@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新建培训 - 协管员端</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        .form-error { border-color: #ef4444 !important; }
+        .error-message { color: #ef4444; font-size: 0.85rem; margin-top: 0.25rem; }
+        .loading-spinner { display: inline-block; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="app" class="phone-container">
+        <div class="phone-screen">
+            <!-- iOS 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left"><span>9:41</span></div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- 应用内容 -->
+            <div class="app-content">
+                <!-- 页面标题 -->
+                <div class="card card--no-margin fade-in">
+                    <div class="card-header">
+                        <a href="training.html" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">{{ meetingTitle || '新建培训' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤指示 -->
+                <div class="card fade-in">
+                    <div class="progress-bar">
+                        <div class="progress-step" :class="{ active: currentStep === 1 }">
+                            <div class="step-number">1</div>
+                            <div class="step-label">基本信息</div>
+                        </div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" :class="{ active: currentStep === 2 }">
+                            <div class="step-number">2</div>
+                            <div class="step-label">会议日程</div>
+                        </div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" :class="{ active: currentStep === 3 }">
+                            <div class="step-number">3</div>
+                            <div class="step-label">报名设置</div>
+                        </div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" :class="{ active: currentStep === 4 }">
+                            <div class="step-number">4</div>
+                            <div class="step-label">其他配置</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤1：基本信息 -->
+                <div v-if="currentStep === 1">
+                    <div class="section-title">基本信息</div>
+                    <div class="card fade-in">
+                        <div class="form-group">
+                            <label class="form-label">培训名称 <span class="required">*</span></label>
+                            <input type="text" v-model="form.trainingName" class="input-field" :class="{ 'form-error': errors.trainingName }" placeholder="请输入培训名称">
+                            <div v-if="errors.trainingName" class="error-message">{{ errors.trainingName }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">培训时间 <span class="required">*</span></label>
+                            <div class="date-range-group">
+                                <input type="date" v-model="form.startDate" class="input-field" :class="{ 'form-error': errors.startDate }">
+                                <span>至</span>
+                                <input type="date" v-model="form.endDate" class="input-field" :class="{ 'form-error': errors.endDate }">
+                            </div>
+                            <div v-if="errors.startDate" class="error-message">{{ errors.startDate }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">培训地点 <span class="required">*</span></label>
+                            <input type="text" v-model="form.location" class="input-field" :class="{ 'form-error': errors.location }" placeholder="请输入培训地点">
+                            <div v-if="errors.location" class="error-message">{{ errors.location }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">培训描述</label>
+                            <textarea v-model="form.description" class="input-field" rows="3" placeholder="请输入培训描述"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">封面图片</label>
+                            <div class="upload-area" @click="triggerImageUpload">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>点击上传封面图片</span>
+                                <input type="file" ref="imageInput" accept="image/*" style="display:none;" @change="handleImageUpload">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤2：会议日程 -->
+                <div v-if="currentStep === 2">
+                    <div class="section-title">会议日程</div>
+                    <div class="card fade-in">
+                        <div class="card-header">
+                            <i class="fas fa-calendar-alt text-muted"></i>
+                            <div class="card-title">日程配置</div>
+                            <button @click="addSchedule" class="btn btn-outline btn--sm">
+                                <i class="fas fa-plus"></i> 添加日程
+                            </button>
+                        </div>
+
+                        <div v-for="(schedule, index) in form.schedules" :key="index" class="schedule-item">
+                            <div class="schedule-header">
+                                <span class="schedule-day">第{{ index + 1 }}天 · {{ schedule.date }}</span>
+                                <button @click="removeSchedule(index)" class="btn-icon"><i class="fas fa-trash text-muted"></i></button>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">会议主题</label>
+                                <input type="text" v-model="schedule.title" class="input-field">
+                            </div>
+
+                            <div class="date-time-group">
+                                <div class="form-group" style="flex:1;">
+                                    <label class="form-label">开始时间</label>
+                                    <input type="time" v-model="schedule.startTime" class="input-field">
+                                </div>
+                                <div class="form-group" style="flex:1;">
+                                    <label class="form-label">结束时间</label>
+                                    <input type="time" v-model="schedule.endTime" class="input-field">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">详细地址</label>
+                                <input type="text" v-model="schedule.address" class="input-field">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">主持人</label>
+                                <input type="text" v-model="schedule.moderator" class="input-field">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">主讲人</label>
+                                <input type="text" v-model="schedule.speaker" class="input-field">
+                            </div>
+
+                            <!-- 日程签到设置 -->
+                            <div class="divider"></div>
+                            <div class="form-section-title">签到设置</div>
+                            <div class="form-group">
+                                <label class="form-label">是否需要签到</label>
+                                <div class="toggle-group">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" v-model="schedule.requireCheckin">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span class="toggle-label">需要签到</span>
+                                </div>
+                            </div>
+
+                            <div v-if="schedule.requireCheckin" class="form-group">
+                                <label class="form-label">签到方式</label>
+                                <select v-model="schedule.checkinType" class="input-field">
+                                    <option value="print">打印表单签字</option>
+                                    <option value="qrcode">二维码扫码 + 位置信息</option>
+                                </select>
+                            </div>
+
+                            <!-- 日程提醒设置 -->
+                            <div class="divider"></div>
+                            <div class="form-section-title">提醒设置</div>
+                            <div class="form-group">
+                                <label class="form-label">是否需要提醒</label>
+                                <div class="toggle-group">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" v-model="schedule.requireReminder">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span class="toggle-label">需要提醒</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤3：报名设置 -->
+                <div v-if="currentStep === 3">
+                    <div class="section-title">报名设置</div>
+                    <div class="card fade-in">
+                        <div class="form-group">
+                            <label class="form-label">报名方式 <span class="required">*</span></label>
+                            <select v-model="form.registrationType" class="input-field">
+                                <option value="open">开放式报名</option>
+                                <option value="limited">限定式报名</option>
+                                <option value="import">导入式报名</option>
+                            </select>
+                        </div>
+
+                        <div v-if="form.registrationType === 'open'" class="info-banner info-banner--info">
+                            <i class="fas fa-info-circle"></i>
+                            <span>生成报名二维码，扫二维码即可打开表单填写报名表</span>
+                        </div>
+
+                        <div v-if="form.registrationType === 'limited'" class="info-banner info-banner--info">
+                            <i class="fas fa-info-circle"></i>
+                            <span>导入单位名录，限定每个单位报N人</span>
+                        </div>
+
+                        <div v-if="form.registrationType === 'import'" class="info-banner info-banner--info">
+                            <i class="fas fa-info-circle"></i>
+                            <span>导入或录入参会人员信息，自动完成报名</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">报名开始时间 <span class="required">*</span></label>
+                            <input type="datetime-local" v-model="form.registrationStartTime" class="input-field">
+                            <div v-if="errors.registrationStartTime" class="error-message">{{ errors.registrationStartTime }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">报名截止时间 <span class="required">*</span></label>
+                            <input type="datetime-local" v-model="form.registrationEndTime" class="input-field">
+                            <div v-if="errors.registrationEndTime" class="error-message">{{ errors.registrationEndTime }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">报名审核方式</label>
+                            <select v-model="form.auditRequired" class="input-field">
+                                <option :value="false">不需要审核</option>
+                                <option :value="true">需要审核</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤4：其他配置 -->
+                <div v-if="currentStep === 4">
+                    <div class="section-title">报到与通知设置</div>
+                    <div class="card fade-in">
+                        <div class="form-group">
+                            <label class="form-label">报到方式</label>
+                            <select v-model="form.checkinMode" class="input-field">
+                                <option value="print">打印表单签字</option>
+                                <option value="qrcode">二维码扫码 + 位置信息</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">报到详细地址</label>
+                            <input type="text" v-model="form.checkinAddress" class="input-field" placeholder="请输入报到的详细地址">
+                        </div>
+
+                        <div class="divider"></div>
+                        <div class="form-group">
+                            <label class="form-label">默认通知方式</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" v-model="form.notificationChannels" value="sms"> 短信通知
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" v-model="form.notificationChannels" value="app"> APP推送
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" v-model="form.notificationChannels" value="wechat"> 微信通知
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">通知文本模板</label>
+                            <textarea v-model="form.notificationTemplate" class="input-field" rows="4" placeholder="请输入默认通知文本"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 创建按钮 -->
+                <div class="card fade-in">
+                    <div class="cta-bar">
+                        <button @click="saveDraft" :disabled="isSaving" class="btn btn-secondary btn--flex">
+                            <i :class="isSaving ? 'fas fa-spinner loading-spinner' : 'fas fa-save'"></i>
+                            {{ isSaving ? '保存中...' : '保存草稿' }}
+                        </button>
+                        <button @click="nextStep" v-if="currentStep < 4" class="btn btn-primary btn--flex">
+                            下一步 <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button @click="createTraining" v-else :disabled="isCreating" class="btn btn-primary btn--flex">
+                            <i :class="isCreating ? 'fas fa-spinner loading-spinner' : 'fas fa-check'"></i>
+                            {{ isCreating ? '创建中...' : '创建培训' }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 温馨提示 -->
+                <div class="info-banner fade-in">
+                    <strong>提示：</strong>创建培训后，系统将自动初始化会议记录、群组和统计数据。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    currentStep: 1,
+                    meetingTitle: '',
+                    isSaving: false,
+                    isCreating: false,
+                    errors: {},
+                    form: {
+                        trainingName: '',
+                        startDate: '',
+                        endDate: '',
+                        location: '',
+                        description: '',
+                        coverImage: '',
+                        schedules: [
+                            {
+                                date: '',
+                                title: '',
+                                startTime: '09:00',
+                                endTime: '10:00',
+                                address: '',
+                                moderator: '',
+                                speaker: '',
+                                requireCheckin: true,
+                                checkinType: 'qrcode',
+                                requireReminder: true
+                            }
+                        ],
+                        registrationType: 'open',
+                        registrationStartTime: '',
+                        registrationEndTime: '',
+                        auditRequired: false,
+                        checkinMode: 'qrcode',
+                        checkinAddress: '',
+                        notificationChannels: ['app', 'sms'],
+                        notificationTemplate: '尊敬的{姓名}，您好！您报名的{培训名称}将于{时间}在{地点}举行，请准时参加。'
+                    }
+                };
+            },
+            methods: {
+                nextStep() {
+                    if (!this.validateStep(this.currentStep)) {
+                        alert('请填写必填项');
+                        return;
+                    }
+                    if (this.currentStep < 4) {
+                        this.currentStep++;
+                    }
+                },
+                validateStep(step) {
+                    this.errors = {};
+                    let isValid = true;
+
+                    if (step === 1) {
+                        if (!this.form.trainingName.trim()) {
+                            this.errors.trainingName = '请输入培训名称';
+                            isValid = false;
+                        }
+                        if (!this.form.startDate) {
+                            this.errors.startDate = '请选择开始日期';
+                            isValid = false;
+                        }
+                        if (!this.form.endDate) {
+                            this.errors.endDate = '请选择结束日期';
+                            isValid = false;
+                        }
+                        if (!this.form.location.trim()) {
+                            this.errors.location = '请输入培训地点';
+                            isValid = false;
+                        }
+                    }
+
+                    if (step === 3) {
+                        if (!this.form.registrationStartTime) {
+                            this.errors.registrationStartTime = '请设置报名开始时间';
+                            isValid = false;
+                        }
+                        if (!this.form.registrationEndTime) {
+                            this.errors.registrationEndTime = '请设置报名截止时间';
+                            isValid = false;
+                        }
+                    }
+
+                    return isValid;
+                },
+                addSchedule() {
+                    const nextDay = new Date(this.form.startDate);
+                    nextDay.setDate(nextDay.getDate() + this.form.schedules.length);
+                    const dateStr = nextDay.toISOString().split('T')[0];
+
+                    this.form.schedules.push({
+                        date: dateStr,
+                        title: '',
+                        startTime: '09:00',
+                        endTime: '10:00',
+                        address: '',
+                        moderator: '',
+                        speaker: '',
+                        requireCheckin: true,
+                        checkinType: 'qrcode',
+                        requireReminder: true
+                    });
+                },
+                removeSchedule(index) {
+                    if (this.form.schedules.length > 1) {
+                        this.form.schedules.splice(index, 1);
+                    }
+                },
+                triggerImageUpload() {
+                    this.$refs.imageInput.click();
+                },
+                handleImageUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.form.coverImage = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                },
+                saveDraft() {
+                    this.isSaving = true;
+                    setTimeout(() => {
+                        const draft = {
+                            currentStep: this.currentStep,
+                            form: this.form,
+                            savedAt: new Date().toISOString()
+                        };
+                        localStorage.setItem('trainingDraft', JSON.stringify(draft));
+                        this.isSaving = false;
+                        alert('草稿已保存');
+                    }, 800);
+                },
+                async createTraining() {
+                    // 最后验证
+                    for (let step = 1; step <= 4; step++) {
+                        if (!this.validateStep(step)) {
+                            this.currentStep = step;
+                            alert('第' + step + '步有未填写的必填项');
+                            return;
+                        }
+                    }
+
+                    this.isCreating = true;
+
+                    try {
+                        // 构建请求数据
+                        const trainingData = {
+                            meetingCode: 'TRAIN_' + Date.now(),
+                            meetingName: this.form.trainingName,
+                            meetingType: 'training',
+                            description: this.form.description,
+                            startTime: this.form.startDate + 'T09:00:00',
+                            endTime: this.form.endDate + 'T17:00:00',
+                            registrationStart: this.form.registrationStartTime,
+                            registrationEnd: this.form.registrationEndTime,
+                            venueName: this.form.location,
+                            venueAddress: this.form.location,
+                            coverImageUrl: this.form.coverImage,
+                            registrationConfig: JSON.stringify({
+                                mode: this.form.registrationType,
+                                auditRequired: this.form.auditRequired,
+                                schedules: this.form.schedules
+                            }),
+                            checkinConfig: JSON.stringify({
+                                mode: this.form.checkinMode,
+                                address: this.form.checkinAddress
+                            }),
+                            notificationConfig: JSON.stringify({
+                                channels: this.form.notificationChannels,
+                                template: this.form.notificationTemplate
+                            })
+                        };
+
+                        // 调用后端 API
+                        const apiUrl = 'http://localhost:8084/api/meeting/create';
+                        const token = localStorage.getItem('token') || '';
+                        
+                        // 获取租户ID（从登录信息中）
+                        const userInfo = localStorage.getItem('userInfo');
+                        let tenantId = null;
+                        if (userInfo) {
+                            try {
+                                const parsedUserInfo = JSON.parse(userInfo);
+                                tenantId = parsedUserInfo.tenantId;
+                            } catch (e) {
+                                console.warn('解析用户信息失败:', e);
+                            }
+                        }
+                        
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`,
+                                'X-Tenant-Id': tenantId || '2027317834622709762'
+                            },
+                            body: JSON.stringify(trainingData)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`API 错误: ${response.status}`);
+                        }
+
+                        const result = await response.json();
+
+                        // 后端返回格式: { code: 0, message: "success", data: {...} }
+                        // code = 0 表示成功
+                        if (result.code === 0 && result.data) {
+                            localStorage.removeItem('trainingDraft');
+                            this.isCreating = false;
+                            alert('培训创建成功！会议ID: ' + result.data.id);
+                            // 跳转到培训详情页面
+                            window.location.href = 'training.html';
+                        } else {
+                            throw new Error(result.message || '创建失败');
+                        }
+                    } catch (error) {
+                        console.error('创建培训失败:', error);
+                        this.isCreating = false;
+                        alert('创建培训失败: ' + error.message);
+                    }
+                }
+            },
+            mounted() {
+                // 尝试加载草稿
+                const draft = localStorage.getItem('trainingDraft');
+                if (draft) {
+                    try {
+                        const draftData = JSON.parse(draft);
+                        this.currentStep = draftData.currentStep || 1;
+                        this.form = { ...this.form, ...draftData.form };
+                    } catch (error) {
+                        console.error('加载草稿失败:', error);
+                    }
+                }
+
+                // 初始化日期
+                if (this.form.schedules[0] && !this.form.schedules[0].date && this.form.startDate) {
+                    this.form.schedules[0].date = this.form.startDate;
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

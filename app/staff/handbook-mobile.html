@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学员手册生成 - 移动版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        .handbook-container {
+            max-width: 425px;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+            height: 4px;
+            border-radius: 2px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .progress-bar--step1 { width: 20%; }
+        .progress-bar--step2 { width: 40%; }
+        .progress-bar--step3 { width: 60%; }
+        .progress-bar--step4 { width: 100%; }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 8px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .step-indicator--active {
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .template-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .template-card:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .template-card--selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .template-card-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+            color: #3b82f6;
+        }
+
+        .template-card-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .template-card-desc {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .sort-button-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .sort-btn {
+            flex: 1;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #475569;
+        }
+
+        .sort-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .sort-btn--active {
+            border-color: #3b82f6;
+            background: #3b82f6;
+            color: white;
+        }
+
+        .content-edit-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .content-edit-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .content-edit-item:hover {
+            background: #f8fafc;
+        }
+
+        .content-edit-item:last-child {
+            border-bottom: none;
+        }
+
+        .content-edit-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 18px;
+            color: white;
+        }
+
+        .icon-blue { background: #3b82f6; }
+        .icon-orange { background: #f97316; }
+        .icon-green { background: #16a34a; }
+        .icon-purple { background: #a855f7; }
+
+        .content-edit-info {
+            flex: 1;
+        }
+
+        .content-edit-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+            margin-bottom: 2px;
+        }
+
+        .content-edit-desc {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .content-edit-arrow {
+            color: #cbd5e1;
+            font-size: 16px;
+        }
+
+        .preview-button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .preview-btn {
+            padding: 12px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #475569;
+        }
+
+        .preview-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .preview-btn-icon {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+
+        .generate-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .generate-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .generate-button:active {
+            transform: translateY(0);
+        }
+
+        .generate-button--loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .export-button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .export-btn {
+            padding: 12px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #475569;
+        }
+
+        .export-btn:hover {
+            border-color: #16a34a;
+            color: #16a34a;
+        }
+
+        .export-btn-icon {
+            font-size: 16px;
+            margin-right: 6px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            padding: 16px 16px 12px;
+            margin: 0;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #1e40af;
+            margin-bottom: 16px;
+        }
+
+        .info-box-icon {
+            margin-right: 8px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay--active {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .modal-content {
+            width: 100%;
+            background: white;
+            border-radius: 16px 16px 0 0;
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 300px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .preview-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #475569;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .statistics-card {
+            background: linear-gradient(135deg, #f0f9ff 0%, #f5f3ff 100%);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .statistics-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .statistics-label {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .statistics-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <!-- 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left"><span>9:41</span></div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- 应用内容 -->
+            <div class="app-content">
+                <!-- 标题卡片 -->
+                <div class="card card--no-margin fade-in">
+                    <div class="card-header">
+                        <a href="registration-manage.html" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第1步：快速选择 -->
+                <div class="card fade-in">
+                    <div class="progress-bar progress-bar--step1"></div>
+                    <div class="step-indicator">
+                        <span class="step-indicator--active">第1步 · 快速选择</span>
+                        <span>2-3分钟</span>
+                    </div>
+
+                    <!-- 模板选择 -->
+                    <div class="section-title">选择模板</div>
+                    <div style="padding: 12px 16px;">
+                        <div class="template-grid">
+                            <div class="template-card template-card--selected" onclick="selectTemplate('standard')">
+                                <div class="template-card-icon">📄</div>
+                                <div class="template-card-name">标准模板</div>
+                                <div class="template-card-desc">推荐使用</div>
+                            </div>
+                            <div class="template-card" onclick="selectTemplate('detailed')">
+                                <div class="template-card-icon">📋</div>
+                                <div class="template-card-name">详细模板</div>
+                                <div class="template-card-desc">更多信息</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 排序方式 -->
+                    <div class="section-title">排序方式</div>
+                    <div style="padding: 12px 16px;">
+                        <div class="sort-button-group">
+                            <button class="sort-btn sort-btn--active" onclick="selectSort('unit')">
+                                <i class="fas fa-building"></i> 按单位
+                            </button>
+                            <button class="sort-btn" onclick="selectSort('sequence')">
+                                <i class="fas fa-list-ol"></i> 按序号
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="info-box" style="margin: 12px 16px 0;">
+                        <i class="fas fa-info-circle info-box-icon"></i>
+                        快速选择预设值，可在下一步编辑详细内容
+                    </div>
+                </div>
+
+                <!-- 第2步：内容编辑 -->
+                <div class="card fade-in">
+                    <div class="progress-bar progress-bar--step2"></div>
+                    <div class="step-indicator">
+                        <span class="step-indicator--active">第2步 · 内容编辑</span>
+                        <span>2-5分钟</span>
+                    </div>
+
+                    <div class="section-title">关键内容</div>
+                    <ul class="content-edit-list">
+                        <li class="content-edit-item" onclick="editContent('training-note')">
+                            <div class="content-edit-icon icon-blue">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="content-edit-info">
+                                <div class="content-edit-title">培训须知</div>
+                                <div class="content-edit-desc">已编辑 · 325字</div>
+                            </div>
+                            <i class="fas fa-chevron-right content-edit-arrow"></i>
+                        </li>
+                        <li class="content-edit-item" onclick="editContent('epilogue')">
+                            <div class="content-edit-icon icon-orange">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                            <div class="content-edit-info">
+                                <div class="content-edit-title">册尾内容</div>
+                                <div class="content-edit-desc">可选 · 点击添加</div>
+                            </div>
+                            <i class="fas fa-chevron-right content-edit-arrow"></i>
+                        </li>
+                    </ul>
+
+                    <div class="section-title" style="margin-top: 12px;">快速查看</div>
+                    <ul class="content-edit-list">
+                        <li class="content-edit-item" onclick="viewSchedule()">
+                            <div class="content-edit-icon icon-green">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="content-edit-info">
+                                <div class="content-edit-title">会议日程</div>
+                                <div class="content-edit-desc">3天日程 · 可编辑</div>
+                            </div>
+                            <i class="fas fa-chevron-right content-edit-arrow"></i>
+                        </li>
+                        <li class="content-edit-item" onclick="viewRoster()">
+                            <div class="content-edit-icon icon-purple">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="content-edit-info">
+                                <div class="content-edit-title">学员名册</div>
+                                <div class="content-edit-desc">142人 · 6个分组</div>
+                            </div>
+                            <i class="fas fa-chevron-right content-edit-arrow"></i>
+                        </li>
+                    </ul>
+
+                    <div class="info-box" style="margin: 12px 16px 0;">
+                        <i class="fas fa-info-circle info-box-icon"></i>
+                        编辑关键项后，可预览效果，不满意可继续修改
+                    </div>
+                </div>
+
+                <!-- 第3步：预览检查 -->
+                <div class="card fade-in">
+                    <div class="progress-bar progress-bar--step3"></div>
+                    <div class="step-indicator">
+                        <span class="step-indicator--active">第3步 · 预览检查</span>
+                        <span>1-2分钟</span>
+                    </div>
+
+                    <div class="section-title">预览选项</div>
+                    <div style="padding: 12px 16px;">
+                        <div class="preview-button-group">
+                            <button class="preview-btn" onclick="previewCover()">
+                                <div class="preview-btn-icon">🎫</div>
+                                <div>封面预览</div>
+                            </button>
+                            <button class="preview-btn" onclick="previewHandbook()">
+                                <div class="preview-btn-icon">📖</div>
+                                <div>手册预览</div>
+                            </button>
+                            <button class="preview-btn" onclick="previewRoster()">
+                                <div class="preview-btn-icon">📋</div>
+                                <div>名册预览</div>
+                            </button>
+                            <button class="preview-btn" onclick="previewFull()">
+                                <div class="preview-btn-icon">👁️</div>
+                                <div>完整预览</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="statistics-card">
+                        <div class="statistics-item">
+                            <span class="statistics-label">模板</span>
+                            <span class="statistics-value">标准模板</span>
+                        </div>
+                        <div class="statistics-item">
+                            <span class="statistics-label">排序</span>
+                            <span class="statistics-value">按单位</span>
+                        </div>
+                        <div class="statistics-item">
+                            <span class="statistics-label">学员数</span>
+                            <span class="statistics-value">142人</span>
+                        </div>
+                        <div class="statistics-item">
+                            <span class="statistics-label">预估页数</span>
+                            <span class="statistics-value">8-10页</span>
+                        </div>
+                    </div>
+
+                    <div class="info-box" style="margin: 0 16px 12px;">
+                        <i class="fas fa-info-circle info-box-icon"></i>
+                        预览满意后，点击下方"生成PDF"开始生成
+                    </div>
+                </div>
+
+                <!-- 第4步：生成导出 -->
+                <div class="card fade-in">
+                    <div class="progress-bar progress-bar--step4"></div>
+                    <div class="step-indicator">
+                        <span class="step-indicator--active">第4步 · 生成导出</span>
+                        <span>1-2分钟</span>
+                    </div>
+
+                    <button class="generate-button" id="generateBtn" onclick="generatePDF()">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>生成PDF名册</span>
+                    </button>
+
+                    <div class="section-title">导出选项</div>
+                    <div style="padding: 12px 16px;">
+                        <div class="export-button-group">
+                            <button class="export-btn" onclick="downloadLocal()">
+                                <span class="export-btn-icon">⬇️</span>
+                                <span>下载到本地</span>
+                            </button>
+                            <button class="export-btn" onclick="shareLink()">
+                                <span class="export-btn-icon">🔗</span>
+                                <span>分享链接</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="info-box" style="margin: 12px 16px 0;">
+                        <i class="fas fa-info-circle info-box-icon"></i>
+                        PDF已生成！可下载到本地或生成7天有效的分享链接
+                    </div>
+                </div>
+
+                <div style="height: 30px;"></div>
+            </div>
+
+            <!-- 底部导航 -->
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                    <div class="nav-text">AI助理</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-comments"></i></div>
+                    <div class="nav-text">沟通</div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon"><i class="fas fa-history"></i></div>
+                    <div class="nav-text">往期</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="editTitle">编辑内容</div>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <textarea id="editTextarea" style="width: 100%; height: 200px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; font-family: inherit; resize: vertical;"></textarea>
+            <button class="btn btn-primary btn--flex" style="width: 100%; margin-top: 16px;" onclick="saveContent()">
+                <i class="fas fa-save"></i> 保存
+            </button>
+        </div>
+    </div>
+
+    <!-- 预览弹窗 -->
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="previewTitle">预览</div>
+                <button class="modal-close" onclick="closePreview()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="previewContent" style="min-height: 300px;">
+                <!-- 预览内容 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 编辑内容
+        function editContent(type) {
+            const titles = {
+                'training-note': '培训须知',
+                'epilogue': '册尾内容'
+            };
+            document.getElementById('editTitle').textContent = '编辑 - ' + titles[type];
+            document.getElementById('editTextarea').value = '这是示例内容，可以编辑...';
+            document.getElementById('editModal').classList.add('modal-overlay--active');
+        }
+
+        // 保存内容
+        function saveContent() {
+            const content = document.getElementById('editTextarea').value;
+            alert('内容已保存！\n\n内容：' + (content.substring(0, 30) + '...'));
+            closeModal();
+        }
+
+        // 关闭编辑弹窗
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('modal-overlay--active');
+        }
+
+        // 关闭预览弹窗
+        function closePreview() {
+            document.getElementById('previewModal').classList.remove('modal-overlay--active');
+        }
+
+        // 选择模板
+        function selectTemplate(type) {
+            document.querySelectorAll('.template-card').forEach(card => {
+                card.classList.remove('template-card--selected');
+            });
+            event.currentTarget.classList.add('template-card--selected');
+            alert('已选择: ' + (type === 'standard' ? '标准模板' : '详细模板'));
+        }
+
+        // 选择排序方式
+        function selectSort(type) {
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.classList.remove('sort-btn--active');
+            });
+            event.currentTarget.classList.add('sort-btn--active');
+            alert('已选择: ' + (type === 'unit' ? '按单位排序' : '按序号排序'));
+        }
+
+        // 预览功能
+        function previewCover() {
+            showPreview('封面预览', `
+                <div class="preview-image">
+                    <div style="text-align: center;">
+                        <div style="font-size: 28px; font-weight: bold; margin-bottom: 20px; color: #1e293b;">
+                            2025党务干部培训班
+                        </div>
+                        <div style="font-size: 16px; color: #64748b; margin-bottom: 40px;">
+                            学员名册
+                        </div>
+                        <div style="font-size: 48px;">🎓</div>
+                    </div>
+                </div>
+            `);
+        }
+
+        function previewHandbook() {
+            showPreview('手册预览', `
+                <div style="padding: 16px;">
+                    <h3 style="color: #1e293b; margin-bottom: 12px;">培训须知</h3>
+                    <div class="preview-text">一、培训时间：2025年2月15日-19日
+二、培训地点：市委党校报告厅
+三、注意事项：
+1. 请准时参加培训，不得无故缺席
+2. 培训期间请将手机调至静音
+3. 请遵守培训纪律，认真听讲</div>
+                </div>
+            `);
+        }
+
+        function previewRoster() {
+            showPreview('名册预览', `
+                <div style="padding: 16px; overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background: #f1f5f9;">
+                                <th style="border: 1px solid #e2e8f0; padding: 8px;">序号</th>
+                                <th style="border: 1px solid #e2e8f0; padding: 8px;">姓名</th>
+                                <th style="border: 1px solid #e2e8f0; padding: 8px;">单位</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="border: 1px solid #e2e8f0; padding: 8px;">1</td><td style="border: 1px solid #e2e8f0; padding: 8px;">张三</td><td style="border: 1px solid #e2e8f0; padding: 8px;">市委组织部</td></tr>
+                            <tr><td style="border: 1px solid #e2e8f0; padding: 8px;">2</td><td style="border: 1px solid #e2e8f0; padding: 8px;">李四</td><td style="border: 1px solid #e2e8f0; padding: 8px;">市教育局</td></tr>
+                            <tr><td style="border: 1px solid #e2e8f0; padding: 8px;">...</td><td style="border: 1px solid #e2e8f0; padding: 8px;">...</td><td style="border: 1px solid #e2e8f0; padding: 8px;">...</td></tr>
+                        </tbody>
+                    </table>
+                    <p style="text-align: center; color: #64748b; margin-top: 12px; font-size: 12px;">共142人</p>
+                </div>
+            `);
+        }
+
+        function previewFull() {
+            showPreview('完整预览', `
+                <div style="padding: 16px;">
+                    <h3>页面1：封面</h3>
+                    <div style="background: #f1f5f9; height: 100px; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin: 10px 0;">2025党务干部培训班</div>
+                    <h3 style="margin-top: 20px;">页面2-3：培训须知</h3>
+                    <p style="font-size: 12px; color: #64748b;">培训须知内容...</p>
+                    <h3 style="margin-top: 20px;">页面4-5：会议日程</h3>
+                    <p style="font-size: 12px; color: #64748b;">日程内容...</p>
+                    <h3 style="margin-top: 20px;">页面6-9：学员名册</h3>
+                    <p style="font-size: 12px; color: #64748b;">名册内容...</p>
+                    <p style="text-align: center; color: #3b82f6; margin-top: 20px; font-weight: 600;">共8-10页</p>
+                </div>
+            `);
+        }
+
+        function showPreview(title, content) {
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('previewContent').innerHTML = content;
+            document.getElementById('previewModal').classList.add('modal-overlay--active');
+        }
+
+        // 查看日程
+        function viewSchedule() {
+            showPreview('会议日程', `
+                <div style="padding: 16px;">
+                    <div style="background: #eff6ff; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                        <div style="font-weight: 600; color: #1e293b; margin-bottom: 6px;">第1天 (2月15日)</div>
+                        <div style="font-size: 12px; color: #64748b;">09:00-10:00 开班仪式</div>
+                    </div>
+                    <div style="background: #eff6ff; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                        <div style="font-weight: 600; color: #1e293b; margin-bottom: 6px;">第2天 (2月16日)</div>
+                        <div style="font-size: 12px; color: #64748b;">09:00-17:00 专题培训</div>
+                    </div>
+                    <div style="background: #eff6ff; padding: 12px; border-radius: 6px;">
+                        <div style="font-weight: 600; color: #1e293b; margin-bottom: 6px;">第3天 (2月17日)</div>
+                        <div style="font-size: 12px; color: #64748b;">14:00-16:00 结业典礼</div>
+                    </div>
+                </div>
+            `);
+        }
+
+        // 查看名册
+        function viewRoster() {
+            showPreview('学员名册', `
+                <div style="padding: 16px;">
+                    <div style="background: #f1f5f9; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #64748b; font-size: 13px;">总人数</span>
+                            <span style="font-size: 18px; font-weight: 700; color: #3b82f6;">142人</span>
+                        </div>
+                    </div>
+                    <div style="background: #f1f5f9; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #64748b; font-size: 13px;">分组数</span>
+                            <span style="font-size: 18px; font-weight: 700; color: #16a34a;">6个</span>
+                        </div>
+                    </div>
+                    <div style="background: #f1f5f9; padding: 12px; border-radius: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #64748b; font-size: 13px;">已分配</span>
+                            <span style="font-size: 18px; font-weight: 700; color: #a855f7;">100%</span>
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+
+        // 生成PDF
+        function generatePDF() {
+            const btn = document.getElementById('generateBtn');
+            btn.classList.add('generate-button--loading');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loading-spinner"></div> <span>生成中...</span>';
+
+            setTimeout(() => {
+                btn.classList.remove('generate-button--loading');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-file-pdf"></i> <span>生成成功！</span>';
+                alert('✅ PDF生成成功！\n\n文件名：党务干部培训班名册.pdf\n文件大小：2.4MB\n\n可以下载或分享');
+                
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-file-pdf"></i> <span>生成PDF名册</span>';
+                }, 2000);
+            }, 2000);
+        }
+
+        // 下载到本地
+        function downloadLocal() {
+            alert('📥 下载成功！\n\n文件已下载到本地设备\n文件名：党务干部培训班名册.pdf');
+        }
+
+        // 分享链接
+        function shareLink() {
+            alert('🔗 分享链接已生成！\n\n链接：https://example.com/share/abc123\n有效期：7天\n\n可复制链接分享给其他人');
+        }
+    </script>
+</body>
+</html>

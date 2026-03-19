@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>留言赠语 - 学员视角</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        /* 论坛容器样式 */
+        .forum-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 发言框样式 */
+        .post-composer {
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .post-composer-header {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .post-composer-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+            margin-bottom: 12px;
+        }
+
+        .post-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .tag-button {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .tag-button:hover {
+            background: #e0e7ff;
+            border-color: #2563eb;
+        }
+
+        .tag-button.active {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            border-color: #1e40af;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .post-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-post {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .btn-post:active {
+            transform: scale(0.98);
+        }
+
+        /* 论坛统计卡片 */
+        .forum-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            padding: 12px;
+            text-align: center;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2563eb;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* 论坛帖子样式 */
+        .forum-post {
+            padding: 15px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .post-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .post-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .avatar-blue {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        }
+
+        .avatar-green {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+
+        .avatar-purple {
+            background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);
+        }
+
+        .avatar-orange {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+
+        .avatar-cyan {
+            background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+        }
+
+        .post-author-info {
+            flex: 1;
+        }
+
+        .post-author-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .post-author-role {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .post-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .post-content {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 12px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .post-tags-list {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .post-tag {
+            padding: 4px 8px;
+            background: #e0e7ff;
+            color: #2563eb;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .post-footer {
+            display: flex;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .post-action {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            background: #f9f9f9;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .post-action:hover {
+            background: #f0f0f0;
+        }
+
+        .post-action.liked {
+            color: #ef4444;
+            background: #ffe0e0;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #999;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <!-- 页面标题卡片 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="task-detail.html?type=message&id=1" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 说明卡片 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-comments" style="color:#2563eb;"></i>
+                        <div class="card-title">留言赠语</div>
+                    </div>
+                    <div class="card-body">
+                        <p style="color:#666; font-size:14px; line-height:1.6;">
+                            在这里分享您的培训心得、学习建议或对他人的祝福。让我们一起记录这段美好的学习时光！
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 论坛容器 -->
+                <div class="forum-container">
+                    <!-- 论坛统计 -->
+                    <div class="card fade-in">
+                        <div class="forum-stats">
+                            <div class="stat-item">
+                                <div class="stat-number" id="totalPosts">6</div>
+                                <div class="stat-label">总留言数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="totalUsers">12</div>
+                                <div class="stat-label">参与人数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="totalLikes">24</div>
+                                <div class="stat-label">点赞互动</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 发言框 -->
+                    <div class="card fade-in">
+                        <div class="post-composer">
+                            <div class="post-composer-header">
+                                <i class="fas fa-pen-fancy"></i>
+                                发表留言
+                            </div>
+                            <textarea id="postContent" class="post-composer-input" placeholder="分享您的心得体会、学习建议或祝福..."></textarea>
+                            
+                            <div class="post-tags">
+                                <button class="tag-button" onclick="toggleTag(this, '心得体会')" title="分享您的培训心得">
+                                    <i class="fas fa-lightbulb"></i> 心得体会
+                                </button>
+                                <button class="tag-button" onclick="toggleTag(this, '学习建议')" title="提出建设性的学习建议">
+                                    <i class="fas fa-seedling"></i> 学习建议
+                                </button>
+                                <button class="tag-button" onclick="toggleTag(this, '点赞勉励')" title="向他人致敬和鼓励">
+                                    <i class="fas fa-thumbs-up"></i> 点赞勉励
+                                </button>
+                                <button class="tag-button" onclick="toggleTag(this, '经验分享')" title="分享您的工作经验">
+                                    <i class="fas fa-star"></i> 经验分享
+                                </button>
+                            </div>
+
+                            <div class="post-actions">
+                                <button class="btn-post" onclick="postMessage()">
+                                    <i class="fas fa-paper-plane"></i> 发表
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 论坛帖子列表 -->
+                    <div id="forumPosts" class="card fade-in">
+                        <!-- 示例帖子1 -->
+                        <div class="forum-post">
+                            <div class="post-header">
+                                <div class="post-avatar avatar-green">王</div>
+                                <div class="post-author-info">
+                                    <div class="post-author-name">王志刚</div>
+                                    <div class="post-author-role">小组组长</div>
+                                </div>
+                                <div class="post-time">2小时前</div>
+                            </div>
+                            <div class="post-content">
+                                这次培训让我深刻认识到党务工作的重要性。讲师的讲解深入浅出，特别是关于党风廉政建设的部分，给我很多启发。收获颇丰！
+                            </div>
+                            <div class="post-tags-list">
+                                <span class="post-tag">心得体会</span>
+                                <span class="post-tag">学习收获</span>
+                            </div>
+                            <div class="post-footer">
+                                <button class="post-action" onclick="toggleLike(this)">
+                                    <i class="fas fa-heart"></i> 4 赞
+                                </button>
+                                <button class="post-action">
+                                    <i class="fas fa-reply"></i> 回复
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 示例帖子2 -->
+                        <div class="forum-post">
+                            <div class="post-avatar avatar-blue">李</div>
+                            <div class="post-header">
+                                <div class="post-avatar avatar-blue">李</div>
+                                <div class="post-author-info">
+                                    <div class="post-author-name">李晓敏</div>
+                                    <div class="post-author-role">部门干部</div>
+                                </div>
+                                <div class="post-time">3小时前</div>
+                            </div>
+                            <div class="post-content">
+                                建议后续的培训可以增加更多实践案例分析，这样能更好地将理论知识应用到工作中。总体上组织得很好！
+                            </div>
+                            <div class="post-tags-list">
+                                <span class="post-tag">学习建议</span>
+                            </div>
+                            <div class="post-footer">
+                                <button class="post-action" onclick="toggleLike(this)">
+                                    <i class="fas fa-heart"></i> 3 赞
+                                </button>
+                                <button class="post-action">
+                                    <i class="fas fa-reply"></i> 回复
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 示例帖子3 -->
+                        <div class="forum-post">
+                            <div class="post-header">
+                                <div class="post-avatar avatar-purple">张</div>
+                                <div class="post-author-info">
+                                    <div class="post-author-name">张涛</div>
+                                    <div class="post-author-role">小组成员</div>
+                                </div>
+                                <div class="post-time">4小时前</div>
+                            </div>
+                            <div class="post-content">
+                                特别感谢各位讲师的精彩授课，感谢所有工作人员的周到服务。在轻松愉快的氛围中收获了很多知识。这是一次很好的学习体验！
+                            </div>
+                            <div class="post-tags-list">
+                                <span class="post-tag">点赞勉励</span>
+                                <span class="post-tag">感谢致敬</span>
+                            </div>
+                            <div class="post-footer">
+                                <button class="post-action" onclick="toggleLike(this)">
+                                    <i class="fas fa-heart"></i> 5 赞
+                                </button>
+                                <button class="post-action">
+                                    <i class="fas fa-reply"></i> 回复
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 示例帖子4 -->
+                        <div class="forum-post">
+                            <div class="post-header">
+                                <div class="post-avatar avatar-orange">陈</div>
+                                <div class="post-author-info">
+                                    <div class="post-author-name">陈静</div>
+                                    <div class="post-author-role">部门干部</div>
+                                </div>
+                                <div class="post-time">5小时前</div>
+                            </div>
+                            <div class="post-content">
+                                通过这次培训，我学到了很多新的党建工作方法。特别是关于党员管理和组织建设的内容，对我今后的工作有很大帮助。希望能继续参加这样的培训！
+                            </div>
+                            <div class="post-tags-list">
+                                <span class="post-tag">经验分享</span>
+                                <span class="post-tag">专业收获</span>
+                            </div>
+                            <div class="post-footer">
+                                <button class="post-action" onclick="toggleLike(this)">
+                                    <i class="fas fa-heart"></i> 3 赞
+                                </button>
+                                <button class="post-action">
+                                    <i class="fas fa-reply"></i> 回复
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 示例帖子5 -->
+                        <div class="forum-post">
+                            <div class="post-header">
+                                <div class="post-avatar avatar-cyan">杨</div>
+                                <div class="post-author-info">
+                                    <div class="post-author-name">杨明</div>
+                                    <div class="post-author-role">小组成员</div>
+                                </div>
+                                <div class="post-time">6小时前</div>
+                            </div>
+                            <div class="post-content">
+                                会议期间，大家的参与度都很高，讨论气氛热烈。希望以后多组织这样的学习交流活动，让大家能够互相学习、共同进步。
+                            </div>
+                            <div class="post-tags-list">
+                                <span class="post-tag">学习建议</span>
+                                <span class="post-tag">交流互动</span>
+                            </div>
+                            <div class="post-footer">
+                                <button class="post-action" onclick="toggleLike(this)">
+                                    <i class="fas fa-heart"></i> 2 赞
+                                </button>
+                                <button class="post-action">
+                                    <i class="fas fa-reply"></i> 回复
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 示例帖子6 -->
+                        <div class="forum-post">
+                            <div class="post-header">
+                                <div class="post-avatar avatar-blue">王</div>
+                                <div class="post-author-info">
+                                    <div class="post-author-name">王莉</div>
+                                    <div class="post-author-role">工作人员</div>
+                                </div>
+                                <div class="post-time">7小时前</div>
+                            </div>
+                            <div class="post-content">
+                                感谢所有参训人员的积极配合和支持！大家的精彩表现和认真态度让这次活动圆满成功。期待与大家再次相聚！
+                            </div>
+                            <div class="post-tags-list">
+                                <span class="post-tag">点赞勉励</span>
+                                <span class="post-tag">活动总结</span>
+                            </div>
+                            <div class="post-footer">
+                                <button class="post-action" onclick="toggleLike(this)">
+                                    <i class="fas fa-heart"></i> 7 赞
+                                </button>
+                                <button class="post-action">
+                                    <i class="fas fa-reply"></i> 回复
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部导航 -->
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='../common/home.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/communication.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="nav-text">沟通</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active" onclick="window.location.href='guestbook.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="nav-text">留言</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/past.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/profile.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 发表留言
+        function postMessage() {
+            const content = document.getElementById('postContent').value.trim();
+            if (!content) {
+                alert('请输入留言内容');
+                return;
+            }
+
+            // 获取选中的标签
+            const selectedTags = Array.from(document.querySelectorAll('.tag-button.active'))
+                .map(btn => btn.textContent.trim().split('\n')[0]);
+
+            // 创建新帖子元素
+            const newPost = document.createElement('div');
+            newPost.className = 'forum-post';
+            const avatars = ['avatar-blue', 'avatar-green', 'avatar-purple', 'avatar-orange', 'avatar-cyan'];
+            const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+            const timeNow = new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'});
+
+            newPost.innerHTML = `
+                <div class="post-header">
+                    <div class="post-avatar ${randomAvatar}">我</div>
+                    <div class="post-author-info">
+                        <div class="post-author-name">我</div>
+                        <div class="post-author-role">学员</div>
+                    </div>
+                    <div class="post-time">刚刚</div>
+                </div>
+                <div class="post-content">${content}</div>
+                ${selectedTags.length > 0 ? `<div class="post-tags-list">${selectedTags.map(tag => `<span class="post-tag">${tag}</span>`).join('')}</div>` : ''}
+                <div class="post-footer">
+                    <button class="post-action" onclick="toggleLike(this)">
+                        <i class="fas fa-heart"></i> 0 赞
+                    </button>
+                    <button class="post-action">
+                        <i class="fas fa-reply"></i> 回复
+                    </button>
+                </div>
+            `;
+
+            // 插入到列表顶部
+            const forumPosts = document.getElementById('forumPosts');
+            forumPosts.insertBefore(newPost, forumPosts.firstChild);
+
+            // 更新统计
+            updateStats();
+
+            // 清空文本框和标签
+            document.getElementById('postContent').value = '';
+            document.querySelectorAll('.tag-button.active').forEach(btn => btn.classList.remove('active'));
+            
+            alert('留言已发表！感谢分享！');
+        }
+
+        // 切换标签
+        function toggleTag(element, tagName) {
+            element.classList.toggle('active');
+        }
+
+        // 点赞
+        function toggleLike(button) {
+            button.classList.toggle('liked');
+            const likeCount = parseInt(button.textContent.match(/\d+/)[0]);
+            if (button.classList.contains('liked')) {
+                button.innerHTML = `<i class="fas fa-heart"></i> ${likeCount + 1} 赞`;
+            } else {
+                button.innerHTML = `<i class="fas fa-heart"></i> ${Math.max(0, likeCount - 1)} 赞`;
+            }
+            updateStats();
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            const totalPosts = document.querySelectorAll('.forum-post').length;
+            document.getElementById('totalPosts').textContent = totalPosts;
+        }
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            // 淡入动画
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(10px)';
+                el.style.transition = 'all 0.3s ease';
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // 初始化统计
+            updateStats();
+        });
+    </script>
+</body>
+</html>

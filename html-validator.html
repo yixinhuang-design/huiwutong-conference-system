@@ -1,0 +1,44 @@
+<!-- HTML标签验证脚本 -->
+<script>
+// 在浏览器console中运行此脚本来诊断标签问题
+
+function validateHTMLTags() {
+    const doc = document.documentElement.outerHTML;
+    const results = {};
+    
+    const tags = ['div', 'button', 'span', 'input', 'li', 'form', 'section', 'nav', 'ul', 'ol', 'label', 'a', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'td'];
+    
+    tags.forEach(tag => {
+        const openRegex = new RegExp(`<${tag}\\b[^>]*>`, 'gi');
+        const closeRegex = new RegExp(`</${tag}>`, 'gi');
+        
+        const opens = (doc.match(openRegex) || []).length;
+        const closes = (doc.match(closeRegex) || []).length;
+        
+        results[tag] = {
+            opens,
+            closes,
+            diff: opens - closes,
+            balanced: opens === closes
+        };
+    });
+    
+    return results;
+}
+
+// 运行验证
+const results = validateHTMLTags();
+console.log('HTML标签检查结果：');
+console.table(results);
+
+// 检查有问题的标签
+const problems = Object.entries(results).filter(([tag, data]) => data.diff !== 0);
+if (problems.length > 0) {
+    console.error('发现不平衡的标签：');
+    problems.forEach(([tag, data]) => {
+        console.error(`  <${tag}>: 开=${data.opens}, 闭=${data.closes}, 差=${data.diff}`);
+    });
+} else {
+    console.log('✅ 所有标签都平衡！');
+}
+</script>

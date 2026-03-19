@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务列表</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+<div class="phone-container">
+    <div class="phone-screen">
+        <div class="status-bar">
+            <div class="status-left"><span>9:41</span></div>
+            <div class="status-right">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-three-quarters"></i>
+            </div>
+        </div>
+        <div class="app-content">
+            <div class="section-title section-title--center">任务列表</div>
+            <div class="card fade-in">
+                <div class="card-header">
+                    <i class="fas fa-tasks" style="color:#2563eb;"></i>
+                    <div class="card-title">我的任务</div>
+                </div>
+                <div class="assistant-list">
+                    <a href="task-detail.html?type=feedback&id=1" class="assistant-item-link">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-blue"><i class="fas fa-clipboard-list"></i></div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">培训满意度调查 <span class="status-chip status-warn"><i class="fas fa-hourglass-start"></i> 待完成</span></div>
+                                <div class="assistant-item-desc">请填写培训反馈问卷，帮助我们改进培训质量</div>
+                                <div class="meta-text">明天 18:00截止</div>
+                            </div>
+                            <div class="assistant-item-actions">
+                                <button class="btn btn-primary btn-xs">填写</button>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="task-detail.html?type=evaluation&id=1" class="assistant-item-link">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-orange"><i class="fas fa-star"></i></div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">讲师评价 <span class="status-chip status-warn"><i class="fas fa-hourglass-start"></i> 待完成</span></div>
+                                <div class="assistant-item-desc">为今日讲师进行评分和评价</div>
+                                <div class="meta-text">今天 22:00截止</div>
+                            </div>
+                            <div class="assistant-item-actions">
+                                <button class="btn btn-primary btn-xs">评价</button>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="task-detail.html?type=scene&id=1" class="assistant-item-link">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-green"><i class="fas fa-camera"></i></div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">现场合影 <span class="status-chip status-accent"><i class="fas fa-circle-notch"></i> 进行中</span></div>
+                                <div class="assistant-item-desc">在指定地点完成小组合影任务</div>
+                                <div class="meta-text">今天 14:00-16:00</div>
+                            </div>
+                            <div class="assistant-item-actions">
+                                <button class="btn btn-primary btn-xs">上传</button>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="task-detail.html?type=collection&id=1" class="assistant-item-link">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-purple"><i class="fas fa-lightbulb"></i></div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">心得体会征集 <span class="status-chip status-neutral"><i class="fas fa-archive"></i> 可选</span></div>
+                                <div class="assistant-item-desc">分享培训心得，优秀作品将展示</div>
+                                <div class="meta-text">本周五截止</div>
+                            </div>
+                            <div class="assistant-item-actions">
+                                <button class="btn btn-outline btn-xs">提交</button>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="task-detail.html?type=collection&id=2" class="assistant-item-link">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-cyan"><i class="fas fa-image"></i></div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">精彩瞬间征集 <span class="status-chip status-neutral"><i class="fas fa-archive"></i> 可选</span></div>
+                                <div class="assistant-item-desc">上传培训期间的精彩照片</div>
+                                <div class="meta-text">培训结束前</div>
+                            </div>
+                            <div class="assistant-item-actions">
+                                <button class="btn btn-outline btn-xs">上传</button>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="window.location.href='../common/home.html'">
+                <div class="nav-icon"><i class="fas fa-home"></i></div>
+                <div class="nav-text">首页</div>
+                <div class="nav-indicator"></div>
+            </div>
+            <div class="nav-item" onclick="window.location.href='../common/assistant.html'">
+                <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                <div class="nav-text">AI助理</div>
+                <div class="nav-indicator"></div>
+            </div>
+            <div class="nav-item active">
+                <div class="nav-icon"><i class="fas fa-tasks"></i></div>
+                <div class="nav-text">任务</div>
+                <div class="nav-indicator"></div>
+            </div>
+            <div class="nav-item" onclick="window.location.href='../common/profile.html'">
+                <div class="nav-icon"><i class="fas fa-user"></i></div>
+                <div class="nav-text">我的</div>
+                <div class="nav-indicator"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

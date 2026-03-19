@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单会议数据指挥中心 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">数据指挥中心</h1>
+                <div class="nav-actions">
+                    <button class="btn-outline" @click="exportReport">
+                        <i class="fas fa-download"></i>
+                        导出报告
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card">
+            <div>
+                <h2>📊 数据指挥中心</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    <span class="status-badge" :class="'status-' + conference.status">
+                        {{ getStatusText(conference.status) }}
+                    </span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="exportReport">
+                    <i class="fas fa-download"></i>
+                    导出报告
+                </button>
+            </div>
+        </div>
+
+        <!-- 实时数据看板 -->
+        <div class="data-dashboard glass-card">
+            <h3>📈 实时数据看板</h3>
+        <div class="metrics-grid">
+            <!-- 报名统计卡片 -->
+            <div class="metric-card glass-card" data-metric="registration">
+                <div class="metric-header">
+                    <h4>报名统计</h4>
+                    <span class="trend-indicator trend-up">+12%</span>
+                </div>
+                <div class="metric-value">{{ stats.registration.registered }}<span class="metric-total">/{{ stats.registration.total }}</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" :style="{ width: getRegistrationProgress() + '%' }"></div>
+                </div>
+                <div class="metric-details">
+                    <div class="detail-item">
+                        <span class="label">今日新增</span>
+                        <span class="value">23人</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">报名率</span>
+                        <span class="value">{{ stats.registration.rate }}%</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">渠道分布</span>
+                        <span class="value">小程序65%</span>
+                    </div>
+                </div>
+                <div class="metric-actions">
+                    <button class="btn-sm btn-primary" @click="openRegistrationManager">管理报名</button>
+                </div>
+            </div>
+
+            <!-- 任务完成卡片 -->
+            <div class="metric-card glass-card" data-metric="tasks">
+                <div class="metric-header">
+                    <h4>任务完成</h4>
+                    <span class="trend-indicator trend-up">+8%</span>
+                </div>
+                <div class="metric-value">{{ stats.tasks.completed }}<span class="metric-total">/{{ stats.tasks.total }}</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" :style="{ width: getTaskProgress() + '%' }"></div>
+                </div>
+                <div class="metric-details">
+                    <div class="detail-item">
+                        <span class="label">进行中</span>
+                        <span class="value">{{ stats.tasks.inProgress }}个</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">完成率</span>
+                        <span class="value">{{ stats.tasks.rate }}%</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">紧急任务</span>
+                        <span class="value">{{ stats.tasks.urgent }}个</span>
+                    </div>
+                </div>
+                <div class="metric-actions">
+                    <button class="btn-sm btn-primary" @click="openTaskManager">管理任务</button>
+                </div>
+            </div>
+
+            <!-- 考勤统计卡片 -->
+            <div class="metric-card glass-card" data-metric="attendance">
+                <div class="metric-header">
+                    <h4>考勤统计</h4>
+                    <span class="trend-indicator trend-up">+5%</span>
+                </div>
+                <div class="metric-value">{{ stats.attendance.checkedIn }}<span class="metric-total">/{{ stats.attendance.total }}</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" :style="{ width: getAttendanceProgress() + '%' }"></div>
+                </div>
+                <div class="metric-details">
+                    <div class="detail-item">
+                        <span class="label">未签到</span>
+                        <span class="value">{{ stats.attendance.notCheckedIn }}人</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">签到率</span>
+                        <span class="value">{{ stats.attendance.rate }}%</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">实时状态</span>
+                        <span class="value">活跃中</span>
+                    </div>
+                </div>
+                <div class="metric-actions">
+                    <button class="btn-sm btn-primary" @click="openAttendanceManager">考勤管理</button>
+                </div>
+            </div>
+
+            <!-- 群组活跃卡片 -->
+            <div class="metric-card glass-card" data-metric="groups">
+                <div class="metric-header">
+                    <h4>群组活跃</h4>
+                    <span class="trend-indicator trend-up">+15%</span>
+                </div>
+                <div class="metric-value">{{ stats.groups.totalGroups }}<span class="metric-total">个群组</span></div>
+                <div class="active-groups">
+                    <div class="group-item" v-for="group in stats.groups.attendeeGroups" :key="group.id">
+                        <span class="group-name">{{ group.name }}</span>
+                        <span class="group-count">{{ group.memberCount }}人</span>
+                        <div class="activity-indicator" :class="{ active: group.active }"></div>
+                    </div>
+                </div>
+                <div class="metric-actions">
+                    <button class="btn-sm btn-primary" @click="openGroupManager">群组管理</button>
+                </div>
+            </div>
+
+            <!-- AI系统状态卡片 -->
+            <div class="metric-card glass-card" data-metric="ai">
+                <div class="metric-header">
+                    <h4>AI系统</h4>
+                    <span class="trend-indicator trend-up">+22%</span>
+                </div>
+                <div class="metric-value">{{ stats.ai.queries }}<span class="metric-total">次查询</span></div>
+                <div class="ai-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">今日查询</span>
+                        <span class="stat-value">{{ stats.ai.todayQueries }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">平均响应</span>
+                        <span class="stat-value">{{ stats.ai.avgResponse }}ms</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">满意度</span>
+                        <span class="stat-value">{{ stats.ai.satisfaction }}%</span>
+                    </div>
+                </div>
+                <div class="metric-actions">
+                    <button class="btn-sm btn-primary" @click="openAIManager">AI管理</button>
+                </div>
+            </div>
+
+            <!-- 系统健康状态卡片 -->
+            <div class="metric-card glass-card" data-metric="system">
+                <div class="metric-header">
+                    <h4>系统健康</h4>
+                    <span class="trend-indicator trend-up">正常</span>
+                </div>
+                <div class="metric-value">{{ stats.system.health }}%<span class="metric-total">健康度</span></div>
+                <div class="system-status-grid">
+                    <div class="status-item">
+                        <span class="status-label">数据库</span>
+                        <span class="status-value" :class="'status-' + stats.system.database">正常</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Redis</span>
+                        <span class="status-value" :class="'status-' + stats.system.redis">正常</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Kafka</span>
+                        <span class="status-value" :class="'status-' + stats.system.kafka">正常</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">API</span>
+                        <span class="status-value" :class="'status-' + stats.system.api">正常</span>
+                    </div>
+                </div>
+                <div class="metric-actions">
+                    <button class="btn-sm btn-primary" @click="openSystemMonitor">系统监控</button>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- 数据可视化区域 -->
+        <div class="data-visualization glass-card">
+            <h3>📊 数据可视化分析</h3>
+        <div class="visualization-section">
+            <div class="chart-container glass-card">
+                <div class="chart-header">
+                    <h4>报名趋势分析</h4>
+                    <span class="chart-context">会议: {{ conference.name }}</span>
+                    <div class="chart-controls">
+                        <select v-model="chartTimeRange" @change="updateChart">
+                            <option value="7d">近7天</option>
+                            <option value="30d">近30天</option>
+                            <option value="90d">近90天</option>
+                        </select>
+                    </div>
+                </div>
+                <canvas id="registrationTrendChart" 
+                        data-conference-id="conf_20240615_001"
+                        data-chart-type="line"
+                        data-time-range="7d"></canvas>
+            </div>
+            
+            <div class="chart-container glass-card">
+                <div class="chart-header">
+                    <h4>任务完成情况</h4>
+                    <span class="chart-context">按协管员分组</span>
+                </div>
+                <canvas id="taskCompletionChart"
+                        data-conference-id="conf_20240615_001"
+                        data-chart-type="bar"></canvas>
+            </div>
+            
+            <div class="chart-container glass-card">
+                <div class="chart-header">
+                    <h4>考勤时段分布</h4>
+                    <span class="chart-context">今日签到情况</span>
+                </div>
+                <canvas id="attendanceChart"
+                        data-conference-id="conf_20240615_001"
+                        data-chart-type="doughnut"></canvas>
+            </div>
+            
+            <div class="chart-container glass-card">
+                <div class="chart-header">
+                    <h4>群组活跃度</h4>
+                    <span class="chart-context">消息发送统计</span>
+                </div>
+                <canvas id="groupActivityChart"
+                        data-conference-id="conf_20240615_001"
+                        data-chart-type="radar"></canvas>
+            </div>
+        </div>
+        </div>
+
+        <!-- 预警信息面板 -->
+        <div class="alert-panel glass-card">
+            <h3>⚠️ 会议预警信息</h3>
+            <div class="panel-header">
+                <span class="alert-count">{{ alerts.length }}个预警</span>
+            </div>
+            <div class="alert-list">
+                <div v-for="alert in alerts" :key="alert.id" 
+                     class="alert-item" 
+                     :class="'alert-' + alert.type">
+                    <i :class="getAlertIcon(alert.type)"></i>
+                    <div class="alert-content">
+                        <div class="alert-title">{{ alert.title }}</div>
+                        <div class="alert-desc">{{ alert.description }}</div>
+                        <div class="alert-context">会议: {{ conference.name }}</div>
+                        <div class="alert-time">检测时间: {{ formatTime(alert.detectedAt) }}</div>
+                    </div>
+                    <div class="alert-actions">
+                        <button class="btn-sm" 
+                                :class="getAlertButtonClass(alert.type)"
+                                @click="handleAlert(alert)">
+                            {{ getAlertButtonText(alert.type) }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快捷操作面板 -->
+        <div class="quick-actions-panel glass-card">
+            <h3>⚡ 快捷操作</h3>
+            <div class="actions-grid">
+                <button class="action-btn" @click="sendReminderNotification">
+                    <i class="fas fa-bell"></i>
+                    <span>发送催报</span>
+                </button>
+                <button class="action-btn" @click="generateReports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>生成报表</span>
+                </button>
+                <button class="action-btn" @click="exportData">
+                    <i class="fas fa-download"></i>
+                    <span>导出数据</span>
+                </button>
+                <button class="action-btn" @click="manageGroups">
+                    <i class="fas fa-users"></i>
+                    <span>管理群组</span>
+                </button>
+                <button class="action-btn" @click="configureAI">
+                    <i class="fas fa-robot"></i>
+                    <span>配置AI</span>
+                </button>
+                <button class="action-btn" @click="systemSettings">
+                    <i class="fas fa-cog"></i>
+                    <span>系统设置</span>
+                </button>
+            </div>
+        </div>
+        </div><!-- 关闭page-with-nav -->
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/data-visualization.js"></script>
+    <script src="../js/realtime-updater.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...',
+                        status: 'preparing',
+                        location: {
+                            venue: '会议中心'
+                        }
+                    },
+                    stats: {
+                        registration: {
+                            total: 500,
+                            registered: 356,
+                            pending: 23,
+                            rejected: 5,
+                            rate: 71.2
+                        },
+                        tasks: {
+                            total: 58,
+                            completed: 42,
+                            inProgress: 12,
+                            pending: 4,
+                            urgent: 2,
+                            rate: 72.4
+                        },
+                        attendance: {
+                            total: 356,
+                            checkedIn: 328,
+                            notCheckedIn: 28,
+                            rate: 94.2
+                        },
+                        groups: {
+                            totalGroups: 4,
+                            attendeeGroups: [
+                                { id: 'group_1', name: '第一学习小组', memberCount: 25, active: true },
+                                { id: 'group_2', name: '第二学习小组', memberCount: 25, active: true },
+                                { id: 'group_3', name: '第三学习小组', memberCount: 25, active: false }
+                            ]
+                        },
+                        ai: {
+                            queries: 1247,
+                            todayQueries: 89,
+                            avgResponse: 245,
+                            satisfaction: 94
+                        },
+                        system: {
+                            health: 98,
+                            database: 'healthy',
+                            redis: 'healthy',
+                            kafka: 'healthy',
+                            api: 'healthy'
+                        }
+                    },
+                    alerts: [
+                        {
+                            id: 1,
+                            type: 'warning',
+                            title: '报名率低于阈值',
+                            description: '当前报名率71.2%，低于目标80%',
+                            detectedAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
+                        },
+                        {
+                            id: 2,
+                            type: 'info',
+                            title: '任务分配提醒',
+                            description: '有4个任务尚未分配负责人',
+                            detectedAt: new Date(Date.now() - 1 * 60 * 60 * 1000)
+                        },
+                        {
+                            id: 3,
+                            type: 'success',
+                            title: '系统运行正常',
+                            description: '所有系统组件运行状态良好',
+                            detectedAt: new Date(Date.now() - 30 * 60 * 1000)
+                        }
+                    ],
+                    countdown: '3天12小时',
+                    chartTimeRange: '7d',
+                    charts: {}
+                }
+            },
+            async mounted() {
+                await this.initializeDashboard();
+                this.setupRealtimeUpdates();
+                this.initializeCharts();
+                this.startCountdown();
+            },
+            methods: {
+                async initializeDashboard() {
+                    try {
+                        // 获取会议ID
+                        const conferenceId = this.getConferenceIdFromUrl();
+                        if (conferenceId) {
+                            // 加载会议数据
+                            this.conference = await window.conferenceContext.loadConference(conferenceId);
+                            // 加载统计数据
+                            await this.loadStats();
+                        } else {
+                            // 如果没有会议ID，使用示例数据
+                            this.conference = {
+                                id: 'demo_conf_001',
+                                name: '2024年度技术峰会',
+                                status: 'preparing',
+                                location: {
+                                    venue: '北京国际会议中心'
+                                }
+                            };
+                            // 使用已有的示例统计数据
+                            await this.loadStats();
+                        }
+                    } catch (error) {
+                        console.error('仪表板初始化失败:', error);
+                        // 即使出错也使用示例数据
+                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '示例会议',
+                            status: 'preparing',
+                            location: {
+                                venue: '会议中心'
+                            }
+                        };
+                    }
+                },
+                
+                getConferenceIdFromUrl() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    return urlParams.get('conferenceId');
+                },
+                
+                async loadStats() {
+                    try {
+                        const stats = await window.conferenceContext.getConferenceStats();
+                        if (stats) {
+                            this.stats = { ...this.stats, ...stats };
+                        }
+                    } catch (error) {
+                        console.error('加载统计数据失败:', error);
+                    }
+                },
+                
+                setupRealtimeUpdates() {
+                    // 设置实时数据更新
+                    setInterval(async () => {
+                        await this.loadStats();
+                        this.updateCharts();
+                    }, 30000); // 30秒更新一次
+                },
+                
+                initializeCharts() {
+                    this.$nextTick(() => {
+                        this.createRegistrationTrendChart();
+                        this.createTaskCompletionChart();
+                        this.createAttendanceChart();
+                        this.createGroupActivityChart();
+                    });
+                },
+                
+                createRegistrationTrendChart() {
+                    const ctx = document.getElementById('registrationTrendChart');
+                    if (!ctx) return;
+                    
+                    this.charts.registration = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['6月8日', '6月9日', '6月10日', '6月11日', '6月12日', '6月13日', '6月14日'],
+                            datasets: [{
+                                label: '报名人数',
+                                data: [120, 145, 167, 189, 210, 245, 356],
+                                borderColor: '#667eea',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                },
+                
+                createTaskCompletionChart() {
+                    const ctx = document.getElementById('taskCompletionChart');
+                    if (!ctx) return;
+                    
+                    this.charts.tasks = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['张三', '李四', '王五', '赵六', '钱七'],
+                            datasets: [{
+                                label: '完成任务数',
+                                data: [12, 8, 15, 6, 9],
+                                backgroundColor: [
+                                    'rgba(102, 126, 234, 0.8)',
+                                    'rgba(118, 75, 162, 0.8)',
+                                    'rgba(240, 147, 251, 0.8)',
+                                    'rgba(79, 172, 254, 0.8)',
+                                    'rgba(0, 242, 254, 0.8)'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                },
+                
+                createAttendanceChart() {
+                    const ctx = document.getElementById('attendanceChart');
+                    if (!ctx) return;
+                    
+                    this.charts.attendance = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['已签到', '未签到'],
+                            datasets: [{
+                                data: [328, 28],
+                                backgroundColor: [
+                                    'rgba(16, 185, 129, 0.8)',
+                                    'rgba(245, 158, 11, 0.8)'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                },
+                
+                createGroupActivityChart() {
+                    const ctx = document.getElementById('groupActivityChart');
+                    if (!ctx) return;
+                    
+                    this.charts.groups = new Chart(ctx, {
+                        type: 'radar',
+                        data: {
+                            labels: ['消息量', '活跃度', '参与度', '响应速度', '满意度'],
+                            datasets: [{
+                                label: '第一学习小组',
+                                data: [85, 78, 92, 88, 90],
+                                borderColor: 'rgba(102, 126, 234, 0.8)',
+                                backgroundColor: 'rgba(102, 126, 234, 0.2)'
+                            }, {
+                                label: '第二学习小组',
+                                data: [72, 85, 78, 82, 85],
+                                borderColor: 'rgba(118, 75, 162, 0.8)',
+                                backgroundColor: 'rgba(118, 75, 162, 0.2)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                r: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                },
+                
+                updateCharts() {
+                    // 更新图表数据
+                    Object.values(this.charts).forEach(chart => {
+                        if (chart && typeof chart.update === 'function') {
+                            chart.update();
+                        }
+                    });
+                },
+                
+                updateChart() {
+                    // 根据时间范围更新图表
+                    this.updateCharts();
+                },
+                
+                startCountdown() {
+                    // 启动倒计时
+                    const targetDate = new Date('2024-06-15 09:00:00').getTime();
+                    
+                    const updateCountdown = () => {
+                        const now = new Date().getTime();
+                        const distance = targetDate - now;
+                        
+                        if (distance > 0) {
+                            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                            
+                            this.countdown = `${days}天${hours}小时${minutes}分钟`;
+                        } else {
+                            this.countdown = '会议已开始';
+                        }
+                    };
+                    
+                    updateCountdown();
+                    setInterval(updateCountdown, 60000); // 每分钟更新
+                },
+                
+                getStatusText(status) {
+                    const statusMap = {
+                        'preparing': '筹备中',
+                        'ongoing': '进行中',
+                        'ended': '已结束'
+                    };
+                    return statusMap[status] || status;
+                },
+                
+                getRegistrationProgress() {
+                    return Math.round((this.stats.registration.registered / this.stats.registration.total) * 100);
+                },
+                
+                getTaskProgress() {
+                    return Math.round((this.stats.tasks.completed / this.stats.tasks.total) * 100);
+                },
+                
+                getAttendanceProgress() {
+                    return Math.round((this.stats.attendance.checkedIn / this.stats.attendance.total) * 100);
+                },
+                
+                getAlertIcon(type) {
+                    const iconMap = {
+                        'success': 'fas fa-check-circle',
+                        'warning': 'fas fa-exclamation-triangle',
+                        'error': 'fas fa-times-circle',
+                        'info': 'fas fa-info-circle'
+                    };
+                    return iconMap[type] || 'fas fa-info-circle';
+                },
+                
+                getAlertButtonClass(type) {
+                    const classMap = {
+                        'success': 'btn-success',
+                        'warning': 'btn-warning',
+                        'error': 'btn-danger',
+                        'info': 'btn-info'
+                    };
+                    return classMap[type] || 'btn-primary';
+                },
+                
+                getAlertButtonText(type) {
+                    const textMap = {
+                        'success': '查看详情',
+                        'warning': '立即处理',
+                        'error': '紧急处理',
+                        'info': '查看信息'
+                    };
+                    return textMap[type] || '处理';
+                },
+                
+                formatTime(date) {
+                    return date.toLocaleString('zh-CN');
+                },
+                
+                handleAlert(alert) {
+                    // 根据预警类型执行相应操作
+                    if (alert.type === 'warning') {
+                        // 跳转到相应处理页面
+                        if (alert.title.includes('报名率')) {
+                            window.location.href = `registration-mgr.html?conferenceId=${this.conference.id}`;
+                        } else if (alert.title.includes('任务')) {
+                            window.location.href = `collaboration-center.html?conferenceId=${this.conference.id}`;
+                        }
+                    } else {
+                        if (this.$showToast) {
+                            this.$showToast(alert.description, alert.type);
+                        }
+                    }
+                },
+                
+                // 快捷操作方法
+                openRegistrationManager() {
+                    window.location.href = `registration-mgr.html?conferenceId=${this.conference.id}`;
+                },
+                
+                openTaskManager() {
+                    window.location.href = `collaboration-center.html?conferenceId=${this.conference.id}`;
+                },
+                
+                openAttendanceManager() {
+                    window.location.href = `collaboration-center.html?conferenceId=${this.conference.id}#attendance`;
+                },
+                
+                openGroupManager() {
+                    window.location.href = `group-management.html?conferenceId=${this.conference.id}`;
+                },
+                
+                openAIManager() {
+                    window.location.href = `ai-assistant-console.html?conferenceId=${this.conference.id}`;
+                },
+                
+                openSystemMonitor() {
+                    window.location.href = `data-command.html?conferenceId=${this.conference.id}#monitor`;
+                },
+                
+                sendReminderNotification() {
+                    window.location.href = `notification-mgr.html?conferenceId=${this.conference.id}`;
+                },
+                
+                generateReports() {
+                    this.showNotification('正在生成报表...', 'info');
+                },
+                
+                exportData() {
+                    this.showNotification('正在导出数据...', 'info');
+                },
+                
+                manageGroups() {
+                    window.location.href = `group-management.html?conferenceId=${this.conference.id}`;
+                },
+                
+                configureAI() {
+                    window.location.href = `ai-assistant-console.html?conferenceId=${this.conference.id}`;
+                },
+                
+                systemSettings() {
+                    window.location.href = `system-settings.html?conferenceId=${this.conference.id}`;
+                },
+                
+                exportReport() {
+                    this.$showLoading('正在导出报告...');
+                    setTimeout(() => {
+                        this.$hideLoading();
+                        this.$showToast('报告已导出', 'success');
+                    }, 2000);
+                },
+                
+                showNotification(message, type = 'info') {
+                    if (this.$showToast) {
+                        this.$showToast(message, type);
+                    } else if (window.InteractionUtils) {
+                        window.InteractionUtils.showToast(message, type);
+                    }
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+</body>
+</html>

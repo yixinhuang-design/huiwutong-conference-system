@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作人员 · 任务派发</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left"><span>9:41</span></div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="meeting-detail.html" class="btn btn-secondary" style="padding:8px 12px;"><i class="fas fa-chevron-left"></i></a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                            <button class="btn btn-primary"><i class="fas fa-plus"></i> 新建任务</button>
+                    </div>
+                    <div style="padding:12px; background:#f8fafc; border-radius:8px; display:grid; grid-template-columns:repeat(4,1fr); gap:10px; font-size:12px; text-align:center;">
+                        <div><div style="font-size:18px; font-weight:700; color:#f59e0b;">8</div><div style="color:#64748b; margin-top:4px;">待执行</div></div>
+                        <div><div style="font-size:18px; font-weight:700; color:#6366f1;">5</div><div style="color:#64748b; margin-top:4px;">进行中</div></div>
+                        <div><div style="font-size:18px; font-weight:700; color:#22c55e;">12</div><div style="color:#64748b; margin-top:4px;">已完成</div></div>
+                        <div><div style="font-size:18px; font-weight:700; color:#ef4444;">1</div><div style="color:#64748b; margin-top:4px;">已逾期</div></div>
+                    </div>
+                    <div class="pill-group" style="margin-top:12px;">
+                        <div class="pill-active">全部</div>
+                        <div class="pill">待执行</div>
+                        <div class="pill">进行中</div>
+                        <div class="pill">已完成</div>
+                        <div class="pill">已逾期</div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-clipboard-list" style="color:#2563eb;"></i>
+                        <div class="card-title">任务列表</div>
+                    </div>
+                    <div class="task-list">
+                        <a href="task-detail.html" style="text-decoration:none;color:inherit;display:block;">
+                            <div class="task-card" style="border-left:3px solid #f59e0b;">
+                                <div class="task-header">
+                                    <div class="task-title">【紧急】会场布置验收</div>
+                                    <span class="status-chip status-accent"><i class="fas fa-spinner"></i> 进行中</span>
+                                </div>
+                                <div class="task-body">负责人：李伟、陈静 · 截止 08:30 · 需提交现场照片。</div>
+                                <div class="task-footer">
+                                    <span>优先级：高 · 最新反馈：舞台搭建完成</span>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="#" style="text-decoration:none;color:inherit;display:block;">
+                            <div class="task-card">
+                                <div class="task-header">
+                                    <div class="task-title">资料礼包发放</div>
+                                    <span class="status-chip status-positive"><i class="fas fa-check-circle"></i> 已完成</span>
+                                </div>
+                                <div class="task-body">负责人：赵敏 · 完成时间 07:50 · 142 份礼包发放完毕。</div>
+                                <div class="task-footer">
+                                    <span>优先级：中 · 评价：执行高效</span>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="#" style="text-decoration:none;color:inherit;display:block;">
+                            <div class="task-card">
+                                <div class="task-header">
+                                    <div class="task-title">下午课程讲师更新</div>
+                                    <span class="status-chip status-info"><i class="fas fa-hourglass-start"></i> 待执行</span>
+                                </div>
+                                <div class="task-body">负责人：王芳 · 截止 14:00 · 更新讲师信息推送至全体学员。</div>
+                                <div class="task-footer">
+                                    <span>优先级：中 · 分配时间：09:30</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon"><i class="fas fa-comments"></i></div>
+                    <div class="nav-text">沟通</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-history"></i></div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025党务干部培训班</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        /* 群组成员头像列表 */
+        .member-avatars {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .avatar-blue {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+        .avatar-green {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        .avatar-purple {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+        .avatar-orange {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+        }
+
+        /* 群组卡片增强 */
+        .group-info-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+            border: 1px solid #e0e7ff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .group-icon-wrapper {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .group-info-content {
+            flex: 1;
+        }
+
+        .group-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .group-role {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .group-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .skill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #1e40af;
+            font-weight: 500;
+        }
+
+        .group-action {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .btn-chat {
+            flex: 1;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-chat:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        /* 成员卡片行列 */
+        .members-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .members-label {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .member-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .member-item {
+            padding: 8px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            font-size: 12px;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .member-item-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        /* 页面信息横幅 */
+        .group-info-banner {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #92400e;
+            line-height: 1.5;
+        }
+
+        .group-info-banner i {
+            margin-right: 4px;
+            color: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <!-- iOS 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- 应用内容 -->
+            <div class="app-content">
+                <!-- 页面标题卡片 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="meeting-detail.html" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 群组说明横幅 -->
+                <div class="group-info-banner fade-in">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>我的分组</strong> - 展示您在本次培训中所在的分组信息和成员详情
+                </div>
+
+                <!-- 分组信息卡片 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-users-cog" style="color:#2563eb;"></i>
+                        <div class="card-title">分组详情</div>
+                    </div>
+                    <div class="card-content" style="padding: 0;">
+                        <div class="group-info-card">
+                            <div class="group-icon-wrapper">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="group-info-content">
+                                <div class="group-title">第一组</div>
+                                <div class="group-role">
+                                    <i class="fas fa-crown" style="color:#f59e0b;"></i> 组长：张三
+                                </div>
+                                <div class="group-skills">
+                                    <span class="skill-badge">
+                                        <i class="fas fa-file-powerpoint"></i> 负责PPT
+                                    </span>
+                                    <span class="skill-badge">
+                                        <i class="fas fa-chart-bar"></i> 数据分析
+                                    </span>
+                                </div>
+                                <div class="group-action">
+                                    <a href="chat-room.html" class="btn-chat">
+                                        <i class="fas fa-comments"></i> 群聊
+                                    </a>
+                                </div>
+
+                                <!-- 成员列表 -->
+                                <div class="members-section">
+                                    <label class="members-label"><i class="fas fa-users"></i> 组员（4人）</label>
+                                    <div class="member-list">
+                                        <div class="member-item">
+                                            <div class="member-item-icon avatar-blue">张</div>
+                                            <span>张三</span>
+                                        </div>
+                                        <div class="member-item">
+                                            <div class="member-item-icon avatar-green">李</div>
+                                            <span>李四</span>
+                                        </div>
+                                        <div class="member-item">
+                                            <div class="member-item-icon avatar-purple">王</div>
+                                            <span>王五</span>
+                                        </div>
+                                        <div class="member-item">
+                                            <div class="member-item-icon avatar-orange">赵</div>
+                                            <span>赵六</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 群组功能提示 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-lightbulb" style="color:#f59e0b;"></i>
+                        <div class="card-title">群组功能</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-comments" style="color:#2563eb;"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">群组讨论</div>
+                                <div class="assistant-item-desc">与组员进行实时沟通和协作讨论</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-tasks" style="color:#10b981;"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">任务分配</div>
+                                <div class="assistant-item-desc">接收和管理分配给小组的任务</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-file-alt" style="color:#f97316;"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">文件共享</div>
+                                <div class="assistant-item-desc">与组员共享和上传相关文件资料</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='../common/home.html'">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/assistant.html'">
+                    <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active" onclick="window.location.href='groups.html'">
+                    <div class="nav-icon"><i class="fas fa-comments"></i></div>
+                    <div class="nav-text">沟通</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/past.html'">
+                    <div class="nav-icon"><i class="fas fa-history"></i></div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/profile.html'">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据分析 - 协管员端</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            padding: 16px 16px 12px;
+            margin: 12px 0 0 0;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .summary-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 16px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #f0f9ff 0%, #f5f3ff 100%);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .summary-card h4 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .summary-card p {
+            margin: 0 0 6px 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .summary-card span {
+            display: block;
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .btn-group--wrap {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 12px 16px;
+        }
+
+        .btn--sm {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .info-banner {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #1e40af;
+            margin: 16px;
+        }
+
+        .icon-container {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 12px;
+        }
+
+        .icon-gradient-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .icon-gradient-green {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+
+        .icon-gradient-cyan {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        }
+
+        .icon-gradient-orange {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+
+        .icon-gradient-purple {
+            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <!-- iOS 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- 应用内容 -->
+            <div class="app-content">
+                <!-- 页面标题 -->
+                <div class="card card--no-margin fade-in">
+                    <div class="card-header">
+                        <a href="dashboard.html" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-search"></i>
+                        <div class="card-title">数据查询</div>
+                    </div>
+                    <div id="data-query-form" class="assistant-list">
+                        <!-- 查询表单由后端渲染，所有字段与后端链路对应 -->
+                    </div>
+                </div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-chart-line"></i>
+                        <div class="card-title">数据分析报表</div>
+                    </div>
+                    <div class="summary-container">
+                        <div class="summary-card">
+                            <h4>报名数据</h4>
+                            <p>142</p>
+                            <span>报名率 89% · 较上周 +5%</span>
+                        </div>
+                        <div class="summary-card">
+                            <h4>签到数据</h4>
+                            <p>138</p>
+                            <span>签到率 97% · 较上周 +2%</span>
+                        </div>
+                        <div class="summary-card">
+                            <h4>任务数据</h4>
+                            <p>85%</p>
+                            <span>完成率 · 较上周 +8%</span>
+                        </div>
+                        <div class="summary-card">
+                            <h4>通知数据</h4>
+                            <p>92%</p>
+                            <span>阅读率 · 较上周 +3%</span>
+                        </div>
+                    </div>
+                    <div class="cta-bar">
+                        <button class="btn btn-secondary btn--flex">
+                            <i class="fas fa-download"></i> 导出
+                        </button>
+                        <button class="btn btn-primary btn--flex">
+                            <i class="fas fa-chart-bar"></i> 详情
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 用户行为分析 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="icon-container icon-gradient-green">
+                            <i class="fas fa-user-chart"></i>
+                        </div>
+                        <div class="card-title">用户行为分析</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-blue">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">页面访问</div>
+                                <div class="assistant-item-desc">首页 85% · 日程 78% · 通讯录 62%</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-orange">
+                                <i class="fas fa-mouse-pointer"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">功能使用</div>
+                                <div class="assistant-item-desc">签到 95% · 通知 88% · AI助理 72%</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-cyan">
+                                <i class="fas fa-hand-pointer"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">用户操作</div>
+                                <div class="assistant-item-desc">平均每日操作 23 次</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cta-bar">
+                        <button class="btn btn-secondary btn--flex">
+                            <i class="fas fa-download"></i> 导出
+                        </button>
+                        <button class="btn btn-primary btn--flex">
+                            <i class="fas fa-chart-bar"></i> 详情
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 系统性能分析 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="icon-container icon-gradient-purple">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <div class="card-title">系统性能分析</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-blue">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">API响应时间</div>
+                                <div class="assistant-item-desc">平均 245ms · 成功率 99.8%</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-orange">
+                                <i class="fas fa-server"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">系统负载</div>
+                                <div class="assistant-item-desc">CPU 42% · 内存 58% · 磁盘 35%</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-green">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">数据库性能</div>
+                                <div class="assistant-item-desc">查询平均 120ms · 连接池 75%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cta-bar">
+                        <button class="btn btn-secondary btn--flex">
+                            <i class="fas fa-download"></i> 导出
+                        </button>
+                        <button class="btn btn-primary btn--flex">
+                            <i class="fas fa-chart-bar"></i> 详情
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 数据对比分析 -->
+                <div class="section-title">数据对比分析</div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="icon-container icon-gradient-cyan">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <div class="card-title">对比维度</div>
+                    </div>
+                    <div class="btn-group--wrap">
+                        <button class="btn btn-secondary btn--sm">
+                            <i class="fas fa-clock"></i> 按时间
+                        </button>
+                        <button class="btn btn-secondary btn--sm">
+                            <i class="fas fa-building"></i> 按部门
+                        </button>
+                        <button class="btn btn-secondary btn--sm">
+                            <i class="fas fa-users"></i> 按会议
+                        </button>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-orange">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">报名率趋势</div>
+                                <div class="assistant-item-desc">本月 89% vs 上月 84% · +5%</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-green">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">签到率趋势</div>
+                                <div class="assistant-item-desc">本月 97% vs 上月 95% · +2%</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-purple">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">任务完成率</div>
+                                <div class="assistant-item-desc">本月 85% vs 上月 77% · +8%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据导出 -->
+                <div class="section-title">数据导出</div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="icon-container icon-gradient-green">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="card-title">导出选项</div>
+                    </div>
+                    <div class="btn-group--wrap">
+                        <button class="btn btn-secondary btn--flex">
+                            <i class="fas fa-file-excel"></i> 导出Excel
+                        </button>
+                        <button class="btn btn-secondary btn--flex">
+                            <i class="fas fa-file-csv"></i> 导出CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 温馨提示 -->
+                <div class="info-banner fade-in">
+                    <strong>提示</strong>
+                    数据支持按时间、部门、会议等多维度对比分析。导出的数据可用于进一步处理和归档。
+                </div>
+
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="nav-text">沟通</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

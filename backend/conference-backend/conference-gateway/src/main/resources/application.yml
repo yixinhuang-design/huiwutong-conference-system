@@ -1,0 +1,157 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: conference-gateway
+  
+  # 配置文件导入
+  config:
+    import: 
+      - optional:nacos:conference-gateway.yml
+  
+  cloud:
+    # Nacos配置
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:dev}
+        group: CONFERENCE_GROUP
+        enabled: ${NACOS_ENABLED:false}
+        register-enabled: ${NACOS_REGISTER_ENABLED:${NACOS_ENABLED:false}}
+      config:
+        server-addr: ${NACOS_SERVER:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:dev}
+        group: CONFERENCE_GROUP
+        file-extension: yml
+        enabled: ${NACOS_CONFIG_ENABLED:${NACOS_ENABLED:false}}
+        import-check:
+          enabled: false
+    
+    # 网关路由配置
+    gateway:
+      # 跨域配置
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      
+      # 路由规则
+      routes:
+        # 认证服务
+        - id: conference-auth
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /api/${segment}
+
+        # 报名服务
+        - id: conference-registration
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/v1/registration/**,/api/v1/conference/**
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /api/${segment}
+
+        # 通知服务
+        - id: conference-notification
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/v1/notification/**
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /api/${segment}
+
+        # 协同服务
+        - id: conference-collaboration
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/v1/group/**,/api/v1/task/**
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /api/${segment}
+
+        # 排座服务
+        - id: conference-seating-v1
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/v1/seating/**
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /api/${segment}
+
+        # 排座服务（无版本前缀）
+        - id: conference-seating
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/seating/**
+
+        # AI服务
+        - id: conference-ai
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/v1/ai/**
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /api/${segment}
+
+        # 导航服务
+        - id: conference-navigation
+          uri: http://localhost:8088
+          predicates:
+            - Path=/api/v1/navigation/**
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /api/${segment}
+
+        # 数据服务
+        - id: conference-data
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/v1/data/**
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /api/${segment}
+
+        # 会议服务（日程等）- 支持/api/schedule和/api/v1/schedule两种路径
+        - id: conference-meeting-v1
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/v1/schedule/**,/api/v1/meeting/**
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /api/${segment}
+
+        # 会议服务（日程等）- 无版本前缀的路由
+        - id: conference-meeting
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/schedule/**,/api/meeting/**
+  
+  # Redis配置（用于限流）
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.conference: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+
+# 网关自定义配置
+gateway:
+  # 白名单路径（不需要认证）
+  white-list:
+    - /api/v1/auth/login
+    - /api/v1/auth/register
+    - /api/v1/auth/captcha
+    - /api/v1/auth/sms-code
+    - /api/v1/tenant/**
+    - /actuator/**
+    - /doc.html
+    - /swagger-resources/**
+    - /v3/api-docs/**
+    - /webjars/**

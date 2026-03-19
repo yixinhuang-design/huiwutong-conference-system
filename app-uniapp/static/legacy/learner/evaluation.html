@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>评价打分 - 学员视角</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="task-detail.html?type=evaluation&id=1" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-user-tie" style="color:#2563eb;"></i>
+                        <div class="card-title">讲师信息</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">张教授</div>
+                                <div class="assistant-item-desc">党建工作实务专家，20年党务工作经验</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">授课主题</div>
+                                <div class="assistant-item-desc">新时代党建工作创新与实践</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">授课时间</div>
+                                <div class="assistant-item-desc">2025年1月11日 09:00-12:00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-star" style="color:#f59e0b;"></i>
+                        <div class="card-title">评价打分</div>
+                    </div>
+
+                    <div class="evaluation-item">
+                        <div class="evaluation-title">
+                            <i class="fas fa-book-open"></i> 内容质量
+                            <span class="evaluation-required">必填</span>
+                        </div>
+                        <div class="evaluation-desc">授课内容的深度、广度和实用性</div>
+                        <div class="star-rating" data-field="content">
+                            <i class="far fa-star" data-value="1"></i>
+                            <i class="far fa-star" data-value="2"></i>
+                            <i class="far fa-star" data-value="3"></i>
+                            <i class="far fa-star" data-value="4"></i>
+                            <i class="far fa-star" data-value="5"></i>
+                            <span class="rating-text"></span>
+                        </div>
+                    </div>
+
+                    <div class="evaluation-item">
+                        <div class="evaluation-title">
+                            <i class="fas fa-microphone"></i> 授课效果
+                            <span class="evaluation-required">必填</span>
+                        </div>
+                        <div class="evaluation-desc">讲师的表达能力、逻辑性和条理性</div>
+                        <div class="star-rating" data-field="delivery">
+                            <i class="far fa-star" data-value="1"></i>
+                            <i class="far fa-star" data-value="2"></i>
+                            <i class="far fa-star" data-value="3"></i>
+                            <i class="far fa-star" data-value="4"></i>
+                            <i class="far fa-star" data-value="5"></i>
+                            <span class="rating-text"></span>
+                        </div>
+                    </div>
+
+                    <div class="evaluation-item">
+                        <div class="evaluation-title">
+                            <i class="fas fa-comments"></i> 互动性
+                            <span class="evaluation-required">必填</span>
+                        </div>
+                        <div class="evaluation-desc">与学员的互动交流及答疑情况</div>
+                        <div class="star-rating" data-field="interaction">
+                            <i class="far fa-star" data-value="1"></i>
+                            <i class="far fa-star" data-value="2"></i>
+                            <i class="far fa-star" data-value="3"></i>
+                            <i class="far fa-star" data-value="4"></i>
+                            <i class="far fa-star" data-value="5"></i>
+                            <span class="rating-text"></span>
+                        </div>
+                    </div>
+
+                    <div class="evaluation-item">
+                        <div class="evaluation-title">
+                            <i class="fas fa-lightbulb"></i> 启发性
+                            <span class="evaluation-required">必填</span>
+                        </div>
+                        <div class="evaluation-desc">课程的启发性和思考价值</div>
+                        <div class="star-rating" data-field="inspiration">
+                            <i class="far fa-star" data-value="1"></i>
+                            <i class="far fa-star" data-value="2"></i>
+                            <i class="far fa-star" data-value="3"></i>
+                            <i class="far fa-star" data-value="4"></i>
+                            <i class="far fa-star" data-value="5"></i>
+                            <span class="rating-text"></span>
+                        </div>
+                    </div>
+
+                    <div class="evaluation-item">
+                        <div class="evaluation-title">
+                            <i class="fas fa-thumbs-up"></i> 综合评分
+                            <span class="evaluation-required">必填</span>
+                        </div>
+                        <div class="evaluation-desc">对该讲师的整体评价</div>
+                        <div class="star-rating" data-field="overall">
+                            <i class="far fa-star" data-value="1"></i>
+                            <i class="far fa-star" data-value="2"></i>
+                            <i class="far fa-star" data-value="3"></i>
+                            <i class="far fa-star" data-value="4"></i>
+                            <i class="far fa-star" data-value="5"></i>
+                            <span class="rating-text"></span>
+                        </div>
+                    </div>
+
+                    <div class="evaluation-item" style="border-bottom:none;">
+                        <div class="evaluation-title">
+                            <i class="fas fa-edit"></i> 文字评价
+                            <span class="evaluation-optional">选填</span>
+                        </div>
+                        <div class="evaluation-desc">分享您的听课感受和建议</div>
+                        <textarea class="text-input" rows="4" placeholder="请输入您的评价内容（选填）"></textarea>
+                    </div>
+
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-block" onclick="submitEvaluation()">
+                            <i class="fas fa-paper-plane"></i> 提交评价
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle" style="color:#6366f1;"></i>
+                        <div class="card-title">评价说明</div>
+                    </div>
+                    <div style="padding: 0 16px 16px; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                        <p style="margin-bottom: 8px;">• 评价将帮助讲师持续改进授课质量</p>
+                        <p style="margin-bottom: 8px;">• 您的评价将以匿名形式呈现</p>
+                        <p style="margin-bottom: 8px;">• 请客观、公正地进行评价</p>
+                        <p>• 截止时间：2025年1月11日 22:00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='../common/home.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/assistant.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/navigation.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-compass"></i>
+                    </div>
+                    <div class="nav-text">导航</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="nav-text">任务</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/profile.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 评分数据
+        const ratings = {
+            content: 0,
+            delivery: 0,
+            interaction: 0,
+            inspiration: 0,
+            overall: 0
+        };
+
+        // 评分文本
+        const ratingTexts = {
+            1: '不满意',
+            2: '一般',
+            3: '满意',
+            4: '很满意',
+            5: '非常满意'
+        };
+
+        // 初始化星级评分
+        document.querySelectorAll('.star-rating').forEach(ratingContainer => {
+            const stars = ratingContainer.querySelectorAll('.fa-star');
+            const field = ratingContainer.dataset.field;
+            const ratingText = ratingContainer.querySelector('.rating-text');
+
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const value = parseInt(this.dataset.value);
+                    ratings[field] = value;
+
+                    // 更新星星显示
+                    stars.forEach((s, index) => {
+                        if (index < value) {
+                            s.classList.remove('far');
+                            s.classList.add('fas');
+                        } else {
+                            s.classList.remove('fas');
+                            s.classList.add('far');
+                        }
+                    });
+
+                    // 更新评分文本
+                    ratingText.textContent = ratingTexts[value];
+                    ratingText.style.color = value >= 4 ? '#22c55e' : (value >= 3 ? '#f59e0b' : '#ef4444');
+                });
+
+                // 鼠标悬停效果
+                star.addEventListener('mouseenter', function() {
+                    const value = parseInt(this.dataset.value);
+                    stars.forEach((s, index) => {
+                        if (index < value) {
+                            s.style.color = '#fbbf24';
+                        } else {
+                            s.style.color = '#d1d5db';
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseleave', function() {
+                    const currentRating = ratings[field];
+                    stars.forEach((s, index) => {
+                        if (index < currentRating) {
+                            s.style.color = '#fbbf24';
+                        } else {
+                            s.style.color = '#d1d5db';
+                        }
+                    });
+                });
+            });
+        });
+
+        // 提交评价
+        function submitEvaluation() {
+            // 检查必填项
+            for (const [field, value] of Object.entries(ratings)) {
+                if (value === 0) {
+                    alert('请完成所有必填评分项');
+                    return;
+                }
+            }
+
+            const comment = document.querySelector('.text-input').value;
+
+            const evaluationData = {
+                ratings: ratings,
+                comment: comment,
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('评价数据:', evaluationData);
+            alert('评价提交成功！感谢您的反馈。');
+            setTimeout(() => {
+                window.location.href = 'task-list.html';
+            }, 500);
+        }
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+
+    <style>
+        .evaluation-item {
+            padding: 16px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .evaluation-item:last-child {
+            border-bottom: none;
+        }
+        .evaluation-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .evaluation-title i {
+            color: #6366f1;
+        }
+        .evaluation-required {
+            font-size: 12px;
+            color: #ef4444;
+            font-weight: normal;
+            margin-left: auto;
+        }
+        .evaluation-optional {
+            font-size: 12px;
+            color: #9ca3af;
+            font-weight: normal;
+            margin-left: auto;
+        }
+        .evaluation-desc {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+        .star-rating {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .star-rating .fa-star {
+            font-size: 24px;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .star-rating .fa-star:hover {
+            transform: scale(1.1);
+        }
+        .star-rating .rating-text {
+            font-size: 13px;
+            margin-left: 8px;
+            font-weight: 500;
+        }
+        .text-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .card-actions {
+            padding: 16px;
+        }
+    </style>
+</body>
+</html>

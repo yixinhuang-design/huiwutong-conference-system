@@ -1,0 +1,59 @@
+序号,文件名,所属目录,标题,功能分类,是否有表单,是否有表格,API调用,Vue框架,复杂度,重要性,优先级,改造周期,关键特性,依赖页面,备注
+1,login.html,common,登录 - 智能会议系统,认证,是,否,是,否,中等,极高,P1,1周,标签切换、表单验证、多角色登录,无,系统入口 必须优先
+2,home.html,common,智能会议助手 - 首页,展示,否,否,否,否,简单,中,P4,0.3周,卡片展示、功能导航,login.html,基础页面
+3,profile.html,common,智能会议助手 - 我的,展示,否,否,否,否,简单,中,P4,0.3周,用户信息、快捷导航,login.html,支撑页面
+4,settings.html,common,设置 - 通用,配置,否,否,否,否,中等,低,P4,0.5周,多级设置、开关控制,login.html,可选功能
+5,assistant.html,common,AI助手 - 智能对话,通讯,否,否,是,否,中等,中,P4,0.8周,聊天界面、语音输入、API集成,login.html,增强功能
+6,communication.html,common,智能会议助手 - 沟通,展示,否,否,否,否,简单,中,P4,0.2周,群组展示、消息聚合,login.html,聚合页面
+7,help.html,common,帮助中心 - 通用,文档,否,否,否,否,简单,低,P4,0.3周,FAQ、使用指南,无,参考资源
+8,navigation.html,common,位置导航 - 智能会议助手,导航,否,否,否,否,简单,中,P4,0.4周,地图展示、路线规划,无,额外功能
+9,past.html,common,智能会议助手 - 往期,展示,否,否,否,否,简单,低,P4,0.3周,往期列表、归档展示,login.html,历史查询
+10,index.html,common,智能会议助手 - 原型展示,导航,否,否,否,否,简单,低,P4,0.2周,iframe索引、页面导航,无,原型工具页
+11,system-intro.html,common,智能会议系统 · 全流程介绍,文档,否,否,否,否,简单,低,P4,0.3周,系统流程说明,无,系统说明
+12,meeting-detail.html,learner,培训详情 - 学员视角,展示,否,否,否,否,简单,中,P4,0.4周,信息卡片、功能导航,login.html,基础页面
+13,schedule.html,learner,2025党务干部培训班,展示,否,是,否,否,简单,中,P4,0.4周,日程表格、时间管理,training-create.html,数据展示
+14,checkin.html,learner,报到签到,业务,是,否,是,否,中等,高,P2,1周,扫码签到、表单验证、API,registration-manage.html,核心业务
+15,seat.html,learner,座位图 - 学员视角,展示,否,否,否,否,简单,高,P4,0.4周,座位显示、同组成员,seat-manage.html,依赖座位数据
+16,seat-detail.html,learner,座位详情 - 学员视角,展示,否,否,否,否,简单,中,P4,0.3周,座位位置、同组信息,seat-manage.html,扩展页面
+17,scan-seat.html,learner,扫码查座 - 学员视角,业务,否,否,是,否,中等,中,P3,0.6周,扫码功能、API查询,seat-manage.html,辅助功能
+18,scan-register.html,learner,扫码报名,业务,是,否,是,否,中等,高,P2,1周,扫码报名、表单提交,training-create.html,参与入口
+19,registration-status.html,learner,报名状态查询 - 学员端,业务,是,否,是,否,中等,中,P3,0.8周,表单查询、API调用,registration-manage.html,辅助查询
+20,contact.html,learner,通讯录,展示,否,是,否,否,简单,低,P4,0.3周,人员列表、联系方式,login.html,参考信息
+21,task-list.html,learner,任务列表,展示,否,否,否,否,简单,中,P4,0.3周,任务分类、状态展示,training-create.html,任务中心
+22,task-detail.html,learner,任务详情 - 学员视角,展示,否,否,否,否,简单,中,P4,0.3周,任务信息、说明详情,task-list.html,展开详情
+23,feedback.html,learner,问卷填写 - 学员视角,业务,是,否,是,否,中等,中,P3,0.8周,问卷表单、选项、提交,task-list.html,任务流程
+24,evaluation.html,learner,评价打分,业务,是,否,是,否,中等,中,P3,0.8周,打分表单、维度、提交,task-list.html,任务流程
+25,materials.html,learner,资料下载 - 学员视角,展示,否,否,否,否,简单,中,P4,0.3周,资料列表、下载链接,training-create.html,资源管理
+26,highlights.html,learner,精彩花絮 - 学员视角,展示,否,否,否,否,简单,低,P4,0.3周,图片展示、幻灯片,无,增强体验
+27,guestbook.html,learner,留言赠语 - 学员视角,社交,是,否,是,是,复杂,中,P3,1.2周,Vue+点赞+标签+评论,login.html,社交互动
+28,message.html,learner,留言赠语 - 学员视角,展示,否,否,否,否,简单,低,P4,0.2周,留言展示、聚合,guestbook.html,聚合展示
+29,chat-room.html,learner,学员群聊 - 全体学员群,通讯,是,否,是,是,复杂,高,P2,2周,Vue+实时聊天+卡片+公告,login.html,协作核心
+30,chat-private.html,learner,学员私聊,通讯,是,否,是,是,复杂,中,P3,1.5周,Vue+一对一聊天,login.html,点对点通讯
+31,guide.html,learner,参会须知 - 学员视角,文档,否,否,否,否,简单,低,P4,0.2周,须知展示、信息聚合,training-create.html,参考文档
+32,notifications.html,learner,通知中心 - 学员端,展示,否,否,否,否,简单,高,P4,0.3周,通知分类、已读管理,login.html,消息中心
+33,groups.html,learner,2025党务干部培训班,展示,否,否,否,否,简单,中,P4,0.3周,分组详情、成员列表,grouping-manage.html,分组展示
+34,arrangements.html,learner,辅助安排 - 学员视角,展示,否,否,否,否,简单,中,P4,0.3周,车辆、住宿、餐饮,training-create.html,配套安排
+35,handbook.html,learner,学员手册,展示,否,否,否,否,简单,中,P4,0.2周,手册展示、下载,handbook-generate.html,生成物展示
+36,dashboard.html,staff,工作人员 · 数据看板,展示,否,否,否,否,中等,高,P3,1周,统计卡片、快捷操作、实时动态,login.html,管理入口
+37,meeting-detail.html,staff,培训详情 - 协管员视角,展示,否,否,否,否,简单,中,P4,0.3周,功能导航、管理入口,login.html,管理汇总
+38,schedule.html,staff,工作人员 · 日程录入,业务,是,否,是,否,中等,高,P2,1周,日程列表+新增表单,training-create.html,日程管理
+39,registration-manage.html,staff,报名审核,业务,否,是,是,是,复杂,极高,P1,1.5周,Vue+数据表格+批量审核,training-create.html,核心业务
+40,grouping-manage.html,staff,工作人员 · 分组编排,展示,否,否,否,否,简单,中,P4,0.3周,分组列表、成员分配,registration-manage.html,分组管理
+41,seat-manage.html,staff,座位编排,业务,否,否,是,是,复杂,极高,P1,2.5周,Vue+拖拽座位图+批量分配,registration-manage.html,核心业务
+42,task-list.html,staff,工作人员 · 任务派发,展示,否,否,否,否,简单,中,P4,0.2周,任务列表、状态展示,training-create.html,任务中心
+43,task-detail.html,staff,任务详情 - 会场布置验收,展示,否,否,否,否,简单,中,P4,0.2周,任务信息、进度、反馈,task-list.html,详情展示
+44,task-feedback.html,staff,任务完成反馈,业务,是,否,是,否,中等,中,P3,0.8周,反馈表单、历史记录,task-detail.html,流程节点
+45,notice-manage.html,staff,通知管理 - 协管员端,业务,否,否,否,否,中等,高,P2,1.5周,模板管理、发送统计、操作历史,training-create.html,通知系统
+46,notice-mobile.html,staff,通知管理 - 协管员端移动版,业务,否,否,否,否,中等,中,P3,0.8周,移动端通知界面,notice-manage.html,移动适配
+47,chat-room.html,staff,工作人员群聊,通讯,是,否,是,是,复杂,高,P2,2周,Vue+实时聊天+工作协作,login.html,工作协作
+48,handbook-generate.html,staff,学员手册生成 - 协管员端,业务,是,否,是,否,复杂,高,P2,1.5周,参数配置+模板选择+PDF导出,registration-manage.html,生成工具
+49,handbook-mobile.html,staff,学员手册生成 - 移动版,业务,是,否,是,是,复杂,中,P3,1.2周,Vue+模态框编辑+移动适配,handbook-generate.html,移动适配
+50,data-analysis.html,staff,数据分析 - 协管员端,展示,否,是,否,否,中等,中,P3,1周,统计表格、数据图表、多维分析,dashboard.html,分析工具
+51,alert-config.html,staff,预警配置,业务,是,否,是,否,复杂,中,P3,1.2周,规则配置表单、阈值设置,training-create.html,风险管理
+52,alert-handle.html,staff,预警处理,业务,否,是,是,否,中等,中,P3,0.8周,预警列表、处理状态、记录,alert-config.html,流程管理
+53,alert-mobile.html,staff,预警提醒 - 移动版,展示,否,否,否,否,简单,低,P4,0.3周,预警通知、移动展示,alert-handle.html,移动通知
+54,training.html,staff,智能会议助手 - 培训,展示,否,否,是,是,中等,中,P3,1周,Vue+列表管理+操作,training-create.html,培训列表
+55,training-create.html,staff,新建培训 - 协管员端,业务,是,否,是,是,复杂,极高,P1,2周,Vue+多步表单+日程配置+参数,无,核心业务 必须优先
+56,tenant-manage.html,staff,租户管理 - 智能会务系统,配置,是,否,是,否,复杂,中,P3,1.2周,租户信息、协管员管理、API,login.html,系统配置
+57,tenant-create.html,staff,创建新租户 - 系统管理员,配置,是,否,否,否,中等,中,P3,1周,多步骤表单、参数配置,无,系统初始化
+58,tenant-login.html,staff,租户管理员登录,认证,是,否,是,否,中等,中,P3,0.8周,登录表单、租户切换,login.html,租户入口

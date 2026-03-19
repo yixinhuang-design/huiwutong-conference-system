@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能会议系统 · 全流程介绍</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #101534;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .intro-screen {
+            width: 1080px;
+            height: 1920px;
+            background: linear-gradient(160deg, #1f3a93 0%, #3a0ca3 45%, #5440d6 100%);
+            border-radius: 40px;
+            box-shadow: 0 60px 120px rgba(10, 14, 60, 0.45);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 72px 110px 56px;
+            color: #f8fafc;
+            box-sizing: border-box;
+        }
+
+        .intro-header h1 {
+            font-size: 64px;
+            margin-bottom: 18px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .intro-header p {
+            font-size: 26px;
+            line-height: 1.6;
+            opacity: 0.9;
+            margin-bottom: 32px;
+        }
+
+        .hero-tags {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            margin-bottom: 60px;
+        }
+
+        .hero-tag {
+            padding: 10px 24px;
+            border-radius: 999px;
+            font-size: 20px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .timeline {
+            flex: 1;
+            display: grid;
+            grid-template-rows: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .phase-card {
+            background: rgba(14, 24, 64, 0.45);
+            border-radius: 28px;
+            padding: 34px 36px;
+            display: flex;
+            gap: 26px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(6px);
+        }
+
+        .phase-icon {
+            width: 96px;
+            height: 96px;
+            border-radius: 24px;
+            background: rgba(59, 130, 246, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            color: #80b7ff;
+        }
+
+        .phase-content h2 {
+            font-size: 36px;
+            margin: 0 0 16px 0;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .phase-content ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 10px;
+        }
+
+        .phase-content li {
+            font-size: 24px;
+            line-height: 1.6;
+            color: rgba(248, 250, 252, 0.92);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .phase-content li i {
+            margin-top: 6px;
+            font-size: 18px;
+            color: #94ddff;
+        }
+
+        .intro-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 36px;
+            padding: 26px 32px;
+            border-radius: 24px;
+            background: rgba(14, 24, 64, 0.65);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .footer-hotline {
+            font-size: 30px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .footer-qrcode {
+            width: 160px;
+            height: 160px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.35);
+        }
+
+        .footer-qrcode img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="intro-screen">
+        <header class="intro-header">
+            <h1>智能会议系统</h1>
+            <p>面向党政机关、企事业大型培训会议的全流程协同平台。将通知报名、现场执行、会后沉淀贯穿，打造数据驱动的会务管理体验。</p>
+            <div class="hero-tags">
+                <span class="hero-tag">角色驱动</span>
+                <span class="hero-tag">任务闭环</span>
+                <span class="hero-tag">数据沉淀</span>
+                <span class="hero-tag">移动优先</span>
+            </div>
+        </header>
+
+        <section class="timeline">
+            <div class="phase-card">
+                <div class="phase-icon">
+                    <i class="fas fa-rocket-launch"></i>
+                </div>
+                <div class="phase-content">
+                    <h2>会前准备 · 动态精准</h2>
+                    <ul>
+                        <li><i class="fas fa-qrcode"></i>扫码报名、批量审核 &nbsp;|&nbsp; 一键导出学员名册，证件缺失即时提醒</li>
+                        <li><i class="fas fa-book-open"></i>电子培训手册自动生成，行程/讲师更新实时同步、培训通讯录</li>
+                        <li><i class="fas fa-th-large"></i>智能排座（算法匹配＋拖拽微调＋插入座位），席位调整秒级完成、座位图示</li>
+                        <li><i class="fas fa-bullhorn"></i>个性化推送座位号、房间号、车号与日程提醒，重要嘉宾可定向“捉人通知”</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="phase-card">
+                <div class="phase-icon" style="background: rgba(34,197,94,0.18); color:#7de4b1;">
+                    <i class="fas fa-people-group"></i>
+                </div>
+                <div class="phase-content">
+                    <h2>会中执行 · 协同高效</h2>
+                    <ul>
+                        <li><i class="fas fa-comments"></i>报名即自动建群；工作人员群、学员全员群、分组群同步建立</li>
+                        <li><i class="fas fa-diagram-project"></i>任务协同：进度时间线、任务派发、提醒遗漏一键推送</li>
+                        <li><i class="fas fa-location-dot"></i>位置签到 + 位置查寝，迟到/漏签自动记录并允许补签申请</li>
+                        <li><i class="fas fa-bolt"></i>一键催签/催查，短信、微信、群公告多渠道同时触达</li>
+                        <li><i class="fas fa-robot"></i>AI助理：会务咨询、位置导航、天气预报</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="phase-card">
+                <div class="phase-icon" style="background: rgba(217, 70, 239, 0.18); color:#cdb4ff;">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="phase-content">
+                    <h2>会后沉淀 · 价值延伸</h2>
+                    <ul>
+                        <li><i class="fas fa-folder-tree"></i>资料归档：课件、资料自动分类，可一键打包与授权</li>
+                        <li><i class="fas fa-gauge-simple-high"></i>实时数据看板：报名、签到、反馈、查寝指标即时呈现</li>
+                        <li><i class="fas fa-comment-dots"></i>课程评价、课堂测试、问卷调查</li>
+                        <li><i class="fas fa-award"></i>学习留言赠语、图片花絮，延续培训影响力，激活复训与社群连接</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
+

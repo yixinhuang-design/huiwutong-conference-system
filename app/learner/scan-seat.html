@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扫码查座 - 学员视角</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="../common/navigation.html" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                    </div>
+                    <div class="scan-container">
+                        <div class="scan-area">
+                            <div class="scan-border">
+                                <div class="scan-corner scan-corner-tl"></div>
+                                <div class="scan-corner scan-corner-tr"></div>
+                                <div class="scan-corner scan-corner-bl"></div>
+                                <div class="scan-corner scan-corner-br"></div>
+                                <div class="scan-icon"><i class="fas fa-qrcode"></i></div>
+                                <div class="scan-line"></div>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="simulateScan()"><i class="fas fa-qrcode"></i> 扫码查座</button>
+                            <button class="btn btn-outline" onclick="manualInput()"><i class="fas fa-keyboard"></i> 手动输入座位号</button>
+                            <button class="btn btn-outline" onclick="openHistory()"><i class="fas fa-history"></i> 历史记录</button>
+                        </div>
+                        <div class="scan-tips">
+                            <p><i class="fas fa-info-circle"></i> 支持扫描二维码快速查找座位</p>
+                            <p><i class="fas fa-keyboard"></i> 无法扫码时可手动输入座位编号</p>
+                            <p><i class="fas fa-history"></i> 可查看历史查座记录</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-map-marked-alt" style="color:#f97316;"></i>
+                        <div class="card-title">快速导航</div>
+                    </div>
+                    <div class="assistant-list" style="overflow:auto;">
+                        <div class="assistant-item" onclick="window.location.href='seat.html'">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-th-large"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">查看完整座位图</div>
+                                <div class="assistant-item-desc">查看所有会场的座位布局</div>
+                            </div>
+                            <i class="fas fa-chevron-right assistant-item-arrow"></i>
+                        </div>
+                        <div class="assistant-item" onclick="window.location.href='arrangements.html'">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-concierge-bell"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">查看辅助安排</div>
+                                <div class="assistant-item-desc">查看车辆、住宿、餐饮等安排</div>
+                            </div>
+                            <i class="fas fa-chevron-right assistant-item-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='../common/home.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/assistant.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-compass"></i>
+                    </div>
+                    <div class="nav-text">导航</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='task-list.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="nav-text">任务</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/profile.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟扫描
+        function simulateScan() {
+            const btn = event.target.closest('.btn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 扫描中...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> 扫描成功';
+                setTimeout(() => {
+                    window.location.href = 'seat-detail.html?scan=true';
+                }, 500);
+            }, 1500);
+        }
+
+        // 手动输入
+        function manualInput() {
+            const seatCode = prompt('请输入座位编号（如：A301）');
+            if (seatCode) {
+                window.location.href = `seat-detail.html?code=${seatCode}`;
+            }
+        }
+
+        // 打开历史记录
+        function openHistory() {
+            alert('历史记录功能开发中...');
+        }
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // 扫描线动画
+            const scanLine = document.querySelector('.scan-line');
+            if (scanLine) {
+                scanLine.style.animation = 'scanMove 2s ease-in-out infinite';
+            }
+        });
+    </script>
+
+    <style>
+        .scan-container {
+            padding: 20px;
+        }
+        .scan-area {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            background: #1f2937;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .scan-border {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .scan-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #22c55e;
+        }
+        .scan-corner-tl {
+            top: 0;
+            left: 0;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 8px 0 0 0;
+        }
+        .scan-corner-tr {
+            top: 0;
+            right: 0;
+            border-left: none;
+            border-bottom: none;
+            border-radius: 0 8px 0 0;
+        }
+        .scan-corner-bl {
+            bottom: 0;
+            left: 0;
+            border-right: none;
+            border-top: none;
+            border-radius: 0 0 0 8px;
+        }
+        .scan-corner-br {
+            bottom: 0;
+            right: 0;
+            border-left: none;
+            border-top: none;
+            border-radius: 0 0 8px 0;
+        }
+        .scan-icon {
+            font-size: 48px;
+            color: #9ca3af;
+            margin-bottom: 12px;
+        }
+        .scan-text {
+            color: #d1d5db;
+            font-size: 14px;
+            text-align: center;
+        }
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #22c55e, transparent);
+            box-shadow: 0 0 10px #22c55e;
+        }
+        @keyframes scanMove {
+            0% {
+                top: 0;
+            }
+            50% {
+                top: 100%;
+            }
+            100% {
+                top: 0;
+            }
+        }
+        .scan-tips {
+            margin-top: 16px;
+            padding: 12px;
+            background: #f3f4f6;
+            border-radius: 8px;
+        }
+        .scan-tips p {
+            font-size: 13px;
+            color: #6b7280;
+            margin: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .scan-tips i {
+            color: #2563eb;
+        }
+        .card-actions {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+    </style>
+</body>
+</html>

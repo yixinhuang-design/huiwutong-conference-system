@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统设置 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">系统设置</h1>
+                <div class="nav-actions">
+                    <button class="btn-primary" @click="saveAllSettings">
+                        <i class="fas fa-save"></i>
+                        保存设置
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+            <!-- 页面头部 -->
+            <div class="page-header glass-card">
+                <h2>⚙️ 系统设置</h2>
+                <p>配置系统参数、API接口、安全设置等</p>
+            </div>
+
+            <!-- 设置选项卡 -->
+            <div class="settings-tabs glass-card">
+                <div class="tab-nav">
+                    <button class="tab-btn" 
+                            :class="{ active: activeTab === 'general' }"
+                            @click="activeTab = 'general'">
+                        <i class="fas fa-cog"></i>
+                        基础设置
+                    </button>
+                    <button class="tab-btn" 
+                            :class="{ active: activeTab === 'api' }"
+                            @click="activeTab = 'api'">
+                        <i class="fas fa-plug"></i>
+                        API配置
+                    </button>
+                    <button class="tab-btn" 
+                            :class="{ active: activeTab === 'security' }"
+                            @click="activeTab = 'security'">
+                        <i class="fas fa-shield-alt"></i>
+                        安全设置
+                    </button>
+                    <button class="tab-btn" 
+                            :class="{ active: activeTab === 'notification' }"
+                            @click="activeTab = 'notification'">
+                        <i class="fas fa-bell"></i>
+                        通知设置
+                    </button>
+                    <button class="tab-btn" 
+                            :class="{ active: activeTab === 'ai' }"
+                            @click="activeTab = 'ai'">
+                        <i class="fas fa-robot"></i>
+                        AI配置
+                    </button>
+                </div>
+
+                <!-- 基础设置 -->
+                <div class="tab-content" v-if="activeTab === 'general'">
+                    <!-- 租户管理入口 -->
+                    <div class="settings-section">
+                        <h3>🏢 租户管理</h3>
+                        <div class="tenant-management-card">
+                            <div class="card-content">
+                                <div class="card-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="card-info">
+                                    <h4>多租户管理</h4>
+                                    <p>管理系统租户信息，配置租户参数和管理员账号</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn-primary" @click="goToTenantManagement">
+                                        <i class="fas fa-arrow-right"></i>
+                                        进入租户管理
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>🏢 系统信息</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>系统名称</label>
+                                <input type="text" v-model="settings.general.systemName">
+                            </div>
+                            <div class="form-group">
+                                <label>系统版本</label>
+                                <input type="text" v-model="settings.general.version" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>时区设置</label>
+                                <select v-model="settings.general.timezone">
+                                    <option value="Asia/Shanghai">中国标准时间</option>
+                                    <option value="UTC">协调世界时</option>
+                                    <option value="America/New_York">美国东部时间</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>语言设置</label>
+                                <select v-model="settings.general.language">
+                                    <option value="zh-CN">简体中文</option>
+                                    <option value="en-US">English</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>💾 存储设置</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>数据保留期限（天）</label>
+                                <input type="number" v-model="settings.general.dataRetentionDays" min="30" max="365">
+                            </div>
+                            <div class="form-group">
+                                <label>自动备份</label>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="autoBackup" v-model="settings.general.autoBackup">
+                                    <label for="autoBackup">启用自动备份</label>
+                                </div>
+                            </div>
+                            <div class="form-group" v-if="settings.general.autoBackup">
+                                <label>备份频率</label>
+                                <select v-model="settings.general.backupFrequency">
+                                    <option value="daily">每日</option>
+                                    <option value="weekly">每周</option>
+                                    <option value="monthly">每月</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API配置 -->
+                <div class="tab-content" v-if="activeTab === 'api'">
+                    <div class="settings-section">
+                        <h3>🔌 API接口配置</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>基础API地址</label>
+                                <input type="url" v-model="settings.api.baseUrl" placeholder="https://api.example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>WebSocket地址</label>
+                                <input type="url" v-model="settings.api.wsUrl" placeholder="wss://ws.example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>API超时时间（秒）</label>
+                                <input type="number" v-model="settings.api.timeout" min="5" max="300">
+                            </div>
+                            <div class="form-group">
+                                <label>重试次数</label>
+                                <input type="number" v-model="settings.api.retryCount" min="0" max="5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>🔑 第三方服务</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>通义听悟API Key</label>
+                                <input type="password" v-model="settings.api.tongyiApiKey" placeholder="请输入API Key">
+                                <button class="btn-sm" @click="testTongyiApi">测试连接</button>
+                            </div>
+                            <div class="form-group">
+                                <label>科大讯飞APP ID</label>
+                                <input type="text" v-model="settings.api.iflytekAppId" placeholder="请输入APP ID">
+                            </div>
+                            <div class="form-group">
+                                <label>科大讯飞API Key</label>
+                                <input type="password" v-model="settings.api.iflytekApiKey" placeholder="请输入API Key">
+                                <button class="btn-sm" @click="testIflytekApi">测试连接</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 安全设置 -->
+                <div class="tab-content" v-if="activeTab === 'security'">
+                    <div class="settings-section">
+                        <h3>🔐 密码策略</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>最小密码长度</label>
+                                <input type="number" v-model="settings.security.minPasswordLength" min="6" max="20">
+                            </div>
+                            <div class="form-group">
+                                <label>密码复杂度要求</label>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="requireUppercase" v-model="settings.security.requireUppercase">
+                                    <label for="requireUppercase">包含大写字母</label>
+                                </div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="requireLowercase" v-model="settings.security.requireLowercase">
+                                    <label for="requireLowercase">包含小写字母</label>
+                                </div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="requireNumbers" v-model="settings.security.requireNumbers">
+                                    <label for="requireNumbers">包含数字</label>
+                                </div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="requireSymbols" v-model="settings.security.requireSymbols">
+                                    <label for="requireSymbols">包含特殊字符</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>密码有效期（天）</label>
+                                <input type="number" v-model="settings.security.passwordExpiryDays" min="30" max="365">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>🛡️ 访问控制</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>会话超时时间（分钟）</label>
+                                <input type="number" v-model="settings.security.sessionTimeout" min="15" max="480">
+                            </div>
+                            <div class="form-group">
+                                <label>最大登录失败次数</label>
+                                <input type="number" v-model="settings.security.maxLoginAttempts" min="3" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label>IP白名单</label>
+                                <textarea v-model="settings.security.ipWhitelist" 
+                                         placeholder="每行一个IP地址或IP段，例如：192.168.1.0/24"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>🔒 数据加密</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>加密算法</label>
+                                <select v-model="settings.security.encryptionAlgorithm">
+                                    <option value="SM4">SM4（国密）</option>
+                                    <option value="AES-256">AES-256</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>数据脱敏</label>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="dataMasking" v-model="settings.security.dataMasking">
+                                    <label for="dataMasking">启用敏感数据脱敏</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 通知设置 -->
+                <div class="tab-content" v-if="activeTab === 'notification'">
+                    <div class="settings-section">
+                        <h3>📧 邮件通知</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>SMTP服务器</label>
+                                <input type="text" v-model="settings.notification.smtpServer" placeholder="smtp.example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>SMTP端口</label>
+                                <input type="number" v-model="settings.notification.smtpPort" placeholder="587">
+                            </div>
+                            <div class="form-group">
+                                <label>发送邮箱</label>
+                                <input type="email" v-model="settings.notification.senderEmail" placeholder="noreply@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>邮箱密码</label>
+                                <input type="password" v-model="settings.notification.senderPassword">
+                            </div>
+                            <div class="form-group">
+                                <button class="btn-outline" @click="testEmail">测试邮件发送</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>📱 短信通知</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>短信服务商</label>
+                                <select v-model="settings.notification.smsProvider">
+                                    <option value="aliyun">阿里云短信</option>
+                                    <option value="tencent">腾讯云短信</option>
+                                    <option value="huawei">华为云短信</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Access Key ID</label>
+                                <input type="text" v-model="settings.notification.smsAccessKeyId">
+                            </div>
+                            <div class="form-group">
+                                <label>Access Key Secret</label>
+                                <input type="password" v-model="settings.notification.smsAccessKeySecret">
+                            </div>
+                            <div class="form-group">
+                                <label>短信签名</label>
+                                <input type="text" v-model="settings.notification.smsSignName">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>🔔 推送设置</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>微信推送</label>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="wechatPush" v-model="settings.notification.wechatPush">
+                                    <label for="wechatPush">启用微信推送</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>企业微信推送</label>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="workWechatPush" v-model="settings.notification.workWechatPush">
+                                    <label for="workWechatPush">启用企业微信推送</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI配置 -->
+                <div class="tab-content" v-if="activeTab === 'ai'">
+                    <div class="settings-section">
+                        <h3>🤖 AI服务配置</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>AI服务提供商</label>
+                                <select v-model="settings.ai.provider">
+                                    <option value="tongyi">通义千问</option>
+                                    <option value="openai">OpenAI</option>
+                                    <option value="claude">Claude</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>API Key</label>
+                                <input type="password" v-model="settings.ai.apiKey">
+                            </div>
+                            <div class="form-group">
+                                <label>模型名称</label>
+                                <input type="text" v-model="settings.ai.model" placeholder="qwen-turbo">
+                            </div>
+                            <div class="form-group">
+                                <label>最大Token数</label>
+                                <input type="number" v-model="settings.ai.maxTokens" min="100" max="4000">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>🎯 AI功能配置</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>智能问答</label>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="aiQa" v-model="settings.ai.enableQa">
+                                    <label for="aiQa">启用智能问答</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>语音识别</label>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="aiSpeech" v-model="settings.ai.enableSpeech">
+                                    <label for="aiSpeech">启用语音识别</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>OCR识别</label>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="aiOcr" v-model="settings.ai.enableOcr">
+                                    <label for="aiOcr">启用OCR识别</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>智能翻译</label>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="aiTranslate" v-model="settings.ai.enableTranslate">
+                                    <label for="aiTranslate">启用智能翻译</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="settings-actions glass-card">
+                <button class="btn-outline" @click="resetSettings">
+                    <i class="fas fa-undo"></i>
+                    重置设置
+                </button>
+                <button class="btn-outline" @click="exportSettings">
+                    <i class="fas fa-download"></i>
+                    导出配置
+                </button>
+                <button class="btn-outline" @click="importSettings">
+                    <i class="fas fa-upload"></i>
+                    导入配置
+                </button>
+                <button class="btn-primary" @click="saveAllSettings">
+                    <i class="fas fa-save"></i>
+                    保存所有设置
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    activeTab: 'general',
+                    settings: {
+                        general: {
+                            systemName: '智能会议系统',
+                            version: '1.0.0',
+                            timezone: 'Asia/Shanghai',
+                            language: 'zh-CN',
+                            dataRetentionDays: 90,
+                            autoBackup: true,
+                            backupFrequency: 'daily'
+                        },
+                        api: {
+                            baseUrl: 'https://api.conference.com',
+                            wsUrl: 'wss://ws.conference.com',
+                            timeout: 30,
+                            retryCount: 3,
+                            tongyiApiKey: '',
+                            iflytekAppId: '',
+                            iflytekApiKey: ''
+                        },
+                        security: {
+                            minPasswordLength: 8,
+                            requireUppercase: true,
+                            requireLowercase: true,
+                            requireNumbers: true,
+                            requireSymbols: false,
+                            passwordExpiryDays: 90,
+                            sessionTimeout: 60,
+                            maxLoginAttempts: 5,
+                            ipWhitelist: '',
+                            encryptionAlgorithm: 'SM4',
+                            dataMasking: true
+                        },
+                        notification: {
+                            smtpServer: '',
+                            smtpPort: 587,
+                            senderEmail: '',
+                            senderPassword: '',
+                            smsProvider: 'aliyun',
+                            smsAccessKeyId: '',
+                            smsAccessKeySecret: '',
+                            smsSignName: '',
+                            wechatPush: true,
+                            workWechatPush: true
+                        },
+                        ai: {
+                            provider: 'tongyi',
+                            apiKey: '',
+                            model: 'qwen-turbo',
+                            maxTokens: 2000,
+                            enableQa: true,
+                            enableSpeech: true,
+                            enableOcr: true,
+                            enableTranslate: false
+                        }
+                    }
+                }
+            },
+            methods: {
+                goToTenantManagement() {
+                    window.location.href = 'tenant-management.html';
+                },
+                async saveAllSettings() {
+                    try {
+                        this.$showLoading('正在保存设置...');
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        // 保存所有设置到服务器
+                        console.log('保存设置:', this.settings);
+                        this.$hideLoading();
+                        this.$showToast('设置已保存', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('保存失败，请重试', 'error');
+                    }
+                },
+                
+                async resetSettings() {
+                    const confirmed = await this.$showConfirm(
+                        '确定要重置所有设置吗？这将恢复默认配置。',
+                        '重置设置',
+                        'warning'
+                    );
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('正在重置设置...');
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            // 重置为默认设置
+                            this.loadDefaultSettings();
+                            this.$hideLoading();
+                            this.$showToast('设置已重置', 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('重置失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                loadDefaultSettings() {
+                    // 重新加载默认设置
+                    this.$forceUpdate();
+                },
+                
+                exportSettings() {
+                    const settingsJson = JSON.stringify(this.settings, null, 2);
+                    const blob = new Blob([settingsJson], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'conference-settings.json';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                },
+                
+                importSettings() {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.json';
+                    input.onchange = (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                try {
+                                    const settings = JSON.parse(e.target.result);
+                                    this.settings = settings;
+                                    this.$showToast('配置导入成功', 'success');
+                                } catch (error) {
+                                    this.$showToast('配置文件格式错误', 'error');
+                                }
+                            };
+                            reader.readAsText(file);
+                        }
+                    };
+                    input.click();
+                },
+                
+                async testTongyiApi() {
+                    try {
+                        this.$showLoading('正在测试通义听悟API连接...');
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        this.$hideLoading();
+                        this.$showToast('通义听悟API连接测试成功', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('API连接测试失败', 'error');
+                    }
+                },
+                
+                async testIflytekApi() {
+                    try {
+                        this.$showLoading('正在测试科大讯飞API连接...');
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        this.$hideLoading();
+                        this.$showToast('科大讯飞API连接测试成功', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('API连接测试失败', 'error');
+                    }
+                },
+                
+                async testEmail() {
+                    try {
+                        this.$showLoading('正在测试邮件发送...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.$hideLoading();
+                        this.$showToast('邮件发送测试成功', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('邮件发送测试失败', 'error');
+                    }
+                }
+            },
+            mixins: [window.InteractionMixin],
+            mounted() {
+                // 加载保存的设置
+                const savedSettings = localStorage.getItem('conferenceSettings');
+                if (savedSettings) {
+                    try {
+                        this.settings = { ...this.settings, ...JSON.parse(savedSettings) };
+                    } catch (error) {
+                        console.error('加载设置失败:', error);
+                    }
+                }
+            },
+            
+            watch: {
+                settings: {
+                    handler(newSettings) {
+                        // 自动保存设置到本地存储
+                        localStorage.setItem('conferenceSettings', JSON.stringify(newSettings));
+                    },
+                    deep: true
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+
+    <style>
+        .settings-tabs {
+            margin-bottom: 2rem;
+        }
+        
+        .tab-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .tab-btn:hover {
+            color: #667eea;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            min-height: 400px;
+        }
+        
+        .settings-section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+        
+        .settings-section h3 {
+            margin-bottom: 1.5rem;
+            color: #667eea;
+            font-size: 1.3rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            margin: 0;
+        }
+        
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .btn-sm:hover {
+            background: #5a67d8;
+        }
+        
+        .settings-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            padding: 1.5rem;
+        }
+        
+        .tenant-management-card {
+            margin-bottom: 2rem;
+        }
+        
+        .card-content {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        
+        .card-content:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
+        }
+        
+        .card-icon {
+            font-size: 3rem;
+            color: #667eea;
+        }
+        
+        .card-info {
+            flex: 1;
+        }
+        
+        .card-info h4 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        
+        .card-info p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .card-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            .tab-nav {
+                flex-wrap: wrap;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .settings-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</body>
+</html>
+

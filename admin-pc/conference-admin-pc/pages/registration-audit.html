@@ -1,0 +1,2410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能审核系统 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">智能审核系统</h1>
+                <div class="nav-actions">
+                    <button class="btn-outline" @click="viewAuditLogs">
+                        <i class="fas fa-history"></i>
+                        审核日志
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+            <!-- 页面头部 -->
+            <div class="page-header glass-card">
+                <div>
+                    <h2>智能审核系统</h2>
+                    <div class="conference-context">
+                        <span class="context-label">当前会议:</span>
+                        <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    </div>
+                </div>
+                <div class="page-actions">
+                    <button class="btn-outline" @click="goBack">
+                        <i class="fas fa-arrow-left"></i>
+                        返回
+                    </button>
+                </div>
+            </div>
+
+            <!-- 审核统计概览 -->
+            <div class="audit-stats-overview glass-card">
+                <h3>审核统计概览</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-list-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ totalRegistrations }}</div>
+                            <div class="stat-label">总报名数</div>
+                        </div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ pendingRegistrations }}</div>
+                            <div class="stat-label">待审核</div>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ approvedCount }}</div>
+                            <div class="stat-label">已通过</div>
+                        </div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ rejectedCount }}</div>
+                            <div class="stat-label">已拒绝</div>
+                        </div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="stat-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ autoAuditRate }}%</div>
+                            <div class="stat-label">自动审核率</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 审核模式选择 -->
+            <div class="audit-mode-selector glass-card">
+                <h3>审核模式</h3>
+                <div class="mode-tabs">
+                    <button class="mode-tab" 
+                            :class="{ active: auditMode === 'auto' }"
+                            @click="auditMode = 'auto'">
+                        <i class="fas fa-robot"></i>
+                        自动审核模式
+                    </button>
+                    <button class="mode-tab" 
+                            :class="{ active: auditMode === 'manual' }"
+                            @click="auditMode = 'manual'">
+                        <i class="fas fa-user-check"></i>
+                        手动审核模式
+                    </button>
+                </div>
+            </div>
+
+            <!-- 自动审核区域 -->
+            <div v-if="auditMode === 'auto'" class="auto-audit-section glass-card">
+                <h3>自动审核</h3>
+                
+                <!-- 选择审核范围 -->
+                <div class="audit-scope">
+                    <h4>选择审核范围</h4>
+                    <div class="scope-options">
+                        <label>
+                            <input type="radio" value="all" v-model="auditScope">
+                            <span>全部报名记录 ({{ totalRegistrations }})</span>
+                        </label>
+                        <label>
+                            <input type="radio" value="pending" v-model="auditScope">
+                            <span>未审核记录 ({{ pendingRegistrations }})</span>
+                        </label>
+                        <label>
+                            <input type="radio" value="custom" v-model="auditScope">
+                            <span>自定义筛选</span>
+                        </label>
+                    </div>
+                    <div v-if="auditScope === 'custom'" class="custom-filters">
+                        <input type="text" v-model="customFilter" placeholder="输入姓名、手机号、单位...">
+                        <button class="btn-sm btn-primary" @click="applyCustomFilter">应用筛选</button>
+                    </div>
+                </div>
+
+                <!-- OCR识别区域 -->
+                <div class="ocr-section">
+                    <h4>OCR证件识别</h4>
+                    <div class="ocr-upload-area">
+                        <div class="upload-header">
+                            <span>通义听悟OCR识别</span>
+                            <span class="api-status" :class="{ 'status-online': ocrApiOnline }">
+                                {{ ocrApiOnline ? 'API在线' : 'API离线' }}
+                            </span>
+                        </div>
+                        <div class="upload-zone" 
+                             @dragover.prevent
+                             @drop.prevent="handleFileDrop"
+                             @click="triggerFileUpload">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>拖拽证件图片到这里或点击上传</p>
+                            <p class="upload-hint">支持批量上传，可识别身份证、学历证明等</p>
+                            <input type="file" 
+                                   ref="fileInput"
+                                   accept="image/*" 
+                                   multiple
+                                   style="display: none;"
+                                   @change="handleFileSelect">
+                        </div>
+                        <div v-if="uploadedFiles.length > 0" class="uploaded-files">
+                            <div v-for="(file, index) in uploadedFiles" :key="index" class="file-item">
+                                <span>{{ file.name }}</span>
+                                <span class="file-status" :class="file.status">
+                                    {{ getFileStatusText(file.status) }}
+                                </span>
+                                <button class="btn-sm btn-danger" @click="removeFile(index)">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OCR识别结果 -->
+                <div v-if="ocrResults.length > 0" class="ocr-results">
+                    <h4>识别结果</h4>
+                    <div class="results-grid">
+                        <div v-for="(result, index) in ocrResults" :key="index" class="result-card">
+                            <div class="result-header">
+                                <span class="result-type">{{ result.type }}</span>
+                                <span class="confidence" :class="getConfidenceClass(result.overallConfidence)">
+                                    置信度: {{ result.overallConfidence }}%
+                                </span>
+                            </div>
+                            <div class="result-content">
+                                <div class="result-item">
+                                    <span class="label">姓名:</span>
+                                    <span class="value">{{ result.name }}</span>
+                                    <span class="confidence" :class="getConfidenceClass(result.nameConfidence)">
+                                        {{ result.nameConfidence }}%
+                                    </span>
+                                </div>
+                                <div class="result-item">
+                                    <span class="label">身份证号:</span>
+                                    <span class="value">{{ result.idNumber }}</span>
+                                    <span class="confidence" :class="getConfidenceClass(result.idConfidence)">
+                                        {{ result.idConfidence }}%
+                                    </span>
+                                </div>
+                                <div class="result-item">
+                                    <span class="label">地址:</span>
+                                    <span class="value">{{ result.address }}</span>
+                                </div>
+                            </div>
+                            <div class="result-actions">
+                                <button class="btn-sm btn-success" @click="matchRegistration(result, index)">
+                                    匹配报名信息
+                                </button>
+                                <button class="btn-sm btn-outline" @click="editResult(index)">
+                                    编辑
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 规则引擎匹配 -->
+                <div class="rule-engine-section">
+                    <h4>规则引擎匹配</h4>
+                    <div class="rule-status">
+                        <div class="rule-item">
+                            <i class="fas fa-check-circle text-success"></i>
+                            <span>身份证号格式验证</span>
+                            <span class="rule-result">{{ ruleResults.idFormat ? '通过' : '失败' }}</span>
+                        </div>
+                        <div class="rule-item">
+                            <i :class="ruleResults.nameMatch ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger'"></i>
+                            <span>身份证号与姓名匹配</span>
+                            <span class="rule-result">{{ ruleResults.nameMatch ? '通过' : '失败' }}</span>
+                        </div>
+                        <div class="rule-item">
+                            <i :class="ruleResults.phoneValid ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger'"></i>
+                            <span>手机号码验证</span>
+                            <span class="rule-result">{{ ruleResults.phoneValid ? '通过' : '失败' }}</span>
+                        </div>
+                        <div class="rule-item">
+                            <i :class="ruleResults.infoConsistent ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger'"></i>
+                            <span>报名信息与证件信息一致性</span>
+                            <span class="rule-result">{{ ruleResults.infoConsistent ? '通过' : '失败' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 自动审核结果展示 -->
+                <div v-if="autoAuditResults.length > 0" class="auto-audit-results">
+                    <h4>自动审核结果</h4>
+                    <div class="results-summary">
+                        <div class="summary-item success">
+                            <span class="count">{{ passedCount }}</span>
+                            <span class="label">审核通过</span>
+                        </div>
+                        <div class="summary-item warning">
+                            <span class="count">{{ pendingCount }}</span>
+                            <span class="label">待人工审核</span>
+                        </div>
+                        <div class="summary-item danger">
+                            <span class="count">{{ failedCount }}</span>
+                            <span class="label">审核不通过</span>
+                        </div>
+                    </div>
+                    <div class="results-list">
+                        <div v-for="(result, index) in autoAuditResults" 
+                             :key="index" 
+                             class="audit-result-item"
+                             :class="'result-' + result.status">
+                            <div class="result-info">
+                                <div class="info-row">
+                                    <span class="name">{{ result.registrationName }}</span>
+                                    <span class="status-badge" :class="'status-' + result.status">
+                                        {{ getStatusText(result.status) }}
+                                    </span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="detail">{{ result.reason }}</span>
+                                </div>
+                            </div>
+                            <div class="result-actions">
+                                <button class="btn-sm btn-success" 
+                                        v-if="result.status === 'pending'"
+                                        @click="quickApprove(result.registrationId)">
+                                    通过
+                                </button>
+                                <button class="btn-sm btn-danger" 
+                                        v-if="result.status === 'pending'"
+                                        @click="quickReject(result.registrationId)">
+                                    拒绝
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 执行自动审核按钮 -->
+                <div class="audit-actions">
+                    <button class="btn-primary btn-lg" @click="executeAutoAudit" :disabled="processing">
+                        <i class="fas fa-robot" v-if="!processing"></i>
+                        <i class="fas fa-spinner fa-spin" v-if="processing"></i>
+                        {{ processing ? '处理中...' : '执行自动审核' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- 管理员审核区域 -->
+            <div v-if="auditMode === 'manual'" class="manual-audit-section glass-card">
+                <h3>管理员审核</h3>
+                
+                <!-- 待审核列表 -->
+                <div class="pending-audit-list">
+                    <div class="list-header">
+                        <h4>待审核列表</h4>
+                        <div class="list-actions">
+                            <button class="btn-outline" @click="selectAllPending">
+                                {{ allSelected ? '取消全选' : '全选' }}
+                            </button>
+                            <button class="btn-primary" 
+                                    @click="batchApprove"
+                                    :disabled="selectedRegistrations.length === 0">
+                                批量通过 ({{ selectedRegistrations.length }})
+                            </button>
+                            <button class="btn-danger" 
+                                    @click="batchReject"
+                                    :disabled="selectedRegistrations.length === 0">
+                                批量拒绝 ({{ selectedRegistrations.length }})
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="audit-items">
+                        <div v-for="registration in pendingRegistrationsList" 
+                             :key="registration.id"
+                             class="audit-item"
+                             :class="{ selected: selectedRegistrations.includes(registration.id) }">
+                            <div class="item-checkbox">
+                                <input type="checkbox" 
+                                       :value="registration.id"
+                                       v-model="selectedRegistrations">
+                            </div>
+                            <div class="item-content">
+                                <!-- 智能审核结果标签 - 右上角 -->
+                                <div class="audit-result-badge" :class="getAuditResultClass(registration)">
+                                    {{ getAuditResultText(registration) }}
+                                </div>
+                                
+                                <div class="item-header">
+                                    <h5>{{ registration.name }}</h5>
+                                    <span class="item-meta">{{ registration.unit }} | {{ registration.position }}</span>
+                                </div>
+                                
+                                <!-- 报名表单信息 -->
+                                <div class="item-form-fields">
+                                    <div class="form-field" v-if="registration.phone">
+                                        <span class="label">手机号:</span>
+                                        <span class="value">{{ registration.phone }}</span>
+                                    </div>
+                                    <div class="form-field" v-if="registration.email">
+                                        <span class="label">邮箱:</span>
+                                        <span class="value">{{ registration.email }}</span>
+                                    </div>
+                                    <div class="form-field" v-if="registration.department">
+                                        <span class="label">部门:</span>
+                                        <span class="value">{{ registration.department }}</span>
+                                    </div>
+                                    <div class="form-field" v-if="registration.registeredAt">
+                                        <span class="label">报名时间:</span>
+                                        <span class="value">{{ formatDate(registration.registeredAt) }}</span>
+                                    </div>
+                                    <div class="form-field" v-if="registration.idNumber">
+                                        <span class="label">身份证:</span>
+                                        <span class="value">{{ maskIdNumber(registration.idNumber) }}</span>
+                                    </div>
+                                    <div class="form-field" v-if="registration.company">
+                                        <span class="label">所属单位:</span>
+                                        <span class="value">{{ registration.company }}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- OCR识别结果 -->
+                                <div v-if="registration.ocrResult" class="ocr-info">
+                                    <div class="ocr-item">
+                                        <span class="label">OCR识别:</span>
+                                        <span class="value">{{ registration.ocrResult.name }}</span>
+                                        <span class="confidence" :class="getConfidenceClass(registration.ocrResult.confidence)">
+                                            置信度 {{ registration.ocrResult.confidence }}%
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <!-- 规则检验结果 -->
+                                <div v-if="registration.ruleResults" class="rule-info">
+                                    <div v-for="(rule, key) in registration.ruleResults" :key="key" class="rule-tag" :class="rule.passed ? 'passed' : 'failed'">
+                                        <i :class="rule.passed ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                                        {{ getRuleName(key) }}: {{ rule.passed ? '通过' : '失败' }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-sm btn-outline" @click="viewDetails(registration.id)">
+                                    查看详情
+                                </button>
+                                <button class="btn-sm btn-success" @click="approveRegistration(registration.id)">
+                                    通过
+                                </button>
+                                <button class="btn-sm btn-danger" @click="rejectRegistration(registration.id)">
+                                    拒绝
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 审核日志弹窗 -->
+            <div v-if="showAuditLogModal" class="modal-overlay" @click.self="showAuditLogModal = false">
+                <div class="modal-content glass-card" @click.stop>
+                    <div class="modal-header">
+                        <h3>审核日志</h3>
+                        <button class="btn-icon" @click="showAuditLogModal = false">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="log-list">
+                            <div v-for="log in auditLogs" :key="log.id" class="log-item">
+                                <div class="log-header">
+                                    <span class="log-action">{{ log.action }}</span>
+                                    <span class="log-time">{{ formatDateTime(log.timestamp) }}</span>
+                                </div>
+                                <div class="log-content">
+                                    <div class="log-detail">
+                                        <span class="label">审核人:</span>
+                                        <span class="value">{{ log.auditor }}</span>
+                                    </div>
+                                    <div class="log-detail">
+                                        <span class="label">审核结果:</span>
+                                        <span class="value" :class="'result-' + log.result">
+                                            {{ log.result === 'approved' ? '通过' : '拒绝' }}
+                                        </span>
+                                    </div>
+                                    <div v-if="log.remark" class="log-detail">
+                                        <span class="label">审核意见:</span>
+                                        <span class="value">{{ log.remark }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    auditMode: 'auto', // 'auto' 或 'manual'
+                    auditScope: 'pending',
+                    customFilter: '',
+                    totalRegistrations: 356,
+                    pendingRegistrations: 45,
+                    approvedCount: 285,
+                    rejectedCount: 26,
+                    ocrApiOnline: true,
+                    uploadedFiles: [],
+                    ocrResults: [],
+                    ruleResults: {
+                        idFormat: true,
+                        nameMatch: true,
+                        phoneValid: true,
+                        infoConsistent: true
+                    },
+                    autoAuditResults: [],
+                    processing: false,
+                    selectedRegistrations: [],
+                    allSelected: false,
+                    pendingRegistrationsList: [],
+                    showAuditLogModal: false,
+                    auditLogs: []
+                }
+            },
+            computed: {
+                passedCount() {
+                    return this.autoAuditResults.filter(r => r.status === 'passed').length;
+                },
+                pendingCount() {
+                    return this.autoAuditResults.filter(r => r.status === 'pending').length;
+                },
+                failedCount() {
+                    return this.autoAuditResults.filter(r => r.status === 'failed').length;
+                },
+                autoAuditRate() {
+                    if (this.totalRegistrations === 0) return 0;
+                    const autoProcessed = this.totalRegistrations - this.pendingRegistrations;
+                    return Math.round((autoProcessed / this.totalRegistrations) * 100);
+                }
+            },
+            async mounted() {
+                await this.waitForConferenceContext();
+                await this.initialize();
+            },
+            methods: {
+                async waitForConferenceContext() {
+                    // 等待会议上下文加载完成
+                    let retries = 0;
+                    while (!window.conferenceContext && retries < 50) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        retries++;
+                    }
+                },
+                
+                async initialize() {
+                    try {
+                        const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                        if (conferenceId && window.conferenceContext) {
+                            try {
+                                this.conference = await window.conferenceContext.loadConference(conferenceId);
+                            } catch (error) {
+                                console.warn('加载会议信息失败，使用示例数据:', error);
+                                this.initSampleConference();
+                            }
+                        } else {
+                            this.initSampleConference();
+                        }
+                    } catch (error) {
+                        console.warn('初始化失败，使用示例数据:', error);
+                        this.initSampleConference();
+                    }
+                    
+                    // 初始化示例数据
+                    await this.initSampleData();
+                },
+                
+                initSampleConference() {
+                    this.conference = {
+                        id: 'conf_20240615_001',
+                        name: '2024年度技术峰会',
+                        status: 'preparing'
+                    };
+                },
+
+                getConferenceId() {
+                    const id = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (id) return id;
+                    return this.conference?.id || localStorage.getItem('currentConferenceId');
+                },
+
+                getApiHeaders() {
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        'X-Tenant-Id': localStorage.getItem('tenantId') || '2027317834622709762',
+                        'X-User-Id': localStorage.getItem('userId') || '1'
+                    };
+                    const token = localStorage.getItem('authToken');
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                    return headers;
+                },
+
+                mapStatusCode(statusCode) {
+                    const map = {0: 'pending', 1: 'approved', 2: 'rejected', 3: 'cancelled', 4: 'checkedin'};
+                    if (typeof statusCode === 'string') return statusCode;
+                    return map[statusCode] || 'pending';
+                },
+
+                parseRuleResults(ocrValidation) {
+                    if (!ocrValidation) {
+                        return null;
+                    }
+                    return {
+                        idFormat: { passed: Boolean(ocrValidation.idFormat) },
+                        nameMatch: { passed: Boolean(ocrValidation.nameMatch) },
+                        phoneValid: { passed: true },
+                        infoConsistent: { passed: Boolean(ocrValidation.idMatch) }
+                    };
+                },
+                
+                async initSampleData() {
+                    // 加载待审核报名数据
+                    await this.loadPendingRegistrations();
+                    
+                    // 初始化审核日志示例数据
+                    this.initSampleAuditLogs();
+                    
+                    // 如果有会议ID，尝试从会议上下文加载真实数据
+                    // 否则使用示例数据
+                },
+                
+                initSampleAuditLogs() {
+                    // 初始化审核日志示例数据
+                    this.auditLogs = [
+                        {
+                            id: 'log_001',
+                            registrationId: 'reg_001',
+                            action: '自动审核',
+                            auditor: '系统',
+                            result: 'approved',
+                            remark: '所有规则验证通过',
+                            timestamp: new Date(Date.now() - 3600000).toISOString()
+                        },
+                        {
+                            id: 'log_002',
+                            registrationId: 'reg_002',
+                            action: '手动审核',
+                            auditor: '管理员',
+                            result: 'approved',
+                            remark: '信息完整，审核通过',
+                            timestamp: new Date(Date.now() - 7200000).toISOString()
+                        },
+                        {
+                            id: 'log_003',
+                            registrationId: 'reg_003',
+                            action: '手动审核',
+                            auditor: '管理员',
+                            result: 'rejected',
+                            remark: '手机号码格式错误',
+                            timestamp: new Date(Date.now() - 10800000).toISOString()
+                        }
+                    ];
+                },
+                
+                async loadPendingRegistrations() {
+                    const conferenceId = this.getConferenceId();
+                    if (!conferenceId) {
+                        this.pendingRegistrationsList = [];
+                        this.pendingRegistrations = 0;
+                        this.totalRegistrations = 0;
+                        return;
+                    }
+
+                    try {
+                        const [listResp, statsResp] = await Promise.all([
+                            fetch(`http://localhost:8082/api/registration/list?conferenceId=${encodeURIComponent(String(conferenceId))}&page=1&pageSize=1000`, {
+                                method: 'GET',
+                                headers: this.getApiHeaders()
+                            }),
+                            fetch(`http://localhost:8082/api/registration/stats?conferenceId=${encodeURIComponent(String(conferenceId))}`, {
+                                method: 'GET',
+                                headers: this.getApiHeaders()
+                            })
+                        ]);
+
+                        const listResult = await listResp.json();
+                        const statsResult = await statsResp.json();
+
+                        if (!listResp.ok || listResult.code !== 200) {
+                            throw new Error(listResult.message || '加载列表失败');
+                        }
+
+                        const records = (listResult.data && listResult.data.records) ? listResult.data.records : [];
+                        this.pendingRegistrationsList = records
+                            .filter(item => this.mapStatusCode(item.status) === 'pending')
+                            .map(item => {
+                                let registrationData = {};
+                                try {
+                                    registrationData = item.registrationData ? JSON.parse(item.registrationData) : {};
+                                } catch (e) {
+                                    registrationData = {};
+                                }
+                                const ocr = registrationData.ocr || null;
+                                return {
+                                    id: item.id,
+                                    name: item.realName || item.name || '',
+                                    unit: item.department || item.organization || registrationData.unit || '',
+                                    position: item.position || '',
+                                    phone: item.phone || '',
+                                    email: item.email || '',
+                                    registeredAt: item.registrationTime || item.createTime || null,
+                                    ocrResult: ocr,
+                                    ruleResults: this.parseRuleResults(registrationData.ocrValidation)
+                                };
+                            });
+
+                        const stats = statsResult?.data || {};
+                        this.pendingRegistrations = Number(stats.pending || this.pendingRegistrationsList.length);
+                        this.approvedCount = Number(stats.approved || 0);
+                        this.rejectedCount = Number(stats.rejected || 0);
+                        this.totalRegistrations = this.pendingRegistrations + this.approvedCount + this.rejectedCount + Number(stats.cancelled || 0) + Number(stats.checkedin || 0);
+                    } catch (e) {
+                        console.error('加载审核数据失败:', e);
+                        this.$showToast(`加载审核数据失败: ${e.message}`, 'error');
+                        this.pendingRegistrationsList = [];
+                        this.pendingRegistrations = 0;
+                    }
+                },
+                
+                triggerFileUpload() {
+                    this.$refs.fileInput.click();
+                },
+                
+                handleFileSelect(event) {
+                    const files = Array.from(event.target.files);
+                    files.forEach(file => {
+                        this.uploadedFiles.push({
+                            name: file.name,
+                            file: file,
+                            status: 'pending'
+                        });
+                    });
+                    this.processOCR();
+                },
+                
+                handleFileDrop(event) {
+                    const files = Array.from(event.dataTransfer.files);
+                    files.forEach(file => {
+                        if (file.type.startsWith('image/')) {
+                            this.uploadedFiles.push({
+                                name: file.name,
+                                file: file,
+                                status: 'pending'
+                            });
+                        }
+                    });
+                    this.processOCR();
+                },
+                
+                async processOCR() {
+                    this.processing = true;
+                    const conferenceId = this.getConferenceId();
+                    try {
+                        for (let i = 0; i < this.uploadedFiles.length; i++) {
+                            if (this.uploadedFiles[i].status !== 'pending') {
+                                continue;
+                            }
+                            this.uploadedFiles[i].status = 'processing';
+
+                            const formData = new FormData();
+                            formData.append('conferenceId', String(conferenceId));
+                            formData.append('fileType', 'idCard');
+                            formData.append('file', this.uploadedFiles[i].file);
+
+                            const uploadResp = await fetch('http://localhost:8082/api/registration/upload', {
+                                method: 'POST',
+                                headers: {
+                                    'X-Tenant-Id': localStorage.getItem('tenantId') || '2027317834622709762',
+                                    'X-User-Id': localStorage.getItem('userId') || '1'
+                                },
+                                body: formData
+                            });
+                            const uploadResult = await uploadResp.json();
+                            if (!uploadResp.ok || uploadResult.code !== 200) {
+                                throw new Error(uploadResult.message || '上传失败');
+                            }
+
+                            const photoUrl = uploadResult.data.fileUrl;
+                            const ocrResp = await fetch(`http://localhost:8082/api/registration/ocr/idCard?photoUrl=${encodeURIComponent(photoUrl)}`, {
+                                method: 'POST',
+                                headers: this.getApiHeaders()
+                            });
+                            const ocrResult = await ocrResp.json();
+                            if (!ocrResp.ok || ocrResult.code !== 200) {
+                                throw new Error(ocrResult.message || 'OCR失败');
+                            }
+
+                            this.uploadedFiles[i].status = 'completed';
+                            this.uploadedFiles[i].fileUrl = photoUrl;
+                            this.uploadedFiles[i].ocr = ocrResult.data;
+
+                            this.ocrResults.push({
+                                type: '身份证',
+                                name: ocrResult.data.name || '未识别',
+                                nameConfidence: Math.round(Number(ocrResult.data.confidence || 0.8) * 100),
+                                idNumber: ocrResult.data.idCard || '未识别',
+                                idConfidence: Math.round(Number(ocrResult.data.confidence || 0.8) * 100),
+                                address: '-',
+                                overallConfidence: Math.round(Number(ocrResult.data.confidence || 0.8) * 100)
+                            });
+                        }
+                    } catch (e) {
+                        console.error('OCR处理失败:', e);
+                        this.$showToast(`OCR处理失败: ${e.message}`, 'error');
+                        this.uploadedFiles.forEach(file => {
+                            if (file.status === 'processing') {
+                                file.status = 'error';
+                            }
+                        });
+                    } finally {
+                        this.processing = false;
+                    }
+                },
+                
+                removeFile(index) {
+                    this.uploadedFiles.splice(index, 1);
+                },
+                
+                getFileStatusText(status) {
+                    const map = {
+                        'pending': '待处理',
+                        'processing': '识别中...',
+                        'completed': '已完成',
+                        'error': '识别失败'
+                    };
+                    return map[status] || status;
+                },
+                
+                getConfidenceClass(confidence) {
+                    if (confidence >= 95) return 'high';
+                    if (confidence >= 85) return 'medium';
+                    return 'low';
+                },
+                
+                matchRegistration(result, index) {
+                    this.$showToast(`匹配报名信息: ${result.name}`, 'info');
+                },
+                
+                editResult(index) {
+                    this.$showToast(`编辑识别结果: ${index}`, 'info');
+                },
+                
+                async executeAutoAudit() {
+                    if (this.totalRegistrations === 0) {
+                        this.$showToast('当前没有待审核的报名记录', 'warning');
+                        return;
+                    }
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定要对 ${this.totalRegistrations} 条报名记录执行自动审核吗？`,
+                        '执行自动审核',
+                        'info'
+                    );
+                    
+                    if (!confirmed) {
+                        return;
+                    }
+                    
+                    this.processing = true;
+                    this.$showLoading('正在进行OCR识别和规则匹配...');
+                    
+                    try {
+                        // 模拟OCR识别进度
+                        this.$showProgress(30, 'OCR识别中...');
+                        await new Promise(resolve => setTimeout(resolve, 800));
+                        
+                        this.$showProgress(60, '规则引擎匹配中...');
+                        await new Promise(resolve => setTimeout(resolve, 800));
+                        
+                        this.$showProgress(90, '生成审核结果...');
+                        await new Promise(resolve => setTimeout(resolve, 400));
+                        
+                        // 模拟审核结果
+                        this.autoAuditResults = [
+                            {
+                                registrationId: 'reg_001',
+                                registrationName: '张三',
+                                status: 'passed',
+                                reason: '所有规则验证通过，OCR识别置信度98%'
+                            },
+                            {
+                                registrationId: 'reg_002',
+                                registrationName: '李四',
+                                status: 'pending',
+                                reason: '需要人工确认身份证信息，未上传证件照片'
+                            },
+                            {
+                                registrationId: 'reg_003',
+                                registrationName: '王五',
+                                status: 'pending',
+                                reason: '手机号码验证失败，需要人工确认'
+                            },
+                            {
+                                registrationId: 'reg_004',
+                                registrationName: '赵六',
+                                status: 'pending',
+                                reason: '报名信息与证件信息不一致，需要人工确认'
+                            },
+                            {
+                                registrationId: 'reg_005',
+                                registrationName: '孙七',
+                                status: 'pending',
+                                reason: '未上传证件照片，需要人工审核'
+                            },
+                            {
+                                registrationId: 'reg_006',
+                                registrationName: '周八',
+                                status: 'passed',
+                                reason: '所有规则验证通过，OCR识别置信度96%'
+                            },
+                            {
+                                registrationId: 'reg_007',
+                                registrationName: '吴九',
+                                status: 'failed',
+                                reason: '身份证号格式验证失败'
+                            }
+                        ];
+                        
+                        this.$hideProgress();
+                        this.$hideLoading();
+                        this.$showToast('自动审核完成', 'success');
+                    } catch (error) {
+                        console.error('自动审核失败:', error);
+                        this.$hideProgress();
+                        this.$hideLoading();
+                        this.$showToast('自动审核失败，请重试', 'error');
+                    } finally {
+                        this.processing = false;
+                    }
+                },
+                
+                async quickApprove(id) {
+                    const confirmed = await this.$showConfirm(
+                        '确定通过该报名申请吗？',
+                        '审核通过',
+                        'info'
+                    );
+                    if (confirmed) {
+                        await this.saveAuditResult(id, 'approved', '');
+                        this.$showToast('审核通过', 'success');
+                    }
+                },
+                
+                async quickReject(id) {
+                    const remark = await this.showRejectReasonDialog();
+                    if (remark) {
+                        await this.saveAuditResult(id, 'rejected', remark);
+                        this.$showToast('已拒绝', 'success');
+                    }
+                },
+                
+                selectAllPending() {
+                    if (this.allSelected) {
+                        this.selectedRegistrations = [];
+                        this.allSelected = false;
+                    } else {
+                        this.selectedRegistrations = this.pendingRegistrationsList.map(r => r.id);
+                        this.allSelected = true;
+                    }
+                },
+                
+                async batchApprove() {
+                    if (this.selectedRegistrations.length === 0) {
+                        this.$showToast('请先选择要审核的记录', 'warning');
+                        return;
+                    }
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定批量通过选中的 ${this.selectedRegistrations.length} 个报名申请吗？`,
+                        '批量审核通过',
+                        'info'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading(`正在批量审核 ${this.selectedRegistrations.length} 条记录...`);
+                            const count = this.selectedRegistrations.length;
+                            
+                            for (let i = 0; i < this.selectedRegistrations.length; i++) {
+                                await this.saveAuditResult(this.selectedRegistrations[i], 'approved', '批量审核通过');
+                                this.$showProgress(Math.round((i + 1) / count * 100), `已处理 ${i + 1}/${count}`);
+                            }
+                            
+                            this.selectedRegistrations = [];
+                            await this.loadPendingRegistrations();
+                            this.$hideProgress();
+                            this.$hideLoading();
+                            this.$showToast(`已批量通过 ${count} 条记录`, 'success');
+                        } catch (error) {
+                            this.$hideProgress();
+                            this.$hideLoading();
+                            this.$showToast('批量审核失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                async batchReject() {
+                    if (this.selectedRegistrations.length === 0) {
+                        this.$showToast('请先选择要审核的记录', 'warning');
+                        return;
+                    }
+                    
+                    const remark = await this.showRejectReasonDialog();
+                    if (remark) {
+                        try {
+                            this.$showLoading(`正在批量拒绝 ${this.selectedRegistrations.length} 条记录...`);
+                            const count = this.selectedRegistrations.length;
+                            
+                            for (let i = 0; i < this.selectedRegistrations.length; i++) {
+                                await this.saveAuditResult(this.selectedRegistrations[i], 'rejected', remark);
+                                this.$showProgress(Math.round((i + 1) / count * 100), `已处理 ${i + 1}/${count}`);
+                            }
+                            
+                            this.selectedRegistrations = [];
+                            await this.loadPendingRegistrations();
+                            this.$hideProgress();
+                            this.$hideLoading();
+                            this.$showToast(`已批量拒绝 ${count} 条记录`, 'success');
+                        } catch (error) {
+                            this.$hideProgress();
+                            this.$hideLoading();
+                            this.$showToast('批量拒绝失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                viewDetails(id) {
+                    this.$showToast(`查看详情: ${id}`, 'info');
+                },
+                
+                async approveRegistration(id) {
+                    const confirmed = await this.$showConfirm(
+                        '确定通过该报名申请吗？',
+                        '审核通过',
+                        'info'
+                    );
+                    if (confirmed) {
+                        await this.saveAuditResult(id, 'approved', '');
+                        await this.loadPendingRegistrations();
+                        this.$showToast('审核通过', 'success');
+                    }
+                },
+                
+                async rejectRegistration(id) {
+                    const remark = await this.showRejectReasonDialog();
+                    if (remark) {
+                        await this.saveAuditResult(id, 'rejected', remark);
+                        await this.loadPendingRegistrations();
+                        this.$showToast('已拒绝', 'success');
+                    }
+                },
+                
+                async showRejectReasonDialog() {
+                    return new Promise((resolve) => {
+                        const reason = prompt('请输入拒绝原因:');
+                        resolve(reason && reason.trim() ? reason.trim() : null);
+                    });
+                },
+                
+                async saveAuditResult(registrationId, result, remark) {
+                    const resp = await fetch('http://localhost:8082/api/registration/audit', {
+                        method: 'POST',
+                        headers: this.getApiHeaders(),
+                        body: JSON.stringify({
+                            registrationId,
+                            auditResult: result,
+                            remark: remark || ''
+                        })
+                    });
+                    const apiResult = await resp.json();
+                    if (!resp.ok || apiResult.code !== 200) {
+                        throw new Error(apiResult.message || '保存审核结果失败');
+                    }
+
+                    const log = {
+                        id: 'log_' + Date.now(),
+                        registrationId: registrationId,
+                        action: '审核报名',
+                        auditor: localStorage.getItem('realName') || '当前用户',
+                        result: result,
+                        remark: remark,
+                        timestamp: new Date().toISOString()
+                    };
+                    this.auditLogs.unshift(log);
+
+                    await this.loadPendingRegistrations();
+                },
+                
+                viewAuditLogs() {
+                    this.showAuditLogModal = true;
+                },
+                
+                getStatusText(status) {
+                    const map = {
+                        'passed': '通过',
+                        'pending': '待审核',
+                        'failed': '不通过'
+                    };
+                    return map[status] || status;
+                },
+                
+                getRuleName(key) {
+                    const map = {
+                        'idFormat': '身份证格式',
+                        'nameMatch': '姓名匹配',
+                        'phoneValid': '手机验证',
+                        'infoConsistent': '信息一致性'
+                    };
+                    return map[key] || key;
+                },
+                
+                formatDate(date) {
+                    if (!date) return '-';
+                    try {
+                        return new Date(date).toLocaleDateString('zh-CN');
+                    } catch (error) {
+                        return '-';
+                    }
+                },
+                
+                formatDateTime(datetime) {
+                    if (!datetime) return '-';
+                    try {
+                        return new Date(datetime).toLocaleString('zh-CN');
+                    } catch (error) {
+                        return '-';
+                    }
+                },
+                
+                goBack() {
+                    window.history.back();
+                },
+                
+                applyCustomFilter() {
+                    // 应用自定义筛选
+                    if (!this.customFilter || !this.customFilter.trim()) {
+                        this.$showToast('请输入筛选条件', 'warning');
+                        return;
+                    }
+                    this.$showToast(`应用筛选: ${this.customFilter}`, 'info');
+                    // 这里可以添加实际的筛选逻辑
+                },
+                
+                /* 审核结果相关方法 */
+                getAuditResultClass(registration) {
+                    // 判断审核结果是否一致
+                    if (!registration.ruleResults) {
+                        return 'pending';
+                    }
+                    
+                    // 检查所有规则是否通过
+                    const allPassed = Object.values(registration.ruleResults).every(rule => rule.passed);
+                    if (allPassed) {
+                        return 'consistent';
+                    } else {
+                        return 'inconsistent';
+                    }
+                },
+                
+                getAuditResultText(registration) {
+                    const resultClass = this.getAuditResultClass(registration);
+                    const map = {
+                        'consistent': '一致',
+                        'inconsistent': '不一致',
+                        'pending': '待审核'
+                    };
+                    return map[resultClass] || '待审核';
+                },
+                
+                maskIdNumber(idNumber) {
+                    // 隐藏身份证号中间部分
+                    if (!idNumber || idNumber.length < 8) return idNumber;
+                    return idNumber.substring(0, 4) + '****' + idNumber.substring(idNumber.length - 4);
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+
+    <style>
+        /* 页面头部优化 */
+        .page-header {
+            padding: var(--space-8) !important;
+            margin-bottom: var(--space-8) !important;
+            background: linear-gradient(135deg, var(--glass-bg) 0%, rgba(255, 255, 255, 0.98) 100%) !important;
+        }
+        
+        .page-header h2 {
+            font-size: var(--font-size-3xl) !important;
+            font-weight: 800 !important;
+            color: var(--gray-900) !important;
+            margin-bottom: var(--space-4) !important;
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            letter-spacing: -0.02em;
+        }
+        
+        .page-header h2::before {
+            content: '';
+            width: 6px;
+            height: 32px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, rgba(102, 126, 234, 0.6) 100%);
+            border-radius: 3px;
+        }
+        
+        .conference-context {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            margin-top: var(--space-4);
+            padding: var(--space-4) var(--space-5);
+            background: rgba(102, 126, 234, 0.08);
+            border-radius: var(--radius-lg);
+            border: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        .context-label {
+            font-weight: 700;
+            color: var(--gray-800);
+            font-size: var(--font-size-base);
+        }
+        
+        .context-value {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: var(--font-size-lg);
+        }
+        
+        /* 审核统计概览 */
+        .audit-stats-overview {
+            margin-bottom: var(--space-8);
+            padding: var(--space-6);
+        }
+        
+        .audit-stats-overview h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-4);
+            border-bottom: 3px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+        
+        .audit-stats-overview h3::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--space-5);
+        }
+        
+        .stat-card {
+            padding: var(--space-6);
+            display: flex;
+            align-items: center;
+            gap: var(--space-5);
+            border-radius: var(--radius-xl);
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-color);
+            transform: scaleY(0);
+            transition: transform var(--transition-normal);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+        
+        .stat-card:hover::before {
+            transform: scaleY(1);
+        }
+        
+        .stat-card.warning {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        
+        .stat-card.warning .stat-icon {
+            color: var(--warning-color);
+        }
+        
+        .stat-card.success {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+        
+        .stat-card.success .stat-icon {
+            color: var(--success-color);
+        }
+        
+        .stat-card.danger {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        
+        .stat-card.danger .stat-icon {
+            color: var(--error-color);
+        }
+        
+        .stat-card.info {
+            background: rgba(59, 130, 246, 0.08);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+        
+        .stat-card.info .stat-icon {
+            color: var(--info-color);
+        }
+        
+        .stat-icon {
+            font-size: 2.75rem;
+            color: var(--primary-color);
+            width: 72px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(102, 126, 234, 0.05) 100%);
+            flex-shrink: 0;
+            transition: all var(--transition-normal);
+        }
+        
+        .stat-card:hover .stat-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .stat-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+        
+        .stat-value {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+        
+        .stat-label {
+            color: var(--gray-600);
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* 审核模式选择器 */
+        .audit-mode-selector {
+            margin-bottom: var(--space-8);
+            padding: var(--space-6);
+        }
+        
+        .audit-mode-selector h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-4);
+            border-bottom: 3px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+        
+        .audit-mode-selector h3::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+        
+        .mode-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-5);
+        }
+        
+        .mode-tab {
+            padding: var(--space-6) var(--space-8);
+            border: 3px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            background: var(--glass-bg);
+            color: var(--gray-700);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-4);
+            transition: all var(--transition-normal);
+            font-weight: 600;
+            font-size: var(--font-size-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .mode-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left var(--transition-slow);
+        }
+        
+        .mode-tab:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.08);
+            color: var(--primary-color);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .mode-tab:hover::before {
+            left: 100%;
+        }
+        
+        .mode-tab.active {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(102, 126, 234, 0.08) 100%);
+            color: var(--primary-color);
+            box-shadow: var(--shadow-xl);
+            transform: scale(1.02);
+        }
+        
+        .mode-tab.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-color);
+        }
+        
+        .mode-tab i {
+            font-size: 3rem;
+            transition: transform var(--transition-normal);
+        }
+        
+        .mode-tab:hover i {
+            transform: scale(1.1);
+        }
+        
+        .mode-tab.active i {
+            transform: scale(1.15);
+        }
+        
+        /* 自动审核区域 */
+        .auto-audit-section,
+        .manual-audit-section {
+            padding: var(--space-6);
+        }
+        
+        .auto-audit-section h3,
+        .manual-audit-section h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-4);
+            border-bottom: 3px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+        
+        .auto-audit-section h3::before,
+        .manual-audit-section h3::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+        
+        .audit-scope {
+            margin-bottom: var(--space-8);
+        }
+        
+        .audit-scope h4 {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-5);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+        
+        .audit-scope h4::before {
+            content: '';
+            width: 3px;
+            height: 20px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+        
+        .scope-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+        
+        .scope-options label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            cursor: pointer;
+            padding: var(--space-4) var(--space-5);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            background: var(--glass-bg);
+            transition: all var(--transition-normal);
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .scope-options label:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.08);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .scope-options input[type="radio"]:checked + span {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        
+        .scope-options label:has(input[type="radio"]:checked) {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.12);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .scope-options label:has(input[type="radio"]:checked)::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary-color);
+        }
+        
+        .scope-options input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary-color);
+        }
+        
+        .custom-filters {
+            display: flex;
+            gap: var(--space-4);
+            margin-top: var(--space-5);
+            padding: var(--space-5);
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: var(--radius-lg);
+            border: 2px dashed var(--glass-border);
+        }
+        
+        .custom-filters input {
+            flex: 1;
+            padding: var(--space-3) var(--space-4);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            background: var(--glass-bg);
+            color: var(--gray-800);
+            font-size: var(--font-size-base);
+            transition: all var(--transition-fast);
+        }
+        
+        .custom-filters input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .custom-filters .btn-sm {
+            padding: var(--space-3) var(--space-6);
+            font-weight: 600;
+        }
+        
+        /* OCR识别区域 */
+        .ocr-section {
+            margin-bottom: var(--space-8);
+        }
+        
+        .ocr-section h4 {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-5);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+        
+        .ocr-section h4::before {
+            content: '';
+            width: 3px;
+            height: 20px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+        
+        .upload-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-5);
+            padding: var(--space-3) var(--space-4);
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: var(--radius-lg);
+        }
+        
+        .upload-header span:first-child {
+            font-weight: 700;
+            color: var(--gray-900);
+            font-size: var(--font-size-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        
+        .upload-header span:first-child::before {
+            content: '🔍';
+            font-size: 1.2em;
+        }
+        
+        .api-status {
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-sm);
+            font-weight: 700;
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error-color);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .api-status::before {
+            content: '●';
+            font-size: 0.8em;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .api-status.status-online {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success-color);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        
+        .upload-zone {
+            padding: var(--space-10) var(--space-8);
+            border: 3px dashed var(--glass-border);
+            border-radius: var(--radius-xl);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+        
+        .upload-zone:hover {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(102, 126, 234, 0.05) 100%);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .upload-zone:hover::before {
+            opacity: 1;
+        }
+        
+        .upload-zone i {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: var(--space-5);
+            transition: transform var(--transition-normal);
+        }
+        
+        .upload-zone:hover i {
+            transform: scale(1.1) translateY(-4px);
+        }
+        
+        .upload-zone p {
+            color: var(--gray-800);
+            font-size: var(--font-size-lg);
+            margin-bottom: var(--space-3);
+            font-weight: 600;
+        }
+        
+        .upload-hint {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            margin-top: var(--space-3);
+            font-weight: 500;
+        }
+        
+        .uploaded-files {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+        
+        .file-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+        
+        .file-status.pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        
+        .file-status.processing {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+        
+        .file-status.completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .ocr-results {
+            margin-bottom: 2rem;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        
+        .result-card {
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .result-type {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .confidence {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+        
+        .confidence.high {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .confidence.medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        
+        .confidence.low {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .result-item .label {
+            color: #666;
+        }
+        
+        .result-item .value {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        /* 规则引擎区域 */
+        .rule-engine-section {
+            margin-bottom: var(--space-6);
+        }
+        
+        .rule-engine-section h4 {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-4);
+        }
+        
+        .rule-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-3);
+        }
+        
+        .rule-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+        
+        .rule-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary-color);
+        }
+        
+        .rule-item i {
+            font-size: var(--font-size-lg);
+            flex-shrink: 0;
+        }
+        
+        .rule-item span:nth-child(2) {
+            flex: 1;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+        
+        .rule-result {
+            margin-left: auto;
+            font-weight: 600;
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-sm);
+        }
+        
+        .rule-item:has(.text-success) .rule-result {
+            color: var(--success-color);
+        }
+        
+        .rule-item:has(.text-danger) .rule-result {
+            color: var(--error-color);
+        }
+        
+        /* 自动审核结果 */
+        .auto-audit-results {
+            margin-bottom: var(--space-6);
+        }
+        
+        .auto-audit-results h4 {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-4);
+        }
+        
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+        
+        .summary-item {
+            padding: var(--space-5);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            transition: all var(--transition-fast);
+        }
+        
+        .summary-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .summary-item.success {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+        
+        .summary-item.warning {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        
+        .summary-item.danger {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        
+        .summary-item .count {
+            display: block;
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-800);
+            line-height: 1.2;
+        }
+        
+        .summary-item .label {
+            display: block;
+            margin-top: var(--space-2);
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+        }
+        
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .audit-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        
+        .audit-result-item.result-passed {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: #10b981;
+        }
+        
+        .audit-result-item.result-pending {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: #f59e0b;
+        }
+        
+        .audit-result-item.result-failed {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+        }
+        
+        .result-info {
+            flex: 1;
+        }
+        
+        .info-row {
+            margin-bottom: 0.5rem;
+        }
+        
+        .info-row .name {
+            font-weight: 600;
+            color: #333;
+            margin-right: 1rem;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+        
+        .status-passed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        
+        .status-failed {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .detail {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        /* 手动审核区域 */
+        .manual-audit-section {
+            margin-bottom: var(--space-6);
+        }
+        
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-5);
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--glass-border);
+        }
+        
+        .list-header h4 {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+        
+        .list-actions {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+        
+        .audit-items {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+        
+        .audit-item {
+            display: flex;
+            gap: var(--space-4);
+            padding: var(--space-5);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.05);
+            transition: all var(--transition-fast);
+        }
+        
+        .audit-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .audit-item.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .item-checkbox {
+            display: flex;
+            align-items: flex-start;
+            padding-top: 0.25rem;
+        }
+        
+        .item-content {
+            flex: 1;
+            position: relative;
+        }
+        
+        /* 智能审核结果标签 */
+        .audit-result-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .audit-result-badge.consistent {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+        
+        .audit-result-badge.consistent::before {
+            content: '✓';
+        }
+        
+        .audit-result-badge.inconsistent {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .audit-result-badge.inconsistent::before {
+            content: '!';
+        }
+        
+        .audit-result-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+        
+        .audit-result-badge.pending::before {
+            content: '?';
+        }
+        
+        /* 报名表单字段 */
+        .item-form-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.8rem;
+            margin: 1rem 0;
+            padding: 0.8rem;
+            background: rgba(249, 250, 251, 0.5);
+            border-radius: 0.4rem;
+        }
+        
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        
+        .form-field .label {
+            font-size: 0.75rem;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-field .value {
+            font-size: 0.9rem;
+            color: #1e293b;
+        }
+        
+        .item-header {
+            margin-bottom: 1rem;
+        }
+        
+        .item-header h5 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+        
+        .item-meta {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .item-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .detail-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .detail-row .label {
+            color: #666;
+        }
+        
+        .detail-row .value {
+            color: #333;
+        }
+        
+        .ocr-info, .rule-info {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .ocr-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .rule-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            margin-right: 0.5rem;
+        }
+        
+        .rule-tag.passed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .rule-tag.failed {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .item-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .audit-actions {
+            margin-top: var(--space-8);
+            padding: var(--space-6);
+            text-align: center;
+            background: rgba(102, 126, 234, 0.03);
+            border-radius: var(--radius-xl);
+            border: 2px dashed var(--glass-border);
+        }
+        
+        .btn-lg {
+            padding: var(--space-5) var(--space-10);
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-normal);
+        }
+        
+        .btn-lg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left var(--transition-slow);
+        }
+        
+        .btn-lg:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .btn-lg:hover::before {
+            left: 100%;
+        }
+        
+        .btn-lg:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .modal-body {
+            padding: 2rem;
+        }
+        
+        .log-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .log-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+        
+        .log-action {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .log-time {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .log-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .log-detail {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .log-detail .label {
+            color: #666;
+        }
+        
+        .log-detail .value {
+            color: #333;
+        }
+        
+        .result-approved {
+            color: #10b981;
+            font-weight: 500;
+        }
+        
+        .result-rejected {
+            color: #ef4444;
+            font-weight: 500;
+        }
+        
+        .text-success {
+            color: #10b981 !important;
+        }
+        
+        .text-danger {
+            color: #ef4444 !important;
+        }
+        
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .scope-options {
+                flex-direction: column;
+            }
+            
+            .audit-item {
+                flex-direction: column;
+            }
+        }
+    </style>
+</body>
+</html>
+

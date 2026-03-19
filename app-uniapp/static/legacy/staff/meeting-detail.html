@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>培训详情 - 协管员视角</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left"><span>9:41</span></div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+            <div class="app-content">
+                <!-- 培训信息卡片 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-title">2025党务干部培训班</div>
+                    </div>
+                </div>
+                <!-- 功能入口区 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-layer-group" style="color:#2563eb;"></i>
+                        <div class="card-title">功能入口</div>
+                    </div>
+                    <div class="grid-3">
+                        <a class="feature-tile" href="registration-manage.html">
+                            <div class="feature-icon-lg"><i class="fas fa-user-check"></i></div>
+                            <div class="feature-title">报名管理</div>
+                        </a>
+                        <a class="feature-tile" href="seat-manage.html">
+                            <div class="feature-icon-lg"><i class="fas fa-th-large"></i></div>
+                            <div class="feature-title">座位管理</div>
+                        </a>
+                        <a class="feature-tile" href="grouping-manage.html">
+                            <div class="feature-icon-lg"><i class="fas fa-users"></i></div>
+                            <div class="feature-title">分组编排</div>
+                        </a>
+                        <a class="feature-tile" href="notice-manage.html">
+                            <div class="feature-icon-lg"><i class="fas fa-bullhorn"></i></div>
+                            <div class="feature-title">通知公告</div>
+                        </a>
+                        <a class="feature-tile" href="task-list.html">
+                            <div class="feature-icon-lg"><i class="fas fa-tasks"></i></div>
+                            <div class="feature-title">任务派发</div>
+                        </a>
+                        <a class="feature-tile" href="data-analysis.html">
+                            <div class="feature-icon-lg"><i class="fas fa-chart-bar"></i></div>
+                            <div class="feature-title">数据分析</div>
+                        </a>
+                    </div>
+                </div>
+                <!-- 今日任务与提醒 -->
+                <div class="section-title">今日任务与提醒</div>
+                <div class="card fade-in">
+                    <div class="task-list">
+                        <a href="registration-manage.html" class="assistant-item-link">
+                            <div class="task-card">
+                                <div class="task-header">
+                                    <div class="task-title">审核最新报名信息</div>
+                                    <span class="status-chip status-warn"><i class="fas fa-hourglass-half"></i> 待完成</span>
+                                </div>
+                                <div class="task-body">需核对 12 名学员的报名资料并确认住宿需求。</div>
+                                <div class="task-footer">
+                                    <span>截止：今日 12:00</span>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="seat-manage.html" class="assistant-item-link">
+                            <div class="task-card">
+                                <div class="task-header">
+                                    <div class="task-title">下午课程座位调整</div>
+                                    <span class="status-chip status-accent"><i class="fas fa-spinner"></i> 进行中</span>
+                                </div>
+                                <div class="task-body">讲师调整为王教授，请更新座位及讲师介绍推送。</div>
+                                <div class="task-footer">
+                                    <span>负责人：李伟</span>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="notice-manage.html" class="assistant-item-link">
+                            <div class="task-card">
+                                <div class="task-header">
+                                    <div class="task-title">车次提醒待审核</div>
+                                    <span class="status-chip status-positive"><i class="fas fa-check-circle"></i> 已提交</span>
+                                </div>
+                                <div class="task-body">AI 助理为 06:30 到站学员生成了接驳车提醒，请确认后推送。</div>
+                                <div class="task-footer">
+                                    <span>待审核：2 条</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <!-- 通知公告 -->
+                <div class="section-title">通知公告</div>
+                <div class="card fade-in">
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon"><i class="fas fa-bullhorn"></i></div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">今日课程有调整</div>
+                                <div class="assistant-item-desc">下午课程改至第二会议厅，请留意座位图更新。</div>
+                                <span class="status-chip status-positive"><i class="fas fa-check-circle"></i> 已读</span>
+                            </div>
+                        </div>
+                        <!-- 更多公告项... -->
+                    </div>
+                </div>
+                <!-- 实时数据概览 -->
+                <div class="section-title">实时数据概览</div>
+                <div class="card fade-in">
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <h4>报名完成度</h4>
+                            <p>94%</p>
+                            <span>通过审核 142 / 目标 150</span>
+                        </div>
+                        <div class="summary-card">
+                            <h4>签到率</h4>
+                            <p>92%</p>
+                            <span>已签到 131 人 · 异常 4 人</span>
+                        </div>
+                        <div class="summary-card">
+                            <h4>任务完成率</h4>
+                            <p>78%</p>
+                            <span>执行中 3 项 · 待完成 2 项</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon"><i class="fas fa-comments"></i></div>
+                    <div class="nav-text">沟通</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-history"></i></div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+                <!-- ...existing code... -->
+</body>
+</html>

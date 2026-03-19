@@ -1,0 +1,398 @@
+{
+  "pages": [
+    {
+      "path": "pages/common/index/index",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/common/login/login",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/common/home/home",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/common/navigation/navigation",
+      "style": {
+        "navigationBarTitleText": "导航"
+      }
+    },
+    {
+      "path": "pages/common/profile/profile",
+      "style": {
+        "navigationBarTitleText": "个人资料"
+      }
+    },
+    {
+      "path": "pages/common/settings/settings",
+      "style": {
+        "navigationBarTitleText": "设置"
+      }
+    },
+    {
+      "path": "pages/common/help/help",
+      "style": {
+        "navigationBarTitleText": "帮助"
+      }
+    },
+    {
+      "path": "pages/common/communication/communication",
+      "style": {
+        "navigationBarTitleText": "交流"
+      }
+    },
+    {
+      "path": "pages/common/assistant/assistant",
+      "style": {
+        "navigationBarTitleText": "助手"
+      }
+    },
+    {
+      "path": "pages/common/system-intro/system-intro",
+      "style": {
+        "navigationBarTitleText": "系统介绍"
+      }
+    },
+    {
+      "path": "pages/common/past/past",
+      "style": {
+        "navigationBarTitleText": "往期"
+      }
+    },
+    {
+      "path": "pages/learner/scan-register/scan-register",
+      "style": {
+        "navigationBarTitleText": "扫码报名"
+      }
+    },
+    {
+      "path": "pages/learner/home/home",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/learner/schedule/schedule",
+      "style": {
+        "navigationBarTitleText": "日程"
+      }
+    },
+    {
+      "path": "pages/learner/registration-status/registration-status",
+      "style": {
+        "navigationBarTitleText": "报名状态"
+      }
+    },
+    {
+      "path": "pages/learner/seat/seat",
+      "style": {
+        "navigationBarTitleText": "座位"
+      }
+    },
+    {
+      "path": "pages/learner/scan-seat/scan-seat",
+      "style": {
+        "navigationBarTitleText": "扫码选座"
+      }
+    },
+    {
+      "path": "pages/learner/meeting-detail/meeting-detail",
+      "style": {
+        "navigationBarTitleText": "会议详情"
+      }
+    },
+    {
+      "path": "pages/learner/task-list/task-list",
+      "style": {
+        "navigationBarTitleText": "任务列表"
+      }
+    },
+    {
+      "path": "pages/learner/task-detail/task-detail",
+      "style": {
+        "navigationBarTitleText": "任务详情"
+      }
+    },
+    {
+      "path": "pages/learner/materials/materials",
+      "style": {
+        "navigationBarTitleText": "学习材料"
+      }
+    },
+    {
+      "path": "pages/learner/handbook/handbook",
+      "style": {
+        "navigationBarTitleText": "学员手册"
+      }
+    },
+    {
+      "path": "pages/learner/highlights/highlights",
+      "style": {
+        "navigationBarTitleText": "精彩回顾"
+      }
+    },
+    {
+      "path": "pages/learner/notifications/notifications",
+      "style": {
+        "navigationBarTitleText": "通知"
+      }
+    },
+    {
+      "path": "pages/learner/message/message",
+      "style": {
+        "navigationBarTitleText": "消息"
+      }
+    },
+    {
+      "path": "pages/learner/chat-room/chat-room",
+      "style": {
+        "navigationBarTitleText": "讨论"
+      }
+    },
+    {
+      "path": "pages/learner/chat-private/chat-private",
+      "style": {
+        "navigationBarTitleText": "私聊"
+      }
+    },
+    {
+      "path": "pages/learner/feedback/feedback",
+      "style": {
+        "navigationBarTitleText": "反馈"
+      }
+    },
+    {
+      "path": "pages/learner/evaluation/evaluation",
+      "style": {
+        "navigationBarTitleText": "评价"
+      }
+    },
+    {
+      "path": "pages/learner/guestbook/guestbook",
+      "style": {
+        "navigationBarTitleText": "留言"
+      }
+    },
+    {
+      "path": "pages/learner/arrangements/arrangements",
+      "style": {
+        "navigationBarTitleText": "安排"
+      }
+    },
+    {
+      "path": "pages/learner/contact/contact",
+      "style": {
+        "navigationBarTitleText": "联系方式"
+      }
+    },
+    {
+      "path": "pages/learner/groups/groups",
+      "style": {
+        "navigationBarTitleText": "分组"
+      }
+    },
+    {
+      "path": "pages/learner/checkin/checkin",
+      "style": {
+        "navigationBarTitleText": "签到"
+      }
+    },
+    {
+      "path": "pages/learner/guide/guide",
+      "style": {
+        "navigationBarTitleText": "指南"
+      }
+    },
+    {
+      "path": "pages/learner/seat-detail/seat-detail",
+      "style": {
+        "navigationBarTitleText": "座位详情"
+      }
+    },
+    {
+      "path": "pages/staff/training-create/training-create",
+      "style": {
+        "navigationBarTitleText": "新建培训"
+      }
+    },
+    {
+      "path": "pages/staff/training/training",
+      "style": {
+        "navigationBarTitleText": "培训管理"
+      }
+    },
+    {
+      "path": "pages/staff/training-detail/training-detail",
+      "style": {
+        "navigationBarTitleText": "培训详情"
+      }
+    },
+    {
+      "path": "pages/staff/registration-manage/registration-manage",
+      "style": {
+        "navigationBarTitleText": "报名管理"
+      }
+    },
+    {
+      "path": "pages/staff/seat-manage/seat-manage",
+      "style": {
+        "navigationBarTitleText": "座位管理"
+      }
+    },
+    {
+      "path": "pages/staff/grouping-manage/grouping-manage",
+      "style": {
+        "navigationBarTitleText": "分组管理"
+      }
+    },
+    {
+      "path": "pages/staff/task-list/task-list",
+      "style": {
+        "navigationBarTitleText": "任务列表"
+      }
+    },
+    {
+      "path": "pages/staff/task-detail/task-detail",
+      "style": {
+        "navigationBarTitleText": "任务详情"
+      }
+    },
+    {
+      "path": "pages/staff/task-feedback/task-feedback",
+      "style": {
+        "navigationBarTitleText": "任务反馈"
+      }
+    },
+    {
+      "path": "pages/staff/dashboard/dashboard",
+      "style": {
+        "navigationBarTitleText": "仪表板"
+      }
+    },
+    {
+      "path": "pages/staff/data-analysis/data-analysis",
+      "style": {
+        "navigationBarTitleText": "数据分析"
+      }
+    },
+    {
+      "path": "pages/staff/alert-config/alert-config",
+      "style": {
+        "navigationBarTitleText": "预警配置"
+      }
+    },
+    {
+      "path": "pages/staff/alert-handle/alert-handle",
+      "style": {
+        "navigationBarTitleText": "预警处理"
+      }
+    },
+    {
+      "path": "pages/staff/alert-mobile/alert-mobile",
+      "style": {
+        "navigationBarTitleText": "预警管理"
+      }
+    },
+    {
+      "path": "pages/staff/notice-manage/notice-manage",
+      "style": {
+        "navigationBarTitleText": "通知管理"
+      }
+    },
+    {
+      "path": "pages/staff/notice-mobile/notice-mobile",
+      "style": {
+        "navigationBarTitleText": "发送通知"
+      }
+    },
+    {
+      "path": "pages/staff/handbook-generate/handbook-generate",
+      "style": {
+        "navigationBarTitleText": "生成手册"
+      }
+    },
+    {
+      "path": "pages/staff/handbook-mobile/handbook-mobile",
+      "style": {
+        "navigationBarTitleText": "手册管理"
+      }
+    },
+    {
+      "path": "pages/staff/schedule/schedule",
+      "style": {
+        "navigationBarTitleText": "日程管理"
+      }
+    },
+    {
+      "path": "pages/staff/meeting-detail/meeting-detail",
+      "style": {
+        "navigationBarTitleText": "会议详情"
+      }
+    },
+    {
+      "path": "pages/staff/chat-room/chat-room",
+      "style": {
+        "navigationBarTitleText": "讨论室"
+      }
+    },
+    {
+      "path": "pages/staff/tenant-create/tenant-create",
+      "style": {
+        "navigationBarTitleText": "创建租户"
+      }
+    },
+    {
+      "path": "pages/staff/tenant-login/tenant-login",
+      "style": {
+        "navigationBarTitleText": "租户登录"
+      }
+    },
+    {
+      "path": "pages/staff/tenant-manage/tenant-manage",
+      "style": {
+        "navigationBarTitleText": "租户管理"
+      }
+    },
+    {
+      "path": "pages/legacy/webview/index",
+      "style": {
+        "navigationBarTitleText": "页面预览"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/common/index/index",
+        "iconPath": "static/assets/tab-home.png",
+        "selectedIconPath": "static/assets/tab-home-active.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/common/navigation/navigation",
+        "iconPath": "static/assets/tab-navigation.png",
+        "selectedIconPath": "static/assets/tab-navigation-active.png",
+        "text": "导航"
+      },
+      {
+        "pagePath": "pages/common/profile/profile",
+        "iconPath": "static/assets/tab-profile.png",
+        "selectedIconPath": "static/assets/tab-profile-active.png",
+        "text": "我的"
+      }
+    ]
+  }
+}

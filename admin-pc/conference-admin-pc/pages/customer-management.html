@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户管理 - 智能会务系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #1890ff;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .search-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .search-bar input,
+        .search-bar select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+        
+        .search-bar input:focus,
+        .search-bar select:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 5px rgba(24,144,255,0.2);
+        }
+        
+        .button-group {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0050b3;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-secondary:hover {
+            background: #e6e6e6;
+        }
+        
+        .btn-danger {
+            background: #ff4d4f;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #cf1322;
+        }
+        
+        .btn-warning {
+            background: #faad14;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #d48806;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #fafafa;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        
+        tbody tr:hover {
+            background: #fafafa;
+        }
+        
+        .status-active {
+            color: #52c41a;
+            background: #f6ffed;
+            padding: 4px 8px;
+            border-radius: 2px;
+        }
+        
+        .status-inactive {
+            color: #ff4d4f;
+            background: #fff1f0;
+            padding: 4px 8px;
+            border-radius: 2px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-buttons button {
+            padding: 4px 8px;
+            font-size: 12px;
+            min-width: 60px;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+        
+        .pagination button,
+        .pagination span {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            background: white;
+        }
+        
+        .pagination button:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        
+        .pagination .active {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+        
+        /* Modal 样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 4px;
+            width: 500px;
+            max-width: 90%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 5px rgba(24,144,255,0.2);
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-success {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .alert-error {
+            background: #fff1f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+        
+        .alert-info {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1890ff;
+            margin: 10px 0;
+        }
+        
+        .stat-card .label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .search-bar {
+                flex-direction: column;
+            }
+            
+            .button-group {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-buttons button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 页面头部 -->
+        <div class="header">
+            <h1>🏢 客户管理</h1>
+            <p>智能会务系统 - 多租户客户管理（超级管理员专用）</p>
+        </div>
+        
+        <!-- 统计卡片 -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="label">总客户数</div>
+                <div class="number" id="totalCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">活跃客户</div>
+                <div class="number" id="activeCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">停用客户</div>
+                <div class="number" id="inactiveCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">总用户数</div>
+                <div class="number" id="totalUsers">0</div>
+            </div>
+        </div>
+        
+        <!-- 消息提示 -->
+        <div id="alertContainer"></div>
+        
+        <!-- 搜索栏 -->
+        <div class="search-bar">
+            <input type="text" id="searchName" placeholder="搜索客户名称或编码...">
+            <select id="statusFilter">
+                <option value="">全部状态</option>
+                <option value="active">活跃</option>
+                <option value="inactive">停用</option>
+            </select>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="searchTenants()">🔍 搜索</button>
+                <button class="btn-secondary" onclick="resetSearch()">↻ 重置</button>
+                <button class="btn-primary" onclick="openCreateModal()">➕ 新增客户</button>
+            </div>
+        </div>
+        
+        <!-- 表格 -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">序号</th>
+                        <th>客户编码</th>
+                        <th>客户名称</th>
+                        <th>描述</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="tenantTableBody">
+                    <!-- 动态插入 -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        <div class="pagination">
+            <button onclick="previousPage()">&lt; 上一页</button>
+            <span id="pageInfo">第 1 页</span>
+            <button onclick="nextPage()">下一页 &gt;</button>
+        </div>
+    </div>
+    
+    <!-- 创建/编辑客户弹窗 -->
+    <div id="tenantModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle">新增客户</div>
+            <div id="modalAlert"></div>
+            <form id="tenantForm" onsubmit="saveTenant(event)">
+                <div class="form-group">
+                    <label for="tenantCode">客户编码 *</label>
+                    <input type="text" id="tenantCode" required placeholder="例如: tenant_001">
+                </div>
+                <div class="form-group">
+                    <label for="tenantName">客户名称 *</label>
+                    <input type="text" id="tenantName" required placeholder="例如: 北京联想会议有限公司">
+                </div>
+                <div class="form-group">
+                    <label for="description">描述</label>
+                    <textarea id="description" placeholder="客户的简单描述..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 查看详情弹窗 -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">客户详情</div>
+            <div id="detailContent">
+                <!-- 动态插入 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // API 基础地址
+        const API_BASE = 'http://localhost:8081';
+        const TENANT_API = `${API_BASE}/api/tenant`;
+        
+        // 全局变量
+        let currentPage = 1;
+        let pageSize = 10;
+        let allTenants = [];
+        let editingTenantId = null;
+        let token = localStorage.getItem('auth_token');
+        
+        /**
+         * 初始化页面
+         */
+        function init() {
+            console.log('初始化客户管理页面...');
+            if (!token) {
+                showAlert('未登录，请先登录系统', 'error');
+                redirectToLogin();
+                return;
+            }
+            loadTenants();
+        }
+        
+        /**
+         * 加载租户列表
+         */
+        async function loadTenants() {
+            try {
+                const response = await fetch(`${TENANT_API}/list?page=${currentPage}&pageSize=${pageSize}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                if (result.code === 200) {
+                    allTenants = result.data.items || [];
+                    renderTable();
+                    updateStats();
+                } else {
+                    showAlert(result.message || '加载失败', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('加载租户列表失败: ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * 渲染表格
+         */
+        function renderTable() {
+            const tbody = document.getElementById('tenantTableBody');
+            tbody.innerHTML = '';
+            
+            if (allTenants.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #999;">暂无数据</td></tr>';
+                return;
+            }
+            
+            allTenants.forEach((tenant, index) => {
+                const statusClass = tenant.status === 'active' ? 'status-active' : 'status-inactive';
+                const statusText = tenant.status === 'active' ? '活跃' : '停用';
+                const createdTime = new Date(tenant.createTime).toLocaleDateString('zh-CN');
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${(currentPage - 1) * pageSize + index + 1}</td>
+                    <td><strong>${tenant.tenantCode}</strong></td>
+                    <td>${tenant.tenantName}</td>
+                    <td>${tenant.remark || '-'}</td>
+                    <td><span class="${statusClass}">${statusText}</span></td>
+                    <td>${createdTime}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-secondary" onclick="viewDetail(${tenant.id})">查看</button>
+                            <button class="btn-secondary" onclick="editTenant(${tenant.id})">编辑</button>
+                            <button class="btn-warning" onclick="toggleStatus(${tenant.id}, '${tenant.status}')">
+                                ${tenant.status === 'active' ? '禁用' : '启用'}
+                            </button>
+                            <button class="btn-danger" onclick="deleteTenant(${tenant.id})">删除</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        /**
+         * 更新统计数据
+         */
+        function updateStats() {
+            const active = allTenants.filter(t => t.status === 'active').length;
+            const inactive = allTenants.filter(t => t.status === 'inactive').length;
+            
+            document.getElementById('totalCount').textContent = allTenants.length;
+            document.getElementById('activeCount').textContent = active;
+            document.getElementById('inactiveCount').textContent = inactive;
+            document.getElementById('totalUsers').textContent = active * 10;  // 模拟数据
+        }
+        
+        /**
+         * 打开创建弹窗
+         */
+        function openCreateModal() {
+            editingTenantId = null;
+            document.getElementById('modalTitle').textContent = '新增客户';
+            document.getElementById('tenantForm').reset();
+            document.getElementById('tenantCode').disabled = false;
+            document.getElementById('tenantModal').classList.add('show');
+        }
+        
+        /**
+         * 编辑租户
+         */
+        async function editTenant(tenantId) {
+            try {
+                const response = await fetch(`${TENANT_API}/${tenantId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.code === 200) {
+                    const tenant = result.data;
+                    editingTenantId = tenantId;
+                    
+                    document.getElementById('modalTitle').textContent = '编辑客户';
+                    document.getElementById('tenantCode').value = tenant.tenantCode;
+                    document.getElementById('tenantCode').disabled = true;  // 不能修改编码
+                    document.getElementById('tenantName').value = tenant.tenantName;
+                    document.getElementById('description').value = tenant.remark || '';
+                    
+                    document.getElementById('tenantModal').classList.add('show');
+                } else {
+                    showAlert(result.message || '获取租户信息失败', 'error');
+                }
+            } catch (error) {
+                showAlert('加载失败: ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * 保存租户
+         */
+        async function saveTenant(event) {
+            event.preventDefault();
+            
+            const tenantCode = document.getElementById('tenantCode').value.trim();
+            const tenantName = document.getElementById('tenantName').value.trim();
+            const description = document.getElementById('description').value.trim();
+            
+            if (!tenantCode || !tenantName) {
+                showAlert('客户编码和名称不能为空', 'error');
+                return;
+            }
+            
+            try {
+                let url = `${TENANT_API}/create`;
+                let method = 'POST';
+                let body = { tenantCode, tenantName, remark: description };
+                
+                if (editingTenantId) {
+                    url = `${TENANT_API}/${editingTenantId}`;
+                    method = 'PUT';
+                    delete body.tenantCode;  // 编辑时不需要编码
+                }
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                const result = await response.json();
+                if (result.code === 200) {
+                    showAlert(editingTenantId ? '客户更新成功' : '客户创建成功', 'success');
+                    closeModal();
+                    loadTenants();
+                } else {
+                    showAlert(result.message || '操作失败', 'error');
+                }
+            } catch (error) {
+                showAlert('保存失败: ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * 切换租户状态
+         */
+        async function toggleStatus(tenantId, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            const confirmMsg = currentStatus === 'active' ? '确定要禁用此客户吗？' : '确定要启用此客户吗？';
+            
+            if (!confirm(confirmMsg)) return;
+            
+            try {
+                const response = await fetch(`${TENANT_API}/${tenantId}/status?status=${newStatus}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.code === 200) {
+                    showAlert('状态更新成功', 'success');
+                    loadTenants();
+                } else {
+                    showAlert(result.message || '操作失败', 'error');
+                }
+            } catch (error) {
+                showAlert('操作失败: ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * 删除租户
+         */
+        async function deleteTenant(tenantId) {
+            if (!confirm('确定要删除此客户及所有相关数据吗？此操作无法撤销！')) return;
+            
+            try {
+                const response = await fetch(`${TENANT_API}/${tenantId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.code === 200) {
+                    showAlert('客户删除成功', 'success');
+                    loadTenants();
+                } else {
+                    showAlert(result.message || '删除失败', 'error');
+                }
+            } catch (error) {
+                showAlert('删除失败: ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * 查看客户详情
+         */
+        async function viewDetail(tenantId) {
+            try {
+                const response = await fetch(`${TENANT_API}/${tenantId}/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.code === 200) {
+                    const data = result.data;
+                    const html = `
+                        <div style="padding: 10px 0;">
+                            <div class="form-group">
+                                <strong>客户名称:</strong> ${data.tenantName}
+                            </div>
+                            <div class="form-group">
+                                <strong>用户数:</strong> ${data.userCount}
+                            </div>
+                            <div class="form-group">
+                                <strong>会议数:</strong> ${data.conferenceCount}
+                            </div>
+                            <div class="form-group">
+                                <strong>注册数:</strong> ${data.registrationCount}
+                            </div>
+                            <div class="form-group">
+                                <strong>最后活动:</strong> ${data.lastActivity || '无'}
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('detailContent').innerHTML = html;
+                    document.getElementById('detailModal').classList.add('show');
+                }
+            } catch (error) {
+                showAlert('加载失败: ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * 搜索租户
+         */
+        function searchTenants() {
+            const name = document.getElementById('searchName').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            
+            const filtered = allTenants.filter(t => {
+                const matchName = !name || t.tenantName.toLowerCase().includes(name) || t.tenantCode.toLowerCase().includes(name);
+                const matchStatus = !status || t.status === status;
+                return matchName && matchStatus;
+            });
+            
+            console.log('搜索结果:', filtered);
+            // 这里可以显示搜索结果
+            showAlert(`找到 ${filtered.length} 个匹配的客户`, 'info');
+        }
+        
+        /**
+         * 重置搜索
+         */
+        function resetSearch() {
+            document.getElementById('searchName').value = '';
+            document.getElementById('statusFilter').value = '';
+            currentPage = 1;
+            loadTenants();
+        }
+        
+        /**
+         * 分页导航
+         */
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadTenants();
+            }
+        }
+        
+        function nextPage() {
+            currentPage++;
+            loadTenants();
+        }
+        
+        /**
+         * 关闭弹窗
+         */
+        function closeModal() {
+            document.getElementById('tenantModal').classList.remove('show');
+        }
+        
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('show');
+        }
+        
+        /**
+         * 显示提示信息
+         */
+        function showAlert(message, type = 'info') {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            container.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+        
+        /**
+         * 重定向到登录页
+         */
+        function redirectToLogin() {
+            window.location.href = '/pages/login.html';
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // 关闭弹窗的点击事件
+        document.getElementById('tenantModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDetailModal();
+        });
+    </script>
+</body>
+</html>

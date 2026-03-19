@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>群组管理系统 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="../css/stat-cards-standard.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <style>
+        /* ==================== 页面整体布局优化 ==================== */
+        .page-with-nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-4);
+        }
+
+        /* ==================== 自动组群触发条件 ==================== */
+        .auto-group-trigger {
+            margin-bottom: var(--space-6);
+            padding: var(--space-5);
+        }
+
+        .auto-group-trigger h3 {
+            margin-bottom: var(--space-4);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+
+        .trigger-status {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        @media (max-width: 768px) {
+            .trigger-status {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            transition: all var(--transition-normal);
+        }
+
+        .status-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .status-item i {
+            font-size: var(--font-size-xl);
+            color: var(--gray-500);
+            transition: all var(--transition-normal);
+        }
+
+        .status-item i.active {
+            color: #22c55e;
+        }
+
+        .status-item span {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        .status-badge {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-2xl);
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+        }
+
+        .status-badge.success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .status-badge.pending {
+            background: rgba(234, 179, 8, 0.2);
+            color: #eab308;
+        }
+
+        .trigger-hint {
+            margin-top: var(--space-3);
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            text-align: center;
+        }
+
+        /* ==================== 群组概览统计 ==================== */
+        .groups-overview {
+            margin-bottom: var(--space-6);
+            padding: var(--space-5);
+        }
+
+        .groups-overview h3 {
+            margin-bottom: var(--space-4);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+
+        /* ==================== 群组列表 ==================== */
+        .groups-list {
+            margin-bottom: var(--space-6);
+            padding: var(--space-5);
+        }
+
+        .groups-list h3 {
+            margin-bottom: var(--space-4);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+
+        .group-filters {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            flex-wrap: wrap;
+        }
+
+        .group-filters select,
+        .group-filters input {
+            padding: var(--space-2) var(--space-3);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.05);
+            font-size: var(--font-size-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .group-filters select:focus,
+        .group-filters input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .groups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: var(--space-4);
+        }
+
+        @media (max-width: 768px) {
+            .groups-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .group-card {
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            padding: var(--space-4);
+        }
+
+        .group-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 var(--space-2) var(--space-6) rgba(0, 0, 0, 0.12);
+        }
+
+        .group-header {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-3);
+        }
+
+        .group-avatar {
+            width: var(--space-12);
+            height: var(--space-12);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: var(--font-size-xl);
+            flex-shrink: 0;
+        }
+
+        .group-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .group-info h4 {
+            font-size: var(--font-size-base);
+            margin-bottom: var(--space-1);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .group-info p {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .group-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            font-size: var(--font-size-xs);
+        }
+
+        .activity-indicator {
+            width: var(--space-2);
+            height: var(--space-2);
+            border-radius: 50%;
+            background: var(--gray-400);
+        }
+
+        .activity-indicator.active {
+            background: #22c55e;
+            box-shadow: 0 0 0 var(--space-1) rgba(34, 197, 94, 0.2);
+        }
+
+        .group-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--space-4);
+            padding: var(--space-3) 0;
+            border-top: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-bottom: var(--space-px) solid rgba(255, 255, 255, 0.1);
+        }
+
+        .group-stats .stat {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+        }
+
+        .group-members-preview {
+            margin-bottom: var(--space-3);
+        }
+
+        .member-avatars {
+            display: flex;
+            align-items: center;
+        }
+
+        .member-avatar {
+            width: var(--space-8);
+            height: var(--space-8);
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            margin-left: calc(var(--space-2) * -1);
+            border: var(--space-px) solid white;
+        }
+
+        .member-avatar:first-child {
+            margin-left: 0;
+        }
+
+        .member-more {
+            width: var(--space-8);
+            height: var(--space-8);
+            border-radius: 50%;
+            background: var(--gray-300);
+            color: var(--gray-700);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: calc(var(--space-2) * -1);
+            border: var(--space-px) solid white;
+        }
+
+        .group-actions {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        .group-actions .btn-sm {
+            padding: var(--space-1) var(--space-3);
+            font-size: var(--font-size-sm);
+            min-width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+
+        .group-actions .btn-sm:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .group-actions .btn-sm.btn-danger:hover {
+            background: var(--error-color);
+            color: white;
+            border-color: var(--error-color);
+        }
+
+        /* ==================== 群组详情弹窗 ==================== */
+        .group-detail-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 var(--space-12) var(--space-16) rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-4);
+            border-bottom: var(--space-px) solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header h3 {
+            font-size: var(--font-size-xl);
+        }
+
+        .modal-tabs {
+            display: flex;
+            gap: var(--space-1);
+            margin-bottom: var(--space-4);
+            overflow-x: auto;
+        }
+
+        .modal-tabs .tab {
+            flex: 1;
+            text-align: center;
+            padding: var(--space-3) var(--space-3);
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-tabs .tab:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .modal-tabs .tab.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .modal-content {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            flex-wrap: wrap;
+        }
+
+        .panel-actions .btn-sm {
+            padding: var(--space-1) var(--space-3);
+            font-size: var(--font-size-sm);
+            min-width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+
+        /* ==================== 成员列表 ==================== */
+        .members-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+        }
+
+        .member-item .member-avatar {
+            width: var(--space-10);
+            height: var(--space-10);
+            font-size: var(--font-size-base);
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-weight: 500;
+            font-size: var(--font-size-base);
+        }
+
+        .member-role {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+        }
+
+        .member-badge {
+            padding: var(--space-1) var(--space-2);
+            background: rgba(102, 126, 234, 0.2);
+            border: var(--space-px) solid rgba(102, 126, 234, 0.3);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            color: var(--primary-color);
+        }
+
+        .member-actions {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        .member-actions .btn-sm {
+            padding: var(--space-1) var(--space-3);
+            font-size: var(--font-size-sm);
+            min-width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+
+        /* ==================== 任务列表 ==================== */
+        .tasks-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .task-item {
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-2);
+        }
+
+        .task-title {
+            font-weight: 600;
+            font-size: var(--font-size-base);
+        }
+
+        .task-status {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+        }
+
+        .task-status.status-pending {
+            background: rgba(234, 179, 8, 0.2);
+            color: #eab308;
+        }
+
+        .task-status.status-in-progress {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .task-status.status-completed {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .task-desc {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            margin-bottom: var(--space-2);
+        }
+
+        .task-meta {
+            display: flex;
+            gap: var(--space-4);
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+            margin-bottom: var(--space-3);
+        }
+
+        .task-meta span {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        .task-actions .btn-sm {
+            padding: var(--space-1) var(--space-3);
+            font-size: var(--font-size-sm);
+            min-width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+
+        /* ==================== 消息列表 ==================== */
+        .messages-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .message-item {
+            display: flex;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+        }
+
+        .message-avatar {
+            width: var(--space-10);
+            height: var(--space-10);
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--space-1);
+        }
+
+        .sender-name {
+            font-weight: 500;
+            font-size: var(--font-size-sm);
+        }
+
+        .message-time {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+        }
+
+        .message-text {
+            font-size: var(--font-size-sm);
+            color: var(--gray-700);
+        }
+
+        /* ==================== 欢迎消息配置 ==================== */
+        .welcome-config h4 {
+            margin-bottom: var(--space-4);
+            font-size: var(--font-size-base);
+            font-weight: 600;
+        }
+
+        .setting-item {
+            margin-bottom: var(--space-4);
+        }
+
+        .setting-item label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: var(--space-2);
+            font-size: var(--font-size-sm);
+        }
+
+        .template-selector {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .template-option {
+            display: flex;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .template-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .template-option input[type="radio"]:checked + .template-preview {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .template-preview {
+            flex: 1;
+        }
+
+        .template-preview strong {
+            display: block;
+            margin-bottom: var(--space-1);
+            font-size: var(--font-size-base);
+        }
+
+        .template-preview p {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+        }
+
+        .welcome-preview {
+            margin-top: var(--space-4);
+        }
+
+        .welcome-preview h5 {
+            margin-bottom: var(--space-2);
+            font-size: var(--font-size-sm);
+        }
+
+        .preview-box {
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            white-space: pre-wrap;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: var(--space-3);
+            margin-top: var(--space-4);
+        }
+
+        .setting-actions {
+            display: flex;
+            gap: var(--space-3);
+            margin-top: var(--space-4);
+        }
+
+        /* ==================== 群组分析 ==================== */
+        .group-analytics {
+            margin-bottom: var(--space-6);
+            padding: var(--space-5);
+        }
+
+        .group-analytics h3 {
+            margin-bottom: var(--space-4);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+
+        .analytics-charts {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-4);
+        }
+
+        @media (max-width: 1024px) {
+            .analytics-charts {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+        }
+
+        .chart-container h4 {
+            margin-bottom: var(--space-4);
+            font-size: var(--font-size-base);
+            font-weight: 600;
+        }
+
+        .activity-bars {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .activity-bar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .activity-bar .group-name {
+            width: 120px;
+            font-size: var(--font-size-xs);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: var(--space-2);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width var(--transition-normal);
+        }
+
+        .bar-value {
+            width: 40px;
+            text-align: right;
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+        }
+
+        .member-distribution {
+            display: grid;
+            gap: var(--space-2);
+        }
+
+        .distribution-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-2);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+        }
+
+        .type-label {
+            font-weight: 500;
+            font-size: var(--font-size-sm);
+        }
+
+        .type-count,
+        .type-members {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+        }
+
+        /* ==================== 批量操作 ==================== */
+        .bulk-operations {
+            margin-bottom: var(--space-6);
+            padding: var(--space-5);
+        }
+
+        .bulk-operations h3 {
+            margin-bottom: var(--space-4);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+
+        .bulk-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-3);
+        }
+
+        .bulk-actions button {
+            padding: var(--space-2) var(--space-4);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-1);
+        }
+
+        .bulk-actions button:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        @media (max-width: 1024px) {
+            .bulk-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .bulk-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ==================== 滚动条美化 ==================== */
+        .group-detail-modal::-webkit-scrollbar,
+        .modal-content::-webkit-scrollbar {
+            width: var(--space-2);
+        }
+
+        .group-detail-modal::-webkit-scrollbar-track,
+        .modal-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+        }
+
+        .group-detail-modal::-webkit-scrollbar-thumb,
+        .modal-content::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: var(--radius-md);
+        }
+
+        .group-detail-modal::-webkit-scrollbar-thumb:hover,
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">群组管理系统</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card">
+            <div>
+                <h2>💬 群组管理系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    <span class="group-count">{{ groups.length }}个群组</span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="createGroup">
+                    <i class="fas fa-plus"></i>
+                    创建群组
+                </button>
+            </div>
+        </div>
+
+        <!-- 自动组群触发条件 -->
+        <div class="auto-group-trigger glass-card">
+            <h3>🔄 自动组群状态</h3>
+            <div class="trigger-status">
+                <div class="status-item">
+                    <i class="fas fa-user-check" :class="{ active: autoGroupConditions.auditCompleted }"></i>
+                    <span>人员审核完成</span>
+                    <span class="status-badge" :class="autoGroupConditions.auditCompleted ? 'success' : 'pending'">
+                        {{ autoGroupConditions.auditCompleted ? '已完成' : '待完成' }}
+                    </span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-file-alt" :class="{ active: autoGroupConditions.rosterGenerated }"></i>
+                    <span>手册生成完毕</span>
+                    <span class="status-badge" :class="autoGroupConditions.rosterGenerated ? 'success' : 'pending'">
+                        {{ autoGroupConditions.rosterGenerated ? '已完成' : '待完成' }}
+                    </span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-robot" :class="{ active: autoGroupConditions.autoCreated }"></i>
+                    <span>自动组群已执行</span>
+                    <span class="status-badge" :class="autoGroupConditions.autoCreated ? 'success' : 'pending'">
+                        {{ autoGroupConditions.autoCreated ? '已创建' : '待执行' }}
+                    </span>
+                </div>
+            </div>
+            <button class="btn-primary"
+                    @click="triggerAutoGroup"
+                    :disabled="!canAutoGroup || autoGroupConditions.autoCreated">
+                <i class="fas fa-magic"></i>
+                {{ autoGroupConditions.autoCreated ? '自动组群已完成' : '执行自动组群' }}
+            </button>
+            <p class="trigger-hint" v-if="!canAutoGroup">
+                <i class="fas fa-info-circle"></i>
+                请先完成人员审核和手册生成后，才能执行自动组群
+            </p>
+        </div>
+
+        <!-- 群组概览 -->
+        <div class="groups-overview glass-card">
+            <h3>📊 群组概览</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ groupStats.total }}</div>
+                        <div class="stat-label">总群组数</div>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ groupStats.active }}</div>
+                        <div class="stat-label">活跃群组</div>
+                    </div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ groupStats.totalMembers }}</div>
+                        <div class="stat-label">总成员数</div>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-message"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ groupStats.todayMessages }}</div>
+                        <div class="stat-label">今日消息</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 群组列表 -->
+        <div class="groups-list glass-card">
+            <h3>👥 会议群组</h3>
+            
+            <div class="group-filters">
+                <select v-model="groupFilter">
+                    <option value="all">全部群组</option>
+                    <option value="manager">协管员群</option>
+                    <option value="attendee">学员群</option>
+                    <option value="study">学习小组</option>
+                </select>
+                <input type="text" 
+                       v-model="searchQuery" 
+                       placeholder="搜索群组..." 
+                       class="search-input">
+            </div>
+
+            <div class="groups-grid">
+                <div v-for="group in filteredGroups" 
+                     :key="group.id"
+                     class="group-card glass-card"
+                     @click="viewGroup(group.id)">
+                    <div class="group-header">
+                        <div class="group-avatar" :style="{ background: group.color }">
+                            <i :class="group.icon"></i>
+                        </div>
+                        <div class="group-info">
+                            <h4>{{ group.name }}</h4>
+                            <p>{{ group.description }}</p>
+                        </div>
+                        <div class="group-status">
+                            <span class="activity-indicator" :class="{ active: group.active }"></span>
+                            <span>{{ group.active ? '活跃' : '静默' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="group-stats">
+                        <div class="stat">
+                            <i class="fas fa-users"></i>
+                            <span>{{ group.memberCount }}人</span>
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-comment"></i>
+                            <span>{{ group.todayMessages }}条消息</span>
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-clock"></i>
+                            <span>{{ formatTime(group.lastActive) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="group-members-preview">
+                        <div class="member-avatars">
+                            <div v-for="(member, index) in group.recentMembers.slice(0, 5)" 
+                                 :key="member.id"
+                                 class="member-avatar"
+                                 :style="{ zIndex: 5 - index }">
+                                {{ member.name[0] }}
+                            </div>
+                            <div v-if="group.memberCount > 5" class="member-more">
+                                +{{ group.memberCount - 5 }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="group-actions">
+                        <button class="btn-sm btn-primary" @click.stop="sendMessage(group.id)">
+                            <i class="fas fa-paper-plane"></i>
+                            发送消息
+                        </button>
+                        <button class="btn-sm btn-outline" @click.stop="manageMembers(group.id)">
+                            <i class="fas fa-users-cog"></i>
+                            管理成员
+                        </button>
+                        <button class="btn-sm btn-outline" @click.stop="groupSettings(group.id)">
+                            <i class="fas fa-cog"></i>
+                            设置
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 群组详情弹窗 (v-if显示) -->
+        <div v-if="selectedGroup" class="group-detail-modal glass-card">
+            <div class="modal-header">
+                <h3>{{ selectedGroup.name }}</h3>
+                <button class="btn-icon" @click="selectedGroup = null">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-tabs">
+                <div class="tab"
+                     :class="{ active: activeTab === 'members' }"
+                     @click="activeTab = 'members'">
+                    成员管理
+                </div>
+                <div class="tab"
+                     :class="{ active: activeTab === 'tasks' }"
+                     @click="activeTab = 'tasks'">
+                    群组任务
+                </div>
+                <div class="tab"
+                     :class="{ active: activeTab === 'messages' }"
+                     @click="activeTab = 'messages'">
+                    消息记录
+                </div>
+                <div class="tab"
+                     :class="{ active: activeTab === 'welcome' }"
+                     @click="activeTab = 'welcome'">
+                    欢迎消息
+                </div>
+                <div class="tab"
+                     :class="{ active: activeTab === 'settings' }"
+                     @click="activeTab = 'settings'">
+                    群组设置
+                </div>
+            </div>
+
+            <div class="modal-content">
+                <!-- 成员管理 -->
+                <div v-if="activeTab === 'members'" class="members-panel">
+                    <div class="panel-actions">
+                        <button class="btn-primary" @click="addMembers">
+                            <i class="fas fa-user-plus"></i>
+                            添加成员
+                        </button>
+                        <button class="btn-outline" @click="importMembers">
+                            <i class="fas fa-upload"></i>
+                            批量导入
+                        </button>
+                    </div>
+
+                    <div class="members-list">
+                        <div v-for="member in selectedGroup.members" 
+                             :key="member.id"
+                             class="member-item">
+                            <div class="member-avatar">{{ member.name[0] }}</div>
+                            <div class="member-info">
+                                <div class="member-name">{{ member.name }}</div>
+                                <div class="member-role">{{ member.department }}</div>
+                            </div>
+                            <div class="member-badge" v-if="member.isAdmin">管理员</div>
+                            <div class="member-actions">
+                                <button class="btn-sm btn-outline" @click="setAdmin(member.id)">
+                                    {{ member.isAdmin ? '取消管理员' : '设为管理员' }}
+                                </button>
+                                <button class="btn-sm btn-danger" @click="removeMember(member.id)">
+                                    移除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 群组任务 -->
+                <div v-if="activeTab === 'tasks'" class="tasks-panel">
+                    <div class="panel-actions">
+                        <button class="btn-primary" @click="addTask">
+                            <i class="fas fa-plus"></i>
+                            添加任务
+                        </button>
+                    </div>
+
+                    <div class="tasks-list">
+                        <div v-for="task in groupTasks"
+                             :key="task.id"
+                             class="task-item">
+                            <div class="task-header">
+                                <div class="task-title">{{ task.title }}</div>
+                                <div class="task-status" :class="'status-' + task.status">
+                                    {{ getTaskStatusText(task.status) }}
+                                </div>
+                            </div>
+                            <div class="task-desc">{{ task.description }}</div>
+                            <div class="task-meta">
+                                <span><i class="fas fa-calendar"></i> {{ formatDateTime(task.deadline) }}</span>
+                                <span><i class="fas fa-user"></i> 负责人: {{ task.assignee }}</span>
+                            </div>
+                            <div class="task-actions">
+                                <button class="btn-sm btn-outline" @click="editTask(task.id)">
+                                    <i class="fas fa-edit"></i>
+                                    编辑
+                                </button>
+                                <button class="btn-sm btn-outline" @click="viewTaskProgress(task.id)">
+                                    <i class="fas fa-chart-line"></i>
+                                    进度
+                                </button>
+                                <button class="btn-sm btn-danger" @click="deleteTask(task.id)">
+                                    <i class="fas fa-trash"></i>
+                                    删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 消息记录 -->
+                <div v-if="activeTab === 'messages'" class="messages-panel">
+                    <div class="messages-list">
+                        <div v-for="message in groupMessages"
+                             :key="message.id"
+                             class="message-item">
+                            <div class="message-avatar">{{ message.sender[0] }}</div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <span class="sender-name">{{ message.sender }}</span>
+                                    <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+                                </div>
+                                <div class="message-text">{{ message.content }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 欢迎消息 -->
+                <div v-if="activeTab === 'welcome'" class="welcome-panel">
+                    <div class="welcome-config">
+                        <h4>欢迎消息设置</h4>
+                        <div class="setting-item">
+                            <label>群公告</label>
+                            <textarea v-model="selectedGroup.announcement"
+                                      class="input"
+                                      rows="4"
+                                      placeholder="请输入群公告内容..."></textarea>
+                        </div>
+
+                        <div class="setting-item">
+                            <label>欢迎消息模板</label>
+                            <div class="template-selector">
+                                <label class="template-option">
+                                    <input type="radio" v-model="welcomeTemplate" value="standard">
+                                    <div class="template-preview">
+                                        <strong>标准模板</strong>
+                                        <p>欢迎加入【{群组名称}】！本群用于【{群组用途}】，请遵守群规。</p>
+                                    </div>
+                                </label>
+                                <label class="template-option">
+                                    <input type="radio" v-model="welcomeTemplate" value="detailed">
+                                    <div class="template-preview">
+                                        <strong>详细模板</strong>
+                                        <p>欢迎加入【{群组名称}】！群管理员：{管理员名单}。本群用于{群组用途}，请遵守群规：1.xxx 2.xxx</p>
+                                    </div>
+                                </label>
+                                <label class="template-option">
+                                    <input type="radio" v-model="welcomeTemplate" value="custom">
+                                    <div class="template-preview">
+                                        <strong>自定义模板</strong>
+                                        <p>使用下方编辑器自定义欢迎消息</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="setting-item" v-if="welcomeTemplate === 'custom'">
+                            <label>自定义欢迎消息</label>
+                            <textarea v-model="customWelcomeMessage"
+                                      class="input"
+                                      rows="6"
+                                      placeholder="请输入自定义欢迎消息，支持变量：{群组名称}、{管理员}、{群组用途}等"></textarea>
+                        </div>
+
+                        <div class="welcome-preview" v-if="welcomeTemplate">
+                            <h5>消息预览</h5>
+                            <div class="preview-box">
+                                {{ getWelcomeMessagePreview() }}
+                            </div>
+                        </div>
+
+                        <div class="welcome-actions">
+                            <button class="btn-primary" @click="sendWelcomeMessage">
+                                <i class="fas fa-paper-plane"></i>
+                                发送欢迎消息
+                            </button>
+                            <button class="btn-outline" @click="saveWelcomeSettings">
+                                <i class="fas fa-save"></i>
+                                保存设置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 群组设置 -->
+                <div v-if="activeTab === 'settings'" class="settings-panel">
+                    <div class="setting-item">
+                        <label>群组名称</label>
+                        <input type="text" v-model="selectedGroup.name" class="input">
+                    </div>
+                    <div class="setting-item">
+                        <label>群组描述</label>
+                        <textarea v-model="selectedGroup.description" class="input" rows="3"></textarea>
+                    </div>
+                    <div class="setting-item">
+                        <label>群组类型</label>
+                        <select v-model="selectedGroup.type" class="select">
+                            <option value="manager">协管员群</option>
+                            <option value="attendee">学员群</option>
+                            <option value="study">学习小组</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" v-model="selectedGroup.allowMemberInvite">
+                            允许成员邀请
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" v-model="selectedGroup.muteAllMembers">
+                            全员禁言
+                        </label>
+                    </div>
+                    <div class="setting-actions">
+                        <button class="btn-primary" @click="saveGroupSettings">保存设置</button>
+                        <button class="btn-danger" @click="deleteGroup">删除群组</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 群组分析 -->
+        <div class="group-analytics glass-card">
+            <h3>📈 群组分析</h3>
+            
+            <div class="analytics-charts">
+                <div class="chart-container">
+                    <h4>消息活跃度</h4>
+                    <div class="activity-bars">
+                        <div v-for="group in groups.slice(0, 5)" 
+                             :key="group.id"
+                             class="activity-bar">
+                            <span class="group-name">{{ group.name }}</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" 
+                                     :style="{ width: (group.todayMessages / groupStats.todayMessages * 100) + '%' }">
+                                </div>
+                            </div>
+                            <span class="bar-value">{{ group.todayMessages }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h4>成员分布</h4>
+                    <div class="member-distribution">
+                        <div v-for="type in groupTypes" 
+                             :key="type.id"
+                             class="distribution-item">
+                            <div class="type-label">{{ type.name }}</div>
+                            <div class="type-count">{{ getGroupCountByType(type.id) }}个群组</div>
+                            <div class="type-members">{{ getMemberCountByType(type.id) }}人</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 批量操作 -->
+        <div class="bulk-operations glass-card">
+            <h3>⚡ 批量操作</h3>
+            
+            <div class="bulk-actions">
+                <button class="btn-outline" @click="bulkSendMessage">
+                    <i class="fas fa-bullhorn"></i>
+                    批量发送消息
+                </button>
+                <button class="btn-outline" @click="bulkAddMembers">
+                    <i class="fas fa-users"></i>
+                    批量添加成员
+                </button>
+                <button class="btn-outline" @click="exportGroupData">
+                    <i class="fas fa-download"></i>
+                    导出群组数据
+                </button>
+                <button class="btn-outline" @click="syncGroups">
+                    <i class="fas fa-sync"></i>
+                    同步群组
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/group-system.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    // 自动组群触发条件
+                    autoGroupConditions: {
+                        auditCompleted: true,
+                        rosterGenerated: true,
+                        autoCreated: false
+                    },
+                    groupStats: {
+                        total: 4,
+                        active: 3,
+                        totalMembers: 398,
+                        todayMessages: 567
+                    },
+                    groups: [
+                        {
+                            id: 'group_managers',
+                            name: '协管员工作群',
+                            description: '会务工作人员协同群组',
+                            type: 'manager',
+                            icon: 'fas fa-tools',
+                            color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            active: true,
+                            memberCount: 12,
+                            todayMessages: 87,
+                            lastActive: new Date(Date.now() - 300000),
+                            recentMembers: [
+                                { id: 'u1', name: '张三', department: '会场管理' },
+                                { id: 'u2', name: '李四', department: '接待服务' }
+                            ],
+                            members: [
+                                { id: 'u1', name: '张三', department: '会场管理', isAdmin: true },
+                                { id: 'u2', name: '李四', department: '接待服务', isAdmin: false }
+                            ],
+                            allowMemberInvite: false,
+                            muteAllMembers: false,
+                            announcement: '协管员工作群 - 用于会务工作协同和沟通',
+                            autoCreated: true
+                        },
+                        {
+                            id: 'group_all',
+                            name: '学员全员群',
+                            description: '全体参会学员交流群',
+                            type: 'attendee',
+                            icon: 'fas fa-user-graduate',
+                            color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                            active: true,
+                            memberCount: 356,
+                            todayMessages: 234,
+                            lastActive: new Date(Date.now() - 60000),
+                            recentMembers: [],
+                            members: [],
+                            allowMemberInvite: true,
+                            muteAllMembers: false,
+                            announcement: '欢迎加入学员全员群！请在此群交流学习心得',
+                            autoCreated: true
+                        },
+                        {
+                            id: 'group_1',
+                            name: '第一学习小组',
+                            description: '小组学习讨论群',
+                            type: 'study',
+                            icon: 'fas fa-users',
+                            color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                            active: true,
+                            memberCount: 25,
+                            todayMessages: 156,
+                            lastActive: new Date(Date.now() - 180000),
+                            recentMembers: [],
+                            members: [],
+                            allowMemberInvite: true,
+                            muteAllMembers: false,
+                            announcement: '第一学习小组群，用于小组学习和讨论',
+                            autoCreated: true
+                        }
+                    ],
+                    groupFilter: 'all',
+                    searchQuery: '',
+                    selectedGroup: null,
+                    activeTab: 'members',
+                    groupMessages: [],
+                    // 群组任务
+                    groupTasks: [
+                        { id: 'task1', title: '收集学员反馈', description: '收集本次培训的学员反馈意见', status: 'pending', deadline: new Date(Date.now() + 86400000), assignee: '张三' },
+                        { id: 'task2', title: '整理讨论记录', description: '整理小组讨论的会议记录', status: 'in_progress', deadline: new Date(Date.now() + 172800000), assignee: '李四' }
+                    ],
+                    // 欢迎消息
+                    welcomeTemplate: 'standard',
+                    customWelcomeMessage: '',
+                    groupTypes: [
+                        { id: 'manager', name: '协管员群' },
+                        { id: 'attendee', name: '学员群' },
+                        { id: 'study', name: '学习小组' }
+                    ]
+                }
+            },
+            computed: {
+                filteredGroups() {
+                    let groups = this.groups;
+
+                    if (this.groupFilter !== 'all') {
+                        groups = groups.filter(g => g.type === this.groupFilter);
+                    }
+
+                    if (this.searchQuery) {
+                        groups = groups.filter(g =>
+                            g.name.includes(this.searchQuery) ||
+                            g.description.includes(this.searchQuery)
+                        );
+                    }
+
+                    return groups;
+                },
+                canAutoGroup() {
+                    return this.autoGroupConditions.auditCompleted && this.autoGroupConditions.rosterGenerated;
+                }
+            },
+            async mounted() {
+                await this.initialize();
+            },
+            methods: {
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                        
+                        // 初始化群组系统
+                        if (typeof initializeGroupSystem === 'function') {
+                            await initializeGroupSystem(conferenceId);
+                        }
+                    } else {
+                        // 如果没有会议ID，使用示例数据
+                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '示例会议'
+                        };
+                    }
+                },
+                
+                createGroup() {
+                    this.$showToast('创建新群组功能', 'info');
+                },
+                
+                viewGroup(groupId) {
+                    this.selectedGroup = this.groups.find(g => g.id === groupId);
+                    this.activeTab = 'members';
+                    this.loadGroupMessages(groupId);
+                },
+                
+                loadGroupMessages(groupId) {
+                    // 模拟加载消息
+                    this.groupMessages = [
+                        {
+                            id: 1,
+                            sender: '张三',
+                            content: '大家好，请确认今天的任务分配',
+                            timestamp: new Date(Date.now() - 3600000)
+                        },
+                        {
+                            id: 2,
+                            sender: '李四',
+                            content: '收到，正在处理',
+                            timestamp: new Date(Date.now() - 1800000)
+                        }
+                    ];
+                },
+                
+                async sendMessage(groupId) {
+                    const message = prompt('请输入要发送的消息:');
+                    if (message && message.trim()) {
+                        try {
+                            if (this.$showLoading) {
+                                this.$showLoading('正在发送消息...');
+                            }
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            if (this.$hideLoading) {
+                                this.$hideLoading();
+                            }
+                            this.$showToast(`消息已发送到群组 ${groupId}`, 'success');
+                        } catch (error) {
+                            if (this.$hideLoading) {
+                                this.$hideLoading();
+                            }
+                            if (this.$showToast) {
+                                this.$showToast('发送失败，请重试', 'error');
+                            }
+                        }
+                    }
+                },
+                
+                manageMembers(groupId) {
+                    const group = this.groups.find(g => g.id === groupId);
+                    this.selectedGroup = group;
+                    this.activeTab = 'members';
+                },
+                
+                groupSettings(groupId) {
+                    const group = this.groups.find(g => g.id === groupId);
+                    this.selectedGroup = group;
+                    this.activeTab = 'settings';
+                },
+                
+                addMembers() {
+                    this.$showToast('添加成员功能', 'info');
+                },
+                
+                importMembers() {
+                    this.$showToast('批量导入成员功能', 'info');
+                },
+                
+                setAdmin(memberId) {
+                    this.$showToast(`设置管理员: ${memberId}`, 'info');
+                },
+                
+                async removeMember(memberId) {
+                    const confirmed = await this.$showConfirm(
+                        '确定要移除该成员吗？',
+                        '移除成员',
+                        'warning'
+                    );
+                    if (confirmed) {
+                        try {
+                            if (this.$showLoading) {
+                                this.$showLoading('正在移除成员...');
+                            }
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            if (this.$hideLoading) {
+                                this.$hideLoading();
+                            }
+                            this.$showToast('成员已移除', 'success');
+                        } catch (error) {
+                            if (this.$hideLoading) {
+                                this.$hideLoading();
+                            }
+                            if (this.$showToast) {
+                                this.$showToast('移除失败，请重试', 'error');
+                            }
+                        }
+                    }
+                },
+                
+                async saveGroupSettings() {
+                    try {
+                        if (this.$showLoading) {
+                            this.$showLoading('正在保存群组设置...');
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        this.$showToast('群组设置已保存', 'success');
+                        this.selectedGroup = null;
+                    } catch (error) {
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        if (this.$showToast) {
+                            this.$showToast('保存失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                async deleteGroup() {
+                    const confirmed = await this.$showConfirm(
+                        '确定要删除该群组吗？此操作不可恢复！',
+                        '删除群组',
+                        'danger'
+                    );
+                    if (confirmed) {
+                        try {
+                            if (this.$showLoading) {
+                                this.$showLoading('正在删除群组...');
+                            }
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            if (this.$hideLoading) {
+                                this.$hideLoading();
+                            }
+                            this.$showToast('群组已删除', 'success');
+                            this.selectedGroup = null;
+                        } catch (error) {
+                            if (this.$hideLoading) {
+                                this.$hideLoading();
+                            }
+                            if (this.$showToast) {
+                                this.$showToast('删除失败，请重试', 'error');
+                            }
+                        }
+                    }
+                },
+                
+                getGroupCountByType(type) {
+                    return this.groups.filter(g => g.type === type).length;
+                },
+                
+                getMemberCountByType(type) {
+                    return this.groups
+                        .filter(g => g.type === type)
+                        .reduce((sum, g) => sum + g.memberCount, 0);
+                },
+                
+                bulkSendMessage() {
+                    this.$showToast('批量发送消息功能', 'info');
+                },
+                
+                bulkAddMembers() {
+                    this.$showToast('批量添加成员功能', 'info');
+                },
+                
+                async exportGroupData() {
+                    try {
+                        if (this.$showLoading) {
+                            this.$showLoading('正在导出群组数据...');
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        this.$showToast('群组数据已导出', 'success');
+                    } catch (error) {
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        if (this.$showToast) {
+                            this.$showToast('导出失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                async syncGroups() {
+                    try {
+                        if (this.$showLoading) {
+                            this.$showLoading('正在同步群组数据...');
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        this.$showToast('群组数据已同步', 'success');
+                    } catch (error) {
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        if (this.$showToast) {
+                            this.$showToast('同步失败，请重试', 'error');
+                        }
+                    }
+                },
+
+                // 自动组群相关方法
+                async triggerAutoGroup() {
+                    if (!this.canAutoGroup) {
+                        this.$showToast('请先完成前置条件', 'warning');
+                        return;
+                    }
+
+                    const confirmed = await this.$showConfirm(
+                        '确定要执行自动组群吗？系统将自动创建：\n• 1个全体人员群\n• 1个工作人员群\n• 各分组的学习小组群',
+                        '执行自动组群',
+                        'info'
+                    );
+
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('正在执行自动组群...');
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+
+                            // 标记自动组群已完成
+                            this.autoGroupConditions.autoCreated = true;
+
+                            // 添加欢迎消息标记
+                            this.groups.forEach(group => {
+                                group.autoCreated = true;
+                            });
+
+                            this.$hideLoading();
+                            this.$showToast('自动组群完成！已创建3个群组', 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('自动组群失败，请重试', 'error');
+                        }
+                    }
+                },
+
+                // 群组任务相关方法
+                addTask() {
+                    this.$showToast('添加群组任务功能', 'info');
+                },
+
+                editTask(taskId) {
+                    this.$showToast(`编辑任务: ${taskId}`, 'info');
+                },
+
+                viewTaskProgress(taskId) {
+                    this.$showToast(`查看任务进度: ${taskId}`, 'info');
+                },
+
+                async deleteTask(taskId) {
+                    const confirmed = await this.$showConfirm(
+                        '确定要删除该任务吗？',
+                        '删除任务',
+                        'warning'
+                    );
+                    if (confirmed) {
+                        this.groupTasks = this.groupTasks.filter(t => t.id !== taskId);
+                        this.$showToast('任务已删除', 'success');
+                    }
+                },
+
+                getTaskStatusText(status) {
+                    const statusMap = {
+                        pending: '待开始',
+                        in_progress: '进行中',
+                        completed: '已完成',
+                        cancelled: '已取消'
+                    };
+                    return statusMap[status] || status;
+                },
+
+                // 欢迎消息相关方法
+                getWelcomeMessagePreview() {
+                    if (!this.selectedGroup) return '';
+
+                    const groupName = this.selectedGroup.name;
+                    const groupPurpose = this.selectedGroup.description || '交流学习';
+                    const admin = this.selectedGroup.members?.find(m => m.isAdmin)?.name || '管理员';
+
+                    if (this.welcomeTemplate === 'standard') {
+                        return `欢迎加入【${groupName}】！\n\n本群用于【${groupPurpose}】，请遵守群规，共同维护良好的交流环境。`;
+                    } else if (this.welcomeTemplate === 'detailed') {
+                        return `欢迎加入【${groupName}】！\n\n群管理员：${admin}\n\n本群用于：${groupPurpose}\n\n请遵守群规：\n1. 文明发言，尊重他人\n2. 禁止发布无关广告\n3. 遵守保密原则\n\n祝您学习愉快！`;
+                    } else {
+                        return this.customWelcomeMessage
+                            .replace(/{群组名称}/g, groupName)
+                            .replace(/{群组用途}/g, groupPurpose)
+                            .replace(/{管理员}/g, admin);
+                    }
+                },
+
+                async sendWelcomeMessage() {
+                    const confirmed = await this.$showConfirm(
+                        '确定要发送欢迎消息到群组吗？',
+                        '发送欢迎消息',
+                        'info'
+                    );
+
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('正在发送欢迎消息...');
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            this.$hideLoading();
+                            this.$showToast('欢迎消息已发送', 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('发送失败，请重试', 'error');
+                        }
+                    }
+                },
+
+                async saveWelcomeSettings() {
+                    try {
+                        this.$showLoading('正在保存设置...');
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        this.$hideLoading();
+                        this.$showToast('欢迎消息设置已保存', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('保存失败，请重试', 'error');
+                    }
+                },
+
+                formatTime(date) {
+                    if (!date) return '';
+                    const now = new Date();
+                    const diff = now - date;
+
+                    if (diff < 60000) return '刚刚';
+                    if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+                    if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+                    return date.toLocaleDateString('zh-CN');
+                },
+
+                formatDateTime(date) {
+                    if (!date) return '';
+                    return new Date(date).toLocaleString('zh-CN');
+                },
+                
+                goBack() {
+                    window.history.back();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+        </div><!-- 关闭page-with-nav -->
+</body>
+</html>

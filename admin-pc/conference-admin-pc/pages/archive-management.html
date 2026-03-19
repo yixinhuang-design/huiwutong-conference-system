@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会议归档管理 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <style>
+        .archive-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .archive-tab-btn {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            background: transparent;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .archive-tab-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--primary-color);
+        }
+
+        .archive-tab-btn.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary-color);
+        }
+
+        .archive-tab-btn .badge {
+            padding: 0.125rem 0.5rem;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 1rem;
+            font-size: 0.75rem;
+        }
+
+        .archive-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .archive-stat-card {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+            text-align: center;
+        }
+
+        .archive-stat-card.primary {
+            border-color: rgba(102, 126, 234, 0.3);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .archive-stat-card.success {
+            border-color: rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.05);
+        }
+
+        .archive-stat-card.warning {
+            border-color: rgba(245, 158, 11, 0.3);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .archive-stat-card.info {
+            border-color: rgba(59, 130, 246, 0.3);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .archive-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+
+        .archive-stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        /* 资料列表 */
+        .material-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .material-card {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .material-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary-color);
+        }
+
+        .material-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .material-card.ppt .material-icon {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .material-card.pdf .material-icon {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .material-card.word .material-icon {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .material-card.video .material-icon {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+
+        .material-card.image .material-icon {
+            background: rgba(168, 85, 247, 0.1);
+            color: #a855f7;
+        }
+
+        .material-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+
+        .material-meta {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-bottom: 0.5rem;
+        }
+
+        .material-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* 学员互动内容 */
+        .interaction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .interaction-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .interaction-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .interaction-media {
+            width: 100%;
+            height: 140px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-500);
+            font-size: 2rem;
+        }
+
+        .interaction-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .interaction-content {
+            padding: 1rem;
+        }
+
+        .interaction-type {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary-color);
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .interaction-type.photo { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+        .interaction-type.video { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+        .interaction-type.experience { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .interaction-type.exchange { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
+        .interaction-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+
+        .interaction-text {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .interaction-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        /* 业务数据表格 */
+        .data-excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .data-excel-table thead {
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .data-excel-table th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-700);
+            border-bottom: 2px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .data-excel-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--gray-600);
+        }
+
+        .data-excel-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .data-excel-table .rate-cell {
+            font-weight: 600;
+        }
+
+        .data-excel-table .rate-cell.high { color: var(--success-color); }
+        .data-excel-table .rate-cell.medium { color: var(--warning-color); }
+        .data-excel-table .rate-cell.low { color: var(--error-color); }
+
+        .excel-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .data-section {
+            margin-bottom: 2rem;
+        }
+
+        .data-section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 1rem;
+        }
+
+        /* 消息记录 */
+        .message-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .message-group {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+        }
+
+        .message-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .message-group-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .message-group-meta {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        .message-preview {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-preview:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-content {
+            font-size: 0.875rem;
+            color: var(--gray-700);
+            margin-bottom: 0.25rem;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        .batch-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* 设置开关 */
+        .settings-card {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .settings-info { flex: 1; min-width: 200px; }
+
+        .settings-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+
+        .settings-desc {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .3s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* 危险操作区域 */
+        .danger-zone {
+            padding: 1.5rem;
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 0.75rem;
+            margin-top: 2rem;
+        }
+
+        .danger-zone h4 {
+            color: var(--error-color);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .danger-zone p {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 1rem;
+        }
+
+        .btn-danger {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-danger:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">会议归档管理</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav" style="padding-top: 90px !important;">
+            <!-- 页面头部 -->
+            <div class="page-header glass-card">
+                <div>
+                    <h2>📦 会议归档管理</h2>
+                    <div class="conference-context">
+                        <span class="context-label">当前会议:</span>
+                        <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    </div>
+                </div>
+                <div class="page-actions">
+                    <button class="btn-outline" @click="goBack">
+                        <i class="fas fa-arrow-left"></i>
+                        返回
+                    </button>
+                    <button class="btn-primary" @click="packAndDownload">
+                        <i class="fas fa-file-archive"></i>
+                        一键打包下载
+                    </button>
+                </div>
+            </div>
+
+            <!-- 归档概览统计 -->
+            <div class="archive-stats">
+                <div class="archive-stat-card primary">
+                    <div class="archive-stat-value">{{ archiveStats.courseware }}</div>
+                    <div class="archive-stat-label">📚 课件资料</div>
+                </div>
+                <div class="archive-stat-card success">
+                    <div class="archive-stat-value">{{ archiveStats.interaction }}</div>
+                    <div class="archive-stat-label">👥 学员互动</div>
+                </div>
+                <div class="archive-stat-card warning">
+                    <div class="archive-stat-value">{{ archiveStats.businessData }}</div>
+                    <div class="archive-stat-label">📊 业务数据</div>
+                </div>
+                <div class="archive-stat-card info">
+                    <div class="archive-stat-value">{{ archiveStats.messages }}</div>
+                    <div class="archive-stat-label">💬 消息条数</div>
+                </div>
+            </div>
+
+            <!-- 归档标签页 -->
+            <div class="archive-tabs">
+                <button class="archive-tab-btn" :class="{ active: currentTab === 'courseware' }" @click="switchTab('courseware')">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    课件类
+                    <span class="badge">{{ archiveStats.courseware }}</span>
+                </button>
+                <button class="archive-tab-btn" :class="{ active: currentTab === 'interaction' }" @click="switchTab('interaction')">
+                    <i class="fas fa-users"></i>
+                    学员互动类
+                    <span class="badge">{{ archiveStats.interaction }}</span>
+                </button>
+                <button class="archive-tab-btn" :class="{ active: currentTab === 'business' }" @click="switchTab('business')">
+                    <i class="fas fa-table"></i>
+                    业务数据类
+                    <span class="badge">{{ archiveStats.businessData }}</span>
+                </button>
+                <button class="archive-tab-btn" :class="{ active: currentTab === 'messages' }" @click="switchTab('messages')">
+                    <i class="fas fa-comments"></i>
+                    群组消息记录
+                    <span class="badge">{{ messageGroups.length }}</span>
+                </button>
+            </div>
+
+            <!-- ==================== 课件类 ==================== -->
+            <div v-show="currentTab === 'courseware'" class="glass-card">
+                <h3>📚 课件类资料</h3>
+                <p style="color: var(--gray-500); margin-bottom: 1rem;">管理员上传的课件、PPT、会议手册等资料</p>
+
+                <!-- 操作按钮 -->
+                <div class="batch-actions">
+                    <button class="btn-primary" @click="uploadCourseware">
+                        <i class="fas fa-upload"></i>
+                        上传课件
+                    </button>
+                    <button class="btn-outline" @click="downloadCategory('courseware')">
+                        <i class="fas fa-download"></i>
+                        下载全部课件
+                    </button>
+                </div>
+
+                <!-- 课件列表 -->
+                <div class="material-grid">
+                    <div v-for="item in coursewareList" :key="item.id" class="material-card" :class="item.type">
+                        <div class="material-icon">
+                            <i :class="getMaterialIcon(item.type)"></i>
+                        </div>
+                        <div class="material-title">{{ item.title }}</div>
+                        <div class="material-meta">
+                            {{ item.size }} · {{ item.uploadTime }} · {{ item.uploader }}
+                        </div>
+                        <div class="material-actions">
+                            <button class="btn-sm btn-outline" @click="downloadItem(item)">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn-sm btn-outline" @click="previewItem(item)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-sm btn-outline" @click="deleteItem(item, 'courseware')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 学员互动类 ==================== -->
+            <div v-show="currentTab === 'interaction'" class="glass-card">
+                <h3>👥 学员互动类资料</h3>
+                <p style="color: var(--gray-500); margin-bottom: 1rem;">交流照片、视频、交流内容、学习心得等</p>
+
+                <!-- 学员上传权限设置 -->
+                <div class="settings-card">
+                    <div class="settings-info">
+                        <div class="settings-title">
+                            <i class="fas fa-user-edit"></i>
+                            允许学员上传
+                        </div>
+                        <div class="settings-desc">会议初期需由管理员确认是否允许学员上传照片、视频、心得等内容</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" v-model="allowStudentUpload" @change="toggleStudentUpload">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="batch-actions">
+                    <button class="btn-primary" @click="uploadInteraction">
+                        <i class="fas fa-upload"></i>
+                        上传互动内容
+                    </button>
+                    <button class="btn-outline" @click="downloadCategory('interaction')">
+                        <i class="fas fa-download"></i>
+                        下载全部互动内容
+                    </button>
+                </div>
+
+                <!-- 互动内容列表 -->
+                <div class="interaction-grid">
+                    <div v-for="item in interactionList" :key="item.id" class="interaction-card">
+                        <div class="interaction-media">
+                            <img v-if="item.thumbnail" :src="item.thumbnail" :alt="item.title">
+                            <i v-else :class="getInteractionIcon(item.category)"></i>
+                        </div>
+                        <div class="interaction-content">
+                            <span class="interaction-type" :class="item.category">{{ getInteractionTypeLabel(item.category) }}</span>
+                            <div class="interaction-title">{{ item.title }}</div>
+                            <div class="interaction-text" v-if="item.content">{{ item.content }}</div>
+                            <div class="interaction-meta">
+                                <span><i class="fas fa-user"></i> {{ item.author }}</span>
+                                <span><i class="fas fa-clock"></i> {{ item.time }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 业务数据类 ==================== -->
+            <div v-show="currentTab === 'business'" class="glass-card">
+                <h3>📊 业务数据类</h3>
+                <p style="color: var(--gray-500); margin-bottom: 1rem;">报到率、签到率等业务数据，以Excel表格方式展示</p>
+
+                <!-- 操作按钮 -->
+                <div class="batch-actions">
+                    <button class="btn-primary" @click="exportBusinessExcel">
+                        <i class="fas fa-file-excel"></i>
+                        导出Excel
+                    </button>
+                    <button class="btn-outline" @click="refreshBusinessData">
+                        <i class="fas fa-sync"></i>
+                        刷新数据
+                    </button>
+                </div>
+
+                <!-- 报到率数据 -->
+                <div class="data-section">
+                    <div class="data-section-title">
+                        <span class="excel-icon"><i class="fas fa-file-excel"></i> Excel</span>
+                        报到率统计
+                    </div>
+                    <table class="data-excel-table">
+                        <thead>
+                            <tr>
+                                <th>部门/单位</th>
+                                <th>应报到</th>
+                                <th>已报到</th>
+                                <th>未报到</th>
+                                <th>报到率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in reportRateData" :key="item.department">
+                                <td>{{ item.department }}</td>
+                                <td>{{ item.expected }}</td>
+                                <td>{{ item.actual }}</td>
+                                <td>{{ item.expected - item.actual }}</td>
+                                <td class="rate-cell" :class="getRateClass(item.rate)">{{ item.rate }}%</td>
+                            </tr>
+                            <tr style="font-weight: 600; background: rgba(255,255,255,0.05);">
+                                <td>合计</td>
+                                <td>{{ totalReportData.expected }}</td>
+                                <td>{{ totalReportData.actual }}</td>
+                                <td>{{ totalReportData.expected - totalReportData.actual }}</td>
+                                <td class="rate-cell" :class="getRateClass(totalReportData.rate)">{{ totalReportData.rate }}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 签到率数据 -->
+                <div class="data-section">
+                    <div class="data-section-title">
+                        <span class="excel-icon"><i class="fas fa-file-excel"></i> Excel</span>
+                        签到率统计
+                    </div>
+                    <table class="data-excel-table">
+                        <thead>
+                            <tr>
+                                <th>日程名称</th>
+                                <th>日期时间</th>
+                                <th>应签到</th>
+                                <th>已签到</th>
+                                <th>缺席</th>
+                                <th>签到率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in checkinRateData" :key="item.id">
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.datetime }}</td>
+                                <td>{{ item.expected }}</td>
+                                <td>{{ item.actual }}</td>
+                                <td>{{ item.expected - item.actual }}</td>
+                                <td class="rate-cell" :class="getRateClass(item.rate)">{{ item.rate }}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 就寝率数据 -->
+                <div class="data-section">
+                    <div class="data-section-title">
+                        <span class="excel-icon"><i class="fas fa-file-excel"></i> Excel</span>
+                        查寝率统计
+                    </div>
+                    <table class="data-excel-table">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>应就寝</th>
+                                <th>已就寝</th>
+                                <th>未就寝</th>
+                                <th>就寝率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in dormitoryRateData" :key="item.date">
+                                <td>{{ item.date }}</td>
+                                <td>{{ item.expected }}</td>
+                                <td>{{ item.actual }}</td>
+                                <td>{{ item.expected - item.actual }}</td>
+                                <td class="rate-cell" :class="getRateClass(item.rate)">{{ item.rate }}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ==================== 群组消息记录 ==================== -->
+            <div v-show="currentTab === 'messages'" class="glass-card">
+                <h3>💬 群组消息记录</h3>
+                <p style="color: var(--gray-500); margin-bottom: 1rem;">群组内所有聊天记录归档</p>
+
+                <!-- 操作按钮 -->
+                <div class="batch-actions">
+                    <button class="btn-primary" @click="exportAllMessages">
+                        <i class="fas fa-file-export"></i>
+                        导出全部消息
+                    </button>
+                    <button class="btn-outline" @click="searchMessages">
+                        <i class="fas fa-search"></i>
+                        搜索消息
+                    </button>
+                </div>
+
+                <!-- 消息群组列表 -->
+                <div class="message-list">
+                    <div v-for="group in messageGroups" :key="group.id" class="message-group">
+                        <div class="message-group-header">
+                            <div class="message-group-title">
+                                <i class="fas fa-users"></i>
+                                {{ group.name }}
+                            </div>
+                            <div class="message-group-meta">
+                                {{ group.messageCount }}条消息 · 最后活跃: {{ group.lastActive }}
+                            </div>
+                            <button class="btn-sm btn-outline" @click="exportGroupMessages(group.id)">
+                                <i class="fas fa-download"></i>
+                                导出
+                            </button>
+                        </div>
+                        <div class="message-preview" v-for="msg in group.previewMessages" :key="msg.id">
+                            <div class="message-content">{{ msg.content }}</div>
+                            <div class="message-time">{{ msg.sender }} · {{ msg.time }}</div>
+                        </div>
+                        <div style="text-align: center; margin-top: 0.5rem;">
+                            <button class="btn-sm btn-outline" @click="viewAllMessages(group.id)">
+                                查看全部 {{ group.messageCount }} 条消息
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 危险操作区域 ==================== -->
+            <div class="danger-zone">
+                <h4><i class="fas fa-exclamation-triangle"></i> 危险操作区域</h4>
+                <p>下载完成后，您可以清空所有归档资料以保护数据安全。此操作不可恢复，请谨慎操作。</p>
+                <button class="btn-danger" :disabled="!hasDownloaded" @click="clearAllArchive">
+                    <i class="fas fa-trash-alt"></i>
+                    一键清空所有资料
+                </button>
+                <span v-if="!hasDownloaded" style="margin-left: 1rem; font-size: 0.875rem; color: var(--gray-500);">
+                    请先完成打包下载后再进行清空操作
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    currentTab: 'courseware',
+                    hasDownloaded: false,
+                    allowStudentUpload: true,
+                    
+                    // 归档统计
+                    archiveStats: {
+                        courseware: 12,
+                        interaction: 28,
+                        businessData: 3,
+                        messages: 456
+                    },
+
+                    // 课件类数据
+                    coursewareList: [
+                        { id: 1, title: '开幕式主题演讲PPT', type: 'ppt', size: '45MB', uploadTime: '2024-06-14', uploader: '管理员' },
+                        { id: 2, title: '培训课程讲义', type: 'pdf', size: '12MB', uploadTime: '2024-06-14', uploader: '管理员' },
+                        { id: 3, title: '会议手册', type: 'pdf', size: '8.5MB', uploadTime: '2024-06-13', uploader: '管理员' },
+                        { id: 4, title: '案例分析课件', type: 'ppt', size: '38MB', uploadTime: '2024-06-15', uploader: '管理员' },
+                        { id: 5, title: '学员手册', type: 'word', size: '2.3MB', uploadTime: '2024-06-13', uploader: '管理员' },
+                        { id: 6, title: '分组讨论资料', type: 'pdf', size: '5.6MB', uploadTime: '2024-06-15', uploader: '管理员' }
+                    ],
+
+                    // 学员互动类数据
+                    interactionList: [
+                        { id: 1, title: '开幕式精彩瞬间', category: 'photo', thumbnail: '', author: '张三', time: '2024-06-14 09:30', content: '' },
+                        { id: 2, title: '小组讨论视频', category: 'video', thumbnail: '', author: '李四', time: '2024-06-15 14:20', content: '' },
+                        { id: 3, title: '培训心得体会', category: 'experience', thumbnail: '', author: '王五', time: '2024-06-15 18:00', content: '通过这次培训，我深刻认识到团队协作的重要性，收获颇丰...' },
+                        { id: 4, title: '学习交流笔记', category: 'exchange', thumbnail: '', author: '赵六', time: '2024-06-15 16:30', content: '今天的案例分析让我受益匪浅，特别是关于项目管理的部分...' },
+                        { id: 5, title: '合影留念', category: 'photo', thumbnail: '', author: '孙七', time: '2024-06-16 11:00', content: '' },
+                        { id: 6, title: '课程回顾感想', category: 'experience', thumbnail: '', author: '周八', time: '2024-06-16 09:00', content: '两天的学习让我对工作有了新的认识和思考...' }
+                    ],
+
+                    // 报到率数据
+                    reportRateData: [
+                        { department: '市委组织部', expected: 50, actual: 48, rate: 96 },
+                        { department: '市委宣传部', expected: 40, actual: 38, rate: 95 },
+                        { department: '市教育局', expected: 60, actual: 55, rate: 92 },
+                        { department: '市发改委', expected: 30, actual: 28, rate: 93 },
+                        { department: '市财政局', expected: 45, actual: 44, rate: 98 }
+                    ],
+
+                    // 签到率数据
+                    checkinRateData: [
+                        { id: 1, name: '开幕式', datetime: '2024-06-15 09:00', expected: 200, actual: 195, rate: 98 },
+                        { id: 2, name: '主题报告', datetime: '2024-06-15 10:30', expected: 200, actual: 188, rate: 94 },
+                        { id: 3, name: '分组讨论', datetime: '2024-06-15 14:00', expected: 200, actual: 178, rate: 89 },
+                        { id: 4, name: '晚宴', datetime: '2024-06-15 18:00', expected: 180, actual: 165, rate: 92 },
+                        { id: 5, name: '闭幕式', datetime: '2024-06-16 10:00', expected: 200, actual: 172, rate: 86 }
+                    ],
+
+                    // 就寝率数据
+                    dormitoryRateData: [
+                        { date: '2024-06-14', expected: 150, actual: 145, rate: 97 },
+                        { date: '2024-06-15', expected: 150, actual: 138, rate: 92 },
+                        { date: '2024-06-16', expected: 100, actual: 92, rate: 92 }
+                    ],
+
+                    // 消息群组数据
+                    messageGroups: [
+                        {
+                            id: 1,
+                            name: '会议工作人员群',
+                            messageCount: 186,
+                            lastActive: '2小时前',
+                            previewMessages: [
+                                { id: 1, content: '会议资料已上传至群文件', sender: '管理员', time: '10:30' },
+                                { id: 2, content: '收到，已安排相关人员查看', sender: '张组长', time: '10:35' }
+                            ]
+                        },
+                        {
+                            id: 2,
+                            name: '第一学习小组',
+                            messageCount: 98,
+                            lastActive: '4小时前',
+                            previewMessages: [
+                                { id: 1, content: '今天的课程内容很精彩', sender: '李四', time: '14:20' },
+                                { id: 2, content: '确实，案例分析部分很有启发', sender: '王五', time: '14:25' }
+                            ]
+                        },
+                        {
+                            id: 3,
+                            name: '第二学习小组',
+                            messageCount: 76,
+                            lastActive: '5小时前',
+                            previewMessages: [
+                                { id: 1, content: '小组讨论结果已整理完毕', sender: '赵六', time: '16:00' }
+                            ]
+                        },
+                        {
+                            id: 4,
+                            name: '全体学员群',
+                            messageCount: 96,
+                            lastActive: '1小时前',
+                            previewMessages: [
+                                { id: 1, content: '明天记得准时参加闭幕式', sender: '管理员', time: '20:00' },
+                                { id: 2, content: '好的，收到', sender: '多位学员', time: '20:05' }
+                            ]
+                        }
+                    ]
+                }
+            },
+            computed: {
+                totalReportData() {
+                    const expected = this.reportRateData.reduce((sum, item) => sum + item.expected, 0);
+                    const actual = this.reportRateData.reduce((sum, item) => sum + item.actual, 0);
+                    return {
+                        expected,
+                        actual,
+                        rate: Math.round(actual / expected * 100)
+                    };
+                }
+            },
+            async mounted() {
+                await this.initialize();
+            },
+            methods: {
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                    } else {
+                        this.conference = { id: 'demo_conf_001', name: '示例会议' };
+                    }
+                },
+
+                switchTab(tab) {
+                    this.currentTab = tab;
+                },
+
+                getMaterialIcon(type) {
+                    const icons = {
+                        ppt: 'fas fa-file-powerpoint',
+                        pdf: 'fas fa-file-pdf',
+                        word: 'fas fa-file-word',
+                        video: 'fas fa-file-video',
+                        image: 'fas fa-file-image'
+                    };
+                    return icons[type] || 'fas fa-file';
+                },
+
+                getInteractionIcon(category) {
+                    const icons = {
+                        photo: 'fas fa-camera',
+                        video: 'fas fa-video',
+                        experience: 'fas fa-lightbulb',
+                        exchange: 'fas fa-comments'
+                    };
+                    return icons[category] || 'fas fa-file';
+                },
+
+                getInteractionTypeLabel(category) {
+                    const labels = {
+                        photo: '交流照片',
+                        video: '交流视频',
+                        experience: '学习心得',
+                        exchange: '交流内容'
+                    };
+                    return labels[category] || '其他';
+                },
+
+                getRateClass(rate) {
+                    if (rate >= 90) return 'high';
+                    if (rate >= 70) return 'medium';
+                    return 'low';
+                },
+
+                // 课件类操作
+                uploadCourseware() {
+                    this.$showToast('打开课件上传对话框', 'info');
+                },
+
+                downloadCategory(category) {
+                    this.$showLoading(`正在打包下载${category === 'courseware' ? '课件' : '互动内容'}...`);
+                    setTimeout(() => {
+                        this.$hideLoading();
+                        this.$showToast('下载完成', 'success');
+                    }, 2000);
+                },
+
+                downloadItem(item) {
+                    this.$showToast(`正在下载: ${item.title}`, 'success');
+                },
+
+                previewItem(item) {
+                    this.$showToast(`预览: ${item.title}`, 'info');
+                },
+
+                async deleteItem(item, category) {
+                    const confirmed = await this.$showConfirm(
+                        `确定要删除 "${item.title}" 吗？`,
+                        '删除确认',
+                        'warning'
+                    );
+                    if (confirmed) {
+                        this.$showToast(`已删除: ${item.title}`, 'warning');
+                    }
+                },
+
+                // 学员互动类操作
+                uploadInteraction() {
+                    this.$showToast('打开互动内容上传对话框', 'info');
+                },
+
+                toggleStudentUpload() {
+                    const status = this.allowStudentUpload ? '已开启' : '已关闭';
+                    this.$showToast(`学员上传权限${status}`, this.allowStudentUpload ? 'success' : 'warning');
+                },
+
+                // 业务数据类操作
+                exportBusinessExcel() {
+                    this.$showLoading('正在生成Excel文件...');
+                    setTimeout(() => {
+                        this.$hideLoading();
+                        this.$showToast('业务数据Excel导出成功', 'success');
+                    }, 1500);
+                },
+
+                refreshBusinessData() {
+                    this.$showLoading('正在刷新数据...');
+                    setTimeout(() => {
+                        this.$hideLoading();
+                        this.$showToast('数据已刷新', 'success');
+                    }, 1000);
+                },
+
+                // 消息记录操作
+                exportAllMessages() {
+                    this.$showLoading('正在导出全部消息记录...');
+                    setTimeout(() => {
+                        this.$hideLoading();
+                        this.$showToast('消息记录导出成功', 'success');
+                    }, 2000);
+                },
+
+                searchMessages() {
+                    this.$showToast('打开消息搜索', 'info');
+                },
+
+                exportGroupMessages(groupId) {
+                    const group = this.messageGroups.find(g => g.id === groupId);
+                    this.$showToast(`正在导出: ${group.name}`, 'success');
+                },
+
+                viewAllMessages(groupId) {
+                    const group = this.messageGroups.find(g => g.id === groupId);
+                    this.$showToast(`查看 ${group.name} 的全部消息`, 'info');
+                },
+
+                // 一键打包下载
+                async packAndDownload() {
+                    this.$showLoading('正在按目录结构打包全部资料...');
+                    
+                    // 模拟打包过程
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    
+                    this.$hideLoading();
+                    this.$showToast('打包下载完成！文件结构：课件类/学员互动类/业务数据类/群组消息记录', 'success');
+                    this.hasDownloaded = true;
+                },
+
+                // 一键清空
+                async clearAllArchive() {
+                    if (!this.hasDownloaded) {
+                        this.$showToast('请先完成打包下载后再进行清空操作', 'warning');
+                        return;
+                    }
+
+                    const firstConfirm = await this.$showConfirm(
+                        '此操作将清空所有归档资料，且不可恢复！确定要继续吗？',
+                        '⚠️ 警告',
+                        'danger'
+                    );
+                    
+                    if (!firstConfirm) return;
+
+                    const secondConfirm = await this.$showConfirm(
+                        '您确定要清空所有资料吗？此操作不可撤销！',
+                        '再次确认',
+                        'danger'
+                    );
+                    
+                    if (!secondConfirm) return;
+
+                    this.$showLoading('正在清空所有资料...');
+                    setTimeout(() => {
+                        this.coursewareList = [];
+                        this.interactionList = [];
+                        this.messageGroups = [];
+                        this.archiveStats = { courseware: 0, interaction: 0, businessData: 0, messages: 0 };
+                        this.$hideLoading();
+                        this.$showToast('所有资料已清空，数据安全已保护', 'success');
+                    }, 2000);
+                },
+
+                goBack() {
+                    window.history.back();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+</body>
+</html>

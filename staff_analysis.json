@@ -1,0 +1,232 @@
+﻿[
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "alert-config.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "棰勮閰嶇疆 - 鍗忕鍛樼"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "alert-handle.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "棰勮澶勭悊 - 鍗忕鍛樼"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "alert-mobile.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "未定义"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "chat-room.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "未定义"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "dashboard.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "宸ヤ綔浜哄憳 路 鏁版嵁鐪嬫澘"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "data-analysis.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "鏁版嵁鍒嗘瀽 - 鍗忕鍛樼"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "grouping-manage.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "宸ヤ綔浜哄憳 路 鍒嗙粍缂栨帓"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "handbook-generate.html",
+        "表格":  true,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "瀛﹀憳鎵嬪唽鐢熸垚 - 鍗忕鍛樼"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "handbook-mobile.html",
+        "表格":  true,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "未定义"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "meeting-detail.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "未定义"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "notice-manage.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "閫氱煡绠＄悊 - 鍗忕鍛樼"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "notice-mobile.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "未定义"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "registration-manage.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "鎶ュ悕瀹℃牳 - 鍗忕鍛樼"
+    },
+    {
+        "复杂度":  "中等",
+        "目录":  "staff",
+        "文件名":  "schedule.html",
+        "表格":  false,
+        "表单":  true,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "宸ヤ綔浜哄憳 路 鏃ョ▼褰曞叆"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "seat-manage.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "鏅鸿兘鎺掑骇 - 鍗忕鍛樼"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "task-detail.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "浠诲姟璇︽儏 - 浼氬満甯冪疆楠屾敹"
+    },
+    {
+        "复杂度":  "中等",
+        "目录":  "staff",
+        "文件名":  "task-feedback.html",
+        "表格":  false,
+        "表单":  true,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "浠诲姟瀹屾垚鍙嶉"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "task-list.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "宸ヤ綔浜哄憳 路 浠诲姟娲惧彂"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "tenant-create.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "未定义"
+    },
+    {
+        "复杂度":  "简单",
+        "目录":  "staff",
+        "文件名":  "tenant-login.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  false,
+        "Vue":  false,
+        "标题":  "未定义"
+    },
+    {
+        "复杂度":  "中等",
+        "目录":  "staff",
+        "文件名":  "tenant-manage.html",
+        "表格":  false,
+        "表单":  true,
+        "API调用":  true,
+        "Vue":  false,
+        "标题":  "绉熸埛绠＄悊 - 鏅鸿兘浼氬姟绯荤粺"
+    },
+    {
+        "复杂度":  "中等",
+        "目录":  "staff",
+        "文件名":  "training-create.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  true,
+        "Vue":  true,
+        "标题":  "鏂板缓鍩硅 - 鍗忕鍛樼"
+    },
+    {
+        "复杂度":  "中等",
+        "目录":  "staff",
+        "文件名":  "training.html",
+        "表格":  false,
+        "表单":  false,
+        "API调用":  true,
+        "Vue":  true,
+        "标题":  "鏅鸿兘浼氳鍔╂墜 - 鍩硅"
+    }
+]

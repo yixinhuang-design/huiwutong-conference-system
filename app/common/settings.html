@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置 - 通用</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="profile.html" class="btn btn-secondary" style="padding:8px 12px;">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">设置</div>
+                            <div class="card-subtitle">管理应用设置和偏好</div>
+                        </div>
+                        <div style="width:44px;"></div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-user-circle" style="color:#2563eb;"></i>
+                        <div class="card-title">账户设置</div>
+                    </div>
+                    <div class="settings-list">
+                        <div class="settings-item" onclick="navigateTo('profile-edit')">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-user-edit"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">个人信息</div>
+                                <div class="settings-item-desc">编辑姓名、单位、职务等信息</div>
+                            </div>
+                            <i class="fas fa-chevron-right settings-item-arrow"></i>
+                        </div>
+                        <div class="settings-item" onclick="navigateTo('security')">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">账户安全</div>
+                                <div class="settings-item-desc">密码、绑定手机、实名认证</div>
+                            </div>
+                            <i class="fas fa-chevron-right settings-item-arrow"></i>
+                        </div>
+                        <div class="settings-item" onclick="navigateTo('privacy')">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">隐私设置</div>
+                                <div class="settings-item-desc">谁可以看到我的信息</div>
+                            </div>
+                            <i class="fas fa-chevron-right settings-item-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-bell" style="color:#f59e0b;"></i>
+                        <div class="card-title">通知设置</div>
+                    </div>
+                    <div class="settings-list">
+                        <div class="settings-item">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">推送通知</div>
+                                <div class="settings-item-desc">接收会议通知和提醒</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked onchange="toggleSetting('push', this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">短信通知</div>
+                                <div class="settings-item-desc">重要信息短信提醒</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked onchange="toggleSetting('sms', this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">免打扰时段</div>
+                                <div class="settings-item-desc">22:00 - 08:00</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked onchange="toggleSetting('dnd', this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-item" onclick="navigateTo('notification-detail')">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">通知详情</div>
+                                <div class="settings-item-desc">管理各类通知的推送规则</div>
+                            </div>
+                            <i class="fas fa-chevron-right settings-item-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-palette" style="color:#8b5cf6;"></i>
+                        <div class="card-title">显示设置</div>
+                    </div>
+                    <div class="settings-list">
+                        <div class="settings-item" onclick="toggleTheme()">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-moon"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">深色模式</div>
+                                <div class="settings-item-desc" id="themeStatus">当前：浅色模式</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="themeSwitch" onchange="toggleThemeSwitch(this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-item" onclick="navigateTo('font-size')">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-text-height"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">字体大小</div>
+                                <div class="settings-item-desc">标准</div>
+                            </div>
+                            <i class="fas fa-chevron-right settings-item-arrow"></i>
+                        </div>
+                        <div class="settings-item" onclick="navigateTo('language')">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">语言</div>
+                                <div class="settings-item-desc">简体中文</div>
+                            </div>
+                            <i class="fas fa-chevron-right settings-item-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-database" style="color:#22c55e;"></i>
+                        <div class="card-title">存储与缓存</div>
+                    </div>
+                    <div class="settings-list">
+                        <div class="settings-item" onclick="clearCache()">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-broom"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">清除缓存</div>
+                                <div class="settings-item-desc">当前缓存：128 MB</div>
+                            </div>
+                            <button class="btn btn-outline btn-sm">清除</button>
+                        </div>
+                        <div class="settings-item" onclick="downloadData()">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-download"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">离线数据</div>
+                                <div class="settings-item-desc">下载会议数据以供离线查看</div>
+                            </div>
+                            <button class="btn btn-primary btn-sm">下载</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle" style="color:#06b6d4;"></i>
+                        <div class="card-title">关于</div>
+                    </div>
+                    <div class="settings-list">
+                        <div class="settings-item" onclick="navigateTo('about')">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-info"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">关于汇悟通</div>
+                                <div class="settings-item-desc">版本 1.0.0</div>
+                            </div>
+                            <i class="fas fa-chevron-right settings-item-arrow"></i>
+                        </div>
+                        <div class="settings-item" onclick="navigateTo('feedback')">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-comment-dots"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">意见反馈</div>
+                                <div class="settings-item-desc">帮助我们改进产品</div>
+                            </div>
+                            <i class="fas fa-chevron-right settings-item-arrow"></i>
+                        </div>
+                        <div class="settings-item" onclick="navigateTo('help')">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">帮助中心</div>
+                                <div class="settings-item-desc">常见问题和使用指南</div>
+                            </div>
+                            <i class="fas fa-chevron-right settings-item-arrow"></i>
+                        </div>
+                        <div class="settings-item" onclick="navigateTo('privacy-policy')">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">隐私政策</div>
+                                <div class="settings-item-desc">了解我们如何保护您的隐私</div>
+                            </div>
+                            <i class="fas fa-chevron-right settings-item-arrow"></i>
+                        </div>
+                        <div class="settings-item" onclick="navigateTo('terms')">
+                            <div class="settings-item-icon">
+                                <i class="fas fa-gavel"></i>
+                            </div>
+                            <div class="settings-item-content">
+                                <div class="settings-item-title">服务条款</div>
+                                <div class="settings-item-desc">使用本应用须遵守的条款</div>
+                            </div>
+                            <i class="fas fa-chevron-right settings-item-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-actions">
+                        <button class="btn btn-outline btn-block" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> 退出登录
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='home.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='assistant.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='navigation.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-compass"></i>
+                    </div>
+                    <div class="nav-text">导航</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='past.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 切换设置
+        function toggleSetting(setting, value) {
+            console.log(`${setting}: ${value}`);
+            // 保存设置到本地存储
+            localStorage.setItem(setting, value);
+        }
+
+        // 切换主题
+        function toggleTheme() {
+            const isDark = document.getElementById('themeSwitch').checked;
+            const themeStatus = document.getElementById('themeStatus');
+            themeStatus.textContent = isDark ? '当前：深色模式' : '当前：浅色模式';
+        }
+
+        function toggleThemeSwitch(checked) {
+            toggleTheme();
+            localStorage.setItem('darkMode', checked);
+        }
+
+        // 清除缓存
+        function clearCache() {
+            if (confirm('确定要清除缓存吗？')) {
+                alert('缓存已清除');
+            }
+        }
+
+        // 下载数据
+        function downloadData() {
+            alert('正在下载离线数据...');
+        }
+
+        // 退出登录
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // 导航到指定页面
+        function navigateTo(page) {
+            alert(`跳转到${page}页面`);
+        }
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // 加载保存的设置
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.getElementById('themeSwitch').checked = true;
+                toggleTheme();
+            }
+        });
+    </script>
+
+    <style>
+        .settings-list {
+            padding: 0;
+        }
+        .settings-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .settings-item:hover {
+            background: #f9fafb;
+        }
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+        .settings-item-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+        .settings-item-icon i {
+            font-size: 18px;
+            color: #4b5563;
+        }
+        .settings-item-content {
+            flex: 1;
+        }
+        .settings-item-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+        .settings-item-desc {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+        .settings-item-arrow {
+            color: #d1d5db;
+            font-size: 14px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #d1d5db;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+        .card-actions {
+            padding: 16px;
+        }
+    </style>
+</body>
+</html>

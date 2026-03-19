@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025党务干部培训班</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        .checkin-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        .checkin-table thead {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        .checkin-table thead tr {
+            border-bottom: 2px solid #1e40af;
+        }
+        .checkin-table th {
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            border: 1px solid #dbeafe;
+        }
+        .checkin-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background-color 0.2s;
+        }
+        .checkin-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        .checkin-table tbody tr.checked {
+            background: #dbeafe;
+        }
+        .checkin-table td {
+            padding: 12px 8px;
+            font-size: 13px;
+            border: 1px solid #e5e7eb;
+            color: #1f2937;
+        }
+        .checkin-table td:first-child {
+            font-weight: 600;
+            color: #2563eb;
+            min-width: 90px;
+        }
+        .checkin-table td:nth-child(2) {
+            font-weight: 500;
+        }
+        .checkin-table td:nth-child(3) {
+            color: #64748b;
+            font-size: 12px;
+        }
+        .checkin-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .badge-checked {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .badge-pending {
+            background: #fed7aa;
+            color: #92400e;
+        }
+        .status-icon {
+            color: #22c55e;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <!-- iOS 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- 应用内容 -->
+            <div class="app-content">
+                <!-- 页面标题 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="meeting-detail.html" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 签到表卡片 -->
+                <div class="card fade-in" style="padding: 0; overflow: hidden;">
+                    <div class="card-header">
+                        <i class="fas fa-sign-in-alt status-icon"></i>
+                        <div class="card-title">报到签到列表</div>
+                    </div>
+                    <div class="card-content" style="padding: 0;">
+                        <table class="checkin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 90px;">日期时间</th>
+                                    <th style="width: 100px;">事项</th>
+                                    <th style="width: auto;">地点</th>
+                                    <th style="width: 60px;">状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 酒店入住 -->
+                                <tr class="checked">
+                                    <td>1月10日<br>14:00 <span class="checkin-badge badge-checked">✓</span></td>
+                                    <td>酒店入住</td>
+                                    <td>维也纳酒店一楼大堂</td>
+                                    <td><span style="color: #22c55e; font-weight: 600;">已签到</span></td>
+                                </tr>
+
+                                <!-- 晚宴餐饮 -->
+                                <tr class="checked">
+                                    <td>1月10日<br>18:00 <span class="checkin-badge badge-checked">✓</span></td>
+                                    <td>欢迎晚餐</td>
+                                    <td>酒店自助餐厅</td>
+                                    <td><span style="color: #22c55e; font-weight: 600;">已签到</span></td>
+                                </tr>
+
+                                <!-- 主会场会议 -->
+                                <tr class="checked">
+                                    <td>1月11日<br>08:45 <span class="checkin-badge badge-checked">✓</span></td>
+                                    <td><strong>主会场会议</strong></td>
+                                    <td>越秀会议中心101</td>
+                                    <td><span style="color: #22c55e; font-weight: 600;">已签到</span></td>
+                                </tr>
+
+                                <!-- 午餐 -->
+                                <tr class="checked">
+                                    <td>1月11日<br>12:00 <span class="checkin-badge badge-checked">✓</span></td>
+                                    <td>自助午餐</td>
+                                    <td>越秀会议中心5F</td>
+                                    <td><span style="color: #22c55e; font-weight: 600;">已签到</span></td>
+                                </tr>
+
+                                <!-- 晚宴 -->
+                                <tr>
+                                    <td>1月11日<br>18:00 <span class="checkin-badge badge-pending">待</span></td>
+                                    <td>欢聚晚宴</td>
+                                    <td>1楼2号桌</td>
+                                    <td><button class="btn btn-primary btn-xs">签到</button></td>
+                                </tr>
+
+                                <!-- 分会场 -->
+                                <tr>
+                                    <td>1月12日<br>09:00 <span class="checkin-badge badge-pending">待</span></td>
+                                    <td><strong>分会场会议</strong></td>
+                                    <td>越秀会议中心6F101</td>
+                                    <td><button class="btn btn-primary btn-xs">签到</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 签到统计 -->
+                <div class="card fade-in">
+                    <div class="card-content">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: center;">
+                            <div style="padding: 12px; background: #f0fdf4; border-radius: 8px; border: 1px solid #dcfce7;">
+                                <div style="font-size: 24px; font-weight: 700; color: #22c55e;">4</div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">已签到</div>
+                            </div>
+                            <div style="padding: 12px; background: #fffbeb; border-radius: 8px; border: 1px solid #fed7aa;">
+                                <div style="font-size: 24px; font-weight: 700; color: #f59e0b;">2</div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">待签到</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 提示信息 -->
+                <div class="info-banner fade-in">
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>温馨提示：</strong>点击"签到"按钮可完成对应事项的报到签到，已签到的事项不可重复签到。</span>
+                </div>
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='../common/home.html'">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/assistant.html'">
+                    <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='schedule.html'">
+                    <div class="nav-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="nav-text">日程</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon"><i class="fas fa-sign-in-alt"></i></div>
+                    <div class="nav-text">签到</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/profile.html'">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

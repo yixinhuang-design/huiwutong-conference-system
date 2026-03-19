@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能会议助手 - 应用导航</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #fff;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: #fff;
+            border-radius: 25px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #f8fafc;
+            transform: translateX(-3px);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .process-section {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .process-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .process-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .process-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .process-desc {
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .process-roles {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .role-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .role-tag.staff {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .role-tag.learner {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+
+        .role-tag.common {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .process-content {
+            margin-top: 20px;
+        }
+
+        .sub-section {
+            margin-bottom: 20px;
+        }
+
+        .sub-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .page-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            border: 1px solid #e2e8f0;
+        }
+
+        .page-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .page-card.featured {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), #fff);
+            border: 2px solid #667eea;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .page-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .page-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .page-desc {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .page-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-staff {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .badge-learner {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+
+        .badge-common {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .badge-archive {
+            background: rgba(168, 85, 247, 0.1);
+            color: #a855f7;
+        }
+
+        .other-sections {
+            margin-top: 30px;
+        }
+
+        .other-section {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .other-section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .other-section-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 24px;
+        }
+
+        .other-section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .flow-steps {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+
+        .flow-step i {
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .page-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .process-title {
+                font-size: 1.3rem;
+            }
+        }
+
+        .footer {
+            text-align: center;
+            color: #fff;
+            margin-top: 40px;
+            padding: 20px;
+            opacity: 0.9;
+        }
+
+        .footer p {
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-layer-group"></i> 智能会议助手 - 完整导航</h1>
+            <p>按18个业务流程组织的完整页面导航（共59个页面）</p>
+        </div>
+
+        <!-- 返回首页按钮 -->
+        <a href="home.html" class="back-btn">
+            <i class="fas fa-home"></i>
+            返回首页
+        </a>
+
+        <!-- 统计信息 -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">59</div>
+                <div class="stat-label">总页面数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">26</div>
+                <div class="stat-label">学员端</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">22</div>
+                <div class="stat-label">协管员端</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">11</div>
+                <div class="stat-label">共有/其他</div>
+            </div>
+        </div>
+
+        <!-- 流程01: 多租户管理 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 01</span>
+                <h2 class="process-title">多租户管理</h2>
+                <p class="process-desc">支持多个组织机构独立使用系统，每个租户拥有独立的数据空间和管理权限。协管员可以创建和管理租户，租户登录后只能看到自己的数据。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="page-grid">
+                    <a href="staff/tenant-manage.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="page-title">租户管理</div>
+                        </div>
+                        <div class="page-desc">查看和管理所有租户信息，支持租户的增删改查操作</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+
+                    <a href="staff/tenant-create.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fas fa-plus-circle"></i>
+                            </div>
+                            <div class="page-title">创建租户</div>
+                        </div>
+                        <div class="page-desc">创建新的组织机构租户，配置租户基本信息和管理员</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+
+                    <a href="staff/tenant-login.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fas fa-sign-in-alt"></i>
+                            </div>
+                            <div class="page-title">租户登录</div>
+                        </div>
+                        <div class="page-desc">租户管理员登录入口，进入租户独立管理后台</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程02: 会议/培训创建 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 02</span>
+                <h2 class="process-title">会议/培训创建与报名</h2>
+                <p class="process-desc">协管员创建会议或培训活动，生成报名二维码。学员通过扫码报名，填写个人信息，系统自动记录报名状态。支持批量导入和管理报名信息。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                    <span class="role-tag learner"><i class="fas fa-user-graduate"></i> 学员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-graduate" style="color: #22c55e;"></i> 学员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <a href="learner/scan-register.html" class="page-card featured">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                                    <i class="fas fa-qrcode"></i>
+                                </div>
+                                <div class="page-title">扫码报名</div>
+                            </div>
+                            <div class="page-desc">扫描会议二维码，填写报名信息完成报名</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+
+                        <a href="learner/registration-status.html" class="page-card">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="page-title">报名状态</div>
+                            </div>
+                            <div class="page-desc">查看报名审核状态和报名信息详情</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程03: 报名汇总 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 03</span>
+                <h2 class="process-title">报名汇总</h2>
+                <p class="process-desc">协管员可以查看所有报名信息，按部门、职级等维度进行分类汇总，导出报名数据报表。支持多条件筛选和搜索，方便统计和管理。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="page-grid">
+                    <a href="staff/registration-manage.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <div class="page-title">报名管理</div>
+                        </div>
+                        <div class="page-desc">查看、筛选、导出所有报名信息，支持按部门、职级等维度汇总统计</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程04: 智能审核 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 04</span>
+                <h2 class="process-title">智能审核</h2>
+                <p class="process-desc">系统自动审核报名信息，检查资料完整性、重复报名等问题。协管员可以查看系统标记的问题，进行人工复核和批量处理，提高审核效率。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="page-grid">
+                    <a href="staff/registration-manage.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #a855f7, #9333ea);">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="page-title">智能审核</div>
+                        </div>
+                        <div class="page-desc">系统自动检测报名问题，协管员进行批量审核和处理</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程05: 名册生成 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 05</span>
+                <h2 class="process-title">名册生成</h2>
+                <p class="process-desc">根据审核通过的报名信息，自动生成培训名册。支持多种模板格式，可以按部门、小组等方式分组生成，便于打印和分发。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="page-grid">
+                    <a href="staff/handbook-generate.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="page-title">名册生成</div>
+                        </div>
+                        <div class="page-desc">自动生成培训名册PDF，支持多种模板和分组方式</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程06: 精准通知 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 06</span>
+                <h2 class="process-title">精准通知</h2>
+                <p class="process-desc">协管员可以向特定群体发送精准通知消息，支持按部门、职级、报名状态等条件筛选接收人。学员可以在通知中心查看所有相关通知，支持消息提醒和已读标记。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                    <span class="role-tag learner"><i class="fas fa-user-graduate"></i> 学员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-tie" style="color: #f59e0b;"></i> 协管员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <a href="staff/notice-manage.html" class="page-card featured">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                                    <i class="fas fa-bullhorn"></i>
+                                </div>
+                                <div class="page-title">通知管理</div>
+                            </div>
+                            <div class="page-desc">创建和发送精准通知，选择目标群体和推送渠道</div>
+                            <span class="page-badge badge-staff">协管员</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-graduate" style="color: #22c55e;"></i> 学员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <a href="learner/notifications.html" class="page-card featured">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #ec4899, #dc2626);">
+                                    <i class="fas fa-bell"></i>
+                                </div>
+                                <div class="page-title">通知中心</div>
+                            </div>
+                            <div class="page-desc">查看所有接收到的通知消息，支持分类和筛选</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程07: 催报催收 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 07</span>
+                <h2 class="process-title">催报催收</h2>
+                <p class="process-desc">针对未报名、未反馈、未签到等人员，系统自动或手动发送催办提醒。支持多轮次催办，记录催办历史，提高响应率。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="page-grid">
+                    <a href="staff/notice-manage.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="page-title">催办管理</div>
+                        </div>
+                        <div class="page-desc">查看待催办人员，发送催报催收通知，记录催办历史</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程08: 自动组群管理 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 08</span>
+                <h2 class="process-title">自动组群管理</h2>
+                <p class="process-desc">系统根据预设规则自动创建群组，如按部门、小组、座位等维度分组。协管员可以管理群组成员，学员可以查看自己的群组并在群内交流沟通。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                    <span class="role-tag learner"><i class="fas fa-user-graduate"></i> 学员端</span>
+                    <span class="role-tag common"><i class="fas fa-share-alt"></i> 共有</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-tie" style="color: #f59e0b;"></i> 协管员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <a href="staff/grouping-manage.html" class="page-card featured">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                                    <i class="fas fa-users-cog"></i>
+                                </div>
+                                <div class="page-title">分组管理</div>
+                            </div>
+                            <div class="page-desc">创建和管理群组，设置分组规则，自动分配成员</div>
+                            <span class="page-badge badge-staff">协管员</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-graduate" style="color: #22c55e;"></i> 学员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <a href="learner/groups.html" class="page-card featured">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="page-title">我的群组</div>
+                            </div>
+                            <div class="page-desc">查看自己加入的所有群组，了解群组成员和活动</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-share-alt" style="color: #667eea;"></i> 共有功能
+                    </div>
+                    <div class="page-grid">
+                        <a href="common/communication.html" class="page-card featured">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                                    <i class="fas fa-comments"></i>
+                                </div>
+                                <div class="page-title">群组沟通</div>
+                            </div>
+                            <div class="page-desc">在群组内进行交流沟通，发送文字、图片、文件等</div>
+                            <span class="page-badge badge-common">共有</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程09: 任务执行 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 09</span>
+                <h2 class="process-title">任务执行</h2>
+                <p class="process-desc">协管员可以创建和分配各类任务（签到、问卷、收集资料等），设置任务截止时间和负责人。学员查看任务列表，执行任务并提交结果。协管员可以跟踪任务进度，提醒未完成人员。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                    <span class="role-tag learner"><i class="fas fa-user-graduate"></i> 学员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-tie" style="color: #f59e0b;"></i> 协管员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <a href="staff/task-list.html" class="page-card featured">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <div class="page-title">任务列表</div>
+                            </div>
+                            <div class="page-desc">查看所有任务，按状态分类，跟踪任务进度</div>
+                            <span class="page-badge badge-staff">协管员</span>
+                        </a>
+
+                        <a href="staff/task-detail.html" class="page-card">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #a855f7, #9333ea);">
+                                    <i class="fas fa-clipboard-list"></i>
+                                </div>
+                                <div class="page-title">任务详情</div>
+                            </div>
+                            <div class="page-desc">查看任务详情和执行情况，管理任务参与者</div>
+                            <span class="page-badge badge-staff">协管员</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-graduate" style="color: #22c55e;"></i> 学员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <a href="learner/task-list.html" class="page-card featured">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                                    <i class="fas fa-list-check"></i>
+                                </div>
+                                <div class="page-title">我的任务</div>
+                            </div>
+                            <div class="page-desc">查看分配给自己的所有任务，按优先级和状态排序</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+
+                        <a href="learner/task-detail.html" class="page-card">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="page-title">任务详情</div>
+                            </div>
+                            <div class="page-desc">查看任务详细信息，执行并提交任务结果</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+
+                        <a href="learner/checkin.html" class="page-card">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="page-title">签到任务</div>
+                            </div>
+                            <div class="page-desc">会议签到任务，支持定位扫码等方式签到</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程10: 任务反馈与汇总 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 10</span>
+                <h2 class="process-title">任务反馈与汇总</h2>
+                <p class="process-desc">学员提交问卷、评价等反馈信息。协管员查看所有反馈结果，进行汇总分析，生成可视化报表。支持导出反馈数据用于后续分析改进。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                    <span class="role-tag learner"><i class="fas fa-user-graduate"></i> 学员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-tie" style="color: #f59e0b;"></i> 协管员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <a href="staff/task-feedback.html" class="page-card featured">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #ec4899, #dc2626);">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <div class="page-title">反馈汇总</div>
+                            </div>
+                            <div class="page-desc">查看所有任务反馈结果，生成统计图表，导出数据</div>
+                            <span class="page-badge badge-staff">协管员</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-graduate" style="color: #22c55e;"></i> 学员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <a href="learner/feedback.html" class="page-card featured">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                                    <i class="fas fa-poll"></i>
+                                </div>
+                                <div class="page-title">问卷反馈</div>
+                            </div>
+                            <div class="page-desc">填写问卷任务，提交反馈意见和建议</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+
+                        <a href="learner/evaluation.html" class="page-card">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="page-title">评价反馈</div>
+                            </div>
+                            <div class="page-desc">对会议培训进行评分和评价，提供满意度反馈</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程11: 智能排座 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 11</span>
+                <h2 class="process-title">智能排座</h2>
+                <p class="process-desc">系统根据预设规则自动安排座位，支持按部门、职级、小组等维度智能排座。协管员可以手动调整座位，学员可以查看自己的座位信息并扫码快速定位。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                    <span class="role-tag learner"><i class="fas fa-user-graduate"></i> 学员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-tie" style="color: #f59e0b;"></i> 协管员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <a href="staff/seat-manage.html" class="page-card featured">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #14b8a6, #0f766e);">
+                                    <i class="fas fa-th"></i>
+                                </div>
+                                <div class="page-title">座位管理</div>
+                            </div>
+                            <div class="page-desc">管理会场座位布局，设置排座规则，自动或手动分配座位</div>
+                            <span class="page-badge badge-staff">协管员</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-graduate" style="color: #22c55e;"></i> 学员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <a href="learner/seat.html" class="page-card featured">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                                    <i class="fas fa-chair"></i>
+                                </div>
+                                <div class="page-title">我的座位</div>
+                            </div>
+                            <div class="page-desc">查看自己的座位位置、区域和周边人员信息</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+
+                        <a href="learner/scan-seat.html" class="page-card">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                    <i class="fas fa-qrcode"></i>
+                                </div>
+                                <div class="page-title">扫码寻座</div>
+                            </div>
+                            <div class="page-desc">扫描会场二维码或座位码，快速定位自己的座位</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+
+                        <a href="learner/seat-detail.html" class="page-card">
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #a855f7, #9333ea);">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="page-title">座位详情</div>
+                            </div>
+                            <div class="page-desc">查看座位详细信息，包括座位号、区域、出入口等</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程12: 中途座位调整 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 12</span>
+                <h2 class="process-title">中途座位调整</h2>
+                <p class="process-desc">会议过程中如有需要，协管员可以临时调整部分人员的座位。系统自动通知相关人员座位变更，学员可以查看最新座位信息。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="page-grid">
+                    <a href="staff/seat-manage.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <div class="page-title">座位调整</div>
+                        </div>
+                        <div class="page-desc">临时调整人员座位，通知相关人员变更信息</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程13: 位置导航 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 13</span>
+                <h2 class="process-title">位置导航</h2>
+                <p class="process-desc">提供会场内部位置导航服务，帮助学员快速找到会议室、座位、洗手间、出入口等位置。支持地图展示和路线规划。</p>
+                <div class="process-roles">
+                    <span class="role-tag common"><i class="fas fa-share-alt"></i> 共有</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="page-grid">
+                    <a href="common/navigation.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fas fa-map-marked-alt"></i>
+                            </div>
+                            <div class="page-title">位置导航</div>
+                        </div>
+                        <div class="page-desc">查看会场地图，搜索目的地，获取导航路线</div>
+                        <span class="page-badge badge-common">共有</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程14: 二维码信息查询 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 14</span>
+                <h2 class="process-title">二维码信息查询</h2>
+                <p class="process-desc">会场各位置设置二维码，学员扫描即可查看当前位置信息、座位安排、会议议程等内容。方便快捷地获取所需信息。</p>
+                <div class="process-roles">
+                    <span class="role-tag learner"><i class="fas fa-user-graduate"></i> 学员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="page-grid">
+                    <a href="learner/scan-seat.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fas fa-qrcode"></i>
+                            </div>
+                            <div class="page-title">扫码查询</div>
+                        </div>
+                        <div class="page-desc">扫描会场二维码，查看位置信息、座位安排、会议议程等</div>
+                        <span class="page-badge badge-learner">学员端</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程15: AI智能咨询 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 15</span>
+                <h2 class="process-title">AI智能咨询</h2>
+                <p class="process-desc">内置AI助手，学员可以随时咨询会议相关问题，如议程、座位、交通、住宿等。AI自动理解问题并给出准确答案，提升用户体验。</p>
+                <div class="process-roles">
+                    <span class="role-tag common"><i class="fas fa-share-alt"></i> 共有</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="page-grid">
+                    <a href="common/assistant.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="page-title">AI助手</div>
+                        </div>
+                        <div class="page-desc">智能问答助手，解答会议相关问题，提供便捷咨询</div>
+                        <span class="page-badge badge-common">共有</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程16: 语音识别 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 16</span>
+                <h2 class="process-title">语音识别与会议纪要</h2>
+                <p class="process-desc">系统实时识别会议语音内容，自动转换为文字记录。协管员可以编辑整理生成正式会议纪要，学员可以查看会议记录和要点摘要。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                    <span class="role-tag learner"><i class="fas fa-user-graduate"></i> 学员端</span>
+                    <span class="role-tag common"><i class="fas fa-share-alt"></i> 共有</span>
+                </div>
+            </div>
+            <div class="process-content">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-tie" style="color: #f59e0b;"></i> 协管员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <!-- <a href="staff/meeting-minutes.html" class="page-card featured"> -->
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #a855f7, #9333ea);">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="page-title">会议纪要</div>
+                            </div>
+                            <div class="page-desc">编辑整理语音识别内容，生成正式会议纪要并分发</div>
+                            <span class="page-badge badge-staff">协管员</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <div class="sub-section-title">
+                        <i class="fas fa-user-graduate" style="color: #22c55e;"></i> 学员操作流程
+                    </div>
+                    <div class="page-grid">
+                        <!-- <a href="learner/minutes.html" class="page-card featured"> -->
+                            <div class="page-header">
+                                <div class="page-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                    <i class="fas fa-book-open"></i>
+                                </div>
+                                <div class="page-title">会议纪要</div>
+                            </div>
+                            <div class="page-desc">查看会议纪要和内容要点，回顾会议重要内容</div>
+                            <span class="page-badge badge-learner">学员端</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程17: 数据监控 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 17</span>
+                <h2 class="process-title">数据监控与分析</h2>
+                <p class="process-desc">实时监控会议各项数据指标，如报名进度、签到率、任务完成情况等。提供多维度数据分析报表，帮助协管员了解会议执行情况，做出数据驱动的决策。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="page-grid">
+                    <a href="staff/dashboard.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fas fa-tachometer-alt"></i>
+                            </div>
+                            <div class="page-title">数据看板</div>
+                        </div>
+                        <div class="page-desc">实时数据监控大屏，展示会议关键指标和统计数据</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+
+                    <a href="staff/data-analysis.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="page-title">数据分析</div>
+                        </div>
+                        <div class="page-desc">多维度数据分析报表，支持数据钻取和导出</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 流程18: 预警提示 -->
+        <div class="process-section">
+            <div class="process-header">
+                <span class="process-number">流程 18</span>
+                <h2 class="process-title">预警提示</h2>
+                <p class="process-desc">系统自动监控各项指标，当发现异常情况（如报名人数不足、签到率低、任务逾期等）时自动预警。协管员可以配置预警规则，查看预警列表并及时处理预警事件。</p>
+                <div class="process-roles">
+                    <span class="role-tag staff"><i class="fas fa-user-tie"></i> 协管员端</span>
+                </div>
+            </div>
+            <div class="process-content">
+                <div class="page-grid">
+                    <a href="staff/alert-config.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <div class="page-title">预警配置</div>
+                        </div>
+                        <div class="page-desc">配置预警规则和阈值，设置预警通知方式</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+
+                    <a href="staff/alert-handle.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="page-title">预警处理</div>
+                        </div>
+                        <div class="page-desc">查看预警列表，处理预警事件，记录处理结果</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 其他共有页面 -->
+        <div class="other-sections">
+            <div class="other-section">
+                <div class="other-section-header">
+                    <div class="other-section-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                    <div class="other-section-title">其他共有页面</div>
+                </div>
+                <p style="color: #64748b; margin-bottom: 20px;">这些页面为协管员和学员共同使用的功能页面</p>
+                <div class="page-grid">
+                    <a href="common/home.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="page-title">APP首页</div>
+                        </div>
+                        <div class="page-desc">会议列表首页，显示所有会议和培训活动</div>
+                        <span class="page-badge badge-common">共有</span>
+                    </a>
+
+                    <a href="common/profile.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="page-title">个人中心</div>
+                        </div>
+                        <div class="page-desc">个人信息管理、资料编辑</div>
+                        <span class="page-badge badge-common">共有</span>
+                    </a>
+
+                    <a href="common/past.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <div class="page-title">往期会议</div>
+                        </div>
+                        <div class="page-desc">历史会议记录查看</div>
+                        <span class="page-badge badge-common">共有</span>
+                    </a>
+
+                    <a href="common/settings.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <div class="page-title">系统设置</div>
+                        </div>
+                        <div class="page-desc">应用设置、通知偏好等</div>
+                        <span class="page-badge badge-common">共有</span>
+                    </a>
+
+                    <a href="common/help.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                            <div class="page-title">帮助中心</div>
+                        </div>
+                        <div class="page-desc">使用帮助、常见问题</div>
+                        <span class="page-badge badge-common">共有</span>
+                    </a>
+
+                    <a href="common/index.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #a855f7, #9333ea);">
+                                <i class="fas fa-th"></i>
+                            </div>
+                            <div class="page-title">导航页</div>
+                        </div>
+                        <div class="page-desc">原型展示导航</div>
+                        <span class="page-badge badge-common">共有</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 学员端其他页面 -->
+            <div class="other-section">
+                <div class="other-section-header">
+                    <div class="other-section-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="other-section-title">学员端其他页面</div>
+                </div>
+                <p style="color: #64748b; margin-bottom: 20px;">学员端的其他功能页面，包括会议详情、日程、资料下载等</p>
+                <div class="page-grid">
+                    <a href="learner/meeting-detail.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="page-title">会议详情</div>
+                        </div>
+                        <div class="page-desc">查看会议详细信息</div>
+                        <span class="page-badge badge-learner">学员端</span>
+                    </a>
+
+                    <a href="learner/schedule.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="page-title">日程查看</div>
+                        </div>
+                        <div class="page-desc">会议日程安排</div>
+                        <span class="page-badge badge-learner">学员端</span>
+                    </a>
+
+                    <a href="learner/materials.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #ec4899, #dc2626);">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="page-title">学习资料</div>
+                        </div>
+                        <div class="page-desc">下载会议资料</div>
+                        <span class="page-badge badge-learner">学员端</span>
+                    </a>
+
+                    <a href="learner/message.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="page-title">消息中心</div>
+                        </div>
+                        <div class="page-desc">查看系统消息</div>
+                        <span class="page-badge badge-learner">学员端</span>
+                    </a>
+
+                    <a href="learner/guestbook.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #a855f7, #9333ea);">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="page-title">留言赠语</div>
+                        </div>
+                        <div class="page-desc">分享心得和祝福</div>
+                        <span class="page-badge badge-learner">学员端</span>
+                    </a>
+
+                    <a href="learner/chat-room.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="page-title">学员聊天室</div>
+                        </div>
+                        <div class="page-desc">群组聊天交流</div>
+                        <span class="page-badge badge-learner">学员端</span>
+                    </a>
+
+                    <a href="learner/chat-private.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #a855f7, #6366f1);">
+                                <i class="fas fa-comment-dots"></i>
+                            </div>
+                            <div class="page-title">私聊</div>
+                        </div>
+                        <div class="page-desc">私人一对一聊天</div>
+                        <span class="page-badge badge-learner">学员端</span>
+                    </a>
+
+                    <a href="learner/contact.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #14b8a6, #0f766e);">
+                                <i class="fas fa-address-book"></i>
+                            </div>
+                            <div class="page-title">联系方式</div>
+                        </div>
+                        <div class="page-desc">联系人和通讯录</div>
+                        <span class="page-badge badge-learner">学员端</span>
+                    </a>
+
+                    <a href="learner/guide.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                            <div class="page-title">使用指南</div>
+                        </div>
+                        <div class="page-desc">新手使用帮助</div>
+                        <span class="page-badge badge-learner">学员端</span>
+                    </a>
+
+                    <a href="learner/arrangements.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                                <i class="fas fa-list-alt"></i>
+                            </div>
+                            <div class="page-title">会议安排</div>
+                        </div>
+                        <div class="page-desc">会议具体安排事项</div>
+                        <span class="page-badge badge-learner">学员端</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 协管员端其他页面 -->
+            <div class="other-section">
+                <div class="other-section-header">
+                    <div class="other-section-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="other-section-title">协管员端其他页面</div>
+                </div>
+                <p style="color: #64748b; margin-bottom: 20px;">一门课程改革中的其他页面信息</p>
+
+                    <!-- <a href="staff/training-detail.html" class="page-card"> -->
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div class="page-title">培训详情</div>
+                        </div>
+                        <div class="page-desc">培训详细信息查看</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+
+                    <a href="staff/schedule.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div class="page-title">工作日程</div>
+                        </div>
+                        <div class="page-desc">协管员工作日程安排</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+
+                    <a href="staff/chat-room.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #ec4899, #dc2626);">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="page-title">工作人员聊天</div>
+                        </div>
+                        <div class="page-desc">协管员内部沟通群</div>
+                        <span class="page-badge badge-staff">协管员</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 归档页面 -->
+            <div class="other-section">
+                <div class="other-section-header">
+                    <div class="other-section-icon" style="background: linear-gradient(135deg, #a855f7, #9333ea);">
+                        <i class="fas fa-archive"></i>
+                    </div>
+                    <div class="other-section-title">归档页面</div>
+                </div>
+                <p style="color: #64748b; margin-bottom: 20px;">会议结束后的资料归档和历史记录查看</p>
+                <div class="page-grid">
+                    <a href="archive/materials.html" class="page-card featured">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                                <i class="fas fa-folder-open"></i>
+                            </div>
+                            <div class="page-title">资料归档</div>
+                        </div>
+                        <div class="page-desc">会议资料下载归档</div>
+                        <span class="page-badge badge-archive">归档</span>
+                    </a>
+
+                    <a href="archive/feedback.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #a855f7, #6366f1);">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="page-title">反馈归档</div>
+                        </div>
+                        <div class="page-desc">查看历史反馈记录</div>
+                        <span class="page-badge badge-archive">归档</span>
+                    </a>
+
+                    <a href="archive/highlights.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                                <i class="fas fa-images"></i>
+                            </div>
+                            <div class="page-title">精彩瞬间归档</div>
+                        </div>
+                        <div class="page-desc">会议照片视频归档</div>
+                        <span class="page-badge badge-archive">归档</span>
+                    </a>
+
+                    <a href="archive/messages.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                                <i class="fas fa-comment-dots"></i>
+                            </div>
+                            <div class="page-title">消息归档</div>
+                        </div>
+                        <div class="page-desc">历史消息记录</div>
+                        <span class="page-badge badge-archive">归档</span>
+                    </a>
+
+                    <a href="archive/reports.html" class="page-card">
+                        <div class="page-header">
+                            <div class="page-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="page-title">报告归档</div>
+                        </div>
+                        <div class="page-desc">会议报告归档</div>
+                        <span class="page-badge badge-archive">归档</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer">
+            <p><strong>智能会议系统 v1.0</strong></p>
+            <p style="margin-top: 10px;">共59个页面 | 学员端26个 | 协管员端22个 | 共有/其他11个</p>
+            <p style="margin-top: 10px; font-size: 0.85rem; opacity: 0.8;">按18个业务流程组织，覆盖会议全生命周期管理</p>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成提示
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ 智能会议助手导航页面加载完成');
+            console.log('📊 总页面数: 59');
+            console.log('📱 学员端: 26个');
+            console.log('👨‍💼 协管员端: 22个');
+            console.log('🔗 共有/其他: 11个');
+            console.log('📋 业务流程: 18个');
+            console.log('🏗️ 页面已按流程顺序重新组织');
+        });
+    </script>
+</body>
+</html>

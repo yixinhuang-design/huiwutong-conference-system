@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互动反馈数据</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left"><span>9:41</span></div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="past.html" class="btn btn-secondary" style="padding:8px 12px;"><i class="fas fa-chevron-left"></i></a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                        <button class="btn btn-outline" style="padding:8px 12px;"><i class="fas fa-file-export"></i> 导出Excel</button>
+                    </div>
+                    <div class="pill-group">
+                        <div class="pill-active">整体数据</div>
+                        <div class="pill">课程评价</div>
+                        <div class="pill">课堂测试</div>
+                        <div class="pill">问卷调查</div>
+                    </div>
+                </div>
+
+                <div class="card fade-in" id="evaluation">
+                    <div class="card-header">
+                        <i class="fas fa-star" style="color:#f59e0b;"></i>
+                        <div class="card-title">课程评价</div>
+                    </div>
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <h4>总体满意度</h4>
+                            <p>4.7</p>
+                            <span>同比 +0.2</span>
+                        </div>
+                        <div class="summary-card">
+                            <h4>评价人数</h4>
+                            <p>138</p>
+                            <span>覆盖率 97%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in" id="survey">
+                    <div class="card-header">
+                        <i class="fas fa-poll" style="color:#2563eb;"></i>
+                        <div class="card-title">问卷调查</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon"><i class="fas fa-clipboard"></i></div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">培训需求调研</div>
+                                <div class="assistant-item-desc">完成率 92% · 重点需求：课程案例、互动讨论、现场实践。</div>
+                                <a class="link-inline" href="#"><i class="fas fa-arrow-right"></i> 查看原始数据</a>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#22c55e,#16a34a);">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">服务满意度调查</div>
+                                <div class="assistant-item-desc">重点反馈：住宿满意度 4.6 · 餐饮满意度 4.5。</div>
+                                <span class="status-chip status-positive"><i class="fas fa-archive"></i> 已归档</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-comments"></i></div>
+                    <div class="nav-text">沟通</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon"><i class="fas fa-history"></i></div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

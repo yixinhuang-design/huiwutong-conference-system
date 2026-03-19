@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>团队管理 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">团队管理</h1>
+                <div class="nav-actions">
+                    <button class="btn-primary" @click="addTeamMember">
+                        <i class="fas fa-user-plus"></i>
+                        添加成员
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+            <!-- 页面头部 -->
+            <div class="page-header glass-card">
+                <h2>👥 团队管理系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                </div>
+            </div>
+
+            <!-- 团队统计 -->
+            <div class="team-stats glass-card">
+                <h3>📊 团队统计</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ teamStats.total }}</div>
+                            <div class="stat-label">总成员数</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ teamStats.managers }}</div>
+                            <div class="stat-label">管理员</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ teamStats.assistants }}</div>
+                            <div class="stat-label">协管员</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ teamStats.online }}</div>
+                            <div class="stat-label">在线人数</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 团队管理 -->
+            <div class="team-management glass-card">
+                <div class="management-header">
+                    <h3>👨‍💼 团队管理</h3>
+                    <div class="management-actions">
+                        <div class="filter-group">
+                            <select v-model="roleFilter" @change="filterMembers">
+                                <option value="">全部角色</option>
+                                <option value="manager">管理员</option>
+                                <option value="assistant">协管员</option>
+                                <option value="member">普通成员</option>
+                            </select>
+                        </div>
+                        <div class="search-group">
+                            <input type="text" v-model="searchQuery" @input="filterMembers" placeholder="搜索成员...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 成员列表 -->
+                <div class="members-list">
+                    <div class="member-item" 
+                         v-for="member in filteredMembers" 
+                         :key="member.id"
+                         :class="{ online: member.isOnline }">
+                        <div class="member-avatar">
+                            <img :src="member.avatar" :alt="member.name">
+                            <div class="status-indicator" :class="{ online: member.isOnline }"></div>
+                        </div>
+                        
+                        <div class="member-info">
+                            <div class="member-name">
+                                {{ member.name }}
+                                <span class="role-badge" :class="'role-' + member.role">
+                                    {{ getRoleText(member.role) }}
+                                </span>
+                            </div>
+                            <div class="member-details">
+                                <span class="detail-item">
+                                    <i class="fas fa-id-badge"></i>
+                                    {{ member.employeeId }}
+                                </span>
+                                <span class="detail-item">
+                                    <i class="fas fa-building"></i>
+                                    {{ member.department }}
+                                </span>
+                                <span class="detail-item">
+                                    <i class="fas fa-phone"></i>
+                                    {{ member.phone }}
+                                </span>
+                            </div>
+                            <div class="member-stats">
+                                <span class="stat-item">
+                                    <i class="fas fa-tasks"></i>
+                                    任务: {{ member.taskCount }}
+                                </span>
+                                <span class="stat-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    完成: {{ member.completedTasks }}
+                                </span>
+                                <span class="stat-item">
+                                    <i class="fas fa-clock"></i>
+                                    效率: {{ member.efficiency }}%
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="member-actions">
+                            <button class="btn-icon" @click="viewMemberProfile(member.id)" title="查看详情">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-icon" @click="editMember(member.id)" title="编辑">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon" @click="assignTask(member.id)" title="分配任务">
+                                <i class="fas fa-tasks"></i>
+                            </button>
+                            <button class="btn-icon btn-danger" @click="removeMember(member.id)" title="移除">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 权限管理 -->
+            <div class="permission-management glass-card">
+                <h3>🔐 权限管理</h3>
+                <div class="permission-grid">
+                    <div class="permission-section">
+                        <h4>管理员权限</h4>
+                        <div class="permission-list">
+                            <div class="permission-item" 
+                                 v-for="permission in managerPermissions" 
+                                 :key="permission.id">
+                                <input type="checkbox" 
+                                       :id="'manager_' + permission.id"
+                                       :checked="permission.enabled">
+                                <label :for="'manager_' + permission.id">
+                                    <i :class="permission.icon"></i>
+                                    {{ permission.name }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="permission-section">
+                        <h4>协管员权限</h4>
+                        <div class="permission-list">
+                            <div class="permission-item" 
+                                 v-for="permission in assistantPermissions" 
+                                 :key="permission.id">
+                                <input type="checkbox" 
+                                       :id="'assistant_' + permission.id"
+                                       :checked="permission.enabled">
+                                <label :for="'assistant_' + permission.id">
+                                    <i :class="permission.icon"></i>
+                                    {{ permission.name }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="permission-section">
+                        <h4>普通成员权限</h4>
+                        <div class="permission-list">
+                            <div class="permission-item" 
+                                 v-for="permission in memberPermissions" 
+                                 :key="permission.id">
+                                <input type="checkbox" 
+                                       :id="'member_' + permission.id"
+                                       :checked="permission.enabled">
+                                <label :for="'member_' + permission.id">
+                                    <i :class="permission.icon"></i>
+                                    {{ permission.name }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="permission-actions">
+                    <button class="btn-outline" @click="resetPermissions">
+                        <i class="fas fa-undo"></i>
+                        重置权限
+                    </button>
+                    <button class="btn-primary" @click="savePermissions">
+                        <i class="fas fa-save"></i>
+                        保存权限
+                    </button>
+                </div>
+            </div>
+
+            <!-- 团队绩效 -->
+            <div class="team-performance glass-card">
+                <h3>📈 团队绩效</h3>
+                <div class="performance-grid">
+                    <div class="performance-chart">
+                        <h4>任务完成率</h4>
+                        <div class="chart-container">
+                            <canvas id="taskCompletionChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="performance-chart">
+                        <h4>成员活跃度</h4>
+                        <div class="chart-container">
+                            <canvas id="memberActivityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 添加成员模态框 -->
+        <div class="modal" v-if="showAddMemberModal" @click.self="closeModal">
+            <div class="modal-content" @click.stop>
+                <div class="modal-header">
+                    <h3>添加团队成员</h3>
+                    <button class="modal-close" @click="closeModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form @submit.prevent="submitMember">
+                        <div class="form-group">
+                            <label>姓名 *</label>
+                            <input type="text" v-model="newMember.name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>工号 *</label>
+                            <input type="text" v-model="newMember.employeeId" required>
+                        </div>
+                        <div class="form-group">
+                            <label>部门</label>
+                            <select v-model="newMember.department">
+                                <option value="技术部">技术部</option>
+                                <option value="产品部">产品部</option>
+                                <option value="市场部">市场部</option>
+                                <option value="销售部">销售部</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>角色</label>
+                            <select v-model="newMember.role">
+                                <option value="member">普通成员</option>
+                                <option value="assistant">协管员</option>
+                                <option value="manager">管理员</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>手机号</label>
+                            <input type="tel" v-model="newMember.phone">
+                        </div>
+                        <div class="form-group">
+                            <label>邮箱</label>
+                            <input type="email" v-model="newMember.email">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-outline" @click="closeModal">取消</button>
+                    <button class="btn-primary" @click="submitMember">添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: 'conf_20240615_001',
+                        name: '2024年度技术峰会'
+                    },
+                    teamStats: {
+                        total: 25,
+                        managers: 3,
+                        assistants: 8,
+                        online: 18
+                    },
+                    members: [
+                        {
+                            id: 'user_001',
+                            name: '张三',
+                            employeeId: 'EMP001',
+                            department: '技术部',
+                            role: 'manager',
+                            phone: '13800138001',
+                            email: 'zhangsan@company.com',
+                            avatar: '/images/default-avatar.png',
+                            isOnline: true,
+                            taskCount: 15,
+                            completedTasks: 12,
+                            efficiency: 95
+                        },
+                        {
+                            id: 'user_002',
+                            name: '李四',
+                            employeeId: 'EMP002',
+                            department: '产品部',
+                            role: 'assistant',
+                            phone: '13800138002',
+                            email: 'lisi@company.com',
+                            avatar: '/images/default-avatar.png',
+                            isOnline: true,
+                            taskCount: 10,
+                            completedTasks: 8,
+                            efficiency: 88
+                        }
+                    ],
+                    filteredMembers: [],
+                    roleFilter: '',
+                    searchQuery: '',
+                    showAddMemberModal: false,
+                    newMember: {
+                        name: '',
+                        employeeId: '',
+                        department: '技术部',
+                        role: 'member',
+                        phone: '',
+                        email: ''
+                    },
+                    managerPermissions: [
+                        { id: 'create_conference', name: '创建会议', icon: 'fas fa-plus', enabled: true },
+                        { id: 'manage_users', name: '管理用户', icon: 'fas fa-users', enabled: true },
+                        { id: 'view_all_data', name: '查看所有数据', icon: 'fas fa-chart-bar', enabled: true },
+                        { id: 'system_settings', name: '系统设置', icon: 'fas fa-cog', enabled: true }
+                    ],
+                    assistantPermissions: [
+                        { id: 'assign_tasks', name: '分配任务', icon: 'fas fa-tasks', enabled: true },
+                        { id: 'manage_groups', name: '管理群组', icon: 'fas fa-users', enabled: true },
+                        { id: 'send_notifications', name: '发送通知', icon: 'fas fa-bell', enabled: true },
+                        { id: 'view_reports', name: '查看报告', icon: 'fas fa-chart-line', enabled: false }
+                    ],
+                    memberPermissions: [
+                        { id: 'view_tasks', name: '查看任务', icon: 'fas fa-list', enabled: true },
+                        { id: 'join_groups', name: '加入群组', icon: 'fas fa-users', enabled: true },
+                        { id: 'send_messages', name: '发送消息', icon: 'fas fa-comment', enabled: true },
+                        { id: 'view_schedule', name: '查看日程', icon: 'fas fa-calendar', enabled: true }
+                    ]
+                }
+            },
+            methods: {
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId && window.conferenceContext) {
+                        try {
+                            this.conference = await window.conferenceContext.loadConference(conferenceId);
+                        } catch (error) {
+                            console.error('加载会议数据失败:', error);
+                            // 使用默认数据
+                            this.conference = {
+                                id: conferenceId,
+                                name: '示例会议'
+                            };
+                        }
+                    } else if (conferenceId) {
+                        // 如果没有conferenceContext，使用示例数据
+                        this.conference = {
+                            id: conferenceId,
+                            name: '示例会议'
+                        };
+                    }
+                    // 如果没有conferenceId，使用已有的默认数据
+                },
+                filterMembers() {
+                    let filtered = [...this.members];
+                    
+                    if (this.roleFilter) {
+                        filtered = filtered.filter(member => member.role === this.roleFilter);
+                    }
+                    
+                    if (this.searchQuery) {
+                        const query = this.searchQuery.toLowerCase();
+                        filtered = filtered.filter(member => 
+                            member.name.toLowerCase().includes(query) ||
+                            member.employeeId.toLowerCase().includes(query) ||
+                            member.department.toLowerCase().includes(query)
+                        );
+                    }
+                    
+                    this.filteredMembers = filtered;
+                },
+                
+                getRoleText(role) {
+                    const roleMap = {
+                        manager: '管理员',
+                        assistant: '协管员',
+                        member: '成员'
+                    };
+                    return roleMap[role] || role;
+                },
+                
+                addTeamMember() {
+                    this.showAddMemberModal = true;
+                },
+                
+                closeModal() {
+                    this.showAddMemberModal = false;
+                    this.resetNewMember();
+                },
+                
+                resetNewMember() {
+                    this.newMember = {
+                        name: '',
+                        employeeId: '',
+                        department: '技术部',
+                        role: 'member',
+                        phone: '',
+                        email: ''
+                    };
+                },
+                
+                submitMember() {
+                    const newMember = {
+                        id: 'user_' + Date.now(),
+                        ...this.newMember,
+                        avatar: '/images/default-avatar.png',
+                        isOnline: false,
+                        taskCount: 0,
+                        completedTasks: 0,
+                        efficiency: 0
+                    };
+                    
+                    this.members.push(newMember);
+                    this.filterMembers();
+                    this.closeModal();
+                    
+                    this.$showToast('成员添加成功！', 'success');
+                },
+                
+                viewMemberProfile(memberId) {
+                    console.log('查看成员详情:', memberId);
+                },
+                
+                editMember(memberId) {
+                    console.log('编辑成员:', memberId);
+                },
+                
+                assignTask(memberId) {
+                    console.log('分配任务给成员:', memberId);
+                },
+                
+                async removeMember(memberId) {
+                    const confirmed = await this.$showConfirm(
+                        '确定要移除这个成员吗？',
+                        '移除成员',
+                        'warning'
+                    );
+                    if (confirmed) {
+                        try {
+                            if (this.$showLoading) {
+                                this.$showLoading('正在移除成员...');
+                            }
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            const index = this.members.findIndex(m => m.id === memberId);
+                            if (index > -1) {
+                                this.members.splice(index, 1);
+                                this.filterMembers();
+                            }
+                            if (this.$hideLoading) {
+                                this.$hideLoading();
+                            }
+                            this.$showToast('成员已移除', 'success');
+                        } catch (error) {
+                            if (this.$hideLoading) {
+                                this.$hideLoading();
+                            }
+                            if (this.$showToast) {
+                                this.$showToast('移除失败，请重试', 'error');
+                            }
+                        }
+                    }
+                },
+                
+                async resetPermissions() {
+                    const confirmed = await this.$showConfirm(
+                        '确定要重置所有权限设置吗？',
+                        '重置权限',
+                        'warning'
+                    );
+                    if (confirmed) {
+                        try {
+                            if (this.$showLoading) {
+                                this.$showLoading('正在重置权限...');
+                            }
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            // 重置权限逻辑
+                            if (this.$hideLoading) {
+                                this.$hideLoading();
+                            }
+                            this.$showToast('权限已重置', 'success');
+                        } catch (error) {
+                            if (this.$hideLoading) {
+                                this.$hideLoading();
+                            }
+                            if (this.$showToast) {
+                                this.$showToast('重置失败，请重试', 'error');
+                            }
+                        }
+                    }
+                },
+                
+                async savePermissions() {
+                    try {
+                        if (this.$showLoading) {
+                            this.$showLoading('正在保存权限设置...');
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        // 保存权限逻辑
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        this.$showToast('权限设置已保存', 'success');
+                    } catch (error) {
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        if (this.$showToast) {
+                            this.$showToast('保存失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                initCharts() {
+                    // 任务完成率图表
+                    const taskCtx = document.getElementById('taskCompletionChart');
+                    if (taskCtx) {
+                        new Chart(taskCtx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['已完成', '进行中', '待处理'],
+                                datasets: [{
+                                    data: [75, 20, 5],
+                                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false
+                            }
+                        });
+                    }
+                    
+                    // 成员活跃度图表
+                    const activityCtx = document.getElementById('memberActivityChart');
+                    if (activityCtx) {
+                        new Chart(activityCtx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['周一', '周二', '周三', '周四', '周五'],
+                                datasets: [{
+                                    label: '活跃度',
+                                    data: [85, 92, 78, 96, 88],
+                                    backgroundColor: '#667eea'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        max: 100
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            },
+            
+            async mounted() {
+                await this.initialize();
+                this.filterMembers();
+                this.initCharts();
+            },
+        }).mount('#app');
+    </script>
+
+    <style>
+        .team-stats {
+            margin-bottom: 2rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .stat-card {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+        
+        .stat-icon {
+            font-size: 2rem;
+            color: #667eea;
+            margin-right: 1rem;
+        }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .management-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .management-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .filter-group select,
+        .search-group input {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .search-group {
+            position: relative;
+        }
+        
+        .search-group i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+        
+        .members-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .member-item {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+        
+        .member-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .member-avatar {
+            position: relative;
+            margin-right: 1.5rem;
+        }
+        
+        .member-avatar img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .status-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ccc;
+            border: 2px solid white;
+        }
+        
+        .status-indicator.online {
+            background: #10b981;
+        }
+        
+        .member-info {
+            flex: 1;
+        }
+        
+        .member-name {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        
+        .role-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .role-manager {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .role-assistant {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .role-member {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .member-details,
+        .member-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .detail-item,
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .detail-item i,
+        .stat-item i {
+            color: #667eea;
+        }
+        
+        .member-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-icon {
+            padding: 0.5rem;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-icon:hover {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+        }
+        
+        .btn-icon.btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .permission-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .permission-section h4 {
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+        
+        .permission-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .permission-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .permission-item input[type="checkbox"] {
+            margin-right: 0.75rem;
+        }
+        
+        .permission-item label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .permission-item i {
+            margin-right: 0.5rem;
+            color: #667eea;
+        }
+        
+        .permission-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+        
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .performance-chart {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+        
+        .performance-chart h4 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .chart-container {
+            height: 200px;
+            position: relative;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            padding: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+    </style>
+</body>
+</html>
+

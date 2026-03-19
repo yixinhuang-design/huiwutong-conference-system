@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报名审核 - 协管员端</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+            <!-- 保留唯一主流程结构，移除重复内容 -->
+
+                <!-- 搜索筛选 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-filter text-muted"></i>
+                        <div class="card-title">搜索筛选</div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" class="input-field" placeholder="按姓名、手机号、单位搜索">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <div class="btn-group--wrap">
+                            <button class="btn btn-secondary btn--sm">
+                                <i class="fas fa-sort"></i> 按报名时间
+                            </button>
+                            <button class="btn btn-secondary btn--sm">
+                                <i class="fas fa-sort-alpha-down"></i> 按姓名
+                            </button>
+                            <button class="btn btn-secondary btn--sm">
+                                <i class="fas fa-building"></i> 按单位
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 报名列表标签 -->
+                <div class="card fade-in">
+                    <div class="pill-group pill-group--compact">
+                        <div class="pill-active">待审核 14</div>
+                        <div class="pill">已通过 142</div>
+                        <div class="pill">需退回 4</div>
+                        <div class="pill">全部 160</div>
+                    </div>
+                </div>
+
+                <!-- 批量操作栏 -->
+                <div class="card fade-in" id="batchBar" style="display:none;">
+                    <div class="batch-bar-header">
+                        <div class="batch-bar-left">
+                            <input type="checkbox" id="selectAll">
+                            <label for="selectAll">全选</label>
+                        </div>
+                        <div class="batch-bar-right">
+                            <span id="selectedCount">已选 0 项</span>
+                        </div>
+                    </div>
+                    <div class="batch-bar-btns">
+                        <button class="batch-btn batch-btn-pass" id="batchApproveBtn">
+                            <i class="fas fa-check"></i> 批量通过
+                        </button>
+                        <button class="batch-btn batch-btn-reject" id="batchRejectBtn">
+                            <i class="fas fa-undo"></i> 批量退回
+                        </button>
+                        <button class="batch-btn batch-btn-ai">
+                            <i class="fas fa-robot"></i> 智能审核
+                        </button>
+                        <button class="batch-btn batch-btn-export">
+                            <i class="fas fa-file-export"></i> 导出Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 待审核列表 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-list-check" style="color:#2563eb;"></i>
+                        <div class="card-title">待审核列表</div>
+                        <button class="btn btn-outline" style="padding:8px 12px;">
+                            <i class="fas fa-file-export"></i> 导出Excel
+                        </button>
+                    </div>
+
+                    <!-- 报名卡片1 -->
+                    <div class="task-card">
+                        <div class="task-header">
+                            <div class="task-title">李华 · 市委组织部</div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <span class="status-chip status-positive" style="font-size: 11px; padding: 4px 8px;">✓ 一致</span>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" class="batch-checkbox">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-body">
+                            <div style="margin-bottom: 8px;">
+                                <span class="status-chip status-neutral">男</span>
+                                <span class="status-chip status-neutral">处长</span>
+                                <span class="status-chip status-neutral">138****1234</span>
+                            </div>
+                            <div style="margin-bottom: 8px; padding: 8px; background: #f0fdf4; border-radius: 6px; font-size: 12px; color: #166534;">
+                                <div style="margin-bottom: 4px;"><strong>报名信息：</strong></div>
+                                <div>学历：本科 | 工作年限：15年 | 住宿：需要</div>
+                            </div>
+                            <div>报名表、身份证复印件齐全 · 需确认住宿安排</div>
+                        </div>
+                        <div class="task-footer">
+                            <span>提交时间：01-12 14:20</span>
+                            <a class="cta-chip cta-chip--primary" href="registration-detail.html">
+                                <i class="fas fa-eye"></i> 查看详情
+                            </a>
+                            <a class="cta-chip cta-chip--primary" href="#">
+                                <i class="fas fa-check"></i> 通过
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 报名卡片2 - OCR识别问题 -->
+                    <div class="task-card" style="border-left: 3px solid #ef4444;">
+                        <div class="task-header">
+                            <div class="task-title">周强 · 市国资委</div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <span class="status-chip status-critical" style="font-size: 11px; padding: 4px 8px;">✗ 不一致</span>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" class="batch-checkbox">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-body">
+                            <div style="margin-bottom: 8px;">
+                                <span class="status-chip status-neutral">男</span>
+                                <span class="status-chip status-neutral">科长</span>
+                                <span class="status-chip status-critical">手机号格式错误</span>
+                            </div>
+                            <div style="margin-bottom: 8px; padding: 8px; background: #fef2f2; border-radius: 6px; font-size: 12px; color: #991b1b;">
+                                <div style="margin-bottom: 4px;"><strong>报名信息：</strong></div>
+                                <div>学历：大专 | 工作年限：8年 | 住宿：不需要</div>
+                            </div>
+                            <div>身份证号码与报名信息不一致，手机号格式有误</div>
+                        </div>
+                        <div class="task-footer">
+                            <span>提交时间：01-12 09:10</span>
+                            <a class="cta-chip cta-chip--secondary" href="#">
+                                <i class="fas fa-edit"></i> 修改
+                            </a>
+                            <a class="cta-chip cta-chip--danger" href="#">
+                                <i class="fas fa-undo"></i> 退回
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 报名卡片3 -->
+                    <div class="task-card" style="border-left: 3px solid #22c55e;">
+                        <div class="task-header">
+                            <div class="task-title">王丽 · 市教育局</div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <span class="status-chip status-positive" style="font-size: 11px; padding: 4px 8px;">✓ 一致</span>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" class="batch-checkbox">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-body">
+                            <div style="margin-bottom: 8px;">
+                                <span class="status-chip status-neutral">女</span>
+                                <span class="status-chip status-neutral">主任</span>
+                                <span class="status-chip status-positive">137****5678</span>
+                            </div>
+                            <div style="margin-bottom: 8px; padding: 8px; background: #f0fdf4; border-radius: 6px; font-size: 12px; color: #166534;">
+                                <div style="margin-bottom: 4px;"><strong>报名信息：</strong></div>
+                                <div>学历：研究生 | 工作年限：12年 | 住宿：需要</div>
+                            </div>
+                            <div>资料齐全，信息完整</div>
+                        </div>
+                        <div class="task-footer">
+                            <span>提交时间：01-12 16:30</span>
+                            <a class="cta-chip cta-chip--primary" href="#">
+                                <i class="fas fa-check"></i> 确认通过
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分页 -->
+                <div class="card fade-in">
+                    <div class="pagination">
+                        <button class="btn btn-secondary btn--sm" disabled>
+                            <i class="fas fa-chevron-left"></i> 上一页
+                        </button>
+                        <div class="pagination-info">
+                            <span>第 1 / 5 页</span>
+                            <span style="color:#94a3b8;">共 160 条</span>
+                        </div>
+                        <button class="btn btn-secondary btn--sm">
+                            下一页 <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 智能审核弹窗 -->
+                <div class="card fade-in">
+                    <div class="card-header card-header--clickable" onclick="toggleSmartAudit()">
+                        <div class="icon-container icon-gradient-purple">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="card-title">智能审核</div>
+                        <i class="fas fa-chevron-down text-muted"></i>
+                    </div>
+                    <div id="smartAuditPanel" style="display:none;">
+                        <div class="assistant-list">
+                            <div class="assistant-item">
+                                <div class="assistant-item-icon icon-gradient-blue">
+                                    <i class="fas fa-id-card"></i>
+                                </div>
+                                <div class="assistant-item-content">
+                                    <div class="assistant-item-title">OCR识别身份证</div>
+                                    <div class="assistant-item-desc">
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" checked> 自动识别姓名
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" checked> 自动识别身份证号
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="assistant-item">
+                                <div class="assistant-item-icon icon-gradient-orange">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </div>
+                                <div class="assistant-item-content">
+                                    <div class="assistant-item-title">手机号验证</div>
+                                    <div class="assistant-item-desc">
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" checked> 验证格式正确性
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="assistant-item">
+                                <div class="assistant-item-icon icon-gradient-green">
+                                    <i class="fas fa-check-double"></i>
+                                </div>
+                                <div class="assistant-item-content">
+                                    <div class="assistant-item-title">信息匹配</div>
+                                    <div class="assistant-item-desc">
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" checked> 身份证与姓名匹配
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" checked> 报名信息与证件一致
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cta-bar">
+                            <button class="btn btn-secondary btn--flex">
+                                <i class="fas fa-redo"></i> 重置
+                            </button>
+                            <button class="btn btn-primary btn--flex">
+                                <i class="fas fa-play"></i> 开始审核
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 审核日志 -->
+                <div class="card fade-in">
+                    <div class="card-header card-header--clickable" onclick="toggleAuditLog()">
+                        <div class="icon-container icon-gradient-cyan">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <div class="card-title">审核日志</div>
+                        <i class="fas fa-chevron-down text-muted"></i>
+                    </div>
+                    <div id="auditLogPanel" style="display:none;">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-dot timeline-dot--success"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">通过 王丽 的报名</div>
+                                    <div class="timeline-desc">审核人：张三 · 2025-02-06 10:30</div>
+                                    <div class="timeline-desc">自动审核通过，资料齐全</div>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot timeline-dot--warning"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">退回 周强 的报名</div>
+                                    <div class="timeline-desc">审核人：李四 · 2025-02-06 09:15</div>
+                                    <div class="timeline-desc">身份证信息不符，请重新提交</div>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot timeline-dot--info"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">批量通过 10 人报名</div>
+                                    <div class="timeline-desc">审核人：张三 · 2025-02-05 16:45</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="nav-text">沟通</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全选与批量操作功能
+        const selectAll = document.getElementById('selectAll');
+        const batchBar = document.getElementById('batchBar');
+        const selectedCount = document.getElementById('selectedCount');
+        const batchApproveBtn = document.getElementById('batchApproveBtn');
+        const batchRejectBtn = document.getElementById('batchRejectBtn');
+
+        function getBatchCheckboxes() {
+            return document.querySelectorAll('.batch-checkbox');
+        }
+
+        function updateBatchBar() {
+            const batchCheckboxes = getBatchCheckboxes();
+            const count = Array.from(batchCheckboxes).filter(cb => cb.checked).length;
+            selectedCount.textContent = `已选 ${count} 项`;
+            batchBar.style.display = count > 0 ? 'block' : 'none';
+            if (selectAll) {
+                selectAll.checked = count === batchCheckboxes.length && count > 0;
+            }
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                const batchCheckboxes = getBatchCheckboxes();
+                batchCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateBatchBar();
+            });
+        }
+
+        // 监听每个checkbox
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('batch-checkbox')) {
+                updateBatchBar();
+            }
+        });
+
+        // 批量通过
+        if (batchApproveBtn) {
+            batchApproveBtn.addEventListener('click', function() {
+                const batchCheckboxes = getBatchCheckboxes();
+                const checked = Array.from(batchCheckboxes).filter(cb => cb.checked);
+                if (checked.length === 0) {
+                    alert('请先选择要通过的报名项');
+                    return;
+                }
+                checked.forEach(cb => {
+                    // 模拟通过操作
+                    const card = cb.closest('.task-card');
+                    if (card) {
+                        card.style.opacity = 0.5;
+                        card.querySelector('.task-footer').insertAdjacentHTML('beforeend', '<span class="status-chip status-positive" style="margin-left:8px;">已通过</span>');
+                    }
+                    cb.checked = false;
+                });
+                updateBatchBar();
+                alert('批量通过操作已完成（模拟）');
+            });
+        }
+
+        // 批量退回
+        if (batchRejectBtn) {
+            batchRejectBtn.addEventListener('click', function() {
+                const batchCheckboxes = getBatchCheckboxes();
+                const checked = Array.from(batchCheckboxes).filter(cb => cb.checked);
+                if (checked.length === 0) {
+                    alert('请先选择要退回的报名项');
+                    return;
+                }
+                checked.forEach(cb => {
+                    // 模拟退回操作
+                    const card = cb.closest('.task-card');
+                    if (card) {
+                        card.style.opacity = 0.5;
+                        card.querySelector('.task-footer').insertAdjacentHTML('beforeend', '<span class="status-chip status-critical" style="margin-left:8px;">已退回</span>');
+                    }
+                    cb.checked = false;
+                });
+                updateBatchBar();
+                alert('批量退回操作已完成（模拟）');
+            });
+        }
+
+        // 页面初始化时刷新批量栏
+        document.addEventListener('DOMContentLoaded', updateBatchBar);
+
+        function toggleSmartAudit() {
+            const panel = document.getElementById('smartAuditPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function toggleAuditLog() {
+            const panel = document.getElementById('auditLogPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>

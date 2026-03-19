@@ -1,0 +1,64 @@
+# Node modules
+node_modules/
+**/node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+unpackage/
+*.min.js
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Maven (for backend)
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Gradle (for Android)
+build/
+.gradle/
+
+# iOS
+Pods/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+
+# Backup files
+*.bak
+*.backup
+
+ # Local data
+.m2repo/
+redis/
+sql/*.sql

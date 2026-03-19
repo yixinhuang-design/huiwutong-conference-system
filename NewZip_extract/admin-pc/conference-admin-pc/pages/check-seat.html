@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>座位查询 - 智能会议系统</title>
+
+    <!-- 全局样式 -->
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--space-4);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 头部 */
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: var(--space-6);
+        }
+
+        .header h1 {
+            font-size: var(--font-size-2xl);
+            margin-bottom: var(--space-2);
+        }
+
+        .header p {
+            font-size: var(--font-size-sm);
+            opacity: 0.9;
+        }
+
+        /* 查询表单 */
+        .search-form {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            margin-bottom: var(--space-4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .form-group label {
+            display: block;
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: var(--gray-700);
+            margin-bottom: var(--space-2);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-base);
+            transition: all var(--transition-fast);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: var(--space-3);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 座位信息卡片 */
+        .seat-info {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            margin-bottom: var(--space-4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .seat-info.show {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .seat-info-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-4);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .seat-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: var(--font-size-2xl);
+        }
+
+        .attendee-info h2 {
+            font-size: var(--font-size-xl);
+            color: var(--gray-900);
+            margin-bottom: var(--space-1);
+        }
+
+        .attendee-info p {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        .seat-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--space-3);
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-3);
+        }
+
+        .seat-detail-label {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        .seat-detail-value {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* 周围座位 */
+        .nearby-seats {
+            margin-top: var(--space-4);
+        }
+
+        .nearby-seats h3 {
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-3);
+        }
+
+        .nearby-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-2);
+        }
+
+        .nearby-item {
+            padding: var(--space-2);
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-sm);
+        }
+
+        .nearby-item .name {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .nearby-item .seat {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+        }
+
+        /* 辅助安排信息 */
+        .arrangements {
+            margin-top: var(--space-4);
+        }
+
+        .arrangements h3 {
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-3);
+        }
+
+        .arrangement-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-2);
+        }
+
+        .arrangement-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+
+        .arrangement-detail {
+            flex: 1;
+        }
+
+        .arrangement-detail .label {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+        }
+
+        .arrangement-detail .value {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        /* 广告区域 */
+        .advertisement {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .advertisement img {
+            width: 100%;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+        }
+
+        .advertisement p {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+            text-align: center;
+        }
+
+        /* 错误提示 */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            text-align: center;
+            color: var(--error-color);
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: var(--space-4);
+            color: white;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading i {
+            font-size: var(--font-size-2xl);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🪑 座位查询</h1>
+            <p>请输入您的信息查询座位安排</p>
+        </div>
+
+        <!-- 查询表单 -->
+        <div class="search-form">
+            <div class="form-group">
+                <label for="name">姓名</label>
+                <input
+                    type="text"
+                    id="name"
+                    v-model="name"
+                    placeholder="请输入您的姓名"
+                    @keyup.enter="checkSeat"
+                >
+            </div>
+            <div class="form-group">
+                <label for="phone">手机号（可选）</label>
+                <input
+                    type="tel"
+                    id="phone"
+                    v-model="phone"
+                    placeholder="请输入手机号辅助验证"
+                    @keyup.enter="checkSeat"
+                >
+            </div>
+            <button class="search-btn" @click="checkSeat">
+                <i class="fas fa-search"></i> 查询座位
+            </button>
+        </div>
+
+        <!-- 加载状态 -->
+        <div class="loading" :class="{ show: loading }">
+            <i class="fas fa-spinner"></i>
+            <p>正在查询...</p>
+        </div>
+
+        <!-- 错误提示 -->
+        <div class="error-message" :class="{ show: errorMessage }">
+            {{ errorMessage }}
+        </div>
+
+        <!-- 座位信息 -->
+        <div class="seat-info" :class="{ show: seatInfo }" v-if="seatInfo">
+            <div class="seat-info-header">
+                <div class="seat-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="attendee-info">
+                    <h2>{{ seatInfo.name }}</h2>
+                    <p>{{ seatInfo.department }} · {{ seatInfo.position }}</p>
+                </div>
+            </div>
+
+            <div class="seat-detail">
+                <span class="seat-detail-label">座位位置</span>
+                <span class="seat-detail-value">
+                    {{ seatInfo.area }} {{ seatInfo.row }}排 {{ seatInfo.number }}号
+                </span>
+            </div>
+
+            <div class="seat-detail">
+                <span class="seat-detail-label">座位类型</span>
+                <span class="seat-detail-value">{{ seatInfo.type }}</span>
+            </div>
+
+            <!-- 周围座位 -->
+            <div class="nearby-seats" v-if="nearbySeats.length > 0">
+                <h3>👥 周围座位</h3>
+                <div class="nearby-list">
+                    <div class="nearby-item" v-for="(seat, index) in nearbySeats" :key="index">
+                        <div class="name">{{ seat.name }}</div>
+                        <div class="seat">{{ seat.seat }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 辅助安排 -->
+            <div class="arrangements" v-if="arrangements.length > 0">
+                <h3>📋 辅助安排</h3>
+                <div class="arrangement-item" v-for="(item, index) in arrangements" :key="index">
+                    <div class="arrangement-icon">
+                        <i class="fas" :class="getArrangementIcon(item.type)"></i>
+                    </div>
+                    <div class="arrangement-detail">
+                        <div class="label">{{ item.label }}</div>
+                        <div class="value">{{ item.value }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 广告区域 -->
+        <div class="advertisement">
+            <img src="https://via.placeholder.com/600x200?text=Advertisement" alt="广告">
+            <p>广告位 · 联系我们：contact@example.com</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const loading = ref(false);
+                const name = ref('');
+                const phone = ref('');
+                const seatInfo = ref(null);
+                const nearbySeats = ref([]);
+                const arrangements = ref([]);
+                const errorMessage = ref('');
+                const conferenceId = ref('');
+
+                // 获取URL参数
+                const getQueryParam = (param) => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    return urlParams.get(param);
+                };
+
+                // 从localStorage加载排座数据
+                const loadSeatingData = () => {
+                    const confId = getQueryParam('conf') || 'demo_conf_001';
+                    conferenceId.value = confId;
+
+                    // 使用与seating-mgr.html相同的存储键
+                    const storageKey = `seating_${confId}`;
+                    const storedData = localStorage.getItem(storageKey);
+
+                    if (!storedData) {
+                        console.error('未找到排座数据，存储键:', storageKey);
+                        return null;
+                    }
+
+                    try {
+                        const data = JSON.parse(storedData);
+                        console.log('成功加载排座数据:', data);
+                        return data;
+                    } catch (error) {
+                        console.error('解析排座数据失败:', error);
+                        return null;
+                    }
+                };
+
+                // 查找参会者的座位
+                const findAttendeeSeat = (seatingData, searchName, searchPhone) => {
+                    if (!seatingData || !seatingData.seatingAreas) {
+                        return null;
+                    }
+
+                    for (const area of seatingData.seatingAreas) {
+                        if (!area || !area.rows) continue;
+
+                        for (const row of area.rows) {
+                            if (!row || !row.seats) continue;
+
+                            for (const seat of row.seats) {
+                                if (!seat || !seat.occupant) continue;
+
+                                const occupant = seat.occupant;
+                                const nameMatch = occupant.name === searchName;
+                                const phoneMatch = !searchPhone || occupant.phone === searchPhone;
+
+                                if (nameMatch && phoneMatch) {
+                                    return {
+                                        attendee: occupant,
+                                        seat: seat,
+                                        area: area.name,
+                                        areaType: area.type
+                                    };
+                                }
+                            }
+                        }
+                    }
+
+                    return null;
+                };
+
+                // 查找周围座位
+                const findNearbySeats = (seatingData, currentSeat) => {
+                    const nearby = [];
+
+                    if (!seatingData || !seatingData.seatingAreas) {
+                        return nearby;
+                    }
+
+                    for (const area of seatingData.seatingAreas) {
+                        if (!area || !area.rows) continue;
+
+                        for (const row of area.rows) {
+                            if (!row || !row.seats) continue;
+
+                            const seatIndex = row.seats.findIndex(s =>
+                                s && s.occupant && s.id === currentSeat.id
+                            );
+
+                            if (seatIndex === -1) continue;
+
+                            // 找到同一排的前后座位
+                            const directions = [
+                                { offset: -1, label: '左' },
+                                { offset: 1, label: '右' }
+                            ];
+
+                            for (const dir of directions) {
+                                const nearbySeat = row.seats[seatIndex + dir.offset];
+                                if (nearbySeat && nearbySeat.occupant) {
+                                    nearby.push({
+                                        name: nearbySeat.occupant.name,
+                                        position: nearbySeat.occupant.position,
+                                        seat: `${row.number}排${nearbySeat.number}号`,
+                                        direction: dir.label
+                                    });
+                                }
+                            }
+
+                            return nearby;
+                        }
+                    }
+
+                    return nearby;
+                };
+
+                // 查询座位
+                const checkSeat = async () => {
+                    const searchName = name.value.trim();
+                    const searchPhone = phone.value.trim();
+
+                    if (!searchName) {
+                        showError('请输入姓名');
+                        return;
+                    }
+
+                    loading.value = true;
+                    errorMessage.value = '';
+                    seatInfo.value = null;
+
+                    // 加载排座数据
+                    const seatingData = loadSeatingData();
+
+                    if (!seatingData) {
+                        loading.value = false;
+                        showError('未找到会议排座数据，请联系管理员');
+                        return;
+                    }
+
+                    // 模拟加载延迟
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    // 查找参会者
+                    const result = findAttendeeSeat(seatingData, searchName, searchPhone);
+
+                    loading.value = false;
+
+                    if (!result) {
+                        showError('未找到您的座位信息，请检查姓名或联系管理员');
+                        return;
+                    }
+
+                    // 设置座位信息
+                    seatInfo.value = {
+                        name: result.attendee.name,
+                        department: result.attendee.department,
+                        position: result.attendee.position,
+                        area: result.area,
+                        row: result.seat.row,
+                        number: result.seat.number,
+                        type: result.areaType === 'vip' ? 'VIP座位' : '普通座位'
+                    };
+
+                    // 查找周围座位
+                    nearbySeats.value = findNearbySeats(seatingData, result.seat);
+
+                    // 获取辅助安排信息
+                    arrangements.value = getAttendeeArrangements(result.attendee, seatingData);
+                };
+
+                // 获取参会者的辅助安排信息
+                const getAttendeeArrangements = (attendee, seatingData) => {
+                    const arrList = [];
+                    const arrangements = seatingData.arrangements || {};
+
+                    // 检查乘车安排
+                    if (arrangements.transport && arrangements.transport.length > 0) {
+                        for (const vehicle of arrangements.transport) {
+                            if (vehicle.passengers && vehicle.passengers.length > 0) {
+                                const isInVehicle = vehicle.passengers.some(p => p.id === attendee.id);
+                                if (isInVehicle) {
+                                    arrList.push({
+                                        type: 'transport',
+                                        label: '乘车安排',
+                                        value: `${vehicle.name} (${vehicle.type}) · ${vehicle.departure || ''}→${vehicle.destination || ''}`
+                                    });
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // 检查住宿安排
+                    if (arrangements.accommodation && arrangements.accommodation.length > 0) {
+                        for (const room of arrangements.accommodation) {
+                            if (room.occupants && room.occupants.length > 0) {
+                                const isInRoom = room.occupants.some(o => o.id === attendee.id);
+                                if (isInRoom) {
+                                    arrList.push({
+                                        type: 'accommodation',
+                                        label: '住宿安排',
+                                        value: `${room.hotelName} · ${room.roomNumber}室 (${room.type})`
+                                    });
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // 检查讨论室安排
+                    if (arrangements.discussion && arrangements.discussion.length > 0) {
+                        for (const discussion of arrangements.discussion) {
+                            if (discussion.groups && discussion.groups.length > 0) {
+                                for (const group of discussion.groups) {
+                                    if (group.attendees && group.attendees.length > 0) {
+                                        const isInGroup = group.attendees.some(a => a.id === attendee.id);
+                                        if (isInGroup) {
+                                            arrList.push({
+                                                type: 'discussion',
+                                                label: '讨论室',
+                                                value: `${discussion.name} · ${discussion.location}`
+                                            });
+                                            break;
+                                        }
+                                    }
+                                }
+                                }
+                            }
+                        }
+                    }
+
+                    return arrList;
+                };
+
+                // 显示错误
+                const showError = (message) => {
+                    errorMessage.value = message;
+                    setTimeout(() => {
+                        errorMessage.value = '';
+                    }, 3000);
+                };
+
+                // 获取辅助安排图标
+                const getArrangementIcon = (type) => {
+                    const icons = {
+                        transport: 'fa-bus',
+                        accommodation: 'fa-hotel',
+                        discussion: 'fa-comments'
+                    };
+                    return icons[type] || 'fa-info-circle';
+                };
+
+                // 页面加载
+                onMounted(() => {
+                    const prefillName = getQueryParam('name');
+                    const prefillPhone = getQueryParam('phone');
+
+                    if (prefillName) {
+                        name.value = prefillName;
+                    }
+                    if (prefillPhone) {
+                        phone.value = prefillPhone;
+                    }
+
+                    if (prefillName) {
+                        checkSeat();
+                    }
+                });
+
+                return {
+                    loading,
+                    name,
+                    phone,
+                    seatInfo,
+                    nearbySeats,
+                    arrangements,
+                    errorMessage,
+                    checkSeat,
+                    getArrangementIcon
+                };
+            }
+        }).mount('body');
+    </script>
+</body>
+</html>

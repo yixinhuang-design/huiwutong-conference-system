@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025党务干部培训班</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        .schedule-table thead {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        .schedule-table thead tr {
+            border-bottom: 2px solid #1e40af;
+        }
+        .schedule-table th {
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            border: 1px solid #dbeafe;
+        }
+        .schedule-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background-color 0.2s;
+        }
+        .schedule-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        .schedule-table tbody tr.important {
+            background: #fef3c7;
+        }
+        .schedule-table td {
+            padding: 12px 8px;
+            font-size: 13px;
+            border: 1px solid #e5e7eb;
+            color: #1f2937;
+        }
+        .schedule-table td:first-child {
+            font-weight: 600;
+            color: #2563eb;
+            min-width: 90px;
+        }
+        .schedule-table td:nth-child(2) {
+            font-weight: 500;
+        }
+        .schedule-table td:nth-child(3) {
+            color: #64748b;
+            font-size: 12px;
+        }
+        .schedule-table .btn-xs {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+        .schedule-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .badge-checkin {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .badge-important {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        .badge-meal {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <!-- iOS 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- 应用内容 -->
+            <div class="app-content">
+                <!-- 页面标题 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="meeting-detail.html" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 日程表卡片 -->
+                <div class="card fade-in" style="padding: 0; overflow: hidden;">
+                    <div class="card-header">
+                        <i class="fas fa-calendar-alt" style="color: #2563eb;"></i>
+                        <div class="card-title">培训日程表</div>
+                    </div>
+                    <div class="card-content" style="padding: 0;">
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 90px;">日期时间</th>
+                                    <th style="width: 100px;">活动</th>
+                                    <th style="width: auto;">地点</th>
+                                    <th style="width: 60px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 1月10日 签到日 -->
+                                <tr>
+                                    <td>1月10日<br>14:00 <span class="schedule-badge badge-checkin">签到</span></td>
+                                    <td>入住酒店</td>
+                                    <td>维也纳酒店一楼大堂</td>
+                                    <td><button class="btn btn-outline btn-xs">签到</button></td>
+                                </tr>
+                                <tr>
+                                    <td>1月10日<br>18:00 <span class="schedule-badge badge-meal">餐饮</span></td>
+                                    <td>自助晚餐</td>
+                                    <td>酒店自助餐厅</td>
+                                    <td>-</td>
+                                </tr>
+
+                                <!-- 1月11日 会议日 -->
+                                <tr class="important">
+                                    <td>1月11日<br>08:45 <span class="schedule-badge badge-important">会议</span></td>
+                                    <td><strong>主会场会议</strong></td>
+                                    <td>越秀会议中心101 · B区2排3座</td>
+                                    <td><button class="btn btn-primary btn-xs">提醒</button></td>
+                                </tr>
+                                <tr>
+                                    <td>1月11日<br>12:00 <span class="schedule-badge badge-meal">餐饮</span></td>
+                                    <td>自助午餐</td>
+                                    <td>越秀会议中心5F</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>1月11日<br>18:00 <span class="schedule-badge badge-meal">活动</span></td>
+                                    <td>欢聚晚宴</td>
+                                    <td>1楼2号桌</td>
+                                    <td>-</td>
+                                </tr>
+
+                                <!-- 1月12日 分会场 -->
+                                <tr>
+                                    <td>1月12日<br>09:00 <span class="schedule-badge badge-important">会议</span></td>
+                                    <td><strong>分会场会议</strong></td>
+                                    <td>越秀会议中心6F101</td>
+                                    <td>-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 提示信息 -->
+                <div class="info-banner fade-in">
+                    <i class="fas fa-info-circle"></i>
+                    <span><strong>温馨提示：</strong>点击"提醒"按钮可设置事件提醒，点击"签到"按钮可完成报到签到。</span>
+                </div>
+
+                <!-- 日程图例 -->
+                <div class="card fade-in" style="padding: 12px 16px;">
+                    <div class="card-header" style="margin-bottom: 12px;">
+                        <i class="fas fa-tag" style="color: #f59e0b;"></i>
+                        <div class="card-title">图例说明</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="schedule-badge badge-important">会议</span>
+                            <span>重要会议</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="schedule-badge badge-checkin">签到</span>
+                            <span>签到点</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="schedule-badge badge-meal">餐饮</span>
+                            <span>用餐安排</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="background: #fef3c7; padding: 2px 4px; border-radius: 2px;">★</span>
+                            <span>重点日期</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='../common/home.html'">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/assistant.html'">
+                    <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="nav-text">日程</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='checkin.html'">
+                    <div class="nav-icon"><i class="fas fa-sign-in-alt"></i></div>
+                    <div class="nav-text">签到</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/profile.html'">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

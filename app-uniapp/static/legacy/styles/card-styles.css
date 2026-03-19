@@ -1,0 +1,264 @@
+/* ========================================
+   统一卡片样式规范
+   所有页面必须使用此CSS，禁止使用内联样式
+   ======================================== */
+
+/* 基础卡片样式 */
+.card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    margin: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+/* 卡片头部 */
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+/* 卡片标题 */
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* 卡片副标题 */
+.card-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+/* 卡片副标题（内联版本） */
+.card-subtitle-inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.card-subtitle-inline .sep {
+    color: #cbd5e1;
+}
+
+/* 卡片变体 - 无边距 */
+.card--no-margin {
+    margin: 0;
+}
+
+/* 卡片变体 - 无padding */
+.card--no-padding {
+    padding: 0;
+}
+
+/* 卡片变体 - 大圆角 */
+.card--rounded-lg {
+    border-radius: 16px;
+}
+
+/* 卡片变体 - 无边框 */
+.card--no-border {
+    border: none;
+}
+
+/* 卡片变体 - 强阴影 */
+.card--shadow-lg {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* 卡片变体 - 居中内容 */
+.card--center {
+    text-align: center;
+}
+
+/* 卡片变体 - 淡入动画 */
+.card--fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* 卡片内部容器 */
+.card-body {
+    padding: 4px 0;
+}
+
+.card-body--spaced {
+    padding: 8px 0;
+}
+
+/* 卡片底部 */
+.card-footer {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+/* 卡片分组标题 */
+.card-group-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #94a3b8;
+    margin: 12px 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* 动画定义 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   替代内联样式的CSS类
+   以下类用于替代页面中的内联样式
+   ======================================== */
+
+/* 替代：style="background:#f1f5f9;border-radius:12px;padding:12px;margin-top:8px;" */
+.card-item {
+    background: #f1f5f9;
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 8px;
+}
+
+/* 替代：style="flex-direction:column;align-items:flex-start;background:#f8fafc;border-radius:10px;padding:12px;" */
+.card-checklist-item {
+    flex-direction: column;
+    align-items: flex-start;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+/* 替代：style="list-style:none;padding:0 16px 16px 16px;display:grid;gap:8px;" */
+.checklist {
+    list-style: none;
+    padding: 0 16px 16px 16px;
+    display: grid;
+    gap: 8px;
+}
+
+/* 替代：style="cursor:pointer;" */
+.assistant-clickable {
+    cursor: pointer;
+}
+
+/* 替代：style="background: #fff; border-radius: 20px; padding: 30px; margin-top: 40px;" */
+.card-highlight {
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px;
+    margin-top: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+/* 替代：style="background:#fee2e2;color:#991b1b;padding:4px 8px;border-radius:4px;display:inline-block;" */
+.info-chip {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* 替代：style="background:linear-gradient(...);color:#fff;" */
+.card-gradient-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.card-gradient-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.card-gradient-warning {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #fff;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+/* 图标容器标准样式 */
+.icon-container {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.icon-container--lg {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    font-size: 24px;
+}
+
+/* 图标渐变色 */
+.icon-gradient-blue {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.icon-gradient-cyan {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+
+.icon-gradient-green {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.icon-gradient-orange {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+}
+
+.icon-gradient-purple {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.icon-gradient-red {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.icon-gradient-pink {
+    background: linear-gradient(135deg, #ec4899, #db2777);
+}
+
+.icon-gradient-yellow {
+    background: linear-gradient(135deg, #facc15, #eab308);
+}
+
+/* ========================================
+   使用规范
+   ======================================== */
+
+/*
+1. 所有页面必须使用 .card 类，禁止使用内联样式
+2. 如需特殊样式，使用预定义的变体类（如 .card--no-margin）
+3. 图标容器必须使用 .icon-container + 渐变色类
+4. 内联样式只能用于特殊情况，并需添加注释说明理由
+*/

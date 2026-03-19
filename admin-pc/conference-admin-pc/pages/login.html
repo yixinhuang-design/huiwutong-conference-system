@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="login-container">
+            <div class="login-card glass-card">
+                <div class="login-header">
+                    <div class="logo">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h1>智能会议系统</h1>
+                    <p>请选择登录方式</p>
+                </div>
+
+                <!-- 登录类型切换 -->
+                <div class="login-type-tabs">
+                    <button class="tab-btn" 
+                            :class="{ active: loginType === 'system' }"
+                            @click="loginType = 'system'">
+                        <i class="fas fa-user-shield"></i>
+                        系统管理员
+                    </button>
+                    <button class="tab-btn" 
+                            :class="{ active: loginType === 'tenant' }"
+                            @click="loginType = 'tenant'">
+                        <i class="fas fa-building"></i>
+                        租户管理员
+                    </button>
+                </div>
+
+                <!-- 系统管理员登录 -->
+                <div v-if="loginType === 'system'" class="login-form">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-user"></i>
+                            账号
+                        </label>
+                        <input type="text" 
+                               v-model="systemLogin.username" 
+                               placeholder="请输入系统管理员账号"
+                               @keyup.enter="systemLoginSubmit">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-lock"></i>
+                            密码
+                        </label>
+                        <div class="input-with-icon">
+                            <input :type="showPassword ? 'text' : 'password'" 
+                                   v-model="systemLogin.password" 
+                                   placeholder="请输入密码"
+                                   @keyup.enter="systemLoginSubmit">
+                            <button type="button" class="icon-btn" @click="showPassword = !showPassword">
+                                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" v-model="rememberMe">
+                            <span>记住我</span>
+                        </label>
+                        <a href="#" class="forgot-password">忘记密码？</a>
+                    </div>
+                    <button class="btn-primary btn-block" @click="systemLoginSubmit" :disabled="logging">
+                        <i class="fas fa-sign-in-alt" v-if="!logging"></i>
+                        <i class="fas fa-spinner fa-spin" v-if="logging"></i>
+                        {{ logging ? '登录中...' : '登录' }}
+                    </button>
+                </div>
+
+                <!-- 租户管理员登录 -->
+                <div v-if="loginType === 'tenant'" class="login-form">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-building"></i>
+                            选择租户
+                        </label>
+                        <select v-model="tenantLogin.tenantCode" @change="onTenantSelect">
+                            <option value="">请选择租户</option>
+                            <option v-for="tenant in availableTenants" :key="tenant.code" :value="tenant.code">
+                                {{ tenant.name }} ({{ tenant.code }})
+                            </option>
+                        </select>
+                        <div v-if="tenantLogin.tenantCode && selectedTenantInfo" class="tenant-info">
+                            <div class="info-item">
+                                <span class="label">联系人:</span>
+                                <span class="value">{{ selectedTenantInfo.contact }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">联系电话:</span>
+                                <span class="value">{{ selectedTenantInfo.phone }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-user"></i>
+                            账号
+                        </label>
+                        <input type="text" 
+                               v-model="tenantLogin.username" 
+                               placeholder="请输入租户管理员账号"
+                               :disabled="!tenantLogin.tenantCode"
+                               @keyup.enter="tenantLoginSubmit">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-lock"></i>
+                            密码
+                        </label>
+                        <div class="input-with-icon">
+                            <input :type="showPassword ? 'text' : 'password'" 
+                                   v-model="tenantLogin.password" 
+                                   placeholder="请输入密码"
+                                   :disabled="!tenantLogin.tenantCode"
+                                   @keyup.enter="tenantLoginSubmit">
+                            <button type="button" class="icon-btn" @click="showPassword = !showPassword">
+                                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" v-model="rememberTenant">
+                            <span>记住租户选择</span>
+                        </label>
+                        <a href="#" class="forgot-password">忘记密码？</a>
+                    </div>
+                    <button class="btn-primary btn-block" 
+                            @click="tenantLoginSubmit" 
+                            :disabled="!tenantLogin.tenantCode || logging">
+                        <i class="fas fa-sign-in-alt" v-if="!logging"></i>
+                        <i class="fas fa-spinner fa-spin" v-if="logging"></i>
+                        {{ logging ? '登录中...' : '登录' }}
+                    </button>
+                </div>
+
+                <!-- 登录提示 -->
+                <div class="login-tips">
+                    <div class="tip-item">
+                        <i class="fas fa-info-circle"></i>
+                        <span>系统管理员可直接登录，无需选择租户</span>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-info-circle"></i>
+                        <span>租户管理员需先选择租户，再输入账号密码</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth-service.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    loginType: 'system', // 'system' 或 'tenant'
+                    showPassword: false,
+                    rememberMe: false,
+                    rememberTenant: true,
+                    logging: false,
+                    systemLogin: {
+                        username: '',
+                        password: ''
+                    },
+                    tenantLogin: {
+                        tenantCode: 'default',
+                        username: '',
+                        password: ''
+                    },
+                    availableTenants: [
+                        {
+                            id: 1,
+                            name: '默认租户',
+                            code: 'default',
+                            contact: '管理员',
+                            phone: '无',
+                            status: 'active'
+                        }
+                    ],
+                    selectedTenantInfo: null
+                }
+            },
+            mounted() {
+                this.loadRememberedData();
+                // 检查是否已登录
+                this.checkAuthToken();
+            },
+            methods: {
+                checkAuthToken() {
+                    // 如果已有有效的token，直接跳转
+                    const token = localStorage.getItem('authToken');
+                    if (token && this.isTokenValid(token)) {
+                        window.location.href = '../index.html';
+                    }
+                },
+                
+                isTokenValid(token) {
+                    // 简单的token有效性检查
+                    if (!token) return false;
+                    try {
+                        const parts = token.split('.');
+                        if (parts.length !== 3) return false;
+                        // 这里可以添加更详细的token验证逻辑
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                },
+                
+                loadRememberedData() {
+                    // 加载记住的租户选择
+                    const rememberedTenantCode = localStorage.getItem('rememberedTenantCode');
+                    if (rememberedTenantCode && this.rememberTenant) {
+                        this.tenantLogin.tenantCode = rememberedTenantCode;
+                        this.onTenantSelect();
+                    }
+                    
+                    // 加载记住的用户名
+                    const rememberedUsername = localStorage.getItem('rememberedUsername');
+                    if (rememberedUsername && this.rememberMe) {
+                        this.systemLogin.username = rememberedUsername;
+                    }
+                },
+                
+                onTenantSelect() {
+                    if (this.tenantLogin.tenantCode) {
+                        this.selectedTenantInfo = this.availableTenants.find(
+                            t => t.code === this.tenantLogin.tenantCode
+                        );
+                        
+                        // 保存租户选择
+                        if (this.rememberTenant) {
+                            localStorage.setItem('rememberedTenantCode', this.tenantLogin.tenantCode);
+                        }
+                    } else {
+                        this.selectedTenantInfo = null;
+                    }
+                },
+                
+                showErrorMessage(message) {
+                    // 使用Toast显示错误信息
+                    if (this.$showToast) {
+                        this.$showToast(message, 'error');
+                    } else {
+                        alert(message);
+                    }
+                },
+                
+                showSuccessMessage(message) {
+                    if (this.$showToast) {
+                        this.$showToast(message, 'success');
+                    }
+                },
+                
+                async systemLoginSubmit() {
+                    // 检查AuthService是否加载
+                    if (!window.AuthService) {
+                        this.showErrorMessage('登录服务未加载，请刷新页面重试');
+                        return;
+                    }
+                    
+                    if (!this.systemLogin.username || !this.systemLogin.password) {
+                        this.showErrorMessage('请输入账号和密码');
+                        return;
+                    }
+                    
+                    this.logging = true;
+                    
+                    try {
+                        // 调用API登录
+                        const response = await window.AuthService.login(
+                            this.systemLogin.username,
+                            this.systemLogin.password
+                        );
+                        
+                        // 检查响应是否成功
+                        if (response.code === 200 && response.data && response.data.accessToken) {
+                            // 保存认证信息
+                            window.AuthService.saveAuth(response.data);
+                            
+                            // 保存记住的用户名
+                            if (this.rememberMe) {
+                                localStorage.setItem('rememberedUsername', this.systemLogin.username);
+                            } else {
+                                localStorage.removeItem('rememberedUsername');
+                            }
+                            
+                            this.showSuccessMessage('登录成功！');
+                            
+                            // 延迟跳转，让用户看到成功消息
+                            setTimeout(() => {
+                                window.location.href = '../index.html';
+                            }, 800);
+                        } else {
+                            throw new Error(response.message || '登录失败');
+                        }
+                        
+                    } catch (error) {
+                        console.error('登录失败:', error);
+                        
+                        if (error.message.includes('网络连接失败')) {
+                            this.showErrorMessage('无法连接到服务器，请检查服务是否启动（http://localhost:8081）');
+                        } else if (error.message.includes('2001') || error.message.includes('用户名或密码错误')) {
+                            this.showErrorMessage('账号或密码错误');
+                        } else {
+                            this.showErrorMessage('登录失败: ' + error.message);
+                        }
+                    } finally {
+                        this.logging = false;
+                    }
+                },
+                
+                async tenantLoginSubmit() {
+                    // 检查AuthService是否加载
+                    if (!window.AuthService) {
+                        this.showErrorMessage('登录服务未加载，请刷新页面重试');
+                        return;
+                    }
+                    
+                    if (!this.tenantLogin.tenantCode) {
+                        this.showErrorMessage('请先选择租户');
+                        return;
+                    }
+                    
+                    if (!this.tenantLogin.username || !this.tenantLogin.password) {
+                        this.showErrorMessage('请输入账号和密码');
+                        return;
+                    }
+                    
+                    this.logging = true;
+                    
+                    try {
+                        // 调用API登录
+                        const response = await window.AuthService.login(
+                            this.tenantLogin.username,
+                            this.tenantLogin.password,
+                            this.tenantLogin.tenantCode
+                        );
+                        
+                        // 检查响应是否成功
+                        if (response.code === 200 && response.data && response.data.accessToken) {
+                            // 保存认证信息
+                            window.AuthService.saveAuth(response.data);
+                            localStorage.setItem('tenantCode', this.tenantLogin.tenantCode);
+                            
+                            // 保存租户选择
+                            if (this.rememberTenant) {
+                                localStorage.setItem('rememberedTenantCode', this.tenantLogin.tenantCode);
+                            } else {
+                                localStorage.removeItem('rememberedTenantCode');
+                            }
+                            
+                            this.showSuccessMessage('登录成功！');
+                            
+                            // 延迟跳转，让用户看到成功消息
+                            setTimeout(() => {
+                                window.location.href = '../index.html';
+                            }, 800);
+                        } else {
+                            throw new Error(response.message || '登录失败');
+                        }
+                        
+                    } catch (error) {
+                        console.error('登录失败:', error);
+                        
+                        if (error.message.includes('网络连接失败')) {
+                            this.showErrorMessage('无法连接到服务器，请检查服务是否启动（http://localhost:8081）');
+                        } else if (error.message.includes('2001') || error.message.includes('用户名或密码错误')) {
+                            this.showErrorMessage('账号或密码错误');
+                        } else {
+                            this.showErrorMessage('登录失败: ' + error.message);
+                        }
+                    } finally {
+                        this.logging = false;
+                    }
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+        }
+        
+        .login-card {
+            width: 100%;
+            max-width: 450px;
+            padding: 3rem;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .logo {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .login-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-header p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .login-type-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn:hover {
+            color: #667eea;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-btn i {
+            font-size: 1.5rem;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-group label {
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-group label i {
+            color: #667eea;
+        }
+        
+        .form-group input,
+        .form-group select {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group input:disabled,
+        .form-group select:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-with-icon input {
+            width: 100%;
+            padding-right: 3rem;
+        }
+        
+        .icon-btn {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+        
+        .icon-btn:hover {
+            color: #667eea;
+        }
+        
+        .tenant-info {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+        
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-item .label {
+            color: #666;
+        }
+        
+        .info-item .value {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+            margin: 0;
+        }
+        
+        .forgot-password {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+        
+        .btn-block {
+            width: 100%;
+            padding: 0.875rem;
+            font-size: 1rem;
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .login-tips {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tip-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .tip-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .tip-item i {
+            color: #667eea;
+            margin-top: 0.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .login-card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .login-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .logo {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</body>
+</html>
+
+

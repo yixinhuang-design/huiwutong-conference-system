@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问卷填写 - 学员视角</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        .form-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-label .required {
+            color: #ef4444;
+            margin-right: 5px;
+        }
+
+        .form-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .radio-label, .checkbox-label {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .radio-label:hover, .checkbox-label:hover {
+            background: #e0e7ff;
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .form-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .btn-save {
+            background: #f3f4f6;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-save:active {
+            background: #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="task-detail.html?type=feedback&id=1" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle" style="color:#2563eb;"></i>
+                        <div class="card-title">问卷说明</div>
+                    </div>
+                    <div class="card-body">
+                        <p style="color:#666; font-size:14px; line-height:1.6;">
+                            感谢您参加本次2025党务干部培训班！为了改进我们的培训质量，请花费5-10分钟填写以下问卷。您的反馈对我们非常重要。
+                        </p>
+                    </div>
+                </div>
+
+                <form id="feedbackForm">
+                    <!-- 问题1：对培训内容的满意度 -->
+                    <div class="card fade-in">
+                        <div class="form-group">
+                            <div class="form-label">
+                                <span class="required">*</span>
+                                <span>您对本次培训内容的满意度如何？</span>
+                            </div>
+                            <div class="form-options">
+                                <label class="radio-label">
+                                    <input type="radio" name="q1" value="非常满意"> 非常满意
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q1" value="满意"> 满意
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q1" value="一般"> 一般
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q1" value="不满意"> 不满意
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 问题2：培训讲师的专业程度 -->
+                    <div class="card fade-in">
+                        <div class="form-group">
+                            <div class="form-label">
+                                <span class="required">*</span>
+                                <span>讲师的专业程度和授课能力</span>
+                            </div>
+                            <div class="form-options">
+                                <label class="radio-label">
+                                    <input type="radio" name="q2" value="非常满意"> 非常满意
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q2" value="满意"> 满意
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q2" value="一般"> 一般
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q2" value="需要改进"> 需要改进
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 问题3：培训材料和资源 -->
+                    <div class="card fade-in">
+                        <div class="form-group">
+                            <div class="form-label">
+                                <span class="required">*</span>
+                                <span>培训材料和参考资源的质量</span>
+                            </div>
+                            <div class="form-options">
+                                <label class="radio-label">
+                                    <input type="radio" name="q3" value="非常充分"> 非常充分
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q3" value="充分"> 充分
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q3" value="一般"> 一般
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q3" value="不充分"> 不充分
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 问题4：培训组织和安排 -->
+                    <div class="card fade-in">
+                        <div class="form-group">
+                            <div class="form-label">
+                                <span class="required">*</span>
+                                <span>培训时间安排和组织管理是否合理</span>
+                            </div>
+                            <div class="form-options">
+                                <label class="radio-label">
+                                    <input type="radio" name="q4" value="非常合理"> 非常合理
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q4" value="合理"> 合理
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q4" value="一般"> 一般
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q4" value="需改进"> 需改进
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 问题5：学到的知识实用性 -->
+                    <div class="card fade-in">
+                        <div class="form-group">
+                            <div class="form-label">
+                                <span class="required">*</span>
+                                <span>本次培训学到的知识在工作中的实用性</span>
+                            </div>
+                            <div class="form-options">
+                                <label class="radio-label">
+                                    <input type="radio" name="q5" value="非常实用"> 非常实用
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q5" value="比较实用"> 比较实用
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q5" value="一般"> 一般
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q5" value="不实用"> 不实用
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 问题6：会场设施和服务 -->
+                    <div class="card fade-in">
+                        <div class="form-group">
+                            <div class="form-label">
+                                <span class="required">*</span>
+                                <span>会场设施和后勤服务质量</span>
+                            </div>
+                            <div class="form-options">
+                                <label class="radio-label">
+                                    <input type="radio" name="q6" value="非常满意"> 非常满意
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q6" value="满意"> 满意
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q6" value="一般"> 一般
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q6" value="不满意"> 不满意
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 问题7：推荐指数 -->
+                    <div class="card fade-in">
+                        <div class="form-group">
+                            <div class="form-label">
+                                <span class="required">*</span>
+                                <span>您会推荐其他人参加这类培训吗？</span>
+                            </div>
+                            <div class="form-options">
+                                <label class="radio-label">
+                                    <input type="radio" name="q7" value="会，非常推荐"> 会，非常推荐
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q7" value="会，比较推荐"> 会，比较推荐
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q7" value="可能会"> 可能会
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="q7" value="不会"> 不会
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 问题8：改进建议 -->
+                    <div class="card fade-in">
+                        <div class="form-group">
+                            <div class="form-label">
+                                <span>您对本次培训有什么改进建议吗？</span>
+                            </div>
+                            <textarea id="q8" name="q8" placeholder="请输入您的改进建议..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 问题9：其他意见 -->
+                    <div class="card fade-in">
+                        <div class="form-group">
+                            <div class="form-label">
+                                <span>还有其他需要反馈的事项吗？</span>
+                            </div>
+                            <textarea id="q9" name="q9" placeholder="请输入您的其他意见..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 提交按钮 -->
+                    <div class="card fade-in" style="margin-bottom: 80px;">
+                        <div class="form-buttons">
+                            <button type="button" class="btn-save" onclick="saveDraft()">
+                                <i class="fas fa-save"></i> 保存草稿
+                            </button>
+                            <button type="button" class="btn-submit" onclick="submitFeedback()">
+                                <i class="fas fa-check"></i> 提交问卷
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='../common/home.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/assistant.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active" onclick="window.location.href='task-list.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="nav-text">任务</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/past.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/profile.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 提交问卷
+        function submitFeedback() {
+            // 获取所有单选框
+            const radios = document.querySelectorAll('input[type="radio"]');
+            let allAnswered = true;
+
+            // 检查必填项
+            for (let i = 1; i <= 7; i++) {
+                const answered = Array.from(radios).some(r => r.name === `q${i}` && r.checked);
+                if (!answered) {
+                    allAnswered = false;
+                    break;
+                }
+            }
+
+            if (!allAnswered) {
+                alert('请完成所有必填项！');
+                return;
+            }
+
+            // 收集数据
+            const formData = new FormData(document.getElementById('feedbackForm'));
+            const data = Object.fromEntries(formData);
+
+            // 保存到本地存储
+            localStorage.setItem('feedbackData', JSON.stringify(data));
+            localStorage.setItem('feedbackSubmitTime', new Date().toISOString());
+
+            alert('感谢您的反馈！问卷已成功提交。');
+            // 返回任务列表
+            window.location.href = 'task-list.html';
+        }
+
+        // 保存草稿
+        function saveDraft() {
+            const formData = new FormData(document.getElementById('feedbackForm'));
+            const data = Object.fromEntries(formData);
+
+            localStorage.setItem('feedbackDraft', JSON.stringify(data));
+            localStorage.setItem('feedbackSaveTime', new Date().toISOString());
+
+            alert('问卷已保存为草稿！');
+        }
+
+        // 页面加载时恢复草稿
+        document.addEventListener('DOMContentLoaded', function() {
+            const draft = localStorage.getItem('feedbackDraft');
+            if (draft) {
+                const data = JSON.parse(draft);
+                // 恢复单选框
+                Object.keys(data).forEach(key => {
+                    const value = data[key];
+                    if (key.startsWith('q') && value) {
+                        const radio = document.querySelector(`input[name="${key}"][value="${value}"]`);
+                        if (radio) radio.checked = true;
+                    } else if (key.startsWith('q') && value) {
+                        const textarea = document.getElementById(key);
+                        if (textarea) textarea.value = value;
+                    }
+                });
+            }
+
+            // 淡入动画
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(10px)';
+                el.style.transition = 'all 0.3s ease';
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

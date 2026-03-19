@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>催报催收系统 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="../css/stat-cards-standard.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <style>
+        /* ==================== 页面整体布局 ==================== */
+        .page-with-nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-4);
+        }
+
+        /* ==================== 卡片内边距标准 ==================== */
+        .glass-card {
+            padding: var(--space-5);
+        }
+
+        /* ==================== 统计网格 ==================== */
+        .urge-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        @media (max-width: 1200px) {
+            .urge-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .urge-stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ==================== 筛选区域 ==================== */
+        .filter-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-5);
+        }
+
+        .filter-section h4 {
+            margin-bottom: var(--space-3);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-5);
+            margin-top: var(--space-3);
+            align-items: center;
+        }
+
+        .filter-controls label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            cursor: pointer;
+            font-size: var(--font-size-sm);
+            color: var(--gray-700);
+        }
+
+        /* ==================== 表格样式 ==================== */
+        .unit-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--space-4);
+            overflow-x: auto;
+            display: block;
+            white-space: nowrap;
+        }
+
+        .unit-table thead,
+        .unit-table tbody,
+        .unit-table tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .unit-table th,
+        .unit-table td {
+            padding: var(--space-3) var(--space-2);
+            text-align: left;
+            border-bottom: var(--space-px) solid rgba(255, 255, 255, 0.08);
+            font-size: var(--font-size-sm);
+        }
+
+        .unit-table th {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+            color: var(--gray-700);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .unit-table tbody tr {
+            transition: background-color var(--transition-fast);
+        }
+
+        .unit-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .unit-table tbody tr.selected {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        /* 表格容器 - 支持横向滚动 */
+        .unit-list {
+            overflow-x: auto;
+        }
+
+        .unit-list::-webkit-scrollbar {
+            height: var(--space-2);
+        }
+
+        .unit-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+        }
+
+        .unit-list::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: var(--radius-md);
+        }
+
+        .unit-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.5);
+        }
+
+        /* ==================== 列表头部 ==================== */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+        }
+
+        .list-header h4 {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+
+        .select-all-label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            cursor: pointer;
+            padding: var(--space-2) var(--space-4);
+            background: var(--primary-color);
+            color: white;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .select-all-label:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* ==================== 选择摘要 ==================== */
+        .selection-summary {
+            background: rgba(59, 130, 246, 0.1);
+            border: var(--space-px) solid rgba(59, 130, 246, 0.3);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+            margin-top: var(--space-4);
+            font-size: var(--font-size-sm);
+        }
+
+        /* ==================== 步骤操作 ==================== */
+        .step-actions {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-4);
+            margin-top: var(--space-6);
+        }
+
+        .step-actions button {
+            padding: var(--space-2) var(--space-4);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-1);
+        }
+
+        .step-actions button:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* ==================== 选中单位摘要 ==================== */
+        .selected-units-summary {
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-5);
+        }
+
+        .selected-units-summary h4 {
+            font-size: var(--font-size-lg);
+            margin-bottom: var(--space-3);
+            font-weight: 600;
+        }
+
+        .unit-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+            margin: var(--space-3) 0;
+        }
+
+        .unit-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: rgba(102, 126, 234, 0.2);
+            border: var(--space-px) solid rgba(102, 126, 234, 0.3);
+            border-radius: var(--radius-2xl);
+            font-size: var(--font-size-xs);
+            transition: all var(--transition-fast);
+        }
+
+        .unit-tag:hover {
+            background: rgba(102, 126, 234, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .unit-tag i {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity var(--transition-fast);
+        }
+
+        .unit-tag i:hover {
+            opacity: 1;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-top: var(--space-4);
+        }
+
+        @media (max-width: 768px) {
+            .summary-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-item .label {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+            margin-bottom: var(--space-1);
+        }
+
+        .summary-item .value {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+        }
+
+        /* ==================== 模板卡片 ==================== */
+        .template-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+            margin: var(--space-4) 0;
+        }
+
+        @media (max-width: 1024px) {
+            .template-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .template-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid transparent;
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            position: relative;
+        }
+
+        .template-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+            border-radius: var(--radius-lg);
+        }
+
+        .template-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 var(--space-1) var(--space-3) rgba(0, 0, 0, 0.1);
+        }
+
+        .template-card:hover::before {
+            opacity: 1;
+        }
+
+        .template-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.15);
+            box-shadow: 0 0 0 var(--space-1) rgba(102, 126, 234, 0.1);
+        }
+
+        .template-icon {
+            font-size: var(--font-size-2xl);
+            margin-bottom: var(--space-3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .template-title {
+            font-weight: 600;
+            font-size: var(--font-size-base);
+            margin-bottom: var(--space-2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .template-desc {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            line-height: 1.4;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ==================== 渠道选择 ==================== */
+        .channel-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--space-3);
+            margin: var(--space-4) 0;
+        }
+
+        .channel-checkbox {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .channel-checkbox:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .channel-checkbox input[type="checkbox"]:checked + span {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .channel-checkbox input[type="checkbox"] {
+            width: var(--font-size-lg);
+            height: var(--font-size-lg);
+            cursor: pointer;
+        }
+
+        .channel-checkbox i {
+            font-size: var(--font-size-lg);
+        }
+
+        /* ==================== 轮次配置 ==================== */
+        .round-config {
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin: var(--space-4) 0;
+        }
+
+        .round-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-3);
+            transition: background var(--transition-fast);
+        }
+
+        .round-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .round-number {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--primary-color);
+            min-width: var(--space-8);
+            text-align: center;
+        }
+
+        .round-config-item {
+            flex: 1;
+            font-size: var(--font-size-sm);
+        }
+
+        /* ==================== 进度条 ==================== */
+        .progress-bar {
+            width: 100%;
+            height: var(--space-1);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: var(--radius-sm);
+        }
+
+        /* ==================== 效果统计 ==================== */
+        .effect-stats.urge-stats-grid {
+            margin-top: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .conversion-rate {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: #22c55e;
+        }
+
+        /* ==================== 历史表格 ==================== */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+            display: block;
+            white-space: nowrap;
+        }
+
+        .history-table thead,
+        .history-table tbody,
+        .history-table tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: var(--space-3) var(--space-2);
+            text-align: left;
+            border-bottom: var(--space-px) solid rgba(255, 255, 255, 0.08);
+            font-size: var(--font-size-sm);
+        }
+
+        .history-table th {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+        }
+
+        .history-section {
+            overflow-x: auto;
+        }
+
+        .history-filters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+        }
+
+        /* ==================== 徽章样式 ==================== */
+        .badge {
+            display: inline-block;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="registration-mgr.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回报名管理</span>
+                </a>
+                <h1 class="nav-title">催报催收系统</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card">
+            <div>
+                <h2>📢 催报催收系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    <span class="context-label">报名方式:</span>
+                    <span class="context-value">限定式报名</span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+            </div>
+        </div>
+
+        <!-- 步骤指示器 -->
+        <div class="step-indicator glass-card">
+            <div class="steps">
+                <div class="step" :class="{ active: currentStep >= 1, completed: currentStep > 1 }">
+                    <div class="step-number">1</div>
+                    <div class="step-label">查询缺报单位</div>
+                </div>
+                <div class="step-line" :class="{ active: currentStep > 1 }"></div>
+                <div class="step" :class="{ active: currentStep >= 2, completed: currentStep > 2 }">
+                    <div class="step-number">2</div>
+                    <div class="step-label">选择催报对象</div>
+                </div>
+                <div class="step-line" :class="{ active: currentStep > 2 }"></div>
+                <div class="step" :class="{ active: currentStep >= 3, completed: currentStep > 3 }">
+                    <div class="step-number">3</div>
+                    <div class="step-label">配置催报</div>
+                </div>
+                <div class="step-line" :class="{ active: currentStep > 3 }"></div>
+                <div class="step" :class="{ active: currentStep >= 4, completed: currentStep > 4 }">
+                    <div class="step-number">4</div>
+                    <div class="step-label">发送催报</div>
+                </div>
+                <div class="step-line" :class="{ active: currentStep > 4 }"></div>
+                <div class="step" :class="{ active: currentStep >= 5, completed: currentStep > 5 }">
+                    <div class="step-number">5</div>
+                    <div class="step-label">查看效果</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤1: 查询缺报和未报名单位 -->
+        <div class="step-content glass-card" v-show="currentStep === 1">
+            <h3>1️⃣ 查询缺报和未报名单位</h3>
+
+            <div class="urge-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ urgeStats.totalUnits }}</div>
+                        <div class="stat-label">总单位数</div>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ urgeStats.registeredUnits }}</div>
+                        <div class="stat-label">已报名单位</div>
+                    </div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ urgeStats.unregisteredUnits }}</div>
+                        <div class="stat-label">未报名单位</div>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ urgeStats.incompleteUnits }}</div>
+                        <div class="stat-label">缺报名单位</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h4>筛选条件</h4>
+                <div class="filter-controls">
+                    <label>
+                        <input type="radio" v-model="filterType" value="all">
+                        显示全部单位
+                    </label>
+                    <label>
+                        <input type="radio" v-model="filterType" value="unregistered">
+                        仅显示未报名单位（已报名数=0）
+                    </label>
+                    <label>
+                        <input type="radio" v-model="filterType" value="incomplete">
+                        仅显示缺报名单位（已报名数&lt;应报名数）
+                    </label>
+                    <input type="text"
+                           v-model="searchUnit"
+                           placeholder="搜索单位名称..."
+                           class="input"
+                           style="width: 250px;">
+                </div>
+            </div>
+
+            <div class="unit-list">
+                <div class="list-header">
+                    <h4>单位列表</h4>
+                    <label class="select-all-label">
+                        <input type="checkbox" v-model="selectAll" @change="toggleSelectAll">
+                        <span>一键全选</span>
+                    </label>
+                </div>
+
+                <table class="unit-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">选择</th>
+                            <th>单位名称</th>
+                            <th>应报名人数</th>
+                            <th>已报名人数</th>
+                            <th>缺报名人数</th>
+                            <th>报名率</th>
+                            <th>报名进度</th>
+                            <th>单位管理员</th>
+                            <th>联系电话</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="unit in filteredUnits"
+                            :key="unit.id"
+                            :class="{ selected: selectedUnits.includes(unit.id) }"
+                            @click="toggleUnitSelection(unit.id)">
+                            <td @click.stop>
+                                <input type="checkbox"
+                                       :value="unit.id"
+                                       v-model="selectedUnits"
+                                       @change="updateSelectAll">
+                            </td>
+                            <td><strong>{{ unit.name }}</strong></td>
+                            <td>{{ unit.requiredCount }}</td>
+                            <td>{{ unit.registeredCount }}</td>
+                            <td style="color: #ef4444;"><strong>{{ unit.requiredCount - unit.registeredCount }}</strong></td>
+                            <td>{{ ((unit.registeredCount / unit.requiredCount) * 100).toFixed(1) }}%</td>
+                            <td style="width: 150px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill"
+                                         :style="{ width: (unit.registeredCount / unit.requiredCount * 100) + '%' }">
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ unit.adminName }}</td>
+                            <td>{{ unit.adminPhone }}</td>
+                            <td>
+                                <span v-if="unit.registeredCount === 0" class="badge badge-error">
+                                    未报名
+                                </span>
+                                <span v-else-if="unit.registeredCount < unit.requiredCount" class="badge badge-warning">
+                                    缺报名
+                                </span>
+                                <span v-else class="badge badge-success">
+                                    已完成
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="selection-summary">
+                    <p>已选择 <strong>{{ selectedUnits.length }}</strong> 个单位，
+                       涉及 <strong>{{ totalInvolvedPersons }}</strong> 人应报名，
+                       已报名 <strong>{{ totalRegistered }}</strong> 人，
+                       缺报名 <strong>{{ totalRequired - totalRegistered }}</strong> 人</p>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn-primary" @click="goToStep(2)" :disabled="selectedUnits.length === 0">
+                    <i class="fas fa-arrow-right"></i>
+                    下一步：选择催报对象
+                </button>
+            </div>
+        </div>
+
+        <!-- 步骤2: 选择催报对象 -->
+        <div class="step-content glass-card" v-show="currentStep === 2">
+            <h3>2️⃣ 确认催报对象</h3>
+
+            <div class="selected-units-summary">
+                <h4>已选择的单位</h4>
+                <p>共选择 <strong>{{ selectedUnits.length }}</strong> 个单位</p>
+
+                <div class="unit-tags">
+                    <span v-for="unitId in selectedUnits"
+                          :key="unitId"
+                          class="unit-tag">
+                        {{ getUnitById(unitId).name }}
+                        <i class="fas fa-times" @click="removeUnit(unitId)"></i>
+                    </span>
+                </div>
+
+                <div class="summary-stats">
+                    <div class="summary-item">
+                        <span class="label">涉及单位:</span>
+                        <span class="value">{{ selectedUnits.length }} 个</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">应报名人数:</span>
+                        <span class="value">{{ totalRequired }} 人</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">已报名人数:</span>
+                        <span class="value">{{ totalRegistered }} 人</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">缺报名人数:</span>
+                        <span class="value" style="color: #ef4444;">{{ totalRequired - totalRegistered }} 人</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn-outline" @click="goToStep(1)">
+                    <i class="fas fa-arrow-left"></i>
+                    上一步
+                </button>
+                <button class="btn-primary" @click="goToStep(3)">
+                    <i class="fas fa-arrow-right"></i>
+                    下一步：配置催报
+                </button>
+            </div>
+        </div>
+
+        <!-- 步骤3: 配置催报 -->
+        <div class="step-content glass-card" v-show="currentStep === 3">
+            <h3>3️⃣ 配置催报</h3>
+
+            <!-- 选择催报模板 -->
+            <div class="template-selection">
+                <h4>选择催报模板</h4>
+                <div class="template-cards">
+                    <div class="template-card"
+                         :class="{ selected: selectedTemplate === 'gentle' }"
+                         @click="selectTemplate('gentle')">
+                        <div class="template-icon" style="color: #3b82f6;">
+                            <i class="fas fa-hand-holding-heart"></i>
+                        </div>
+                        <div class="template-title">温和提醒模板</div>
+                        <div class="template-desc">友好提醒，语气温和，适合首次催报</div>
+                    </div>
+
+                    <div class="template-card"
+                         :class="{ selected: selectedTemplate === 'urgent' }"
+                         @click="selectTemplate('urgent')">
+                        <div class="template-icon" style="color: #eab308;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="template-title">紧急催报模板</div>
+                        <div class="template-desc">强调重要性，语气紧急，适合多次催报</div>
+                    </div>
+
+                    <div class="template-card"
+                         :class="{ selected: selectedTemplate === 'final' }"
+                         @click="selectTemplate('final')">
+                        <div class="template-icon" style="color: #ef4444;">
+                            <i class="fas fa-hourglass-end"></i>
+                        </div>
+                        <div class="template-title">最后机会模板</div>
+                        <div class="template-desc">最后期限提醒，强调截止时间</div>
+                    </div>
+                </div>
+
+                <div class="template-preview" v-if="selectedTemplate">
+                    <h4>模板预览</h4>
+                    <div class="preview-content">
+                        <textarea v-model="templateContent"
+                                  class="input"
+                                  rows="6"
+                                  readonly
+                                  style="width: 100%; font-family: monospace;"></textarea>
+                    </div>
+                    <p class="template-hint">
+                        <i class="fas fa-info-circle"></i>
+                        支持变量: {单位名称}、{会议名称}、{应报名人数}、{已报名人数}、{缺报名人数}、{截止时间}
+                    </p>
+                </div>
+            </div>
+
+            <!-- 配置催报渠道 -->
+            <div class="channel-selection">
+                <h4>配置催报渠道（可多选）</h4>
+                <div class="channel-checkboxes">
+                    <label class="channel-checkbox">
+                        <input type="checkbox" v-model="channels.sms">
+                        <i class="fas fa-sms" style="color: #3b82f6;"></i>
+                        <span>短信（支持非注册用户）</span>
+                    </label>
+                    <label class="channel-checkbox">
+                        <input type="checkbox" v-model="channels.email">
+                        <i class="fas fa-envelope" style="color: #22c55e;"></i>
+                        <span>邮件</span>
+                    </label>
+                    <label class="channel-checkbox">
+                        <input type="checkbox" v-model="channels.wechat">
+                        <i class="fab fa-weixin" style="color: #07c160;"></i>
+                        <span>微信（需注册用户）</span>
+                    </label>
+                    <label class="channel-checkbox">
+                        <input type="checkbox" v-model="channels.app">
+                        <i class="fas fa-mobile-alt" style="color: #8b5cf6;"></i>
+                        <span>APP/小程序推送（需注册用户）</span>
+                    </label>
+                    <label class="channel-checkbox">
+                        <input type="checkbox" v-model="channels.qrcode">
+                        <i class="fas fa-qrcode" style="color: #f59e0b;"></i>
+                        <span>二维码查询（非注册用户）</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 设置催报时间 -->
+            <div class="timing-selection">
+                <h4>设置催报时间</h4>
+                <div class="timing-options">
+                    <label class="timing-option">
+                        <input type="radio" v-model="timingType" value="immediate">
+                        <div class="option-content">
+                            <div class="option-title">立即发送</div>
+                            <div class="option-desc">确认后立即发送催报通知</div>
+                        </div>
+                    </label>
+                    <label class="timing-option">
+                        <input type="radio" v-model="timingType" value="scheduled">
+                        <div class="option-content">
+                            <div class="option-title">定时发送</div>
+                            <div class="option-desc">设置具体日期和时间发送</div>
+                        </div>
+                    </label>
+                    <label class="timing-option">
+                        <input type="radio" v-model="timingType" value="multi-round">
+                        <div class="option-content">
+                            <div class="option-title">多轮催报计划</div>
+                            <div class="option-desc">设置多轮催报，自动跳过已报名人员</div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- 定时发送配置 -->
+                <div v-if="timingType === 'scheduled'" class="scheduled-config">
+                    <label>发送时间:</label>
+                    <input type="datetime-local" v-model="scheduledTime" class="input">
+                </div>
+
+                <!-- 多轮催报配置 -->
+                <div v-if="timingType === 'multi-round'" class="round-config">
+                    <h5>多轮催报配置</h5>
+                    <div class="round-settings">
+                        <div class="setting-item">
+                            <label>催报轮次:</label>
+                            <select v-model="roundCount" class="select">
+                                <option :value="1">1轮</option>
+                                <option :value="2">2轮</option>
+                                <option :value="3">3轮</option>
+                                <option :value="4">4轮</option>
+                                <option :value="5">5轮</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>催报间隔:</label>
+                            <select v-model="roundInterval" class="select">
+                                <option :value="6">6小时</option>
+                                <option :value="12">12小时</option>
+                                <option :value="24">1天</option>
+                                <option :value="48">2天</option>
+                                <option :value="72">3天</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="rounds-preview">
+                        <h6>轮次预览</h6>
+                        <div class="round-item" v-for="round in roundCount" :key="round">
+                            <div class="round-number">{{ round }}</div>
+                            <div class="round-config-item">
+                                <strong>第{{ round }}轮</strong>
+                                <span v-if="round === 1">：立即发送（{{ getTemplateName(selectedTemplate) }}）</span>
+                                <span v-else>：{{ roundInterval }}小时后自动发送（已报名人员自动跳过）</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="round-templates">
+                        <h6>各轮次模板</h6>
+                        <div class="round-template-item" v-for="round in roundCount" :key="round">
+                            <label>第{{ round }}轮:</label>
+                            <select v-model="roundTemplates[round - 1]" class="select">
+                                <option value="gentle">温和提醒模板</option>
+                                <option value="urgent">紧急催报模板</option>
+                                <option value="final">最后机会模板</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn-outline" @click="goToStep(2)">
+                    <i class="fas fa-arrow-left"></i>
+                    上一步
+                </button>
+                <button class="btn-primary" @click="goToStep(4)">
+                    <i class="fas fa-arrow-right"></i>
+                    下一步：预览并发送
+                </button>
+            </div>
+        </div>
+
+        <!-- 步骤4: 预览并发送 -->
+        <div class="step-content glass-card" v-show="currentStep === 4">
+            <h3>4️⃣ 预览并发送催报</h3>
+
+            <div class="preview-summary">
+                <h4>催报配置总览</h4>
+
+                <div class="summary-section">
+                    <h5>催报对象</h5>
+                    <p>共 <strong>{{ selectedUnits.length }}</strong> 个单位，
+                       涉及 <strong>{{ totalRequired }}</strong> 人应报名，
+                       缺报名 <strong>{{ totalRequired - totalRegistered }}</strong> 人</p>
+                </div>
+
+                <div class="summary-section">
+                    <h5>催报模板</h5>
+                    <p><strong>{{ getTemplateName(selectedTemplate) }}</strong></p>
+                    <div class="template-content-preview">
+                        {{ templateContent }}
+                    </div>
+                </div>
+
+                <div class="summary-section">
+                    <h5>催报渠道</h5>
+                    <div class="selected-channels">
+                        <span v-if="channels.sms" class="channel-tag">
+                            <i class="fas fa-sms"></i> 短信
+                        </span>
+                        <span v-if="channels.email" class="channel-tag">
+                            <i class="fas fa-envelope"></i> 邮件
+                        </span>
+                        <span v-if="channels.wechat" class="channel-tag">
+                            <i class="fab fa-weixin"></i> 微信
+                        </span>
+                        <span v-if="channels.app" class="channel-tag">
+                            <i class="fas fa-mobile-alt"></i> APP推送
+                        </span>
+                        <span v-if="channels.qrcode" class="channel-tag">
+                            <i class="fas fa-qrcode"></i> 二维码
+                        </span>
+                    </div>
+                </div>
+
+                <div class="summary-section">
+                    <h5>发送时间</h5>
+                    <p v-if="timingType === 'immediate'"><strong>立即发送</strong></p>
+                    <p v-if="timingType === 'scheduled'"><strong>定时发送:</strong> {{ formatDateTime(scheduledTime) }}</p>
+                    <p v-if="timingType === 'multi-round'">
+                        <strong>多轮催报:</strong> {{ roundCount }}轮，间隔{{ roundInterval }}小时
+                    </p>
+                </div>
+
+                <div class="summary-section">
+                    <h5>预估发送数量</h5>
+                    <div class="estimated-counts">
+                        <div class="count-item">
+                            <span class="label">短信:</span>
+                            <span class="value">{{ selectedUnits.length }} 条</span>
+                        </div>
+                        <div class="count-item">
+                            <span class="label">邮件:</span>
+                            <span class="value">{{ selectedUnits.length }} 封</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn-outline" @click="goToStep(3)">
+                    <i class="fas fa-arrow-left"></i>
+                    上一步
+                </button>
+                <button class="btn-success" @click="sendReminders" :disabled="isSending">
+                    <i class="fas fa-paper-plane"></i>
+                    {{ isSending ? '发送中...' : '确认发送催报' }}
+                </button>
+            </div>
+        </div>
+
+        <!-- 步骤5: 查看催报效果 -->
+        <div class="step-content glass-card" v-show="currentStep === 5">
+            <h3>5️⃣ 催报效果统计</h3>
+
+            <div class="effect-stats urge-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-minus"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ effectStats.beforeCount }}</div>
+                        <div class="stat-label">催报前报名数</div>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ effectStats.afterCount }}</div>
+                        <div class="stat-label">催报后报名数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ effectStats.newRegistrations }}</div>
+                        <div class="stat-label">新增报名数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="conversion-rate stat-value">{{ effectStats.conversionRate }}%</div>
+                        <div class="stat-label">催报转化率</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 催报记录查询 -->
+            <div class="history-section">
+                <h4>催报记录查询</h4>
+                <div class="history-filters">
+                    <select v-model="historyFilter" class="select" style="width: 200px;">
+                        <option value="all">全部记录</option>
+                        <option value="today">今天</option>
+                        <option value="week">本周</option>
+                        <option value="month">本月</option>
+                    </select>
+                    <button class="btn-outline" @click="exportHistory">
+                        <i class="fas fa-download"></i>
+                        导出记录
+                    </button>
+                </div>
+
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>轮次</th>
+                            <th>发送时间</th>
+                            <th>渠道</th>
+                            <th>发送数</th>
+                            <th>新增报名</th>
+                            <th>转化率</th>
+                            <th>操作人</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="record in filteredHistory" :key="record.id">
+                            <td>第{{ record.round }}轮</td>
+                            <td>{{ formatDateTime(record.sendTime) }}</td>
+                            <td>{{ record.channels.join(', ') }}</td>
+                            <td>{{ record.sentCount }}</td>
+                            <td style="color: #22c55e;">+{{ record.newRegistrations }}</td>
+                            <td>{{ record.conversionRate }}%</td>
+                            <td>{{ record.operator }}</td>
+                            <td>
+                                <span v-if="record.status === 'completed'" class="badge badge-success">
+                                    已完成
+                                </span>
+                                <span v-else-if="record.status === 'sending'" class="badge badge-warning">
+                                    发送中
+                                </span>
+                                <span v-else class="badge badge-secondary">
+                                    待发送
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 多轮催报状态 -->
+            <div class="multi-round-status" v-if="timingType === 'multi-round' && currentRound < roundCount">
+                <h4>多轮催报进行中</h4>
+                <div class="round-progress">
+                    <p>当前进度: 第 <strong>{{ currentRound }}</strong> / {{ roundCount }} 轮</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill"
+                             :style="{ width: (currentRound / roundCount * 100) + '%' }">
+                        </div>
+                    </div>
+                    <p>下一轮将在 <strong>{{ roundInterval }}</strong> 小时后自动发送</p>
+                    <button class="btn-warning" @click="cancelRemainingRounds">
+                        <i class="fas fa-times"></i>
+                        取消剩余轮次
+                    </button>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn-primary" @click="resetFlow">
+                    <i class="fas fa-redo"></i>
+                    发起新的催报
+                </button>
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回报名管理
+                </button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    currentStep: 1,
+
+                    // 步骤1数据
+                    filterType: 'incomplete',
+                    searchUnit: '',
+                    selectAll: false,
+                    selectedUnits: [],
+
+                    // 步骤2数据（从步骤1继承）
+
+                    // 步骤3数据
+                    selectedTemplate: 'gentle',
+                    templateContent: '',
+                    channels: {
+                        sms: true,
+                        email: false,
+                        wechat: false,
+                        app: false,
+                        qrcode: false
+                    },
+                    timingType: 'immediate',
+                    scheduledTime: '',
+                    roundCount: 3,
+                    roundInterval: 24,
+                    roundTemplates: ['gentle', 'urgent', 'final'],
+
+                    // 步骤5数据
+                    effectStats: {
+                        beforeCount: 0,
+                        afterCount: 0,
+                        newRegistrations: 0,
+                        conversionRate: 0
+                    },
+                    historyFilter: 'all',
+                    currentRound: 0,
+                    isSending: false,
+
+                    // 模拟数据
+                    urgeStats: {
+                        totalUnits: 45,
+                        registeredUnits: 38,
+                        unregisteredUnits: 7,
+                        incompleteUnits: 15
+                    },
+
+                    units: [
+                        { id: 1, name: '市委组织部', requiredCount: 5, registeredCount: 0, adminName: '张主任', adminPhone: '13800138001' },
+                        { id: 2, name: '市委宣传部', requiredCount: 3, registeredCount: 0, adminName: '李部长', adminPhone: '13800138002' },
+                        { id: 3, name: '市教育局', requiredCount: 10, registeredCount: 7, adminName: '王局长', adminPhone: '13800138003' },
+                        { id: 4, name: '市财政局', requiredCount: 8, registeredCount: 5, adminName: '赵局长', adminPhone: '13800138004' },
+                        { id: 5, name: '市卫健委', requiredCount: 6, registeredCount: 4, adminName: '刘主任', adminPhone: '13800138005' },
+                        { id: 6, name: '市公安局', requiredCount: 10, registeredCount: 10, adminName: '陈局长', adminPhone: '13800138006' },
+                        { id: 7, name: '市人社局', requiredCount: 4, registeredCount: 2, adminName: '周局长', adminPhone: '13800138007' }
+                    ],
+
+                    reminderHistory: [
+                        { id: 1, round: 1, sendTime: new Date(Date.now() - 86400000), channels: ['短信', '微信'], sentCount: 15, newRegistrations: 8, conversionRate: 53.3, operator: '管理员', status: 'completed' },
+                        { id: 2, round: 2, sendTime: new Date(Date.now() - 43200000), channels: ['短信'], sentCount: 7, newRegistrations: 3, conversionRate: 42.9, operator: '管理员', status: 'completed' },
+                        { id: 3, round: 3, sendTime: new Date(), channels: ['短信', '邮件'], sentCount: 4, newRegistrations: 0, conversionRate: 0, operator: '管理员', status: 'sending' }
+                    ]
+                }
+            },
+            computed: {
+                filteredUnits() {
+                    let units = this.units;
+
+                    // 按筛选类型过滤
+                    if (this.filterType === 'unregistered') {
+                        units = units.filter(u => u.registeredCount === 0);
+                    } else if (this.filterType === 'incomplete') {
+                        units = units.filter(u => u.registeredCount < u.requiredCount);
+                    }
+
+                    // 按搜索关键词过滤
+                    if (this.searchUnit) {
+                        units = units.filter(u => u.name.includes(this.searchUnit));
+                    }
+
+                    return units;
+                },
+
+                totalRequired() {
+                    return this.selectedUnits.reduce((sum, unitId) => {
+                        const unit = this.getUnitById(unitId);
+                        return sum + (unit ? unit.requiredCount : 0);
+                    }, 0);
+                },
+
+                totalRegistered() {
+                    return this.selectedUnits.reduce((sum, unitId) => {
+                        const unit = this.getUnitById(unitId);
+                        return sum + (unit ? unit.registeredCount : 0);
+                    }, 0);
+                },
+
+                totalInvolvedPersons() {
+                    return this.totalRequired;
+                },
+
+                filteredHistory() {
+                    // 根据historyFilter过滤历史记录
+                    return this.reminderHistory;
+                }
+            },
+            async mounted() {
+                await this.initialize();
+                this.updateTemplateContent();
+            },
+            methods: {
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                    } else {
+                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '示例会议'
+                        };
+                    }
+
+                    // 初始化定时发送时间（默认为当前时间+1小时）
+                    const now = new Date();
+                    now.setHours(now.getHours() + 1);
+                    this.scheduledTime = now.toISOString().slice(0, 16);
+                },
+
+                getUnitById(unitId) {
+                    return this.units.find(u => u.id === unitId);
+                },
+
+                toggleUnitSelection(unitId) {
+                    const index = this.selectedUnits.indexOf(unitId);
+                    if (index > -1) {
+                        this.selectedUnits.splice(index, 1);
+                    } else {
+                        this.selectedUnits.push(unitId);
+                    }
+                    this.updateSelectAll();
+                },
+
+                removeUnit(unitId) {
+                    const index = this.selectedUnits.indexOf(unitId);
+                    if (index > -1) {
+                        this.selectedUnits.splice(index, 1);
+                    }
+                    this.updateSelectAll();
+                },
+
+                toggleSelectAll() {
+                    if (this.selectAll) {
+                        this.selectedUnits = this.filteredUnits.map(u => u.id);
+                    } else {
+                        this.selectedUnits = [];
+                    }
+                },
+
+                updateSelectAll() {
+                    this.selectAll = this.filteredUnits.length > 0 &&
+                                   this.filteredUnits.every(u => this.selectedUnits.includes(u.id));
+                },
+
+                selectTemplate(templateId) {
+                    this.selectedTemplate = templateId;
+                    this.updateTemplateContent();
+                },
+
+                updateTemplateContent() {
+                    const templates = {
+                        gentle: `尊敬的{单位名称}管理员：
+
+您好！关于【{会议名称}】的报名工作，目前贵单位应报名{应报名人数}人，已报名{已报名人数}人，还有{缺报名人数}人未完成报名。
+
+报名截止时间：{截止时间}
+
+请尽快组织相关人员完成报名。如有任何问题，请随时与我们联系。
+
+谢谢您的配合！`,
+                        urgent: `【紧急催报】{单位名称}：
+
+【{会议名称}】报名工作即将截止！贵单位仍有{缺报名人数}人未完成报名（应报名{应报名人数}人，已报名{已报名人数}人）。
+
+⚠️ 报名截止时间：{截止时间}
+
+请务必在截止时间前完成报名！这是最后一次提醒，请务必重视！
+
+如有问题请立即联系我们！`,
+                        final: `【最后机会】{单位名称}：
+
+【{会议名称}】报名工作将在今天截止！贵单位仍有{缺报名人数}人未完成报名！
+
+🔴 截止时间：{截止时间}
+🔴 剩余时间不足24小时
+
+这是最后一次催报通知，请务必立即组织报名！
+
+联系人：会议会务组`
+                    };
+
+                    this.templateContent = templates[this.selectedTemplate] || '';
+                },
+
+                getTemplateName(templateId) {
+                    const names = {
+                        gentle: '温和提醒模板',
+                        urgent: '紧急催报模板',
+                        final: '最后机会模板'
+                    };
+                    return names[templateId] || '';
+                },
+
+                goToStep(step) {
+                    this.currentStep = step;
+                },
+
+                async sendReminders() {
+                    const confirmed = await this.$showConfirm(
+                        `确定要向${this.selectedUnits.length}个单位发送催报通知吗？`,
+                        '确认发送催报',
+                        'warning'
+                    );
+
+                    if (confirmed) {
+                        this.isSending = true;
+                        try {
+                            this.$showLoading('正在发送催报通知...');
+
+                            // 模拟发送过程
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+
+                            // 记录催报前报名数
+                            this.effectStats.beforeCount = this.totalRegistered;
+
+                            // 模拟催报效果（随机新增1-3人报名）
+                            const newRegs = Math.floor(Math.random() * 3) + 1;
+                            this.effectStats.afterCount = this.effectStats.beforeCount + newRegs;
+                            this.effectStats.newRegistrations = newRegs;
+                            this.effectStats.conversionRate = ((newRegs / (this.totalRequired - this.totalRegistered)) * 100).toFixed(1);
+
+                            // 添加到历史记录
+                            this.reminderHistory.unshift({
+                                id: Date.now(),
+                                round: 1,
+                                sendTime: new Date(),
+                                channels: this.getSelectedChannelNames(),
+                                sentCount: this.selectedUnits.length,
+                                newRegistrations: newRegs,
+                                conversionRate: this.effectStats.conversionRate,
+                                operator: '管理员',
+                                status: 'completed'
+                            });
+
+                            this.$hideLoading();
+                            this.$showToast(`催报通知已发送！新增报名${newRegs}人`, 'success');
+
+                            // 进入效果查看步骤
+                            this.currentRound = 1;
+                            this.goToStep(5);
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('发送失败，请重试', 'error');
+                        } finally {
+                            this.isSending = false;
+                        }
+                    }
+                },
+
+                getSelectedChannelNames() {
+                    const names = [];
+                    if (this.channels.sms) names.push('短信');
+                    if (this.channels.email) names.push('邮件');
+                    if (this.channels.wechat) names.push('微信');
+                    if (this.channels.app) names.push('APP');
+                    if (this.channels.qrcode) names.push('二维码');
+                    return names;
+                },
+
+                resetFlow() {
+                    this.currentStep = 1;
+                    this.selectedUnits = [];
+                    this.selectAll = false;
+                    this.effectStats = {
+                        beforeCount: 0,
+                        afterCount: 0,
+                        newRegistrations: 0,
+                        conversionRate: 0
+                    };
+                },
+
+                cancelRemainingRounds() {
+                    this.$showConfirm(
+                        '确定要取消剩余的催报轮次吗？',
+                        '取消催报',
+                        'warning'
+                    ).then(confirmed => {
+                        if (confirmed) {
+                            this.$showToast('已取消剩余催报轮次', 'info');
+                            this.roundCount = this.currentRound;
+                        }
+                    });
+                },
+
+                formatDateTime(dateStr) {
+                    if (!dateStr) return '';
+                    const date = new Date(dateStr);
+                    return date.toLocaleString('zh-CN');
+                },
+
+                exportHistory() {
+                    this.$showToast('导出催报记录功能', 'info');
+                },
+
+                goBack() {
+                    window.location.href = 'registration-mgr.html';
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+
+    <style>
+        /* ==================== 步骤指示器 ==================== */
+        .step-indicator {
+            margin-bottom: var(--space-6);
+            padding: var(--space-4);
+        }
+
+        .steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+
+        .step-number {
+            width: var(--space-10);
+            height: var(--space-10);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: var(--font-size-base);
+            color: var(--gray-600);
+            transition: all var(--transition-normal);
+        }
+
+        .step.active .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 var(--space-1) var(--space-3) rgba(102, 126, 234, 0.3);
+            transform: scale(1.1);
+        }
+
+        .step.completed .step-number {
+            background: #22c55e;
+            border-color: #22c55e;
+            color: white;
+        }
+
+        .step.completed .step-number::after {
+            content: '✓';
+            font-weight: bold;
+        }
+
+        .step-label {
+            margin-top: var(--space-2);
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+            text-align: center;
+            max-width: 100px;
+            transition: color var(--transition-normal);
+        }
+
+        .step.active .step-label {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .step-line {
+            flex: 1;
+            height: var(--space-px);
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0 var(--space-2);
+            position: relative;
+            top: -1.25rem;
+            min-width: var(--space-4);
+            transition: background var(--transition-normal);
+        }
+
+        .step-line.active {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* ==================== 步骤内容 ==================== */
+        .step-content {
+            margin-bottom: var(--space-6);
+            animation: fadeIn var(--transition-normal) ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-content h3 {
+            margin-bottom: var(--space-4);
+            font-size: var(--font-size-xl);
+        }
+
+        /* ==================== 模板、渠道、时间选择 ==================== */
+        .template-selection,
+        .channel-selection,
+        .timing-selection {
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-5);
+        }
+
+        .template-selection h4,
+        .channel-selection h4,
+        .timing-selection h4 {
+            margin-bottom: var(--space-3);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+
+        .template-preview {
+            margin-top: var(--space-5);
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+        }
+
+        .template-hint {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            margin-top: var(--space-2);
+        }
+
+        .timing-options {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .timing-option {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .timing-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+
+        .timing-option input[type="radio"] {
+            margin-top: var(--space-1);
+        }
+
+        .option-content {
+            flex: 1;
+        }
+
+        .option-title {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+            font-size: var(--font-size-base);
+        }
+
+        .option-desc {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        .scheduled-config {
+            margin-top: var(--space-3);
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+        }
+
+        .round-settings {
+            display: flex;
+            gap: var(--space-6);
+            margin-bottom: var(--space-3);
+            flex-wrap: wrap;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--font-size-sm);
+        }
+
+        .rounds-preview,
+        .round-templates {
+            margin-top: var(--space-3);
+        }
+
+        .rounds-preview h6,
+        .round-templates h6 {
+            font-size: var(--font-size-sm);
+            margin-bottom: var(--space-2);
+        }
+
+        .round-template-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-2);
+            font-size: var(--font-size-sm);
+        }
+
+        /* ==================== 预览摘要 ==================== */
+        .preview-summary {
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+        }
+
+        .summary-section {
+            margin-bottom: var(--space-5);
+            padding-bottom: var(--space-5);
+            border-bottom: var(--space-px) solid rgba(255, 255, 255, 0.1);
+        }
+
+        .summary-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .summary-section h5 {
+            margin-bottom: var(--space-2);
+            font-size: var(--font-size-base);
+            font-weight: 600;
+        }
+
+        .summary-section p {
+            font-size: var(--font-size-sm);
+        }
+
+        .selected-channels {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+        }
+
+        .channel-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-2) var(--space-3);
+            background: rgba(102, 126, 234, 0.2);
+            border: var(--space-px) solid rgba(102, 126, 234, 0.3);
+            border-radius: var(--radius-2xl);
+            font-size: var(--font-size-sm);
+        }
+
+        .estimated-counts {
+            display: flex;
+            gap: var(--space-6);
+            flex-wrap: wrap;
+        }
+
+        .count-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .count-item .label {
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
+        }
+
+        .count-item .value {
+            font-weight: 600;
+            font-size: var(--font-size-base);
+        }
+
+        .history-section {
+            margin-top: var(--space-6);
+        }
+
+        .history-filters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+        }
+
+        /* ==================== 多轮状态 ==================== */
+        .multi-round-status {
+            margin-top: var(--space-6);
+            padding: var(--space-5);
+            background: rgba(234, 179, 8, 0.1);
+            border: var(--space-px) solid rgba(234, 179, 8, 0.3);
+            border-radius: var(--radius-lg);
+        }
+
+        .multi-round-status h4 {
+            font-size: var(--font-size-lg);
+            margin-bottom: var(--space-3);
+            font-weight: 600;
+        }
+
+        .round-progress {
+            margin-top: var(--space-3);
+        }
+
+        .round-progress p {
+            font-size: var(--font-size-sm);
+            margin-bottom: var(--space-2);
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帮助中心 - 通用</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="settings.html" class="btn btn-secondary" style="padding:8px 12px;">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">帮助中心</div>
+                            <div class="card-subtitle">常见问题与使用指南</div>
+                        </div>
+                        <div style="width:44px;"></div>
+                    </div>
+                    <div class="search-container">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" class="search-input" placeholder="搜索问题..." id="searchInput">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-fire" style="color:#ef4444;"></i>
+                        <div class="card-title">热门问题</div>
+                    </div>
+                    <div class="faq-list">
+                        <div class="faq-item" onclick="toggleFaq(this)">
+                            <div class="faq-question">
+                                <i class="fas fa-question-circle"></i>
+                                <span>如何查看我的座位安排？</span>
+                                <i class="fas fa-chevron-down faq-icon"></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>您可以通过以下方式查看座位安排：</p>
+                                <ol>
+                                    <li>在首页点击"座位图"查看完整座位布局</li>
+                                    <li>使用"扫码查座"功能扫描现场二维码</li>
+                                    <li>在"日程安排"中查看您的座位信息</li>
+                                </ol>
+                                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); window.location.href='../learner/seat.html'">
+                                    <i class="fas fa-chair"></i> 查看座位
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="faq-item" onclick="toggleFaq(this)">
+                            <div class="faq-question">
+                                <i class="fas fa-question-circle"></i>
+                                <span>如何完成会议签到？</span>
+                                <i class="fas fa-chevron-down faq-icon"></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>会议签到有两种方式：</p>
+                                <ol>
+                                    <li><strong>现场签到</strong>：在签到处出示二维码或身份证</li>
+                                    <li><strong>扫码签到</strong>：使用"扫码查座"功能扫描座位二维码自动签到</li>
+                                </ol>
+                                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); window.location.href='../learner/checkin.html'">
+                                    <i class="fas fa-check-circle"></i> 立即签到
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="faq-item" onclick="toggleFaq(this)">
+                            <div class="faq-question">
+                                <i class="fas fa-question-circle"></i>
+                                <span>如何查看我的任务？</span>
+                                <i class="fas fa-chevron-down faq-icon"></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>任务包括：签到任务、问卷任务、评价任务、现场任务等。您可以：</p>
+                                <ol>
+                                    <li>在首页查看任务提醒卡片</li>
+                                    <li>点击底部导航的"任务"查看所有任务</li>
+                                    <li>任务会有截止时间提醒，请及时完成</li>
+                                </ol>
+                                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); window.location.href='../learner/task-list.html'">
+                                    <i class="fas fa-tasks"></i> 查看任务
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="faq-item" onclick="toggleFaq(this)">
+                            <div class="faq-question">
+                                <i class="fas fa-question-circle"></i>
+                                <span>如何联系其他参会人员？</span>
+                                <i class="fas fa-chevron-down faq-icon"></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>您可以通过以下方式联系：</p>
+                                <ol>
+                                    <li>在"分组"页面查看同组成员信息</li>
+                                    <li>在"通讯录"中搜索联系人</li>
+                                    <li>点击座位信息查看周边人员并发起聊天</li>
+                                </ol>
+                                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); window.location.href='../learner/groups.html'">
+                                    <i class="fas fa-users"></i> 查看分组
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="faq-item" onclick="toggleFaq(this)">
+                            <div class="faq-question">
+                                <i class="fas fa-question-circle"></i>
+                                <span>如何使用AI助理？</span>
+                                <i class="fas fa-chevron-down faq-icon"></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>AI助理可以帮您：</p>
+                                <ol>
+                                    <li>智能问答：回答会议相关问题</li>
+                                    <li>日程提醒：智能提醒重要日程</li>
+                                    <li>语音识别：语音转文字记录会议内容</li>
+                                    <li>智能推荐：推荐相关内容和联系人</li>
+                                </ol>
+                                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); window.location.href='assistant.html'">
+                                    <i class="fas fa-robot"></i> 打开AI助理
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-book" style="color:#2563eb;"></i>
+                        <div class="card-title">使用指南</div>
+                    </div>
+                    <div class="guide-list">
+                        <div class="guide-item" onclick="openGuide('quick-start')">
+                            <div class="guide-icon">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <div class="guide-content">
+                                <div class="guide-title">快速入门</div>
+                                <div class="guide-desc">5分钟了解汇悟通的基本功能</div>
+                            </div>
+                            <div class="guide-meta">
+                                <span class="guide-time"><i class="fas fa-clock"></i> 5分钟</span>
+                                <i class="fas fa-chevron-right guide-arrow"></i>
+                            </div>
+                        </div>
+
+                        <div class="guide-item" onclick="openGuide('schedule')">
+                            <div class="guide-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="guide-content">
+                                <div class="guide-title">日程管理</div>
+                                <div class="guide-desc">查看会议日程，设置提醒</div>
+                            </div>
+                            <div class="guide-meta">
+                                <span class="guide-time"><i class="fas fa-clock"></i> 3分钟</span>
+                                <i class="fas fa-chevron-right guide-arrow"></i>
+                            </div>
+                        </div>
+
+                        <div class="guide-item" onclick="openGuide('task')">
+                            <div class="guide-icon">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="guide-content">
+                                <div class="guide-title">任务完成</div>
+                                <div class="guide-desc">如何完成各项任务要求</div>
+                            </div>
+                            <div class="guide-meta">
+                                <span class="guide-time"><i class="fas fa-clock"></i> 4分钟</span>
+                                <i class="fas fa-chevron-right guide-arrow"></i>
+                            </div>
+                        </div>
+
+                        <div class="guide-item" onclick="openGuide('communication')">
+                            <div class="guide-icon">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="guide-content">
+                                <div class="guide-title">沟通协作</div>
+                                <div class="guide-desc">使用聊天和分组功能</div>
+                            </div>
+                            <div class="guide-meta">
+                                <span class="guide-time"><i class="fas fa-clock"></i> 4分钟</span>
+                                <i class="fas fa-chevron-right guide-arrow"></i>
+                            </div>
+                        </div>
+
+                        <div class="guide-item" onclick="openGuide('ai-assistant')">
+                            <div class="guide-icon">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="guide-content">
+                                <div class="guide-title">AI助理使用</div>
+                                <div class="guide-desc">充分利用AI智能功能</div>
+                            </div>
+                            <div class="guide-meta">
+                                <span class="guide-time"><i class="fas fa-clock"></i> 6分钟</span>
+                                <i class="fas fa-chevron-right guide-arrow"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-headset" style="color:#22c55e;"></i>
+                        <div class="card-title">联系支持</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">客服热线</div>
+                                <div class="assistant-item-desc">400-123-4567（工作时间 9:00-18:00）</div>
+                            </div>
+                            <a class="cta-chip cta-chip--primary" href="tel:400-123-4567">
+                                <i class="fas fa-phone"></i> 拨打
+                            </a>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">邮件支持</div>
+                                <div class="assistant-item-desc">support@huiwutong.com</div>
+                            </div>
+                            <a class="cta-chip cta-chip--primary" href="mailto:support@huiwutong.com">
+                                <i class="fas fa-envelope"></i> 发送
+                            </a>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-comment-dots"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">在线客服</div>
+                                <div class="assistant-item-desc">实时在线咨询服务</div>
+                            </div>
+                            <a class="cta-chip cta-chip--secondary" href="#" onclick="openOnlineService()">
+                                <i class="fas fa-comments"></i> 咨询
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle" style="color:#8b5cf6;"></i>
+                        <div class="card-title">更多信息</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item" onclick="window.location.href='system-intro.html'">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-info"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">系统介绍</div>
+                                <div class="assistant-item-desc">了解汇悟通的系统功能</div>
+                            </div>
+                            <i class="fas fa-chevron-right assistant-item-arrow"></i>
+                        </div>
+                        <div class="assistant-item" onclick="window.location.href='settings.html'">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">设置</div>
+                                <div class="assistant-item-desc">调整应用设置</div>
+                            </div>
+                            <i class="fas fa-chevron-right assistant-item-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='home.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='assistant.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='navigation.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-compass"></i>
+                    </div>
+                    <div class="nav-text">导航</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='past.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='profile.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 切换FAQ展开/收起
+        function toggleFaq(element) {
+            const answer = element.querySelector('.faq-answer');
+            const icon = element.querySelector('.faq-icon');
+
+            if (answer.style.display === 'block') {
+                answer.style.display = 'none';
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            } else {
+                answer.style.display = 'block';
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            }
+        }
+
+        // 打开使用指南
+        function openGuide(guideId) {
+            alert(`正在打开使用指南：${guideId}`);
+        }
+
+        // 打开在线客服
+        function openOnlineService() {
+            alert('正在连接在线客服...');
+        }
+
+        // 搜索功能
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const keyword = this.value;
+                if (keyword) {
+                    alert(`搜索：${keyword}`);
+                }
+            }
+        });
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+
+    <style>
+        .search-container {
+            padding: 16px;
+        }
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            color: #9ca3af;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .faq-list {
+            padding: 0;
+        }
+        .faq-item {
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+        }
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+        .faq-question {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            gap: 10px;
+        }
+        .faq-question > i:first-child {
+            color: #2563eb;
+            font-size: 18px;
+        }
+        .faq-question span {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 500;
+            color: #1f2937;
+        }
+        .faq-icon {
+            color: #9ca3af;
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+        .faq-answer {
+            display: none;
+            padding: 0 16px 16px 44px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin: 0 16px 12px;
+        }
+        .faq-answer p {
+            font-size: 14px;
+            color: #4b5563;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        .faq-answer ol {
+            margin: 0 0 12px 20px;
+            font-size: 14px;
+            color: #4b5563;
+        }
+        .faq-answer li {
+            margin: 6px 0;
+        }
+        .guide-list {
+            padding: 0;
+        }
+        .guide-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .guide-item:hover {
+            background: #f9fafb;
+        }
+        .guide-item:last-child {
+            border-bottom: none;
+        }
+        .guide-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+        .guide-icon i {
+            font-size: 18px;
+            color: white;
+        }
+        .guide-content {
+            flex: 1;
+        }
+        .guide-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+        .guide-desc {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+        .guide-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+        .guide-time {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        .guide-time i {
+            margin-right: 4px;
+        }
+        .guide-arrow {
+            color: #d1d5db;
+            font-size: 14px;
+        }
+    </style>
+</body>
+</html>

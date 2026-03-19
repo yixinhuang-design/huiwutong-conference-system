@@ -1,0 +1,2096 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户管理 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回首页</span>
+                </a>
+                <h1 class="nav-title">客户管理</h1>
+                <div class="nav-actions">
+                    <button class="btn-primary" @click="showCreateTenantModal">
+                        <i class="fas fa-plus"></i>
+                        创建客户
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+            <!-- 页面头部 -->
+            <div class="page-header glass-card">
+                <h2>客户管理</h2>
+                <p>管理系统客户信息，配置客户参数和管理员账号</p>
+            </div>
+
+            <!-- 客户统计面板 -->
+            <div class="tenant-stats glass-card">
+                <h3>客户统计</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ tenantStats.total }}</div>
+                            <div class="stat-label">总客户数</div>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ tenantStats.active }}</div>
+                            <div class="stat-label">启用客户</div>
+                        </div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ tenantStats.locked }}</div>
+                            <div class="stat-label">锁定客户</div>
+                        </div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ tenantStats.totalUsers }}</div>
+                            <div class="stat-label">总会议/培训数</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 筛选器 -->
+            <div class="tenant-filters glass-card">
+                <div class="filter-group">
+                    <label>状态筛选:</label>
+                    <select v-model="filters.status" @change="filterTenants">
+                        <option value="">全部状态</option>
+                        <option value="active">启用</option>
+                        <option value="disabled">禁用</option>
+                        <option value="locked">锁定</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>客户类型:</label>
+                    <select v-model="filters.type" @change="filterTenants">
+                        <option value="">全部类型</option>
+                        <option value="enterprise">企业</option>
+                        <option value="government">政府</option>
+                        <option value="education">教育</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>搜索:</label>
+                    <input type="text" v-model="filters.search" @input="filterTenants" placeholder="客户名称、编码、联系人...">
+                </div>
+                <div class="filter-actions">
+                    <button class="btn-outline" @click="resetFilters">重置</button>
+                </div>
+            </div>
+
+            <!-- 批量操作 -->
+            <div class="bulk-actions glass-card" v-if="selectedTenants.length > 0">
+                <span class="selected-count">已选择 {{ selectedTenants.length }} 个客户</span>
+                <div class="bulk-buttons">
+                    <button class="btn-outline" @click="bulkLock">
+                        <i class="fas fa-lock"></i>
+                        批量锁定
+                    </button>
+                    <button class="btn-outline" @click="bulkUnlock">
+                        <i class="fas fa-unlock"></i>
+                        批量解锁
+                    </button>
+                    <button class="btn-danger" @click="bulkDelete">
+                        <i class="fas fa-trash"></i>
+                        批量删除
+                    </button>
+                </div>
+            </div>
+
+            <!-- 客户列表 -->
+            <div class="tenant-list glass-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th width="50">
+                                <input type="checkbox" v-model="selectAll" @change="toggleSelectAll">
+                            </th>
+                            <th>客户名称</th>
+                            <th>客户编码</th>
+                            <th>管理员</th>
+                            <th>登录号码</th>
+                            <th>邮箱</th>
+                            <th>状态</th>
+                            <th>使用期限</th>
+                            <th>总会议/培训数</th>
+                            <th>客户类型</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="tenant in paginatedTenants" :key="tenant.id">
+                            <td>
+                                <input type="checkbox" v-model="selectedTenants" :value="tenant.id">
+                            </td>
+                            <td>{{ tenant.tenantName }}</td>
+                            <td>{{ tenant.tenantCode }}</td>
+                            <td>{{ tenant.contactName }}</td>
+                            <td>{{ tenant.contactPhone }}</td>
+                            <td>{{ tenant.contactEmail }}</td>
+                            <td>
+                                <span class="status-badge" :class="'status-' + tenant.status">
+                                    {{ getStatusText(tenant.status) }}
+                                </span>
+                            </td>
+                            <td>{{ formatDateRange(tenant.validStartDate, tenant.validEndDate) }}</td>
+                            <td>{{ tenant.currentConferences }}/{{ tenant.maxConferences }}</td>
+                            <td>{{ getTypeText(tenant.tenantType) }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-sm btn-outline" @click="editTenant(tenant.id)" title="编辑">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-sm btn-success" 
+                                            v-if="tenant.status === 'disabled'"
+                                            @click="enableTenant(tenant.id)" 
+                                            title="启用">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                    <button class="btn-sm btn-warning" 
+                                            v-else-if="tenant.status === 'active'"
+                                            @click="disableTenant(tenant.id)" 
+                                            title="禁用">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                    <button class="btn-sm btn-outline" 
+                                            v-if="tenant.status !== 'locked'"
+                                            @click="lockTenant(tenant.id)" 
+                                            title="锁定">
+                                        <i class="fas fa-lock"></i>
+                                    </button>
+                                    <button class="btn-sm btn-outline" 
+                                            v-if="tenant.status === 'locked'"
+                                            @click="unlockTenant(tenant.id)" 
+                                            title="解锁">
+                                        <i class="fas fa-unlock"></i>
+                                    </button>
+                                    <button class="btn-sm btn-danger" @click="deleteTenant(tenant.id)" title="删除">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button @click="prevPage" :disabled="currentPage === 1">上一页</button>
+                    <span>第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
+                    <button @click="nextPage" :disabled="currentPage === totalPages">下一页</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 创建/编辑客户弹窗 -->
+        <div v-if="showTenantModal" class="modal-overlay" @click.self="closeModal">
+            <div class="modal-content glass-card" @click.stop>
+                <div class="modal-header">
+                    <h3>{{ editingTenant ? '编辑客户' : '创建客户' }}</h3>
+                    <button class="btn-icon" @click="closeModal" type="button">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- 步骤导航 -->
+                    <div class="wizard-steps">
+                        <div class="step" :class="{ active: currentStep === 1, completed: currentStep > 1 }">
+                            <div class="step-number">1</div>
+                            <div class="step-label">基本信息</div>
+                        </div>
+                        <div class="step" :class="{ active: currentStep === 2, completed: currentStep > 2 }">
+                            <div class="step-number">2</div>
+                            <div class="step-label">客户参数</div>
+                        </div>
+                        <div class="step" :class="{ active: currentStep === 3, completed: currentStep > 3 }">
+                            <div class="step-number">3</div>
+                            <div class="step-label">确认创建</div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤1：基本信息 -->
+                    <div v-if="currentStep === 1" class="step-content">
+                        <h4>基本信息</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>客户名称 *</label>
+                                <input type="text" v-model="tenantForm.tenantName" required placeholder="请输入客户名称">
+                            </div>
+                            <div class="form-group">
+                                <label>客户编码 *</label>
+                                <div class="input-with-button">
+                                    <input type="text" v-model="tenantForm.tenantCode" required placeholder="自动生成或手动输入">
+                                    <button type="button" class="btn-sm" @click="generateCode">生成</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>管理员 *</label>
+                                <input type="text" v-model="tenantForm.contactName" required placeholder="请输入管理员姓名">
+                            </div>
+                            <div class="form-group">
+                                <label>登录号码 *</label>
+                                <input type="tel" v-model="tenantForm.contactPhone" required placeholder="请输入登录号码">
+                            </div>
+                            <div class="form-group">
+                                <label>邮箱</label>
+                                <input type="email" v-model="tenantForm.contactEmail" placeholder="请输入邮箱地址">
+                            </div>
+                            <div class="form-group">
+                                <label>状态</label>
+                                <select v-model="tenantForm.status">
+                                    <option value="active">启用</option>
+                                    <option value="disabled">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2：客户参数 -->
+                    <div v-if="currentStep === 2" class="step-content">
+                        <h4>客户参数</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>客户类型 *</label>
+                                <select v-model="tenantForm.tenantType" required>
+                                    <option value="self-rent">自助年租式</option>
+                                    <option value="full-pay">全托计次式</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="display: none;">
+                                <label>权限范围</label>
+                                <div class="checkbox-group">
+                                    <label v-for="permission in availablePermissions" :key="permission.id">
+                                        <input type="checkbox" 
+                                               :value="permission.id" 
+                                               v-model="tenantForm.permissions">
+                                        {{ permission.name }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>使用期限开始日期</label>
+                                <input type="date" v-model="tenantForm.validStartDate">
+                            </div>
+                            <div class="form-group">
+                                <label>使用期限结束日期</label>
+                                <input type="date" v-model="tenantForm.validEndDate">
+                            </div>
+                            <div class="form-group">
+                                <label>最大用户数</label>
+                                <input type="number" v-model="tenantForm.maxUsers" min="1" placeholder="不限制请留空">
+                            </div>
+                            <div class="form-group">
+                                <label>最大会议数</label>
+                                <input type="number" v-model="tenantForm.maxConferences" min="1" placeholder="不限制请留空">
+                            </div>
+                            <div class="form-group">
+                                <label>存储配额 (GB)</label>
+                                <input type="number" v-model="tenantForm.storageQuota" min="1" placeholder="不限制请留空">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤3：确认创建 -->
+                    <div v-if="currentStep === 3" class="step-content">
+                        <h4>确认创建</h4>
+                        <p class="preview-description">请确认以下信息无误后点击"确认创建"按钮</p>
+                        <div class="preview-content">
+                            <div class="preview-section">
+                                <h5>基本信息</h5>
+                                <div class="preview-item">
+                                    <span class="label">客户名称:</span>
+                                    <span class="value">{{ tenantForm.tenantName || '未填写' }}</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="label">客户编码:</span>
+                                    <span class="value">{{ tenantForm.tenantCode || '未填写' }}</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="label">管理员:</span>
+                                    <span class="value">{{ tenantForm.contactName || '未填写' }}</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="label">登录号码:</span>
+                                    <span class="value">{{ tenantForm.contactPhone || '未填写' }}</span>
+                                </div>
+                                <div class="preview-item" v-if="tenantForm.contactEmail">
+                                    <span class="label">邮箱:</span>
+                                    <span class="value">{{ tenantForm.contactEmail }}</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="label">状态:</span>
+                                    <span class="value">{{ getStatusText(tenantForm.status) }}</span>
+                                </div>
+                            </div>
+                            <div class="preview-section">
+                                <h5>客户参数</h5>
+                                <div class="preview-item">
+                                    <span class="label">客户类型:</span>
+                                    <span class="value">{{ getTypeText(tenantForm.tenantType) }}</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="label">使用期限:</span>
+                                    <span class="value">{{ formatDateRange(tenantForm.validStartDate, tenantForm.validEndDate) }}</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="label">最大用户数:</span>
+                                    <span class="value">{{ tenantForm.maxUsers || '不限制' }}</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="label">最大会议数:</span>
+                                    <span class="value">{{ tenantForm.maxConferences || '不限制' }}</span>
+                                </div>
+                                <div class="preview-item" v-if="tenantForm.storageQuota">
+                                    <span class="label">存储配额:</span>
+                                    <span class="value">{{ tenantForm.storageQuota }} GB</span>
+                                </div>
+                                <div class="preview-item" v-if="tenantForm.permissions && tenantForm.permissions.length > 0">
+                                    <span class="label">权限配置:</span>
+                                    <span class="value">{{ getPermissionsText(tenantForm.permissions) }}</span>
+                                </div>
+                            </div>
+                            <div class="preview-section" style="display: none;">
+                                <h5>管理员信息</h5>
+                                <div class="preview-item">
+                                    <span class="label">管理员账号:</span>
+                                    <span class="value">{{ tenantForm.admin.username || '未填写' }}</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="label">管理员姓名:</span>
+                                    <span class="value">{{ tenantForm.admin.name || '未填写' }}</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="label">管理员手机:</span>
+                                    <span class="value">{{ tenantForm.admin.phone || '未填写' }}</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="label">发送初始密码通知:</span>
+                                    <span class="value">
+                                        <span v-if="tenantForm.admin.sendSms">短信通知</span>
+                                        <span v-if="!tenantForm.admin.sendSms">不发送</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-outline" @click="prevStep" v-if="currentStep > 1">上一步</button>
+                    <button class="btn-outline" @click="closeModal">取消</button>
+                    <button class="btn-primary" @click="nextStep" v-if="currentStep < 3">下一步</button>
+                    <button class="btn-primary" @click="saveTenant" v-if="currentStep === 3">确认创建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局错误处理 - 捕获扩展和其他Promise错误
+        window.addEventListener('error', (event) => {
+            // 过滤掉非关键的扩展错误
+            if (event.message && event.message.includes('Cannot read properties')) {
+                console.warn('⚠️ 扩展错误已被忽略:', event.message);
+                event.preventDefault();
+                return;
+            }
+            console.error('❌ 应用错误:', event.error);
+        });
+
+        // 捕获未处理的Promise rejection
+        window.addEventListener('unhandledrejection', (event) => {
+            // 过滤掉信息通道关闭的错误
+            if (event.reason && event.reason.message && 
+                event.reason.message.includes('message channel closed')) {
+                console.warn('⚠️ 扩展通信错误已被忽略:', event.reason.message);
+                event.preventDefault();
+                return;
+            }
+            console.error('❌ 未处理的Promise错误:', event.reason);
+        });
+
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    tenants: [],
+                    filteredTenants: [],
+                    selectedTenants: [],
+                    selectAll: false,
+                    currentPage: 1,
+                    pageSize: 10,
+                    filters: {
+                        status: '',
+                        type: '',
+                        search: ''
+                    },
+                    tenantStats: {
+                        total: 0,
+                        active: 0,
+                        locked: 0,
+                        totalUsers: 0
+                    },
+                    showTenantModal: false,
+                    editingTenant: null,
+                    currentStep: 1,
+                    tenantForm: {
+                        tenantCode: '',
+                        tenantName: '',
+                        contactName: '',
+                        contactPhone: '',
+                        contactEmail: '',
+                        status: 'active',
+                        type: '',
+                        permissions: [],
+                        validStartDate: '',
+                        validEndDate: '',
+                        maxUsers: '',
+                        maxConferences: '',
+                        storageQuota: '',
+                        remark: '',
+                        domain: '',
+                        logoUrl: '',
+                        admin: {
+                            username: '',
+                            password: '',
+                            name: '',
+                            phone: '',
+                            sendEmail: true,
+                            sendSms: false
+                        }
+                    },
+                    availablePermissions: [
+                        { id: 'conference', name: '会议管理' },
+                        { id: 'registration', name: '报名管理' },
+                        { id: 'notification', name: '通知管理' },
+                        { id: 'collaboration', name: '协同管理' },
+                        { id: 'ai', name: 'AI功能' },
+                        { id: 'navigation', name: '导航功能' },
+                        { id: 'seating', name: '排座功能' }
+                    ]
+                }
+            },
+            computed: {
+                paginatedTenants() {
+                    const start = (this.currentPage - 1) * this.pageSize;
+                    const end = start + this.pageSize;
+                    return this.filteredTenants.slice(start, end);
+                },
+                totalPages() {
+                    const pages = Math.ceil(this.filteredTenants.length / this.pageSize);
+                    return pages > 0 ? pages : 1;
+                }
+            },
+            watch: {
+                selectedTenants() {
+                    // 同步全选状态
+                    if (this.paginatedTenants.length > 0) {
+                        this.selectAll = this.paginatedTenants.every(t => this.selectedTenants.includes(t.id));
+                    } else {
+                        this.selectAll = false;
+                    }
+                },
+                filteredTenants() {
+                    // 当筛选结果变化时，重置到第一页
+                    this.currentPage = 1;
+                    // totalPages 现在是计算属性，不需要手动设置
+                }
+            },
+            mounted() {
+                // 确保模态框初始状态为关闭
+                this.showTenantModal = false;
+                this.currentStep = 1;
+                this.editingTenant = null;
+                this.loadTenants();
+            },
+            methods: {
+                async loadTenants() {
+                    try {
+                        this.$showLoading('加载客户数据...');
+                        
+                        // 获取token
+                        const token = this.getToken();
+                        if (!token) {
+                            console.warn('⚠️ 未找到有效的认证令牌，将使用演示数据');
+                        } else {
+                            console.log('✅ 已获取认证令牌');
+                        }
+                        
+                        // 构建请求headers
+                        const headers = {
+                            'Content-Type': 'application/json'
+                        };
+                        
+                        // 如果有token，添加Authorization header
+                        if (token) {
+                            headers['Authorization'] = `Bearer ${token}`;
+                        }
+                        
+                        // 调用真实后端API: GET /api/tenant/list
+                        // 简化查询参数，避免格式问题
+                        console.log('🔄 正在调用 /api/tenant/list...');
+                        const response = await fetch('http://localhost:8081/api/tenant/list', {
+                            method: 'GET',
+                            headers: headers
+                        });
+                        
+                        console.log(`📊 服务器响应: ${response.status} ${response.statusText}`);
+                        
+                        // 记录请求headers（除了敏感信息）
+                        console.log('📤 请求信息:', {
+                            method: 'GET',
+                            url: 'http://localhost:8081/api/tenant/list',
+                            hasAuthHeader: !!headers['Authorization'],
+                            authHeaderPreview: headers['Authorization'] ? headers['Authorization'].substring(0, 20) + '...' : 'none'
+                        });
+                        
+                        if (!response.ok) {
+                            console.warn(`⚠️ HTTP ${response.status} 错误: ${response.statusText}`);
+                            
+                            // 尝试读取response体获取更多错误信息
+                            try {
+                                const errorBody = await response.clone().json();
+                                console.log('📋 服务器错误详情:', errorBody);
+                            } catch (e) {
+                                try {
+                                    const errorText = await response.clone().text();
+                                    console.log('📋 服务器响应:', errorText.substring(0, 200));
+                                } catch (e2) {
+                                    console.log('📋 无法读取服务器响应体');
+                                }
+                            }
+                            
+                            // 详细的错误原因分析
+                            if (response.status === 400) {
+                                console.log('💡 400 Bad Request 诊断：');
+                                console.log('   ✓ 请求格式已检查');
+                                console.log('   ❌ 可能原因1: Token无效或过期');
+                                console.log('   ❌ 可能原因2: 后端权限检查失败');
+                                console.log('   ❌ 可能原因3: TenantContextHolder.getUserId()为null');
+                                console.log('   💡 解决方案: 检查localStorage中的authToken是否包含userId字段');
+                                console.log('   💡 建议: 在浏览器console执行:');
+                                console.log('      const token = localStorage.getItem(\"authToken\");');
+                                console.log('      const payload = JSON.parse(atob(token.split(\".\")[1]));');
+                                console.log('      console.log(payload);');
+                            } else if (response.status === 401) {
+                                console.log('💡 401 Unauthorized - 认证失败，请先登录');
+                            } else if (response.status === 403) {
+                                console.log('💡 403 Forbidden - 没有访问权限');
+                            }
+                            
+                            // 使用演示数据作为降级方案
+                            console.log('✅ 由于服务器错误，已自动切换到演示数据');
+                            this.loadDemoData();
+                            this.$hideLoading();
+                            this.updateStats();
+                            this.filterTenants();
+                            this.$showToast(`API请求失败 (${response.status})，已使用本地演示数据`, 'warning');
+                            return;
+                        }
+                        
+                        const result = await response.json();
+                        
+                        // 检查API返回是否成功
+                        if (result.code === 200 && result.data) {
+                            const apiData = result.data;
+                            const apiTenants = apiData.items || apiData.tenants || apiData;
+                            
+                            // 处理数组或对象
+                            let tenantArray = [];
+                            if (Array.isArray(apiTenants)) {
+                                tenantArray = apiTenants;
+                            } else if (typeof apiTenants === 'object') {
+                                tenantArray = Object.values(apiTenants);
+                            }
+                            
+                            // 将API返回的租户数据映射到前端所需的格式
+                            this.tenants = tenantArray.map(tenant => ({
+                                id: tenant.id || tenant.tenantId,
+                                tenantName: tenant.tenantName || tenant.name,
+                                tenantCode: tenant.tenantCode || tenant.code,
+                                contactName: tenant.contactName || tenant.contact || '管理员',
+                                contactPhone: tenant.contactPhone || tenant.phone || '',
+                                contactEmail: tenant.contactEmail || tenant.email || '',
+                                status: this.mapStatus(tenant.status),
+                                tenantType: tenant.tenantType || tenant.type || 'enterprise',
+                                validStartDate: tenant.validStartDate || (tenant.createTime ? tenant.createTime.split(' ')[0] : ''),
+                                validEndDate: tenant.validEndDate || tenant.expireTime || '',
+                                maxUsers: tenant.maxUsers || tenant.accountLimit || 0,
+                                maxConferences: tenant.maxConferences || 0,
+                                storageQuota: tenant.storageQuota || 0,
+                                currentUsers: tenant.currentUsers || 0,
+                                currentConferences: tenant.currentConferences || 0,
+                                domain: tenant.domain || '',
+                                logoUrl: tenant.logoUrl || '',
+                                remark: tenant.remark || ''
+                            }));
+                            
+                            console.log('✅ 从后端成功加载客户数据:', this.tenants.length, '条');
+                        } else {
+                            console.warn('⚠️ API返回错误:', result.message);
+                            this.loadDemoData();
+                        }
+                        
+                        this.$hideLoading();
+                    } catch (error) {
+                        console.error('❌ 加载客户数据失败:', error);
+                        this.$hideLoading();
+                        this.$showToast('加载客户数据失败，已使用演示数据', 'info');
+                        // 如果API调用失败，使用示例数据进行演示
+                        this.loadDemoData();
+                    }
+                    
+                    this.updateStats();
+                    this.filterTenants();
+                },
+                
+                mapStatus(status) {
+                    // 映射数据库状态值到前端显示状态
+                    // 1=启用, 0=禁用
+                    if (status === 1 || status === '1') return 'active';
+                    if (status === 0 || status === '0') return 'disabled';
+                    return 'disabled';
+                },
+                
+                loadDemoData() {
+                    // 演示数据（API失败时使用）
+                    this.tenants = [
+                        {
+                            id: 1,
+                            name: 'default',
+                            code: 'default',
+                            contact: '系统管理员',
+                            phone: '13800138000',
+                            email: 'admin@example.com',
+                            status: 'active',
+                            type: 'enterprise',
+                            validPeriod: { start: '2024-01-01', end: '2099-12-31' },
+                            currentUsers: 3,
+                            maxUsers: 100,
+                            currentConferences: 0,
+                            maxConferences: 20
+                        },
+                        {
+                            id: 3,
+                            name: 'Enterprise Edition',
+                            code: 'ENT_002',
+                            contact: 'Enterprise Admin',
+                            phone: '13900139000',
+                            email: 'ent@example.com',
+                            status: 'active',
+                            type: 'enterprise',
+                            validPeriod: { start: '2024-01-01', end: '2025-12-31' },
+                            currentUsers: 1,
+                            maxUsers: 200,
+                            currentConferences: 0,
+                            maxConferences: 50
+                        },
+                        {
+                            id: 4,
+                            name: 'Education Edition',
+                            code: 'EDU_003',
+                            contact: 'Education Admin',
+                            phone: '13910139100',
+                            email: 'edu@example.com',
+                            status: 'active',
+                            type: 'enterprise',
+                            validPeriod: { start: '2024-01-01', end: '2025-12-31' },
+                            currentUsers: 1,
+                            maxUsers: 150,
+                            currentConferences: 0,
+                            maxConferences: 30
+                        }
+                    ];
+                    console.log('📦 已使用演示数据');
+                },
+                
+                getToken() {
+                    // 按优先级获取token
+                    let token = localStorage.getItem('authToken') || 
+                               localStorage.getItem('token') ||
+                               sessionStorage.getItem('authToken') ||
+                               sessionStorage.getItem('token');
+                    
+                    // 如果没有token，尝试从URL参数获取
+                    if (!token) {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        token = urlParams.get('token');
+                    }
+                    
+                    // 调试：记录token获取过程
+                    if (token) {
+                        console.log('✅ Token 获取成功:', token.substring(0, 20) + '...');
+                        
+                        // 解析token验证是否有效 (简单JSON.parse检查)
+                        try {
+                            const parts = token.split('.');
+                            if (parts.length === 3) {
+                                // JWT标准格式: header.payload.signature
+                                console.log('✅ Token 格式正确（标准JWT格式）');
+                                
+                                // 尝试解析payload
+                                const payload = JSON.parse(atob(parts[1]));
+                                console.log('✅ Token payload:', {
+                                    userId: payload.userId || 'missing',
+                                    tenantId: payload.tenantId || 'missing',
+                                    username: payload.username || 'missing',
+                                    exp: new Date(payload.exp * 1000).toLocaleString()
+                                });
+                            } else {
+                                console.warn('⚠️ Token 格式可能不正确，不是标准JWT');
+                            }
+                        } catch (e) {
+                            console.warn('⚠️ 无法解析Token内容:', e.message);
+                        }
+                    } else {
+                        console.warn('⚠️ 未找到有效的认证令牌');
+                    }
+                    
+                    return token || '';
+                },
+                
+                updateStats() {
+                    this.tenantStats.total = this.tenants.length;
+                    this.tenantStats.active = this.tenants.filter(t => t.status === 'active').length;
+                    this.tenantStats.locked = this.tenants.filter(t => t.status === 'locked').length;
+                    this.tenantStats.totalUsers = this.tenants.reduce((sum, t) => sum + t.currentConferences, 0);
+                },
+                
+                filterTenants() {
+                    let filtered = [...this.tenants];
+                    
+                    if (this.filters.status) {
+                        filtered = filtered.filter(t => t.status === this.filters.status);
+                    }
+                    
+                    if (this.filters.type) {
+                        filtered = filtered.filter(t => t.type === this.filters.type);
+                    }
+                    
+                    if (this.filters.search) {
+                        const search = this.filters.search.toLowerCase();
+                        filtered = filtered.filter(t => 
+                            t.name.toLowerCase().includes(search) ||
+                            t.code.toLowerCase().includes(search) ||
+                            t.contact.toLowerCase().includes(search)
+                        );
+                    }
+                    
+                    this.filteredTenants = filtered;
+                    // totalPages 现在是计算属性，不需要手动设置
+                    if (this.currentPage > Math.ceil(filtered.length / this.pageSize)) {
+                        this.currentPage = 1;
+                    }
+                },
+                
+                resetFilters() {
+                    this.filters = { status: '', type: '', search: '' };
+                    this.filterTenants();
+                },
+                
+                toggleSelectAll() {
+                    if (this.selectAll) {
+                        // 只选择当前页的客户
+                        const currentPageIds = this.paginatedTenants.map(t => t.id);
+                        // 合并已选择的客户（保留其他页面的选择）
+                        const newSelection = [...new Set([...this.selectedTenants, ...currentPageIds])];
+                        this.selectedTenants = newSelection;
+                    } else {
+                        // 取消选择当前页的客户
+                        const currentPageIds = this.paginatedTenants.map(t => t.id);
+                        this.selectedTenants = this.selectedTenants.filter(id => !currentPageIds.includes(id));
+                    }
+                },
+                
+                showCreateTenantModal() {
+                    this.editingTenant = null;
+                    this.currentStep = 1;
+                    this.resetTenantForm();
+                    this.showTenantModal = true;
+                },
+                
+                editTenant(id) {
+                    const tenant = this.tenants.find(t => t.id === id);
+                    if (tenant) {
+                        this.editingTenant = tenant;
+                        // 加载客户数据到表单，确保所有字段都被正确映射
+                        this.tenantForm = {
+                            id: tenant.id,
+                            tenantName: tenant.tenantName || '',
+                            tenantCode: tenant.tenantCode || '',
+                            contactName: tenant.contactName || '',
+                            contactPhone: tenant.contactPhone || '',
+                            contactEmail: tenant.contactEmail || '',
+                            status: tenant.status || 'active',  // 来自 mapStatus 的字符串值
+                            tenantType: tenant.tenantType || '',
+                            validStartDate: tenant.validStartDate || '',
+                            validEndDate: tenant.validEndDate || '',
+                            maxUsers: tenant.maxUsers || '',
+                            maxConferences: tenant.maxConferences || '',
+                            storageQuota: tenant.storageQuota || '',
+                            remark: tenant.remark || '',
+                            domain: tenant.domain || '',
+                            logoUrl: tenant.logoUrl || '',
+                            admin: tenant.admin || {
+                                username: '',
+                                password: '',
+                                name: '',
+                                phone: '',
+                                sendEmail: false,
+                                sendSms: false
+                            }
+                        };
+                        this.currentStep = 1;
+                        this.showTenantModal = true;
+                    }
+                },
+                
+                resetTenantForm() {
+                    this.tenantForm = {
+                        tenantName: '',
+                        tenantCode: '',
+                        contactName: '',
+                        contactPhone: '',
+                        contactEmail: '',
+                        status: 'active',
+                        tenantType: '',
+                        permissions: [],
+                        validStartDate: '',
+                        validEndDate: '',
+                        maxUsers: '',
+                        maxConferences: '',
+                        storageQuota: '',
+                        remark: '',
+                        domain: '',
+                        logoUrl: '',
+                        admin: {
+                            username: '',
+                            password: '',
+                            name: '',
+                            phone: '',
+                            sendEmail: true,
+                            sendSms: false
+                        }
+                    };
+                },
+                
+                generateCode() {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    const randomLetters = Array(3).fill(0).map(() => letters[Math.floor(Math.random() * letters.length)]).join('');
+                    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    this.tenantForm.code = `${randomLetters}${year}${month}${random}`;
+                },
+                
+                generatePassword() {
+                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                    let password = '';
+                    for (let i = 0; i < 12; i++) {
+                        password += chars.charAt(Math.floor(Math.random() * chars.length));
+                    }
+                    this.tenantForm.admin.password = password;
+                },
+                
+                async nextStep() {
+                    if (await this.validateCurrentStep()) {
+                        if (this.currentStep < 4) {
+                            this.currentStep++;
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    }
+                },
+                
+                prevStep() {
+                    if (this.currentStep > 1) {
+                        this.currentStep--;
+                    }
+                },
+                
+                async validateCurrentStep() {
+                    let isValid = true;
+                    let errorMessage = '';
+                    
+                    if (this.currentStep === 1) {
+                        if (!this.tenantForm.tenantName || !this.tenantForm.tenantName.trim()) {
+                            isValid = false;
+                            errorMessage = '请输入客户名称';
+                        } else if (!this.tenantForm.tenantCode || !this.tenantForm.tenantCode.trim()) {
+                            isValid = false;
+                            errorMessage = '请输入客户编码';
+                        } else if (!this.tenantForm.contactName || !this.tenantForm.contactName.trim()) {
+                            isValid = false;
+                            errorMessage = '请输入管理员';
+                        } else if (!this.tenantForm.contactPhone || !this.tenantForm.contactPhone.trim()) {
+                            isValid = false;
+                            errorMessage = '请输入登录号码';
+                        } else if (this.tenantForm.contactPhone && !/^1[3-9]\d{9}$/.test(this.tenantForm.contactPhone)) {
+                            isValid = false;
+                            errorMessage = '请输入正确的手机号码';
+                        }
+                    }
+                    
+                    if (!isValid) {
+                        this.$showToast(errorMessage, 'error');
+                        return false;
+                    }
+                    
+                    return true;
+                },
+                
+                async saveTenant() {
+                    if (!await this.validateCurrentStep()) {
+                        return;
+                    }
+                    
+                    const action = this.editingTenant ? '更新' : '创建';
+                    const confirmed = await this.$showConfirm(
+                        `确定要${action}客户"${this.tenantForm.tenantName}"吗？`,
+                        `${action}客户`,
+                        'info'
+                    );
+                    
+                    if (!confirmed) {
+                        return;
+                    }
+                    
+                    try {
+                        this.$showLoading(`${action}中...`);
+                        
+                        // 调用真实后端API
+                        if (this.editingTenant) {
+                        // 更新客户: PUT /api/tenant/{tenantId}
+                            const response = await fetch(`http://localhost:8081/api/tenant/${this.editingTenant.id}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${this.getToken()}`
+                                },
+                                body: JSON.stringify({
+                                    tenantName: this.tenantForm.tenantName,
+                                    contactName: this.tenantForm.contactName,
+                                    contactPhone: this.tenantForm.contactPhone,
+                                    contactEmail: this.tenantForm.contactEmail,
+                                    status: this.tenantForm.status === 'active' ? 1 : 0,
+                                    type: this.tenantForm.tenantType,
+                                    validStartDate: this.tenantForm.validStartDate,
+                                    validEndDate: this.tenantForm.validEndDate,
+                                    maxUsers: this.tenantForm.maxUsers ? parseInt(this.tenantForm.maxUsers) : null,
+                                    maxConferences: this.tenantForm.maxConferences ? parseInt(this.tenantForm.maxConferences) : null,
+                                    storageQuota: this.tenantForm.storageQuota ? parseInt(this.tenantForm.storageQuota) : null,
+                                    remark: this.tenantForm.remark,
+                                    domain: this.tenantForm.domain,
+                                    logoUrl: this.tenantForm.logoUrl
+                                })
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            }
+                            
+                            const result = await response.json();
+                            
+                            if (result.code === 200) {
+                                // 重新加载数据
+                                await this.loadTenants();
+                                this.$hideLoading();
+                                this.$showToast('客户更新成功', 'success');
+                            } else {
+                                throw new Error(result.message || '更新失败');
+                            }
+                        } else {
+                            // 创建客户: POST /api/tenant/create
+                            const response = await fetch('http://localhost:8081/api/tenant/create', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${this.getToken()}`
+                                },
+                                body: JSON.stringify({
+                                    tenantName: this.tenantForm.tenantName,
+                                    tenantCode: this.tenantForm.tenantCode,
+                                    contactName: this.tenantForm.contactName,
+                                    contactPhone: this.tenantForm.contactPhone,
+                                    contactEmail: this.tenantForm.contactEmail,
+                                    status: this.tenantForm.status === 'active' ? 1 : 0,
+                                    type: this.tenantForm.tenantType,
+                                    validStartDate: this.tenantForm.validStartDate,
+                                    validEndDate: this.tenantForm.validEndDate,
+                                    maxUsers: this.tenantForm.maxUsers ? parseInt(this.tenantForm.maxUsers) : null,
+                                    maxConferences: this.tenantForm.maxConferences ? parseInt(this.tenantForm.maxConferences) : null,
+                                    storageQuota: this.tenantForm.storageQuota ? parseInt(this.tenantForm.storageQuota) : null,
+                                    remark: this.tenantForm.remark,
+                                    domain: this.tenantForm.domain,
+                                    logoUrl: this.tenantForm.logoUrl
+                                })
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            }
+                            
+                            const result = await response.json();
+                            
+                            if (result.code === 200) {
+                                // 重新加载数据
+                                await this.loadTenants();
+                                this.$hideLoading();
+                                this.$showToast('客户创建成功', 'success');
+                            } else {
+                                throw new Error(result.message || '创建失败');
+                            }
+                        }
+                        
+                        this.closeModal();
+                    } catch (error) {
+                        this.$hideLoading();
+                        console.error(`${action}客户失败:`, error);
+                        this.$showToast(`${action}失败：${error.message}`, 'error');
+                    }
+                },
+                
+                closeModal() {
+                    this.showTenantModal = false;
+                    this.currentStep = 1;
+                    this.editingTenant = null;
+                    this.resetTenantForm();
+                },
+                
+                async lockTenant(id) {
+                    const tenant = this.tenants.find(t => t.id === id);
+                    if (!tenant) return;
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定要锁定客户"${tenant.name}"吗？锁定后该客户将无法使用系统。`,
+                        '锁定客户',
+                        'warning'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('锁定中...');
+                            
+                            // 调用后端API: PUT /api/tenant/{tenantId}/status?status=locked
+                            const response = await fetch(`http://localhost:8081/api/tenant/${id}/status?status=locked`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${this.getToken()}`
+                                }
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}`);
+                            }
+                            
+                            const result = await response.json();
+                            if (result.code === 200) {
+                                await this.loadTenants();
+                                this.$hideLoading();
+                                this.$showToast('客户已锁定', 'success');
+                            } else {
+                                throw new Error(result.message || '锁定失败');
+                            }
+                        } catch (error) {
+                            this.$hideLoading();
+                            console.error('锁定客户失败:', error);
+                            this.$showToast('锁定失败：' + error.message, 'error');
+                        }
+                    }
+                },
+                
+                async disableTenant(id) {
+                    const tenant = this.tenants.find(t => t.id === id);
+                    if (!tenant) return;
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定要禁用客户"${tenant.name}"吗？禁用后该客户将无法使用系统。`,
+                        '禁用客户',
+                        'warning'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('禁用中...');
+                            
+                            // 调用后端API: PUT /api/tenant/{tenantId}/status?status=inactive
+                            const response = await fetch(`http://localhost:8081/api/tenant/${id}/status?status=inactive`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${this.getToken()}`
+                                }
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}`);
+                            }
+                            
+                            const result = await response.json();
+                            if (result.code === 200) {
+                                await this.loadTenants();
+                                this.$hideLoading();
+                                this.$showToast('客户已禁用', 'success');
+                            } else {
+                                throw new Error(result.message || '禁用失败');
+                            }
+                        } catch (error) {
+                            this.$hideLoading();
+                            console.error('禁用客户失败:', error);
+                            this.$showToast('禁用失败：' + error.message, 'error');
+                        }
+                    }
+                },
+                
+                async enableTenant(id) {
+                    const tenant = this.tenants.find(t => t.id === id);
+                    if (!tenant) return;
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定要启用客户"${tenant.name}"吗？`,
+                        '启用客户',
+                        'info'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('启用中...');
+                            
+                            // 调用后端API: PUT /api/tenant/{tenantId}/status?status=active
+                            const response = await fetch(`http://localhost:8081/api/tenant/${id}/status?status=active`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${this.getToken()}`
+                                }
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}`);
+                            }
+                            
+                            const result = await response.json();
+                            if (result.code === 200) {
+                                await this.loadTenants();
+                                this.$hideLoading();
+                                this.$showToast('客户已启用', 'success');
+                            } else {
+                                throw new Error(result.message || '启用失败');
+                            }
+                        } catch (error) {
+                            this.$hideLoading();
+                            console.error('启用客户失败:', error);
+                            this.$showToast('启用失败：' + error.message, 'error');
+                        }
+                    }
+                },
+                
+                async unlockTenant(id) {
+                    const tenant = this.tenants.find(t => t.id === id);
+                    if (!tenant) return;
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定要解锁客户"${tenant.name}"吗？`,
+                        '解锁客户',
+                        'info'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('解锁中...');
+                            
+                            // 调用后端API: PUT /api/tenant/{tenantId}/status?status=active
+                            const response = await fetch(`http://localhost:8081/api/tenant/${id}/status?status=active`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${this.getToken()}`
+                                }
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}`);
+                            }
+                            
+                            const result = await response.json();
+                            if (result.code === 200) {
+                                await this.loadTenants();
+                                this.$hideLoading();
+                                this.$showToast('客户已解锁', 'success');
+                            } else {
+                                throw new Error(result.message || '解锁失败');
+                            }
+                        } catch (error) {
+                            this.$hideLoading();
+                            console.error('解锁客户失败:', error);
+                            this.$showToast('解锁失败：' + error.message, 'error');
+                        }
+                    }
+                },
+                
+                async deleteTenant(id) {
+                    const tenant = this.tenants.find(t => t.id === id);
+                    if (!tenant) return;
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定要删除客户"${tenant.name}"吗？此操作不可恢复，将删除该客户的所有数据！`,
+                        '删除客户',
+                        'danger'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('删除中...');
+                            
+                            // 调用后端API: DELETE /api/tenant/{tenantId}
+                            const response = await fetch(`http://localhost:8081/api/tenant/${id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${this.getToken()}`
+                                }
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}`);
+                            }
+                            
+                            const result = await response.json();
+                            if (result.code === 200) {
+                                await this.loadTenants();
+                                this.$hideLoading();
+                                this.$showToast('客户已删除', 'success');
+                            } else {
+                                throw new Error(result.message || '删除失败');
+                            }
+                        } catch (error) {
+                            this.$hideLoading();
+                            console.error('删除客户失败:', error);
+                            this.$showToast('删除失败：' + error.message, 'error');
+                        }
+                    }
+                },
+                
+                async bulkLock() {
+                    if (this.selectedTenants.length === 0) {
+                        this.$showToast('请先选择要锁定的客户', 'warning');
+                        return;
+                    }
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定要锁定选中的 ${this.selectedTenants.length} 个客户吗？`,
+                        '批量锁定',
+                        'warning'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            const count = this.selectedTenants.length;
+                            this.$showLoading(`正在锁定 ${count} 个客户...`);
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            this.selectedTenants.forEach(id => {
+                                const tenant = this.tenants.find(t => t.id === id);
+                                if (tenant) tenant.status = 'locked';
+                            });
+                            this.updateStats();
+                            this.selectedTenants = [];
+                            this.$hideLoading();
+                            this.$showToast(`已锁定 ${count} 个客户`, 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('批量锁定失败', 'error');
+                        }
+                    }
+                },
+                
+                async bulkUnlock() {
+                    if (this.selectedTenants.length === 0) {
+                        this.$showToast('请先选择要解锁的客户', 'warning');
+                        return;
+                    }
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定要解锁选中的 ${this.selectedTenants.length} 个客户吗？`,
+                        '批量解锁',
+                        'info'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading(`正在解锁 ${this.selectedTenants.length} 个客户...`);
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            const count = this.selectedTenants.length;
+                            this.selectedTenants.forEach(id => {
+                                const tenant = this.tenants.find(t => t.id === id);
+                                if (tenant) tenant.status = 'active';
+                            });
+                            this.updateStats();
+                            this.selectedTenants = [];
+                            this.$hideLoading();
+                            this.$showToast(`已解锁 ${count} 个客户`, 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('批量解锁失败', 'error');
+                        }
+                    }
+                },
+                
+                async bulkDelete() {
+                    if (this.selectedTenants.length === 0) {
+                        this.$showToast('请先选择要删除的客户', 'warning');
+                        return;
+                    }
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定要删除选中的 ${this.selectedTenants.length} 个客户吗？此操作不可恢复，将删除所有相关数据！`,
+                        '批量删除',
+                        'danger'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading(`正在删除 ${this.selectedTenants.length} 个客户...`);
+                            await new Promise(resolve => setTimeout(resolve, 1500));
+                            const count = this.selectedTenants.length;
+                            this.tenants = this.tenants.filter(t => !this.selectedTenants.includes(t.id));
+                            this.updateStats();
+                            this.filterTenants();
+                            this.selectedTenants = [];
+                            this.$hideLoading();
+                            this.$showToast(`已删除 ${count} 个客户`, 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('批量删除失败', 'error');
+                        }
+                    }
+                },
+                
+                getStatusText(status) {
+                    const map = {
+                        'active': '启用',
+                        'disabled': '禁用',
+                        'locked': '锁定'
+                    };
+                    return map[status] || status;
+                },
+                
+                getTypeText(type) {
+                    const map = {
+                        'self-rent': '自助年租式',
+                        'full-pay': '全托计次式'
+                    };
+                    return map[type] || type;
+                },
+                
+                formatDateRange(startDate, endDate) {
+                    // 处理两种调用方式
+                    if (typeof startDate === 'object' && startDate !== null) {
+                        // 旧方式：传入对象 { start, end }
+                        if (!startDate.start || !startDate.end) return '未设置';
+                        return `${startDate.start} 至 ${startDate.end}`;
+                    } else {
+                        // 新方式：传入两个参数
+                        if (!startDate || !endDate) return '未设置';
+                        return `${startDate} 至 ${endDate}`;
+                    }
+                },
+                
+                getPermissionsText(permissions) {
+                    if (!permissions || permissions.length === 0) return '无';
+                    const permissionMap = {
+                        'conference': '会议管理',
+                        'registration': '报名管理',
+                        'notification': '通知管理',
+                        'collaboration': '协同管理',
+                        'ai': 'AI功能',
+                        'navigation': '导航功能',
+                        'seating': '排座功能'
+                    };
+                    return permissions.map(p => permissionMap[p] || p).join('、');
+                },
+                
+                prevPage() {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                    }
+                },
+                
+                nextPage() {
+                    if (this.currentPage < this.totalPages) {
+                        this.currentPage++;
+                    }
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+        
+        // 应用挂载后的全局错误处理
+        const app = window.__app_instance__ || {};
+        
+        // 额外的Promise异常捕获
+        if (window.Promise && window.Promise.prototype) {
+            const originalThen = window.Promise.prototype.then;
+            window.Promise.prototype.then = function(...args) {
+                const catchHandler = args[2] || (err => {
+                    if (!err.message || !err.message.includes('message channel closed')) {
+                        console.error('Promise错误:', err);
+                    }
+                });
+                args[2] = catchHandler;
+                return originalThen.apply(this, args);
+            };
+        }
+        
+        console.log('✅ 客户管理系统已初始化，错误处理已启用');
+    </script>
+
+    <style>
+        /* 客户统计卡片优化 */
+        .tenant-stats {
+            margin-bottom: var(--space-6);
+            padding: 0 var(--space-5) var(--space-6) var(--space-5);
+        }
+        
+        .tenant-stats h3 {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-5);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--space-3);
+        }
+        
+        .stat-card {
+            padding: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            transition: all var(--transition-fast);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-color);
+        }
+        
+        .stat-card.success {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+        
+        .stat-card.success .stat-icon {
+            color: var(--success-color);
+        }
+        
+        .stat-card.warning {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        
+        .stat-card.warning .stat-icon {
+            color: var(--warning-color);
+        }
+        
+        .stat-card.info {
+            background: rgba(59, 130, 246, 0.08);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+        
+        .stat-card.info .stat-icon {
+            color: var(--info-color);
+        }
+        
+        .stat-icon {
+            font-size: 2.2rem;
+            color: var(--primary-color);
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            background: rgba(102, 126, 234, 0.1);
+            flex-shrink: 0;
+        }
+        
+        .stat-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+        
+        .stat-value {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: var(--gray-800);
+            line-height: 1.2;
+        }
+        
+        .stat-label {
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+        }
+        
+        /* 筛选器优化 */
+        .tenant-filters {
+            margin-bottom: var(--space-4);
+            padding: var(--space-4);
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            align-items: flex-end;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+            min-width: 180px;
+        }
+        
+        .filter-group label {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .filter-group input,
+        .filter-group select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-800);
+            font-size: var(--font-size-sm);
+            transition: all var(--transition-fast);
+        }
+        
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .filter-group input::placeholder {
+            color: var(--gray-400);
+        }
+        
+        .filter-actions {
+            display: flex;
+            align-items: flex-end;
+            gap: var(--space-2);
+        }
+        
+        /* 批量操作优化 */
+        .bulk-actions {
+            margin-bottom: var(--space-4);
+            padding: var(--space-4) var(--space-5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(102, 126, 234, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: var(--radius-lg);
+        }
+        
+        .selected-count {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: var(--font-size-base);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        
+        .selected-count::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-color);
+        }
+        
+        .bulk-buttons {
+            display: flex;
+            gap: var(--space-2);
+        }
+        
+        /* 表格优化 */
+        .tenant-list {
+            overflow-x: auto;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 1200px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: var(--space-4) var(--space-3);
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .data-table th {
+            font-weight: 600;
+            color: var(--gray-800);
+            background: rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-size: var(--font-size-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .data-table tbody tr {
+            transition: all var(--transition-fast);
+        }
+        
+        .data-table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .data-table td {
+            color: var(--gray-700);
+            font-size: var(--font-size-sm);
+        }
+        
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .status-disabled {
+            background: rgba(107, 114, 128, 0.2);
+            color: #6b7280;
+        }
+        
+        .status-locked {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .modal-body {
+            padding: 2rem;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .wizard-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .wizard-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        .step.active .step-number {
+            background: #667eea;
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background: #10b981;
+            color: white;
+        }
+        
+        .step-label {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .step.active .step-label {
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        .step-content h4 {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-group label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .input-with-button {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .input-with-button input {
+            flex: 1;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .preview-description {
+            color: var(--gray-600);
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .preview-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .preview-section {
+            padding: 1.5rem;
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .preview-section h5 {
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+        
+        .preview-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .preview-item:last-child {
+            border-bottom: none;
+        }
+        
+        .preview-item .label {
+            color: var(--gray-600);
+            font-weight: 500;
+            min-width: 120px;
+        }
+        
+        .preview-item .value {
+            color: var(--gray-800);
+            font-weight: 500;
+            text-align: right;
+            flex: 1;
+        }
+        
+        /* 状态标签优化 */
+        .status-badge {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        
+        .status-active {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .status-active::before {
+            background: var(--success-color);
+        }
+        
+        .status-disabled {
+            background: rgba(107, 114, 128, 0.15);
+            color: var(--gray-500);
+            border: 1px solid rgba(107, 114, 128, 0.3);
+        }
+        
+        .status-disabled::before {
+            background: var(--gray-500);
+        }
+        
+        .status-locked {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error-color);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .status-locked::before {
+            background: var(--error-color);
+        }
+        
+        /* 操作按钮优化 */
+        .action-buttons {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+        
+        .action-buttons .btn-sm {
+            padding: var(--space-1) var(--space-3);
+            font-size: var(--font-size-sm);
+            min-width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+        
+        .action-buttons .btn-sm:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .action-buttons .btn-sm.btn-danger:hover {
+            background: var(--error-color);
+            color: var(--white);
+            border-color: var(--error-color);
+        }
+        
+        /* 分页优化 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-5);
+            margin-top: var(--space-4);
+            border-top: 1px solid var(--glass-border);
+        }
+        
+        .pagination button {
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            transition: all var(--transition-fast);
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination button:not(:disabled):hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .pagination span {
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .data-table {
+                font-size: 0.85rem;
+            }
+            
+            .tenant-filters {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-actions {
+                width: 100%;
+            }
+            
+            .bulk-actions {
+                flex-direction: column;
+                gap: var(--space-3);
+                align-items: stretch;
+            }
+            
+            .bulk-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</body>
+</html>
+

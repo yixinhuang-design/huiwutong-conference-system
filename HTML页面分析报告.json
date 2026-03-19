@@ -1,0 +1,1016 @@
+{
+  "分析日期": "2026-03-09",
+  "总体统计": {
+    "总页面数": 58,
+    "common目录": 11,
+    "learner目录": 24,
+    "staff目录": 23,
+    "简单页面": 24,
+    "中等页面": 22,
+    "复杂页面": 12
+  },
+  "页面详情": {
+    "common_pages": [
+      {
+        "序号": 1,
+        "文件名": "login.html",
+        "标题": "登录 - 智能会议系统",
+        "功能": "用户登录和注册",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "登录页面，包含标签页切换，支持学员/工作人员登录"
+      },
+      {
+        "序号": 2,
+        "文件名": "home.html",
+        "标题": "智能会议助手 - 首页",
+        "功能": "首页仪表板",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "展示用户信息、参加的培训、功能导航"
+      },
+      {
+        "序号": 3,
+        "文件名": "profile.html",
+        "标题": "智能会议助手 - 我的",
+        "功能": "用户个人中心",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "显示用户信息、任务、功能导航"
+      },
+      {
+        "序号": 4,
+        "文件名": "settings.html",
+        "标题": "设置 - 通用",
+        "功能": "应用设置",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "包含账户设置、通知设置、显示设置、存储设置"
+      },
+      {
+        "序号": 5,
+        "文件名": "assistant.html",
+        "标题": "AI助手 - 智能对话",
+        "功能": "AI聊天助手",
+        "表单": false,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "聊天界面，支持文本和语音输入"
+      },
+      {
+        "序号": 6,
+        "文件名": "communication.html",
+        "标题": "智能会议助手 - 沟通",
+        "功能": "沟通中心",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "展示群组、私聊、通知等沟通内容"
+      },
+      {
+        "序号": 7,
+        "文件名": "help.html",
+        "标题": "帮助中心 - 通用",
+        "功能": "帮助中心",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "热门问题、使用指南、联系支持"
+      },
+      {
+        "序号": 8,
+        "文件名": "navigation.html",
+        "标题": "位置导航 - 智能会议助手",
+        "功能": "会场导航",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "地图导航、推荐路线、周边设施"
+      },
+      {
+        "序号": 9,
+        "文件名": "past.html",
+        "标题": "智能会议助手 - 往期",
+        "功能": "往期会议归档",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "展示往期会议/培训列表"
+      },
+      {
+        "序号": 10,
+        "文件名": "index.html",
+        "标题": "智能会议助手 - 原型展示",
+        "功能": "原型导航中心",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "所有页面的导航索引页，使用iframe展示"
+      },
+      {
+        "序号": 11,
+        "文件名": "system-intro.html",
+        "标题": "智能会议系统 · 全流程介绍",
+        "功能": "系统介绍",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "系统整体流程和功能介绍"
+      }
+    ],
+    "learner_pages": [
+      {
+        "序号": 1,
+        "文件名": "meeting-detail.html",
+        "标题": "培训详情 - 学员视角",
+        "功能": "培训详情展示",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "展示培训信息、功能入口、任务和通知"
+      },
+      {
+        "序号": 2,
+        "文件名": "schedule.html",
+        "标题": "2025党务干部培训班",
+        "功能": "日程查看",
+        "表单": false,
+        "表格": true,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "培训日程表展示"
+      },
+      {
+        "序号": 3,
+        "文件名": "checkin.html",
+        "标题": "报到签到",
+        "功能": "签到功能",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "扫码签到和手动签到"
+      },
+      {
+        "序号": 4,
+        "文件名": "seat.html",
+        "标题": "座位图 - 学员视角",
+        "功能": "座位查看",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "显示我的座位、同组成员、会场导航"
+      },
+      {
+        "序号": 5,
+        "文件名": "seat-detail.html",
+        "标题": "座位详情 - 学员视角",
+        "功能": "座位详情",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "座位位置、同组成员、会场导航"
+      },
+      {
+        "序号": 6,
+        "文件名": "scan-seat.html",
+        "标题": "扫码查座 - 学员视角",
+        "功能": "扫码查座",
+        "表单": false,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "扫码查询座位信息"
+      },
+      {
+        "序号": 7,
+        "文件名": "scan-register.html",
+        "标题": "扫码报名",
+        "功能": "扫码报名",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "扫码或手动输入报名"
+      },
+      {
+        "序号": 8,
+        "文件名": "registration-status.html",
+        "标题": "报名状态查询 - 学员端",
+        "功能": "报名状态查询",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "输入报名信息查询报名状态"
+      },
+      {
+        "序号": 9,
+        "文件名": "contact.html",
+        "标题": "通讯录",
+        "功能": "通讯录",
+        "表单": false,
+        "表格": true,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "工作人员和学员通讯录"
+      },
+      {
+        "序号": 10,
+        "文件名": "task-list.html",
+        "标题": "任务列表",
+        "功能": "任务列表",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "展示各类任务列表"
+      },
+      {
+        "序号": 11,
+        "文件名": "task-detail.html",
+        "标题": "任务详情 - 学员视角",
+        "功能": "任务详情",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "展示任务详细信息"
+      },
+      {
+        "序号": 12,
+        "文件名": "feedback.html",
+        "标题": "问卷填写 - 学员视角",
+        "功能": "问卷调查",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "问卷表单填写和提交"
+      },
+      {
+        "序号": 13,
+        "文件名": "evaluation.html",
+        "标题": "评价打分",
+        "功能": "讲师评价",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "讲师打分和评价"
+      },
+      {
+        "序号": 14,
+        "文件名": "materials.html",
+        "标题": "资料下载 - 学员视角",
+        "功能": "资料下载",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "培训资料下载列表"
+      },
+      {
+        "序号": 15,
+        "文件名": "highlights.html",
+        "标题": "精彩花絮 - 学员视角",
+        "功能": "花絮展示",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "图文精选展示"
+      },
+      {
+        "序号": 16,
+        "文件名": "guestbook.html",
+        "标题": "留言赠语 - 学员视角",
+        "功能": "留言赠语",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": true,
+        "复杂度": "复杂",
+        "描述": "发布和查看留言，支持标签、点赞等交互"
+      },
+      {
+        "序号": 17,
+        "文件名": "message.html",
+        "标题": "留言赠语 - 学员视角",
+        "功能": "留言展示",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "展示其他用户的留言"
+      },
+      {
+        "序号": 18,
+        "文件名": "chat-room.html",
+        "标题": "学员群聊 - 全体学员群",
+        "功能": "群聊",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": true,
+        "复杂度": "复杂",
+        "描述": "实时群聊，支持消息卡片、公告等"
+      },
+      {
+        "序号": 19,
+        "文件名": "chat-private.html",
+        "标题": "学员私聊",
+        "功能": "私聊",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": true,
+        "复杂度": "复杂",
+        "描述": "一对一聊天"
+      },
+      {
+        "序号": 20,
+        "文件名": "guide.html",
+        "标题": "参会须知 - 学员视角",
+        "功能": "参会指南",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "参会须知展示"
+      },
+      {
+        "序号": 21,
+        "文件名": "notifications.html",
+        "标题": "通知中心 - 学员端",
+        "功能": "通知中心",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "未读和已读通知列表"
+      },
+      {
+        "序号": 22,
+        "文件名": "groups.html",
+        "标题": "2025党务干部培训班",
+        "功能": "分组管理",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "显示分组详情和成员"
+      },
+      {
+        "序号": 23,
+        "文件名": "arrangements.html",
+        "标题": "辅助安排 - 学员视角",
+        "功能": "辅助安排",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "车辆、住宿、餐饮、分组安排"
+      },
+      {
+        "序号": 24,
+        "文件名": "handbook.html",
+        "标题": "学员手册",
+        "功能": "手册查看",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "生成的学员手册展示"
+      }
+    ],
+    "staff_pages": [
+      {
+        "序号": 1,
+        "文件名": "dashboard.html",
+        "标题": "工作人员 · 数据看板",
+        "功能": "管理员仪表板",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "展示核心数据、快捷操作、实时动态"
+      },
+      {
+        "序号": 2,
+        "文件名": "meeting-detail.html",
+        "标题": "培训详情 - 协管员视角",
+        "功能": "培训详情",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "培训信息、功能入口、任务和动态"
+      },
+      {
+        "序号": 3,
+        "文件名": "schedule.html",
+        "标题": "工作人员 · 日程录入",
+        "功能": "日程管理",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "日程列表展示和新增日程表单"
+      },
+      {
+        "序号": 4,
+        "文件名": "registration-manage.html",
+        "标题": "报名审核",
+        "功能": "报名管理",
+        "表单": false,
+        "表格": true,
+        "API调用": true,
+        "Vue": true,
+        "复杂度": "复杂",
+        "描述": "报名数据表格、审核、批量操作"
+      },
+      {
+        "序号": 5,
+        "文件名": "grouping-manage.html",
+        "标题": "工作人员 · 分组编排",
+        "功能": "分组管理",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "分组列表和待分配成员"
+      },
+      {
+        "序号": 6,
+        "文件名": "seat-manage.html",
+        "标题": "座位编排",
+        "功能": "座位管理",
+        "表单": false,
+        "表格": false,
+        "API调用": true,
+        "Vue": true,
+        "复杂度": "复杂",
+        "描述": "座位图交互编辑、拖拽、批量分配"
+      },
+      {
+        "序号": 7,
+        "文件名": "task-list.html",
+        "标题": "工作人员 · 任务派发",
+        "功能": "任务列表",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "工作任务列表展示"
+      },
+      {
+        "序号": 8,
+        "文件名": "task-detail.html",
+        "标题": "任务详情 - 会场布置验收",
+        "功能": "任务详情",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "任务信息、内容、进度反馈"
+      },
+      {
+        "序号": 9,
+        "文件名": "task-feedback.html",
+        "标题": "任务完成反馈",
+        "功能": "反馈提交",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "任务完成反馈表单和历史记录"
+      },
+      {
+        "序号": 10,
+        "文件名": "notice-manage.html",
+        "标题": "通知管理 - 协管员端",
+        "功能": "通知管理",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "通知模板、快捷操作、发送记录、统计数据"
+      },
+      {
+        "序号": 11,
+        "文件名": "notice-mobile.html",
+        "标题": "通知管理 - 协管员端移动版",
+        "功能": "通知管理(移动)",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "移动版通知管理界面"
+      },
+      {
+        "序号": 12,
+        "文件名": "chat-room.html",
+        "标题": "工作人员群聊",
+        "功能": "工作群聊",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": true,
+        "复杂度": "复杂",
+        "描述": "工作人员实时群聊"
+      },
+      {
+        "序号": 13,
+        "文件名": "handbook-generate.html",
+        "标题": "学员手册生成 - 协管员端",
+        "功能": "手册生成",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "复杂",
+        "描述": "配置手册生成参数、模板选择、导出"
+      },
+      {
+        "序号": 14,
+        "文件名": "handbook-mobile.html",
+        "标题": "学员手册生成 - 移动版",
+        "功能": "手册生成(移动)",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": true,
+        "复杂度": "复杂",
+        "描述": "移动版手册生成，支持模态框编辑"
+      },
+      {
+        "序号": 15,
+        "文件名": "data-analysis.html",
+        "标题": "数据分析 - 协管员端",
+        "功能": "数据分析",
+        "表单": false,
+        "表格": true,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "统计数据展示、各类数据表格"
+      },
+      {
+        "序号": 16,
+        "文件名": "alert-config.html",
+        "标题": "预警配置",
+        "功能": "预警配置",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "复杂",
+        "描述": "预警规则配置表单"
+      },
+      {
+        "序号": 17,
+        "文件名": "alert-handle.html",
+        "标题": "预警处理",
+        "功能": "预警处理",
+        "表单": false,
+        "表格": true,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "预警列表、处理状态、操作记录"
+      },
+      {
+        "序号": 18,
+        "文件名": "alert-mobile.html",
+        "标题": "预警提醒 - 移动版",
+        "功能": "预警提醒(移动)",
+        "表单": false,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "简单",
+        "描述": "移动端预警通知提醒"
+      },
+      {
+        "序号": 19,
+        "文件名": "training.html",
+        "标题": "智能会议助手 - 培训",
+        "功能": "培训列表",
+        "表单": false,
+        "表格": false,
+        "API调用": true,
+        "Vue": true,
+        "复杂度": "中等",
+        "描述": "培训列表管理和操作"
+      },
+      {
+        "序号": 20,
+        "文件名": "training-create.html",
+        "标题": "新建培训 - 协管员端",
+        "功能": "创建培训",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": true,
+        "复杂度": "复杂",
+        "描述": "培训创建表单，包含基本信息、日程、报名设置等"
+      },
+      {
+        "序号": 21,
+        "文件名": "tenant-manage.html",
+        "标题": "租户管理 - 智能会务系统",
+        "功能": "租户管理",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "复杂",
+        "描述": "租户信息、协管员管理、API调用"
+      },
+      {
+        "序号": 22,
+        "文件名": "tenant-create.html",
+        "标题": "创建新租户 - 系统管理员",
+        "功能": "创建租户",
+        "表单": true,
+        "表格": false,
+        "API调用": false,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "租户基本信息、参数配置、管理员设置"
+      },
+      {
+        "序号": 23,
+        "文件名": "tenant-login.html",
+        "标题": "租户管理员登录",
+        "功能": "登录",
+        "表单": true,
+        "表格": false,
+        "API调用": true,
+        "Vue": false,
+        "复杂度": "中等",
+        "描述": "租户管理员登录页面"
+      }
+    ]
+  },
+  "复杂度分类": {
+    "简单页面": [
+      "home.html",
+      "profile.html",
+      "communication.html",
+      "help.html",
+      "navigation.html",
+      "past.html",
+      "index.html",
+      "system-intro.html",
+      "meeting-detail.html (learner)",
+      "schedule.html (learner)",
+      "seat.html",
+      "seat-detail.html",
+      "contact.html",
+      "task-list.html (learner)",
+      "task-detail.html (learner)",
+      "materials.html",
+      "highlights.html",
+      "message.html",
+      "guide.html",
+      "notifications.html",
+      "groups.html",
+      "arrangements.html",
+      "handbook.html",
+      "meeting-detail.html (staff)"
+    ],
+    "中等页面": [
+      "login.html",
+      "settings.html",
+      "assistant.html",
+      "checkin.html",
+      "scan-seat.html",
+      "scan-register.html",
+      "registration-status.html",
+      "feedback.html",
+      "evaluation.html",
+      "dashboard.html",
+      "schedule.html (staff)",
+      "task-feedback.html",
+      "notice-manage.html",
+      "notice-mobile.html",
+      "data-analysis.html",
+      "alert-handle.html",
+      "training.html",
+      "tenant-create.html",
+      "tenant-login.html"
+    ],
+    "复杂页面": [
+      "guestbook.html",
+      "chat-room.html (learner)",
+      "chat-private.html",
+      "registration-manage.html",
+      "seat-manage.html",
+      "chat-room.html (staff)",
+      "handbook-generate.html",
+      "handbook-mobile.html",
+      "alert-config.html",
+      "training-create.html",
+      "tenant-manage.html"
+    ]
+  },
+  "关键页面优先级": {
+    "priority_1": [
+      {
+        "页面": "login.html",
+        "目录": "common",
+        "原因": "核心入口，影响全系统用户登录体验，涉及认证逻辑"
+      },
+      {
+        "页面": "training-create.html",
+        "目录": "staff",
+        "原因": "复杂业务流程，需要处理多个配置项，影响后续所有业务"
+      },
+      {
+        "页面": "seat-manage.html",
+        "目录": "staff",
+        "原因": "核心功能，涉及拖拽交互、座位图展示、批量操作"
+      }
+    ],
+    "priority_2": [
+      {
+        "页面": "registration-manage.html",
+        "目录": "staff",
+        "原因": "核心管理功能，涉及数据表格、审核流程"
+      },
+      {
+        "页面": "handbook-generate.html",
+        "目录": "staff",
+        "原因": "复杂功能，涉及模板、参数配置、导出生成"
+      },
+      {
+        "页面": "chat-room.html",
+        "目录": "learner/staff",
+        "原因": "实时通讯功能，涉及消息处理、列表更新"
+      }
+    ],
+    "priority_3": [
+      {
+        "页面": "feedback.html",
+        "目录": "learner",
+        "原因": "表单提交，涉及数据收集和提交"
+      },
+      {
+        "页面": "notice-manage.html",
+        "目录": "staff",
+        "原因": "通知管理，涉及模板、发送统计"
+      },
+      {
+        "页面": "tenant-manage.html",
+        "目录": "staff",
+        "原因": "系统管理，涉及租户配置和协管员管理"
+      }
+    ]
+  },
+  "数据依赖关系": {
+    "数据流向": [
+      {
+        "源": "login.html",
+        "目标": [
+          "home.html",
+          "profile.html",
+          "dashboard.html",
+          "meeting-detail.html"
+        ],
+        "依赖": "用户认证信息"
+      },
+      {
+        "源": "training-create.html",
+        "目标": [
+          "training.html",
+          "schedule.html",
+          "registration-manage.html"
+        ],
+        "依赖": "培训基础配置"
+      },
+      {
+        "源": "registration-manage.html",
+        "目标": [
+          "seat-manage.html",
+          "grouping-manage.html",
+          "handbook-generate.html",
+          "dashboard.html"
+        ],
+        "依赖": "学员名单和审核状态"
+      },
+      {
+        "源": "seat-manage.html",
+        "目标": [
+          "seat.html",
+          "seat-detail.html",
+          "scan-seat.html",
+          "arrangements.html"
+        ],
+        "依赖": "座位分配结果"
+      },
+      {
+        "源": "notice-manage.html",
+        "目标": [
+          "notifications.html",
+          "communication.html"
+        ],
+        "依赖": "通知内容"
+      },
+      {
+        "源": "schedule.html (staff)",
+        "目标": [
+          "schedule.html (learner)",
+          "task-list.html"
+        ],
+        "依赖": "日程信息"
+      }
+    ],
+    "关键业务流程": [
+      {
+        "流程": "报名→审核→分座位→分组→发通知→签到",
+        "涉及页面": [
+          "training-create.html",
+          "scan-register.html",
+          "registration-manage.html",
+          "seat-manage.html",
+          "grouping-manage.html",
+          "notice-manage.html",
+          "checkin.html"
+        ],
+        "重要性": "极高"
+      },
+      {
+        "流程": "创建任务→派发→学员查看→完成→反馈",
+        "涉及页面": [
+          "task-list.html (staff)",
+          "task-detail.html (staff)",
+          "task-list.html (learner)",
+          "task-detail.html (learner)",
+          "feedback.html",
+          "task-feedback.html"
+        ],
+        "重要性": "高"
+      },
+      {
+        "流程": "工作群聊→通知发布→学员收到→沟通互动",
+        "涉及页面": [
+          "chat-room.html (staff)",
+          "notice-manage.html",
+          "communication.html",
+          "chat-room.html (learner)"
+        ],
+        "重要性": "中等"
+      }
+    ]
+  },
+  "技术实现特点": {
+    "静态页面": {
+      "特点": "纯HTML+CSS展示，无动态数据",
+      "页面数": 24,
+      "示例": [
+        "home.html",
+        "help.html",
+        "guide.html"
+      ]
+    },
+    "表单页面": {
+      "特点": "包含表单提交，可能需要API对接",
+      "页面数": 15,
+      "示例": [
+        "login.html",
+        "checkin.html",
+        "feedback.html",
+        "training-create.html"
+      ]
+    },
+    "表格展示": {
+      "特点": "数据表格展示，支持查询和操作",
+      "页面数": 8,
+      "示例": [
+        "registration-manage.html",
+        "contact.html",
+        "data-analysis.html"
+      ]
+    },
+    "Vue框架": {
+      "特点": "使用Vue 3实现动态交互",
+      "页面数": 8,
+      "示例": [
+        "guestbook.html",
+        "chat-room.html",
+        "training-create.html",
+        "handbook-mobile.html"
+      ]
+    },
+    "API调用": {
+      "特点": "通过fetch/axios调用后端API",
+      "页面数": 16,
+      "示例": [
+        "login.html",
+        "registration-status.html",
+        "seat-manage.html"
+      ]
+    }
+  },
+  "建议改造优先级": {
+    "第一阶段": {
+      "目标": "完成核心业务流程改造",
+      "页面": [
+        "login.html - 认证系统集成",
+        "training-create.html - 培训配置系统",
+        "registration-manage.html - 报名管理系统",
+        "seat-manage.html - 座位分配系统"
+      ],
+      "预计周期": "4-6周"
+    },
+    "第二阶段": {
+      "目标": "完成沟通协作功能改造",
+      "页面": [
+        "chat-room.html (learner/staff) - 实时聊天",
+        "notice-manage.html - 通知系统",
+        "handbook-generate.html - 手册生成"
+      ],
+      "预计周期": "3-4周"
+    },
+    "第三阶段": {
+      "目标": "完成数据展示和分析改造",
+      "页面": [
+        "dashboard.html - 仪表板",
+        "data-analysis.html - 数据分析",
+        "contact.html - 通讯录"
+      ],
+      "预计周期": "2-3周"
+    },
+    "第四阶段": {
+      "目标": "完成学员端功能改造",
+      "页面": [
+        "feedback.html - 问卷调查",
+        "evaluation.html - 讲师评价",
+        "guestbook.html - 留言赠语",
+        "checkin.html - 签到功能"
+      ],
+      "预计周期": "3-4周"
+    }
+  }
+}

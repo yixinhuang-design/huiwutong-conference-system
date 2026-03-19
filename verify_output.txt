@@ -1,0 +1,12 @@
+id	tenant_code	tenant_name	contact_name	contact_phone	contact_email	tenant_type	valid_start_date	valid_end_date	max_users	max_conferences	storage_quota	domain	logo_url	expire_time	account_limit	status	remark	create_time	update_time	deleted
+3	ENT_002	das	管理员	13000000001		full-pay	2026-02-27	2027-02-27	50	5	21474836480	NULL	NULL	NULL	-1	0		2026-02-27 15:09:10	2026-02-27 19:13:01	0
+4	EDU_003	Education Edition	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	-1	1		2026-02-27 15:09:10	2026-02-27 17:54:25	0
+5	EVT_004	Event Management	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	-1	1	NULL	2026-02-27 15:09:10	2026-02-27 15:09:10	0
+2027317834622709761	dsfss	hongxin	管理员	13000000000		self-rent	2026-02-27	2027-02-27	100	20	10737418240	NULL	NULL	NULL	-1	1		2026-02-27 17:40:12	2026-02-27 19:12:50	0
+id	tenant_id	username	password	real_name	phone	email	avatar	gender	user_type	status	last_login_time	last_login_ip	login_fail_count	remark	create_time	update_time	create_by	update_by	deleted
+1	1	admin	123456	管理员	NULL	NULL	NULL	0	admin	1	NULL	NULL	0	NULL	2026-02-26 18:10:02	2026-02-26 18:10:02	NULL	NULL	0
+2	1	staff	\\.qH7cq3C7Og1YJqDe5l8KPgNJlYRz9jO	Staff User	13800000001	staff@ex.com	NULL	0	staff	1	NULL	NULL	0	NULL	2026-02-27 15:09:20	2026-02-27 15:09:20	NULL	NULL	0
+3	1	learner	\\.qH7cq3C7Og1YJqDe5l8KPgNJlYRz9jO	Learner User	13800000002	learner@ex.com	NULL	0	learner	1	NULL	NULL	0	NULL	2026-02-27 15:09:20	2026-02-27 15:09:20	NULL	NULL	0
+4	3	admin	\\.qH7cq3C7Og1YJqDe5l8KPgNJlYRz9jO	Enterprise Admin	13800000010	admin@ent.com	NULL	0	admin	1	NULL	NULL	0	NULL	2026-02-27 15:09:20	2026-02-27 15:09:20	NULL	NULL	0
+5	4	admin	\\.qH7cq3C7Og1YJqDe5l8KPgNJlYRz9jO	Education Admin	13800000020	admin@edu.com	NULL	0	admin	1	NULL	NULL	0	NULL	2026-02-27 15:09:20	2026-02-27 15:09:20	NULL	NULL	0
+6	5	admin	\\.qH7cq3C7Og1YJqDe5l8KPgNJlYRz9jO	Event Admin	13800000030	admin@evt.com	NULL	0	admin	1	NULL	NULL	0	NULL	2026-02-27 15:09:20	2026-02-27 15:09:20	NULL	NULL	0

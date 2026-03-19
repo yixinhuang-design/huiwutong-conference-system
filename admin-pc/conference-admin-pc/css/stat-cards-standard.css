@@ -1,0 +1,134 @@
+/* ==================== 统计卡片标准样式 ==================== */
+/*
+ * 基于客户管理界面(tenant-management.html)的全局设计标准
+ * 用于统一所有页面的统计卡片展示
+ */
+
+/* 统计容器 */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-3);
+}
+
+/* 统计卡片基础样式 */
+.stat-card {
+    padding: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    transition: all var(--transition-fast);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+/* 统计卡片 - 成功状态 */
+.stat-card.success {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.stat-card.success .stat-icon {
+    color: var(--success-color);
+}
+
+/* 统计卡片 - 警告状态 */
+.stat-card.warning {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+.stat-card.warning .stat-icon {
+    color: var(--warning-color);
+}
+
+/* 统计卡片 - 信息状态 */
+.stat-card.info {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.stat-card.info .stat-icon {
+    color: var(--info-color);
+}
+
+/* 统计卡片 - 危险状态 */
+.stat-card.danger {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.stat-card.danger .stat-icon {
+    color: var(--error-color);
+}
+
+/* 统计图标 */
+.stat-icon {
+    font-size: 2.2rem;
+    color: var(--primary-color);
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    background: rgba(102, 126, 234, 0.1);
+    flex-shrink: 0;
+}
+
+/* 统计内容 */
+.stat-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+/* 统计数值 */
+.stat-value {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--gray-800);
+    line-height: 1.2;
+}
+
+/* 统计标签 */
+.stat-label {
+    color: var(--gray-600);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+/* ==================== 响应式设计 ==================== */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: var(--space-3);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.8rem;
+    }
+
+    .stat-value {
+        font-size: var(--font-size-xl);
+    }
+}

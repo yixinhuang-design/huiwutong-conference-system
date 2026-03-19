@@ -1,0 +1,434 @@
+<template>
+  <view class="home-container">
+    <!-- 欢迎区域 -->
+    <view class="welcome-card card fade-in">
+      <view class="card-header">
+        <view class="avatar">
+          <text>{{ avatarText }}</text>
+        </view>
+        <view class="user-info">
+          <view class="card-title">上午好，{{ realName }}</view>
+          <view class="card-subtitle-inline">
+            <text>{{ userTypeName }}</text>
+            <text class="sep" v-if="organization">｜</text>
+            <text v-if="organization">{{ organization }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 今日提醒 -->
+    <view v-if="todayReminder" class="info-banner fade-in">
+      <strong>📢 今日提醒</strong>
+      {{ todayReminder }}
+    </view>
+
+    <!-- 当前会议/培训列表 -->
+    <view class="section-title">我参加的培训</view>
+
+    <view v-if="meetings.length > 0">
+      <view
+        v-for="(meeting, index) in meetings"
+        :key="meeting.id"
+        class="meeting-card card fade-in"
+        @click="goToMeetingDetail(meeting.id)"
+      >
+        <view class="meeting-header">
+          <view class="meeting-info">
+            <view class="meeting-title">{{ meeting.title }}</view>
+            <view class="meeting-meta">
+              <text class="meta-item">
+                <text>📅</text>
+                {{ meeting.dateRange }} · 共{{ meeting.days }}天
+              </text>
+              <text class="meta-item">
+                <text>📍</text>
+                {{ meeting.location }}
+              </text>
+            </view>
+          </view>
+          <view
+            class="status-chip"
+            :class="getStatusClass(meeting.status)"
+          >
+            <text class="status-dot"></text>
+            {{ meeting.statusText }}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view v-else class="empty-state">
+      <text class="empty-icon">📋</text>
+      <text class="empty-text">暂无培训安排</text>
+    </view>
+
+    <!-- 功能导航 -->
+    <view class="section-title">功能导航</view>
+    <view class="grid-3">
+      <view
+        v-for="(feature, index) in featureList"
+        :key="index"
+        class="feature-tile"
+        @click="navigateTo(feature.path)"
+      >
+        <view class="feature-icon-lg" :style="{ background: feature.gradient }">
+          <text>{{ feature.icon }}</text>
+        </view>
+        <view class="feature-title">{{ feature.title }}</view>
+      </view>
+    </view>
+
+    <!-- 底部安全区域 -->
+    <view class="safe-area-bottom"></view>
+  </view>
+</template>
+
+<script>
+import { useUserStore } from '@/store/modules/user'
+import { useAppStore } from '@/store/modules/app'
+
+export default {
+  data() {
+    return {
+      todayReminder: '',
+      meetings: [],
+      featureList: [
+        {
+          icon: '📖',
+          title: '参会须知',
+          path: '/pages/learner/guide',
+          gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+        },
+        {
+          icon: '📅',
+          title: '日程安排',
+          path: '/pages/learner/schedule',
+          gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+        },
+        {
+          icon: '📒',
+          title: '通讯录',
+          path: '/pages/learner/contact',
+          gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+        },
+        {
+          icon: '🪑',
+          title: '座位图',
+          path: '/pages/learner/seat',
+          gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+        },
+        {
+          icon: '✅',
+          title: '报到签到',
+          path: '/pages/learner/checkin',
+          gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+        },
+        {
+          icon: '📚',
+          title: '学习资料',
+          path: '/pages/learner/materials',
+          gradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+        }
+      ]
+    }
+  },
+
+  computed: {
+    userStore() {
+      return useUserStore()
+    },
+
+    realName() {
+      return this.userStore.realName || '学员'
+    },
+
+    avatarText() {
+      const name = this.realName
+      return name ? name.charAt(name.length - 1) : '学'
+    },
+
+    userType() {
+      return this.userStore.userType
+    },
+
+    userTypeName() {
+      const typeMap = {
+        learner: '学员',
+        staff: '工作人员'
+      }
+      return typeMap[this.userType] || '学员'
+    },
+
+    organization() {
+      return this.userStore.userInfo?.organization || ''
+    }
+  },
+
+  onLoad() {
+    this.initPage()
+  },
+
+  onShow() {
+    // 页面显示时刷新数据
+    this.loadMeetings()
+  },
+
+  methods: {
+    /**
+     * 初始化页面
+     */
+    initPage() {
+      // 设置今日提醒
+      this.setTodayReminder()
+
+      // 加载会议列表
+      this.loadMeetings()
+
+      // 根据用户类型调整功能列表
+      this.adjustFeatureList()
+    },
+
+    /**
+     * 设置今日提醒
+     */
+    setTodayReminder() {
+      const now = new Date()
+      const hour = now.getHours()
+
+      if (hour < 9) {
+        this.todayReminder = '请在 09:00 前完成报到签到，携带胸牌入场。'
+      } else if (hour >= 9 && hour < 12) {
+        this.todayReminder = '上午课程即将开始，请前往指定会议室。'
+      } else if (hour >= 12 && hour < 14) {
+        this.todayReminder = '午休时间，下午课程将在 14:00 开始。'
+      } else {
+        this.todayReminder = '请注意下午课程安排，准时参加。'
+      }
+    },
+
+    /**
+     * 加载会议列表
+     */
+    async loadMeetings() {
+      try {
+        // TODO: 调用API获取会议列表
+        // const res = await this.$api.meeting.getList()
+
+        // 模拟数据
+        this.meetings = [
+          {
+            id: 1,
+            title: '2025党务干部培训班',
+            dateRange: '1月15日 - 1月19日',
+            days: 5,
+            location: '市委党校报告厅',
+            status: 'ongoing',
+            statusText: '进行中'
+          },
+          {
+            id: 2,
+            title: '青年干部能力提升班',
+            dateRange: '1月22日 - 1月26日',
+            days: 5,
+            location: '市委党校教学楼',
+            status: 'upcoming',
+            statusText: '即将开始'
+          }
+        ]
+      } catch (error) {
+        console.error('Load meetings error:', error)
+        this.meetings = []
+      }
+    },
+
+    /**
+     * 调整功能列表
+     */
+    adjustFeatureList() {
+      if (this.userType === 'staff') {
+        // 工作人员显示不同功能
+        this.featureList = [
+          {
+            icon: '📊',
+            title: '数据看板',
+            path: '/pages/staff/dashboard',
+            gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+          },
+          {
+            icon: '✅',
+            title: '任务管理',
+            path: '/pages/staff/task-list',
+            gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+          },
+          {
+            icon: '👥',
+            title: '报名管理',
+            path: '/pages/staff/registration-manage',
+            gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+          },
+          {
+            icon: '🪑',
+            title: '座位管理',
+            path: '/pages/staff/seat-manage',
+            gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+          },
+          {
+            icon: '📢',
+            title: '通知管理',
+            path: '/pages/staff/notice-manage',
+            gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+          },
+          {
+            icon: '📈',
+            title: '数据分析',
+            path: '/pages/staff/data-analysis',
+            gradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+          }
+        ]
+      }
+    },
+
+    /**
+     * 获取状态样式类
+     */
+    getStatusClass(status) {
+      const classMap = {
+        ongoing: 'status-accent',
+        upcoming: 'status-warn',
+        completed: 'status-success',
+        cancelled: 'status-danger'
+      }
+      return classMap[status] || 'status-accent'
+    },
+
+    /**
+     * 跳转到会议详情
+     */
+    goToMeetingDetail(id) {
+      uni.navigateTo({
+        url: `/pages/learner/meeting-detail?id=${id}`
+      })
+    },
+
+    /**
+     * 页面跳转
+     */
+    navigateTo(path) {
+      uni.navigateTo({
+        url: path
+      })
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+@import '../../styles/variables.scss';
+@import '../../styles/common.scss';
+
+.home-container {
+  min-height: 100vh;
+  background: $bg-secondary;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.welcome-card {
+  margin: $spacing-md;
+  margin-top: 20rpx;
+}
+
+.avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $border-radius-lg;
+  background: $primary-gradient;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $text-white;
+  font-size: $font-size-xl;
+  font-weight: 600;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.meeting-card {
+  margin: $spacing-sm $spacing-md;
+  transition: $transition-base;
+}
+
+.meeting-card:active {
+  transform: scale(0.98);
+}
+
+.meeting-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-md;
+}
+
+.meeting-info {
+  flex: 1;
+}
+
+.meeting-title {
+  font-size: $font-size-lg;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.meeting-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.meta-item {
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 8rpx $spacing-md;
+  border-radius: $border-radius-lg;
+  font-size: $font-size-xs;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.safe-area-bottom {
+  height: constant(safe-area-inset-bottom);
+  height: env(safe-area-inset-bottom);
+  min-height: $spacing-lg;
+}
+</style>

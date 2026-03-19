@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>租户管理员登录</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .login-logo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .login-logo i {
+            font-size: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .login-title {
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+        .login-subtitle {
+            font-size: 14px;
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 32px;
+        }
+        .tenant-selector {
+            margin-bottom: 20px;
+        }
+        .tenant-dropdown {
+            position: relative;
+        }
+        .tenant-dropdown select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            background: white;
+            appearance: none;
+            cursor: pointer;
+        }
+        .tenant-dropdown::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+        .input-wrapper {
+            position: relative;
+        }
+        .input-wrapper i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .login-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: all 0.3s;
+        }
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .login-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Logo -->
+            <div class="login-logo">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+
+            <!-- 标题 -->
+            <div class="login-title">智能会议系统</div>
+            <div class="login-subtitle">租户管理员登录</div>
+
+            <!-- 租户选择 -->
+            <div class="tenant-selector">
+                <label class="form-label">选择租户</label>
+                <div class="tenant-dropdown">
+                    <select>
+                        <option value="">请选择租户</option>
+                        <option value="T001">市委党校 (T001)</option>
+                        <option value="T002">市教育局 (T002)</option>
+                        <option value="T003">某国企分公司 (T003)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 账号 -->
+            <div class="form-group">
+                <label class="form-label">管理员账号</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user"></i>
+                    <input type="text" placeholder="请输入管理员账号">
+                </div>
+            </div>
+
+            <!-- 密码 -->
+            <div class="form-group">
+                <label class="form-label">登录密码</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" placeholder="请输入登录密码">
+                </div>
+            </div>
+
+            <!-- 登录按钮 -->
+            <button class="login-button" onclick="handleLogin()">
+                <i class="fas fa-sign-in-alt"></i> 登录
+            </button>
+
+            <!-- 底部链接 -->
+            <div class="login-footer">
+                <a href="#">忘记密码？</a>
+                <span style="margin: 0 8px; color: #cbd5e1;">|</span>
+                <a href="#">联系系统管理员</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleLogin() {
+            // 模拟登录成功，获取JWT Token
+            const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+
+            // 存储token
+            localStorage.setItem('tenant_token', token);
+            localStorage.setItem('tenant_id', 'T001');
+
+            // 跳转到租户管理首页
+            alert('登录成功！\n\nJWT Token: ' + token.substring(0, 30) + '...\n\n即将跳转到管理后台...');
+
+            setTimeout(() => {
+                window.location.href = 'meeting-detail.html';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

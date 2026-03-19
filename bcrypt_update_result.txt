@@ -1,0 +1,4 @@
+id	username	password
+7	admin	$2a$10$slYQmyNdGzin7olVN3/p2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUe
+is_bcrypt
+1

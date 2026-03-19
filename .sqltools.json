@@ -1,0 +1,47 @@
+{
+  "autoOpenSessionFiles": false,
+  "connections": [
+    {
+      "name": "conference_auth (conference-auth)",
+      "driver": "MySQL",
+      "server": "127.0.0.1",
+      "port": 3308,
+      "database": "conference_auth",
+      "username": "root",
+      "password": "Hnhx@123",
+      "connectionTimeout": 15,
+      "showSystemObjects": false,
+      "previewLimit": 50,
+      "group": "Conference System",
+      "dialect": "mysql"
+    },
+    {
+      "name": "conference_seating (conference-seating)",
+      "driver": "MySQL",
+      "server": "127.0.0.1",
+      "port": 3308,
+      "database": "conference_seating",
+      "username": "root",
+      "password": "Hnhx@123",
+      "connectionTimeout": 15,
+      "showSystemObjects": false,
+      "previewLimit": 50,
+      "group": "Conference System",
+      "dialect": "mysql"
+    },
+    {
+      "name": "conference_registration (conference-registration)",
+      "driver": "MySQL",
+      "server": "127.0.0.1",
+      "port": 3308,
+      "database": "conference_registration",
+      "username": "root",
+      "password": "Hnhx@123",
+      "connectionTimeout": 15,
+      "showSystemObjects": false,
+      "previewLimit": 50,
+      "group": "Conference System",
+      "dialect": "mysql"
+    }
+  ]
+}

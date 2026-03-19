@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据指挥系统 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <style>
+        .command-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .realtime-monitor {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            min-height: 400px;
+        }
+        
+        .monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .refresh-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-color);
+            animation: pulse 2s infinite;
+        }
+        
+        .data-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .stream-item {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            animation: slideInRight 0.3s;
+        }
+        
+        .stream-item.info { border-color: var(--info-color); }
+        .stream-item.success { border-color: var(--success-color); }
+        .stream-item.warning { border-color: var(--warning-color); }
+        .stream-item.error { border-color: var(--error-color); }
+        
+        .system-monitor-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .monitor-card {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+        }
+        
+        .monitor-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+        
+        .monitor-label {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-top: 0.25rem;
+        }
+        
+        .monitor-chart {
+            height: 80px;
+            margin-top: 0.5rem;
+            position: relative;
+            overflow: visible;
+        }
+        
+        .monitor-chart canvas {
+            max-width: 100%;
+            max-height: 80px;
+            height: 80px !important;
+            width: 100% !important;
+            display: block;
+        }
+        
+        .alert-severity-high {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--error-color);
+        }
+        
+        /* 性能分析图表样式优化 */
+        .performance-charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .performance-charts .chart-container {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            min-height: 350px;
+            max-height: 450px;
+            display: flex;
+            flex-direction: column;
+            overflow: visible;
+        }
+        
+        .performance-charts .chart-container h4 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .performance-charts .chart-container canvas {
+            max-width: 100%;
+            max-height: 280px;
+            height: 280px !important;
+            width: 100% !important;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .alert-severity-medium {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--warning-color);
+        }
+        
+        .alert-severity-low {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--info-color);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">数据指挥系统</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card">
+            <div>
+                <h2>📊 数据指挥系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    <span class="realtime-status">
+                        <div class="refresh-indicator"></div>
+                        实时监控中
+                    </span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="exportReport">
+                    <i class="fas fa-file-download"></i>
+                    导出报告
+                </button>
+            </div>
+        </div>
+
+        <!-- 实时数据流 -->
+        <div class="realtime-data glass-card">
+            <h3>📊 实时数据流</h3>
+            <div class="command-grid">
+                <div class="realtime-monitor">
+                    <div class="monitor-header">
+                        <h4>系统事件</h4>
+                        <span class="event-count">{{ systemEvents.length }}条</span>
+                    </div>
+                    <div class="data-stream">
+                        <div v-for="event in systemEvents" 
+                             :key="event.id"
+                             class="stream-item"
+                             :class="event.type">
+                            <div class="stream-time">{{ formatTime(event.timestamp) }}</div>
+                            <div class="stream-content">{{ event.message }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="realtime-monitor">
+                    <div class="monitor-header">
+                        <h4>用户活动</h4>
+                        <span class="event-count">{{ userActivities.length }}条</span>
+                    </div>
+                    <div class="data-stream">
+                        <div v-for="activity in userActivities" 
+                             :key="activity.id"
+                             class="stream-item info">
+                            <div class="stream-time">{{ formatTime(activity.timestamp) }}</div>
+                            <div class="stream-content">
+                                <strong>{{ activity.user }}</strong> {{ activity.action }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="realtime-monitor">
+                    <div class="monitor-header">
+                        <h4>数据变更</h4>
+                        <span class="event-count">{{ dataChanges.length }}条</span>
+                    </div>
+                    <div class="data-stream">
+                        <div v-for="change in dataChanges" 
+                             :key="change.id"
+                             class="stream-item success">
+                            <div class="stream-time">{{ formatTime(change.timestamp) }}</div>
+                            <div class="stream-content">
+                                {{ change.table }}: {{ change.operation }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系统监控 -->
+        <div class="system-monitoring glass-card" id="monitor">
+            <h3>🖥️ 系统监控</h3>
+            <div class="system-monitor-grid">
+                <div class="monitor-card">
+                    <div class="monitor-value">{{ systemMetrics.cpu }}%</div>
+                    <div class="monitor-label">CPU使用率</div>
+                    <div class="monitor-chart">
+                        <canvas :id="'cpuChart'"></canvas>
+                    </div>
+                </div>
+                <div class="monitor-card">
+                    <div class="monitor-value">{{ systemMetrics.memory }}%</div>
+                    <div class="monitor-label">内存使用率</div>
+                    <div class="monitor-chart">
+                        <canvas :id="'memoryChart'"></canvas>
+                    </div>
+                </div>
+                <div class="monitor-card">
+                    <div class="monitor-value">{{ systemMetrics.disk }}%</div>
+                    <div class="monitor-label">磁盘使用率</div>
+                    <div class="monitor-chart">
+                        <canvas :id="'diskChart'"></canvas>
+                    </div>
+                </div>
+                <div class="monitor-card">
+                    <div class="monitor-value">{{ systemMetrics.network }}</div>
+                    <div class="monitor-label">网络流量 (MB/s)</div>
+                    <div class="monitor-chart">
+                        <canvas :id="'networkChart'"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-status">
+                <h4>服务状态</h4>
+                <div class="services-grid">
+                    <div v-for="service in services" 
+                         :key="service.name"
+                         class="service-item"
+                         :class="'status-' + service.status">
+                        <div class="service-icon">
+                            <i :class="service.icon"></i>
+                        </div>
+                        <div class="service-info">
+                            <div class="service-name">{{ service.name }}</div>
+                            <div class="service-desc">{{ service.description }}</div>
+                        </div>
+                        <div class="service-status-badge">
+                            {{ getStatusText(service.status) }}
+                        </div>
+                        <div class="service-metrics">
+                            <span>响应: {{ service.responseTime }}ms</span>
+                            <span>QPS: {{ service.qps }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据库监控 -->
+        <div class="database-monitoring glass-card">
+            <h3>💾 数据库监控</h3>
+            <div class="db-stats">
+                <div class="stat-card">
+                    <div class="stat-value">{{ dbMetrics.connections }}</div>
+                    <div class="stat-label">活动连接数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ dbMetrics.qps }}</div>
+                    <div class="stat-label">查询速率 (QPS)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ dbMetrics.slowQueries }}</div>
+                    <div class="stat-label">慢查询</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ dbMetrics.cacheHitRate }}%</div>
+                    <div class="stat-label">缓存命中率</div>
+                </div>
+            </div>
+
+            <div class="slow-queries">
+                <h4>慢查询日志</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>SQL语句</th>
+                            <th>执行时间</th>
+                            <th>影响行数</th>
+                            <th>发生时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="query in slowQueries" :key="query.id">
+                            <td class="query-sql">{{ query.sql }}</td>
+                            <td><span class="time-badge">{{ query.time }}ms</span></td>
+                            <td>{{ query.rows }}</td>
+                            <td>{{ formatTime(query.timestamp) }}</td>
+                            <td>
+                                <button class="btn-sm btn-outline" @click="explainQuery(query.id)">
+                                    分析
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- API监控 -->
+        <div class="api-monitoring glass-card">
+            <h3>🌐 API监控</h3>
+            <div class="api-overview">
+                <div class="stat-card">
+                    <div class="stat-value">{{ apiMetrics.totalRequests }}</div>
+                    <div class="stat-label">总请求数</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-value">{{ apiMetrics.successRate }}%</div>
+                    <div class="stat-label">成功率</div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-value">{{ apiMetrics.avgResponseTime }}ms</div>
+                    <div class="stat-label">平均响应时间</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value">{{ apiMetrics.errorCount }}</div>
+                    <div class="stat-label">错误数量</div>
+                </div>
+            </div>
+
+            <div class="api-endpoints">
+                <h4>热门接口</h4>
+                <div class="endpoint-list">
+                    <div v-for="endpoint in topEndpoints" 
+                         :key="endpoint.path"
+                         class="endpoint-item">
+                        <div class="endpoint-info">
+                            <span class="endpoint-method" :class="'method-' + endpoint.method">
+                                {{ endpoint.method }}
+                            </span>
+                            <span class="endpoint-path">{{ endpoint.path }}</span>
+                        </div>
+                        <div class="endpoint-metrics">
+                            <span class="metric">请求: {{ endpoint.requests }}</span>
+                            <span class="metric">平均: {{ endpoint.avgTime }}ms</span>
+                            <span class="metric">成功率: {{ endpoint.successRate }}%</span>
+                        </div>
+                        <div class="endpoint-chart">
+                            <div class="mini-bar" 
+                                 :style="{ width: (endpoint.requests / apiMetrics.totalRequests * 100) + '%' }">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 告警中心 -->
+        <div class="alert-center glass-card">
+            <h3>🚨 告警中心</h3>
+            <div class="alert-summary">
+                <div class="alert-stat high">
+                    <div class="stat-number">{{ getAlertCountBySeverity('high') }}</div>
+                    <div class="stat-text">严重告警</div>
+                </div>
+                <div class="alert-stat medium">
+                    <div class="stat-number">{{ getAlertCountBySeverity('medium') }}</div>
+                    <div class="stat-text">警告</div>
+                </div>
+                <div class="alert-stat low">
+                    <div class="stat-number">{{ getAlertCountBySeverity('low') }}</div>
+                    <div class="stat-text">提示</div>
+                </div>
+            </div>
+
+            <div class="alert-list">
+                <div v-for="alert in alerts" 
+                     :key="alert.id"
+                     class="alert-item"
+                     :class="'alert-severity-' + alert.severity">
+                    <div class="alert-icon">
+                        <i :class="getAlertIcon(alert.severity)"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">{{ alert.title }}</div>
+                        <div class="alert-desc">{{ alert.description }}</div>
+                        <div class="alert-meta">
+                            <span>{{ alert.source }}</span>
+                            <span>{{ formatTime(alert.timestamp) }}</span>
+                        </div>
+                    </div>
+                    <div class="alert-actions">
+                        <button class="btn-sm" @click="handleAlert(alert.id)">处理</button>
+                        <button class="btn-sm btn-outline" @click="ignoreAlert(alert.id)">忽略</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 性能分析 -->
+        <div class="performance-analysis glass-card">
+            <h3>⚡ 性能分析</h3>
+            <div class="performance-charts">
+                <div class="chart-container">
+                    <h4>响应时间分布</h4>
+                    <canvas id="responseTimeChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h4>错误率趋势</h4>
+                    <canvas id="errorRateChart"></canvas>
+                </div>
+            </div>
+
+            <div class="performance-recommendations">
+                <h4>优化建议</h4>
+                <div class="recommendation-list">
+                    <div v-for="rec in recommendations" 
+                         :key="rec.id"
+                         class="recommendation-item">
+                        <div class="rec-priority" :class="'priority-' + rec.priority">
+                            {{ rec.priority }}
+                        </div>
+                        <div class="rec-content">
+                            <div class="rec-title">{{ rec.title }}</div>
+                            <div class="rec-desc">{{ rec.description }}</div>
+                        </div>
+                        <button class="btn-sm btn-outline" @click="applyRecommendation(rec.id)">
+                            应用
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    systemEvents: [],
+                    userActivities: [],
+                    dataChanges: [],
+                    systemMetrics: {
+                        cpu: 45,
+                        memory: 62,
+                        disk: 38,
+                        network: 12.5
+                    },
+                    services: [
+                        {
+                            name: 'API Gateway',
+                            description: 'API网关服务',
+                            icon: 'fas fa-door-open',
+                            status: 'healthy',
+                            responseTime: 45,
+                            qps: 1250
+                        },
+                        {
+                            name: 'Database',
+                            description: 'MySQL数据库',
+                            icon: 'fas fa-database',
+                            status: 'healthy',
+                            responseTime: 23,
+                            qps: 3400
+                        },
+                        {
+                            name: 'Redis Cache',
+                            description: 'Redis缓存',
+                            icon: 'fas fa-server',
+                            status: 'healthy',
+                            responseTime: 5,
+                            qps: 8900
+                        },
+                        {
+                            name: 'Message Queue',
+                            description: 'Kafka消息队列',
+                            icon: 'fas fa-stream',
+                            status: 'warning',
+                            responseTime: 89,
+                            qps: 450
+                        }
+                    ],
+                    dbMetrics: {
+                        connections: 45,
+                        qps: 3400,
+                        slowQueries: 12,
+                        cacheHitRate: 94.5
+                    },
+                    slowQueries: [
+                        {
+                            id: 1,
+                            sql: 'SELECT * FROM conference_registrations WHERE...',
+                            time: 1250,
+                            rows: 3456,
+                            timestamp: new Date(Date.now() - 300000)
+                        }
+                    ],
+                    apiMetrics: {
+                        totalRequests: 12450,
+                        successRate: 98.5,
+                        avgResponseTime: 145,
+                        errorCount: 23
+                    },
+                    topEndpoints: [
+                        {
+                            method: 'GET',
+                            path: '/api/conferences/:id',
+                            requests: 4567,
+                            avgTime: 89,
+                            successRate: 99.8
+                        },
+                        {
+                            method: 'POST',
+                            path: '/api/registrations',
+                            requests: 2345,
+                            avgTime: 245,
+                            successRate: 97.5
+                        }
+                    ],
+                    alerts: [
+                        {
+                            id: 1,
+                            severity: 'high',
+                            title: 'CPU使用率过高',
+                            description: 'API服务器CPU使用率达到85%',
+                            source: 'System Monitor',
+                            timestamp: new Date(Date.now() - 120000)
+                        },
+                        {
+                            id: 2,
+                            severity: 'medium',
+                            title: '慢查询增加',
+                            description: '最近1小时慢查询数量增加30%',
+                            source: 'Database Monitor',
+                            timestamp: new Date(Date.now() - 300000)
+                        }
+                    ],
+                    recommendations: [
+                        {
+                            id: 1,
+                            priority: 'high',
+                            title: '优化数据库索引',
+                            description: '建议为conference_registrations表添加复合索引'
+                        },
+                        {
+                            id: 2,
+                            priority: 'medium',
+                            title: '增加缓存策略',
+                            description: '对热点数据启用Redis缓存'
+                        }
+                    ]
+                }
+            },
+            async mounted() {
+                await this.initialize();
+                this.startRealtimeMonitoring();
+                this.initializeCharts();
+            },
+            methods: {
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                    } else {
+                        // 如果没有会议ID，使用示例数据
+                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '示例会议'
+                        };
+                    }
+                },
+                
+                startRealtimeMonitoring() {
+                    // 模拟实时数据流
+                    setInterval(() => {
+                        this.addSystemEvent();
+                        this.addUserActivity();
+                        this.addDataChange();
+                        this.updateMetrics();
+                    }, 3000);
+                },
+                
+                addSystemEvent() {
+                    const types = ['info', 'success', 'warning', 'error'];
+                    const messages = [
+                        '系统启动完成',
+                        '数据备份成功',
+                        '内存使用率较高',
+                        '连接超时'
+                    ];
+                    
+                    this.systemEvents.unshift({
+                        id: Date.now(),
+                        type: types[Math.floor(Math.random() * types.length)],
+                        message: messages[Math.floor(Math.random() * messages.length)],
+                        timestamp: new Date()
+                    });
+                    
+                    if (this.systemEvents.length > 10) {
+                        this.systemEvents.pop();
+                    }
+                },
+                
+                addUserActivity() {
+                    const users = ['张三', '李四', '王五'];
+                    const actions = ['登录系统', '查看报名', '发送通知', '创建任务'];
+                    
+                    this.userActivities.unshift({
+                        id: Date.now(),
+                        user: users[Math.floor(Math.random() * users.length)],
+                        action: actions[Math.floor(Math.random() * actions.length)],
+                        timestamp: new Date()
+                    });
+                    
+                    if (this.userActivities.length > 10) {
+                        this.userActivities.pop();
+                    }
+                },
+                
+                addDataChange() {
+                    const tables = ['registrations', 'tasks', 'notifications'];
+                    const operations = ['INSERT', 'UPDATE', 'DELETE'];
+                    
+                    this.dataChanges.unshift({
+                        id: Date.now(),
+                        table: tables[Math.floor(Math.random() * tables.length)],
+                        operation: operations[Math.floor(Math.random() * operations.length)],
+                        timestamp: new Date()
+                    });
+                    
+                    if (this.dataChanges.length > 10) {
+                        this.dataChanges.pop();
+                    }
+                },
+                
+                updateMetrics() {
+                    this.systemMetrics.cpu = Math.min(100, Math.max(0, this.systemMetrics.cpu + (Math.random() - 0.5) * 10));
+                    this.systemMetrics.memory = Math.min(100, Math.max(0, this.systemMetrics.memory + (Math.random() - 0.5) * 5));
+                },
+                
+                initializeCharts() {
+                    // 初始化图表
+                    this.$nextTick(() => {
+                        this.createResponseTimeChart();
+                        this.createErrorRateChart();
+                    });
+                },
+                
+                createResponseTimeChart() {
+                    const ctx = document.getElementById('responseTimeChart');
+                    if (!ctx) return;
+                    
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+                            datasets: [{
+                                label: '响应时间(ms)',
+                                data: Array.from({ length: 24 }, () => Math.random() * 200 + 50),
+                                borderColor: '#667eea',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                },
+                
+                createErrorRateChart() {
+                    const ctx = document.getElementById('errorRateChart');
+                    if (!ctx) return;
+                    
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                            datasets: [{
+                                label: '错误率(%)',
+                                data: [1.2, 0.8, 1.5, 0.9, 1.1, 0.7, 0.5],
+                                backgroundColor: 'rgba(239, 68, 68, 0.6)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                },
+                
+                getStatusText(status) {
+                    const map = {
+                        healthy: '正常',
+                        warning: '警告',
+                        error: '错误'
+                    };
+                    return map[status] || status;
+                },
+                
+                getAlertCountBySeverity(severity) {
+                    return this.alerts.filter(a => a.severity === severity).length;
+                },
+                
+                getAlertIcon(severity) {
+                    const map = {
+                        high: 'fas fa-exclamation-circle',
+                        medium: 'fas fa-exclamation-triangle',
+                        low: 'fas fa-info-circle'
+                    };
+                    return map[severity] || 'fas fa-bell';
+                },
+                
+                handleAlert(id) {
+                    this.$showToast(`处理告警: ${id}`, 'info');
+                },
+                
+                ignoreAlert(id) {
+                    const index = this.alerts.findIndex(a => a.id === id);
+                    if (index > -1) {
+                        this.alerts.splice(index, 1);
+                    }
+                },
+                
+                explainQuery(id) {
+                    this.$showToast(`分析SQL: ${id}`, 'info');
+                },
+                
+                applyRecommendation(id) {
+                    this.$showToast(`应用建议: ${id}`, 'info');
+                },
+                
+                async exportReport() {
+                    try {
+                        this.$showLoading('正在导出系统监控报告...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.$hideLoading();
+                        this.$showToast('系统监控报告已导出', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导出失败，请重试', 'error');
+                    }
+                },
+                
+                formatTime(date) {
+                    if (!date) return '';
+                    return date.toLocaleTimeString('zh-CN');
+                },
+                
+                goBack() {
+                    window.history.back();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+        </div><!-- 关闭page-with-nav -->
+</body>
+</html>

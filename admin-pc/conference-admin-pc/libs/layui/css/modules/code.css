@@ -1,0 +1,24 @@
+/* Layui Code CSS Placeholder
+ * 此文件是占位符，实际功能已由以下方案替代：
+ * 1. Highlight.js 代码高亮
+ * 2. 自定义代码块样式
+ * 3. conference-theme.css 主题集成
+ * 
+ * 保留此文件以消除浏览器 404 错误
+ */
+
+/* 防止样式干扰 */
+.lay-code {
+  display: block;
+  background: #f5f5f5;
+  border-radius: 4px;
+  overflow: auto;
+}
+
+pre {
+  margin: 0;
+  padding: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}

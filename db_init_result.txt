@@ -1,0 +1,63 @@
+操�
+检查系统租户表...
+Field	Type	Null	Key	Default	Extra
+id	bigint	NO	PRI	NULL	auto_increment
+tenant_code	varchar(50)	NO	UNI	NULL	
+tenant_name	varchar(100)	NO		NULL	
+contact_name	varchar(50)	YES		NULL	
+contact_phone	varchar(20)	YES		NULL	
+contact_email	varchar(100)	YES		NULL	
+tenant_type	varchar(50)	YES		NULL	
+valid_start_date	date	YES		NULL	
+valid_end_date	date	YES		NULL	
+max_users	int	YES		NULL	
+max_conferences	int	YES		NULL	
+storage_quota	bigint	YES		NULL	
+domain	varchar(100)	YES		NULL	
+logo_url	varchar(255)	YES		NULL	
+expire_time	datetime	YES		NULL	
+account_limit	int	YES		-1	
+status	tinyint	YES		1	
+remark	varchar(500)	YES		NULL	
+create_time	datetime	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+update_time	datetime	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+deleted	tinyint	YES		0	
+操�
+检查系统用户表...
+Field	Type	Null	Key	Default	Extra
+id	bigint	NO	PRI	NULL	auto_increment
+tenant_id	bigint	NO	MUL	NULL	
+username	varchar(50)	NO		NULL	
+password	varchar(100)	NO		NULL	
+real_name	varchar(50)	YES		NULL	
+phone	varchar(20)	YES	MUL	NULL	
+email	varchar(100)	YES		NULL	
+avatar	varchar(255)	YES		NULL	
+gender	tinyint	YES		0	
+user_type	varchar(20)	YES		staff	
+status	tinyint	YES		1	
+last_login_time	datetime	YES		NULL	
+last_login_ip	varchar(50)	YES		NULL	
+login_fail_count	int	YES		0	
+remark	varchar(500)	YES		NULL	
+create_time	datetime	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+update_time	datetime	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+create_by	bigint	YES		NULL	
+update_by	bigint	YES		NULL	
+deleted	tinyint	YES		0	
+操�
+检查default租户是否存在...
+现有租户�
+0
+操�
+准备插入default租户...
+操�
+✅ 默认租户已初始化
+id	tenant_code	tenant_name	contact_name	contact_phone	contact_email	tenant_type	valid_start_date	valid_end_date	max_users	max_conferences	storage_quota	domain	logo_url	expire_time	account_limit	status	remark	create_time	update_time	deleted
+1	default	????	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	-1	1	NULL	2026-02-26 17:56:34	2026-02-27 17:19:39	1
+操�
+检查admin用户是否存在...
+现有用户�
+4
+操�
+准备插入admin用户...

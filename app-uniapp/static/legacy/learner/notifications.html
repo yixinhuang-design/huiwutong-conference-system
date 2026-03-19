@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通知中心 - 学员端</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left"><span>9:41</span></div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+            <div class="app-content">
+                <div class="card card--no-margin fade-in">
+                    <div class="card-header">
+                        <a href="home.html" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                        <button class="btn btn-secondary" style="padding:6px 8px;font-size:12px;" onclick="markAllAsRead()">
+                            <i class="fas fa-check-double"></i> 全部已读
+                        </button>
+                    </div>
+                </div>
+                <div style="height:8px;"></div>
+                <!-- 通知列表，仅保留核心信息 -->
+                <div class="section-title">未读通知</div>
+                <div class="card fade-in assistant-item-link" onclick="window.location.href='seat.html'">
+                    <div class="card-header">
+                        <div class="card-title card-title--md">座位安排通知</div>
+                        <div class="card-subtitle">2025-02-05 14:30</div>
+                        <span class="status-chip status-warn">未读</span>
+                    </div>
+                    <div class="assistant-item-content" style="overflow:auto;">
+                        <div class="assistant-item-title">前区 · 第3排 · 12座</div>
+                        <div class="assistant-item-desc">市委党校报告厅</div>
+                    </div>
+                </div>
+                <div class="card fade-in assistant-item-link" onclick="window.location.href='meeting-detail.html'">
+                    <div class="card-header">
+                        <div class="card-title card-title--md">培训会议通知</div>
+                        <div class="card-subtitle">2025-02-05 09:00</div>
+                        <span class="status-chip status-warn">未读</span>
+                    </div>
+                    <div class="assistant-item-content" style="overflow:auto;">
+                        <div class="assistant-item-title">2025党务干部培训班</div>
+                        <div class="assistant-item-desc">市委党校报告厅</div>
+                    </div>
+                </div>
+                <div class="card fade-in assistant-item-link" onclick="window.location.href='checkin.html'">
+                    <div class="card-header">
+                        <div class="card-title card-title--md">签到提醒</div>
+                        <div class="card-subtitle">2025-02-06 08:00</div>
+                        <span class="status-chip status-warn">未读</span>
+                    </div>
+                    <div class="assistant-item-content" style="overflow:auto;">
+                        <div class="assistant-item-title">签到时间：2025-02-15 08:30 - 09:00</div>
+                        <div class="assistant-item-desc">请携带身份证件，提前15分钟到达签到</div>
+                    </div>
+                </div>
+                <div class="section-title">已读通知</div>
+                <div class="card fade-in assistant-item-link" style="opacity:0.7;" onclick="window.location.href='home.html'">
+                    <div class="card-header">
+                        <div class="card-title card-title--md">报名成功通知</div>
+                        <div class="card-subtitle">2025-02-04 16:30</div>
+                        <span class="status-chip status-neutral">已读</span>
+                    </div>
+                    <div class="assistant-item-content" style="margin-left:8px;">
+                        <div class="assistant-item-title">您的报名已通过审核</div>
+                        <div class="assistant-item-desc">欢迎参加2025党务干部培训班</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon"><i class="fas fa-bell"></i></div>
+                    <div class="nav-text">通知</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-history"></i></div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全部标记已读
+        function markAllAsRead() {
+            const unreadNotices = document.querySelectorAll('.card-subtitle:contains("未读")');
+            alert('✅ 已将所有通知标记为已读');
+            // 实际应用中此处应调用后端API
+        }
+
+        // 点击通知卡片可跳转到相应页面或查看详情
+        document.querySelectorAll('.assistant-item-link').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.querySelector('.card-title--md')?.textContent || '通知';
+                console.log(`点击通知：${title}`);
+                // 标记该通知为已读
+                const badge = this.querySelector('.status-chip');
+                if (badge && badge.textContent.includes('未读')) {
+                    badge.innerHTML = '<span class="status-chip status-neutral">已读</span>';
+                    this.style.opacity = '1';
+                }
+            });
+        });
+    </script>

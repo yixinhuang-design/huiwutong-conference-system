@@ -1,0 +1,72 @@
+/**
+ * UniApp 全局样式变量
+ * 用于覆盖 uni-app 内置的样式变量
+ */
+
+/* 主题颜色 */
+$uni-color-primary: #667eea;
+$uni-color-success: #4cd964;
+$uni-color-warning: #f0ad4e;
+$uni-color-error: #dd524d;
+
+/* 文本颜色 */
+$uni-text-color: #1a202c;
+$uni-text-color-grey: #4a5568;
+$uni-text-color-placeholder: #a0aec0;
+$uni-text-color-disable: #e2e8f0;
+
+/* 背景颜色 */
+$uni-bg-color: #f8fafc;
+$uni-bg-color-grey: #edf2f7;
+$uni-bg-color-hover: #f7f7f7;
+$uni-bg-color-mask: rgba(0, 0, 0, 0.4);
+
+/* 边框颜色 */
+$uni-border-color: #e2e8f0;
+
+/* 尺寸 */
+$uni-spacing-row-sm: 8px;
+$uni-spacing-row-base: 16px;
+$uni-spacing-row-lg: 24px;
+
+$uni-spacing-col-sm: 8px;
+$uni-spacing-col-base: 16px;
+$uni-spacing-col-lg: 24px;
+
+/* 圆角 */
+$uni-border-radius-sm: 4px;
+$uni-border-radius-base: 8px;
+$uni-border-radius-lg: 12px;
+$uni-border-radius-circle: 50%;
+
+/* 字体大小 */
+$uni-font-size-sm: 12px;
+$uni-font-size-base: 14px;
+$uni-font-size-lg: 16px;
+$uni-font-size-title: 20px;
+$uni-font-size-subtitle: 18px;
+$uni-font-size-special: 24px;
+
+/* 行高 */
+$uni-line-height-small: 1.2;
+$uni-line-height-base: 1.5;
+$uni-line-height-large: 1.8;
+
+/* 图片尺寸 */
+$uni-img-size-sm: 32px;
+$uni-img-size-base: 48px;
+$uni-img-size-lg: 64px;
+
+/* 阴影 */
+$uni-shadow-base: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$uni-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+/* 过渡 */
+$uni-transition-base: all 0.3s ease;
+$uni-transition-fast: all 0.15s ease;
+$uni-transition-slow: all 0.5s ease;
+
+/* 层级 */
+$uni-z-index-mask: 999;
+$uni-z-index-popup: 1000;
+$uni-z-index-modal: 1001;

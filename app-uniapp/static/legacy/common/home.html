@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能会议助手 - 首页</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <!-- iOS 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- 应用内容 -->
+            <div class="app-content">
+                <!-- 欢迎区域 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">上午好，丽华（学员）</div>
+                            <div class="card-subtitle-inline">
+                                <span>市委组织部</span>
+                                <span class="sep">｜</span>
+                                <span>副处长</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-banner fade-in">
+                    <strong>今日提醒</strong>
+                    请在 09:00 前完成报到签到，携带胸牌入场。下午讨论安排在 A 栋 302 室。
+                </div>
+
+                <!-- 当前会议/培训列表 -->
+                <div class="section-title">我参加的培训</div>
+
+                <div class="meeting-card fade-in">
+                    <div class="meeting-header">
+                        <div>
+                            <div class="meeting-title">2025党务干部培训班</div>
+                            <div class="meeting-meta">
+                                <span><i class="fas fa-calendar-alt"></i> 1月15日 - 1月19日 · 共5天</span>
+                                <span><i class="fas fa-map-marker-alt"></i> 市委党校报告厅 · 主办：市委组织部</span>
+                            </div>
+                        </div>
+                        <span class="status-chip status-accent"><i class="fas fa-circle-notch"></i> 进行中</span>
+                    </div>
+                </div>
+
+                <div class="meeting-card fade-in">
+                    <div class="meeting-header">
+                        <div>
+                            <div class="meeting-title">青年干部能力提升班</div>
+                            <div class="meeting-meta">
+                                <span><i class="fas fa-calendar-alt"></i> 1月22日 - 1月26日 · 共5天</span>
+                                <span><i class="fas fa-map-marker-alt"></i> 市委党校教学楼 · 主办：市委组织部</span>
+                            </div>
+                        </div>
+                        <span class="status-chip status-warn"><i class="fas fa-hourglass-start"></i> 即将开始</span>
+                    </div>
+                </div>
+
+                <!-- 功能导航 -->
+                <div class="section-title">功能导航</div>
+                <div class="grid-3">
+                    <a class="feature-tile" href="../learner/guide.html">
+                        <div class="feature-icon-lg"><i class="fas fa-book-open"></i></div>
+                        <div class="feature-title">参会须知</div>
+                    </a>
+                    <a class="feature-tile" href="../learner/schedule.html">
+                        <div class="feature-icon-lg"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="feature-title">日程安排</div>
+                    </a>
+                    <a class="feature-tile" href="../learner/contact.html">
+                        <div class="feature-icon-lg"><i class="fas fa-address-book"></i></div>
+                        <div class="feature-title">通讯录</div>
+                    </a>
+                    <a class="feature-tile" href="../learner/seat.html">
+                        <div class="feature-icon-lg"><i class="fas fa-th-large"></i></div>
+                        <div class="feature-title">座位图</div>
+                    </a>
+                    <a class="feature-tile" href="../learner/checkin.html">
+                        <div class="feature-icon-lg"><i class="fas fa-qrcode"></i></div>
+                        <div class="feature-title">报到签到</div>
+                    </a>
+                    <a class="feature-tile" href="../learner/groups.html">
+                        <div class="feature-icon-lg"><i class="fas fa-users"></i></div>
+                        <div class="feature-title">群组分组</div>
+                    </a>
+                    <a class="feature-tile" href="../learner/materials.html">
+                        <div class="feature-icon-lg"><i class="fas fa-download"></i></div>
+                        <div class="feature-title">资料下载</div>
+                    </a>
+                    <a class="feature-tile" href="../learner/highlights.html">
+                        <div class="feature-icon-lg"><i class="fas fa-camera"></i></div>
+                        <div class="feature-title">精彩花絮</div>
+                    </a>
+                    <a class="feature-tile" href="../learner/message.html">
+                        <div class="feature-icon-lg"><i class="fas fa-pen-fancy"></i></div>
+                        <div class="feature-title">留言赠语</div>
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="nav-text">沟通</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

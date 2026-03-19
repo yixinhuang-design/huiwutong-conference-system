@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学员手册生成 - 协管员端</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <!-- iOS 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- 应用内容 -->
+            <div class="app-content">
+                <div class="card card--no-margin fade-in">
+                    <div class="card-header">
+                        <a href="registration-manage.html" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 名册分组设置 -->
+                <div class="section-title">名册分组</div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="icon-container icon-gradient-blue">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="card-title">分组设置</div>
+                        <span class="status-chip status-neutral">可选</span>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-orange">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">分组数量</div>
+                                <div class="assistant-item-desc">6个小组</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-green">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">已指定组长</div>
+                                <div class="assistant-item-desc">6人已确定</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-cyan">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">工作人员</div>
+                                <div class="assistant-item-desc">12人已分配</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-purple">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">自动生成群组</div>
+                                <div class="assistant-item-desc">
+                                    <span class="status-chip status-positive"><i class="fas fa-check"></i> 已生成</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cta-bar">
+                        <button class="btn btn-secondary btn--flex" onclick="alert('拖拽分组功能\n\n长按卡片可拖拽调整顺序\n点击卡片可查看组成员')">
+                            <i class="fas fa-arrows-alt"></i> 拖动排序
+                        </button>
+                        <button class="btn btn-primary btn--flex">
+                            <i class="fas fa-cog"></i> 设置分组
+                        </button>
+                    </div>
+                    <div class="info-banner info-banner--info">
+                        <i class="fas fa-info-circle"></i>
+                        <span>支持拖拽调整分组顺序，系统将自动生成各组人员群</span>
+                    </div>
+                </div>
+
+                <!-- 名册排序 -->
+                <div class="section-title">名册排序</div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="icon-container icon-gradient-orange">
+                            <i class="fas fa-sort-amount-down"></i>
+                        </div>
+                        <div class="card-title">排序方式</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">按单位排序</div>
+                                <div class="assistant-item-desc">
+                                    <span class="status-chip status-positive"><i class="fas fa-check"></i> 已选择</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-arrows-alt"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">拖动排序</div>
+                                <div class="assistant-item-desc">手动调整顺序</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-list-ol"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">序号排序</div>
+                                <div class="assistant-item-desc">按指定序号排列</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 名册格式配置 -->
+                <div class="section-title">格式配置</div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="icon-container icon-gradient-green">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="card-title">模板选择</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-purple">
+                                <i class="fas fa-file"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">标准模板</div>
+                                <div class="assistant-item-desc">
+                                    <span class="status-chip status-positive"><i class="fas fa-check"></i> 当前使用</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-file"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">详细模板</div>
+                                <div class="assistant-item-desc">包含更多详细信息</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-file"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">自定义模板</div>
+                                <div class="assistant-item-desc">上传自定义封面</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 名册内容设置 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="icon-container icon-gradient-cyan">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <div class="card-title">内容设置</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item assistant-item--clickable" onclick="showUploadModal()">
+                            <div class="assistant-item-icon icon-gradient-blue">
+                                <i class="fas fa-image"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">封面图片</div>
+                                <div class="assistant-item-desc">已上传封面.jpg · 点击更换</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </div>
+                        <div class="assistant-item assistant-item--clickable" onclick="showRichTextEditor('培训须知')">
+                            <div class="assistant-item-icon icon-gradient-orange">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">培训须知</div>
+                                <div class="assistant-item-desc">已编辑 · 共325字 · 点击修改</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </div>
+                        <div class="assistant-item assistant-item--clickable" onclick="showScheduleEditor()">
+                            <div class="assistant-item-icon icon-gradient-green">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">会议日程</div>
+                                <div class="assistant-item-desc">已同步 · 共3天日程 · 可编辑修改</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </div>
+                        <div class="assistant-item assistant-item--clickable" onclick="showRosterEditor()">
+                            <div class="assistant-item-icon icon-gradient-purple">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">学员名册</div>
+                                <div class="assistant-item-desc">142人已审核通过 · 可调整排序</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </div>
+                        <div class="assistant-item assistant-item--clickable" onclick="showRichTextEditor('册尾内容')">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">自定义册尾内容</div>
+                                <div class="assistant-item-desc">支持富文本编辑 · 点击添加</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </div>
+                    </div>
+                    <div class="cta-bar">
+                        <button class="btn btn-secondary btn--flex" onclick="showTemplateSave()">
+                            <i class="fas fa-save"></i> 保存模板
+                        </button>
+                        <button class="btn btn-primary btn--flex" onclick="showPreview()">
+                            <i class="fas fa-eye"></i> 预览
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 预览区域 -->
+                <div class="section-title">名册预览</div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="icon-container icon-gradient-cyan">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div class="card-title">预览</div>
+                    </div>
+                    <div class="btn-group--wrap">
+                        <button class="btn btn-secondary btn--sm" onclick="showCoverPreview()">
+                            <i class="fas fa-image"></i> 封面预览
+                        </button>
+                        <button class="btn btn-secondary btn--sm" onclick="showHandbookPreview()">
+                            <i class="fas fa-book-open"></i> 手册预览
+                        </button>
+                        <button class="btn btn-secondary btn--sm" onclick="showRosterPreview()">
+                            <i class="fas fa-list"></i> 名册预览
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 预览弹窗内容（隐藏） -->
+                <div id="previewModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:1000; padding:20px; overflow:auto;">
+                    <div style="background:white; border-radius:12px; max-width:600px; margin:0 auto; padding:24px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                            <h3 id="previewTitle">预览</h3>
+                            <button onclick="closePreview()" class="btn btn-secondary btn--sm">
+                                <i class="fas fa-times"></i> 关闭
+                            </button>
+                        </div>
+                        <div id="previewContent" style="min-height:200px; background:#f8fafc; border-radius:8px; padding:16px;">
+                            <!-- 预览内容 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 生成按钮 -->
+                <div class="card card--gradient-purple fade-in">
+                    <div class="card-header card-header--light" onclick="generatePDF()">
+                        <div class="icon-container icon-container--light">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="card-header-content">
+                            <div class="card-title card-title--light">生成名册PDF</div>
+                            <div class="card-subtitle card-subtitle--light">生成并保存名册模板</div>
+                        </div>
+                        <i class="fas fa-chevron-right text-light"></i>
+                    </div>
+                </div>
+
+                <!-- 下载/分享 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="icon-container icon-gradient-green">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="card-title">下载与分享</div>
+                    </div>
+                    <div class="cta-bar">
+                        <button class="btn btn-secondary btn--flex" onclick="alert('下载到本地\n\n名册PDF已下载到本地设备')">
+                            <i class="fas fa-download"></i> 下载到本地
+                        </button>
+                        <button class="btn btn-primary btn--flex" onclick="alert('分享链接\n\n已生成分享链接\n\n有效期：7天\n\n链接：https://xxx.com/share/abc123')">
+                            <i class="fas fa-share-alt"></i> 生成分享链接
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 温馨提示 -->
+                <div class="info-banner fade-in">
+                    <strong>提示</strong>
+                    生成名册后将自动保存为PDF格式，支持下载到本地或生成分享链接（有效期7天）。支持富文本编辑培训须知和册尾内容。
+                </div>
+
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="nav-text">沟通</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showUploadModal() {
+            alert('上传封面图片\n\n支持格式：JPG、PNG\n建议尺寸：A4比例 (210mm x 297mm)\n文件大小：不超过5MB');
+        }
+
+        function showRichTextEditor(title) {
+            alert('富文本编辑器 - ' + title + '\n\n功能：\n• 文字格式设置（字体、大小、颜色、粗体、斜体）\n• 插入图片\n• 插入表格\n• 插入链接\n• 撤销/重做\n\n当前内容：已编辑内容将显示在编辑器中');
+        }
+
+        function showScheduleEditor() {
+            alert('会议日程编辑\n\n当前日程：\n第1天：开班仪式 (09:00-10:00)\n第2天：专题培训 (09:00-17:00)\n第3天：结业典礼 (14:00-16:00)\n\n可在此编辑修改日程安排');
+        }
+
+        function showRosterEditor() {
+            alert('学员名册编辑\n\n共142人\n\n可在此：\n• 调整学员排序\n• 添加/删除学员\n• 修改学员信息\n• 设置分组');
+        }
+
+        function showTemplateSave() {
+            alert('保存名册模板\n\n模板名称：党务干部培训模板\n\n保存后可在创建名册时直接使用此模板');
+        }
+
+        function showCoverPreview() {
+            document.getElementById('previewModal').style.display = 'block';
+            document.getElementById('previewTitle').textContent = '封面预览';
+            document.getElementById('previewContent').innerHTML = `
+                <div style="text-align:center; padding:40px; border:1px solid #e2e8f0;">
+                    <h1 style="font-size:32px; margin-bottom:20px;">2025年党务干部培训班</h1>
+                    <p style="color:#64748b; font-size:16px;">学员名册</p>
+                    <div style="margin-top:40px; width:100px; height:100px; background:#e2e8f0; margin-left:auto; margin-right:auto; display:flex; align-items:center; justify-content:center;">
+                        <i class="fas fa-graduation-cap" style="font-size:48px; color:#94a3b8;"></i>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showHandbookPreview() {
+            document.getElementById('previewModal').style.display = 'block';
+            document.getElementById('previewTitle').textContent = '学员手册预览';
+            document.getElementById('previewContent').innerHTML = `
+                <div style="padding:20px;">
+                    <h3 style="margin-bottom:16px;">培训须知</h3>
+                    <p style="line-height:1.8; color:#475569;">
+                        一、培训时间：2025年2月15日-19日<br>
+                        二、培训地点：市委党校报告厅<br>
+                        三、注意事项：<br>
+                        1. 请准时参加培训，不得无故缺席<br>
+                        2. 培训期间请将手机调至静音<br>
+                        3. 请遵守培训纪律，认真听讲<br>
+                        ...（共325字）
+                    </p>
+                </div>
+            `;
+        }
+
+        function showRosterPreview() {
+            document.getElementById('previewModal').style.display = 'block';
+            document.getElementById('previewTitle').textContent = '学员名册预览';
+            document.getElementById('previewContent').innerHTML = `
+                <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                    <thead>
+                        <tr style="background:#f1f5f9;">
+                            <th style="border:1px solid #e2e8f0; padding:8px;">序号</th>
+                            <th style="border:1px solid #e2e8f0; padding:8px;">姓名</th>
+                            <th style="border:1px solid #e2e8f0; padding:8px;">单位</th>
+                            <th style="border:1px solid #e2e8f0; padding:8px;">职务</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="border:1px solid #e2e8f0; padding:8px; text-align:center;">1</td><td style="border:1px solid #e2e8f0; padding:8px;">张三</td><td style="border:1px solid #e2e8f0; padding:8px;">市委组织部</td><td style="border:1px solid #e2e8f0; padding:8px;">处长</td></tr>
+                        <tr><td style="border:1px solid #e2e8f0; padding:8px; text-align:center;">2</td><td style="border:1px solid #e2e8f0; padding:8px;">李四</td><td style="border:1px solid #e2e8f0; padding:8px;">市教育局</td><td style="border:1px solid #e2e8f0; padding:8px;">主任</td></tr>
+                        <tr><td style="border:1px solid #e2e8f0; padding:8px; text-align:center;">...</td><td style="border:1px solid #e2e8f0; padding:8px;">...</td><td style="border:1px solid #e2e8f0; padding:8px;">...</td><td style="border:1px solid #e2e8f0; padding:8px;">...</td></tr>
+                    </tbody>
+                </table>
+                <p style="text-align:center; color:#64748b; margin-top:16px; font-size:12px;">共142人</p>
+            `;
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').style.display = 'none';
+        }
+
+        function showPreview() {
+            alert('完整预览\n\n将显示：\n1. 封面\n2. 培训须知\n3. 会议日程\n4. 学员名册\n5. 册尾内容\n\n所有内容合并后的完整效果');
+        }
+
+        function generatePDF() {
+            alert('生成PDF名册\n\n正在生成PDF文件...\n\n生成完成后可：\n• 下载到本地\n• 生成分享链接（有效期7天）\n• 保存为模板');
+        }
+    </script>
+</body>
+</html>

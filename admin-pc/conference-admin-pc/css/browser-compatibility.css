@@ -1,0 +1,420 @@
+/* ========================================
+   国产浏览器兼容性样式
+   支持：360浏览器、QQ浏览器、奇安信浏览器、搜狗浏览器、猎豹浏览器等
+   ======================================== */
+
+/* 国产浏览器基础优化 */
+.domestic-browser {
+    /* 强制硬件加速 */
+    -webkit-transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    -o-transform: translateZ(0);
+    transform: translateZ(0);
+
+    /* 优化渲染性能 */
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    -ms-backface-visibility: hidden;
+    backface-visibility: hidden;
+
+    /* 避免字体模糊 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 360浏览器特定优化 */
+.browser-360 {
+    /* 360浏览器滚动条优化 */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(102, 126, 234, 0.5) rgba(255, 255, 255, 0.1);
+}
+
+/* QQ浏览器特定优化 */
+.browser-qq .glass-card {
+    /* QQ浏览器毛玻璃效果优化 */
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* 搜狗浏览器特定优化 */
+.browser-sogou input,
+.browser-sogou textarea,
+.browser-sogou select {
+    /* 搜狗浏览器表单元素样式重置 */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* ========================================
+   CSS属性前缀自动补全
+   ======================================== */
+
+/* Flexbox兼容性 */
+.flex-compatible {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+    -moz-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+}
+
+/* Grid布局兼容性 */
+.grid-compatible {
+    display: -ms-grid;
+    display: grid;
+}
+
+/* 动画兼容性 */
+@-webkit-keyframes fadeIn {
+    from {
+        opacity: 0;
+        -webkit-transform: translateY(10px);
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        -webkit-transform: translateY(0);
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        -webkit-transform: translateY(10px);
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        -webkit-transform: translateY(0);
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   滚动条样式（国产浏览器）
+   ======================================== */
+
+/* WebKit内核浏览器（360、QQ等）滚动条 */
+.domestic-browser ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.domestic-browser ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.domestic-browser ::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 4px;
+    -webkit-transition: background 0.3s;
+    transition: background 0.3s;
+}
+
+.domestic-browser ::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.8);
+}
+
+/* ========================================
+   表单元素兼容性
+   ======================================== */
+
+.domestic-browser input,
+.domestic-browser textarea,
+.domestic-browser select {
+    /* 移除默认样式 */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    /* 边框盒模型 */
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+
+    /* 移除轮廓 */
+    -webkit-tap-highlight-color: transparent;
+}
+
+.domestic-browser input:focus,
+.domestic-browser textarea:focus,
+.domestic-browser select:focus {
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 按钮兼容性 */
+.domestic-browser button,
+.domestic-browser .btn {
+    /* 移除点击高亮 */
+    -webkit-tap-highlight-color: transparent;
+
+    /* 优化按钮渲染 */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    /* 光标样式 */
+    cursor: pointer;
+}
+
+/* ========================================
+   过渡和动画兼容性
+   ======================================== */
+
+.domestic-browser .glass-card,
+.domestic-browser .nav-item,
+.domestic-browser .btn,
+.domestic-browser .card {
+    /* 硬件加速 */
+    -webkit-transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    transform: translateZ(0);
+
+    /* 平滑过渡 */
+    -webkit-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    -moz-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    -o-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========================================
+   backdrop-filter 兼容性（毛玻璃效果）
+   ======================================== */
+
+.domestic-browser .glass-card,
+.domestic-browser .glass-background,
+.domestic-browser .page-navigation {
+    /* 标准属性 */
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+    /* 降级方案（不支持backdrop-filter的浏览器） */
+    background: var(--glass-bg);
+}
+
+/* 不支持backdrop-filter时使用纯色背景 */
+@supports not (backdrop-filter: blur(10px)) {
+    .domestic-browser .glass-card,
+    .domestic-browser .glass-background,
+    .domestic-browser .page-navigation {
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+}
+
+/* ========================================
+   CSS Grid 兼容性
+   ======================================== */
+
+.domestic-browser .stats-grid,
+.domestic-browser .metrics-grid,
+.domestic-browser .features-grid {
+    /* 旧版Flexbox降级方案 */
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: flex;
+
+    -webkit-flex-wrap: wrap;
+    -moz-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+
+    -webkit-box-pack: justify;
+    -webkit-justify-content: space-between;
+    -moz-justify-content: space-between;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+}
+
+.domestic-browser .stats-grid > *,
+.domestic-browser .metrics-grid > *,
+.domestic-browser .features-grid > * {
+    -webkit-box-flex: 1;
+    -webkit-flex: 1 1 300px;
+    -moz-box-flex: 1;
+    -ms-flex: 1 1 300px;
+    flex: 1 1 300px;
+}
+
+/* ========================================
+   文本渲染优化
+   ======================================== */
+
+.domestic-browser body,
+.domestic-browser h1, .domestic-browser h2, .domestic-browser h3,
+.domestic-browser h4, .domestic-browser h5, .domestic-browser h6,
+.domestic-browser p, .domestic-browser span, .domestic-browser div {
+    /* 字体平滑渲染 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* 文本渲染优化 */
+    text-rendering: optimizeLegibility;
+
+    /* 避免文本选中高亮 */
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+/* ========================================
+   Vue 3 过渡动画兼容性
+   ======================================== */
+
+/* fade过渡 */
+.domestic-browser .fade-enter-active,
+.domestic-browser .fade-leave-active {
+    -webkit-transition: opacity 0.3s ease;
+    -moz-transition: opacity 0.3s ease;
+    -o-transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease;
+}
+
+.domestic-browser .fade-enter-from,
+.domestic-browser .fade-leave-to {
+    opacity: 0;
+}
+
+/* slide过渡 */
+.domestic-browser .slide-enter-active,
+.domestic-browser .slide-leave-active {
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+.domestic-browser .slide-enter-from {
+    -webkit-transform: translateX(-10px);
+    transform: translateX(-10px);
+    opacity: 0;
+}
+
+.domestic-browser .slide-leave-to {
+    -webkit-transform: translateX(10px);
+    transform: translateX(10px);
+    opacity: 0;
+}
+
+/* ========================================
+   360浏览器特殊问题修复
+   ======================================== */
+
+/* 修复360浏览器中定位元素遮挡问题 */
+.browser-360 .modal-overlay {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+/* 修复360浏览器中表格边框显示问题 */
+.browser-360 table,
+.browser-360 .data-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* ========================================
+   QQ浏览器特殊问题修复
+   ======================================== */
+
+/* 修复QQ浏览器中flex布局bug */
+.browser-qq .flex-container {
+    min-width: 0;
+    min-height: 0;
+}
+
+/* 修复QQ浏览器中z-index层级问题 */
+.browser-qq .dropdown-menu,
+.browser-qq .modal-content {
+    -webkit-transform: translateZ(1px);
+    transform: translateZ(1px);
+}
+
+/* ========================================
+   奇安信浏览器特殊优化
+   ======================================== */
+
+/* 奇安信浏览器安全模式兼容 */
+.domestic-browser .secure-mode {
+    filter: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='none'><feColorMatrix type='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0'/></filter></svg>#none");
+}
+
+/* ========================================
+   性能优化
+   ======================================== */
+
+/* 国产浏览器性能优化 */
+.domestic-browser * {
+    /* 减少重绘 */
+    -webkit-transform-origin: 0 0;
+    -moz-transform-origin: 0 0;
+    -ms-transform-origin: 0 0;
+    transform-origin: 0 0;
+}
+
+/* 图片优化 */
+.domestic-browser img {
+    /* 防止图片溢出 */
+    max-width: 100%;
+    height: auto;
+
+    /* 优化图片渲染 */
+    -webkit-image-rendering: -webkit-optimize-contrast;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+/* ========================================
+   打印样式优化
+   ======================================== */
+
+@media print {
+    .domestic-browser {
+        background: white !important;
+    }
+
+    .domestic-browser .no-print {
+        display: none !important;
+    }
+
+    .domestic-browser .glass-card {
+        background: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* ========================================
+   响应式兼容性
+   ======================================== */
+
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+    /* WebKit浏览器（包括国产浏览器） */
+    .domestic-browser .icon {
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+}
+
+/* 高DPI屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .domestic-browser {
+        /* 高清屏幕字体渲染 */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}

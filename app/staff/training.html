@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能会议助手 - 培训</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        .loading { text-align: center; padding: 2rem; color: #999; }
+        .loading-spinner { display: inline-block; animation: spin 1s linear infinite; margin-right: 0.5rem; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 2rem; color: #999; }
+    </style>
+</head>
+<body>
+    <div id="app" class="phone-container">
+        <div class="phone-screen">
+            <!-- iOS 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left"><span>9:41</span></div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- 应用内容 -->
+            <div class="app-content">
+                <!-- 页面标题 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">培训管理</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 筛选标签 -->
+                <div class="pill-group" style="overflow-x:auto;gap:8px;padding:0 16px 8px 16px;margin-bottom:16px;">
+                    <div class="pill" :class="{ 'pill-active': filterStatus === 'all' }" @click="filterStatus = 'all'">全部</div>
+                    <div class="pill" :class="{ 'pill-active': filterStatus === '3' }" @click="filterStatus = '3'">进行中</div>
+                    <div class="pill" :class="{ 'pill-active': filterStatus === '4' }" @click="filterStatus = '4'">已结束</div>
+                    <div class="pill" :class="{ 'pill-active': filterStatus === '1' }" @click="filterStatus = '1'">报名中</div>
+                </div>
+
+                <!-- 加载中 -->
+                <div v-if="loading" class="loading">
+                    <i class="fas fa-spinner loading-spinner"></i>
+                    加载中...
+                </div>
+
+                <!-- 培训列表 -->
+                <div v-else class="training-list">
+                    <a v-for="training in filteredTrainings" :key="training.id" 
+                       :href="'meeting-detail.html?meetingId=' + training.id"
+                       style="text-decoration:none;color:inherit;display:block;">
+                        <div class="training-card fade-in">
+                            <div class="training-header">
+                                <div class="training-icon">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <div class="training-info">
+                                    <h3>{{ training.meetingName }}</h3>
+                                    <div class="training-meta">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <span>{{ formatDate(training.startTime) }} 至 {{ formatDate(training.endTime) }}</span>
+                                    </div>
+                                    <div class="training-meta">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span>{{ training.venueName || '未设置' }}</span>
+                                    </div>
+                                </div>
+                                <div class="status-badge" :class="getStatusClass(training.status)">
+                                    {{ getStatusText(training.status) }}
+                                </div>
+                            </div>
+                            <div class="training-status-bar">
+                                <div class="training-status-list">
+                                    <span><i class="fas fa-users"></i> {{ training.currentParticipants || 0 }}人报名</span>
+                                    <span><i class="fas fa-user-check"></i> 0人确认</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- 空列表提示 -->
+                <div v-if="!loading && filteredTrainings.length === 0" class="empty-state">
+                    <i class="fas fa-inbox" style="font-size: 2rem; display: block; margin-bottom: 1rem;"></i>
+                    <p>暂无培训，点击下方按钮创建新培训</p>
+                </div>
+
+                <!-- 新建培训按钮 -->
+                <div style="padding: 16px;">
+                    <a href="training-create.html" class="btn btn-primary" style="width: 100%; justify-content: center; gap: 8px; text-decoration: none;">
+                        <i class="fas fa-plus"></i>
+                        <span>新建培训</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon"><i class="fas fa-graduation-cap"></i></div>
+                    <div class="nav-text">培训</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                    <div class="nav-text">助手</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-bell"></i></div>
+                    <div class="nav-text">提醒</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    trainings: [],
+                    filterStatus: 'all',
+                    loading: true
+                };
+            },
+            computed: {
+                filteredTrainings() {
+                    if (this.filterStatus === 'all') {
+                        return this.trainings;
+                    }
+                    return this.trainings.filter(t => t.status === parseInt(this.filterStatus));
+                }
+            },
+            methods: {
+                async loadTrainings() {
+                    this.loading = true;
+                    try {
+                        const apiUrl = 'http://localhost:8084/api/meeting/list?pageNum=1&pageSize=100';
+                        const token = localStorage.getItem('token') || '';
+                        
+                        // 获取租户ID（从登录信息中）
+                        const userInfo = localStorage.getItem('userInfo');
+                        let tenantId = null;
+                        if (userInfo) {
+                            try {
+                                const parsedUserInfo = JSON.parse(userInfo);
+                                tenantId = parsedUserInfo.tenantId;
+                            } catch (e) {
+                                console.warn('解析用户信息失败:', e);
+                            }
+                        }
+                        
+                        const response = await fetch(apiUrl, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'X-Tenant-Id': tenantId || '2027317834622709762'
+                            }
+                        });
+
+                        if (!response.ok) throw new Error('API 错误: ' + response.status);
+
+                        const result = await response.json();
+                        
+                        // 后端返回格式: { code: 0, message: "success", data: { records: [...], total: 100 } }
+                        // code = 0 表示成功
+                        if (result.code === 0 && result.data && result.data.records) {
+                            this.trainings = result.data.records;
+                            console.log('加载培训列表成功:', this.trainings.length + ' 条记录');
+                        } else {
+                            console.warn('API返回格式异常，使用示例数据');
+                            this.loadSampleData();
+                        }
+                    } catch (error) {
+                        console.error('加载培训列表失败:', error);
+                        // 使用示例数据降级处理
+                        this.loadSampleData();
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                loadSampleData() {
+                    this.trainings = [
+                        {
+                            id: 'demo_1',
+                            meetingName: '2025年党务干部培训班',
+                            startTime: new Date().toISOString(),
+                            endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+                            venueName: '市委党校报告厅',
+                            status: 3,
+                            currentParticipants: 156
+                        },
+                        {
+                            id: 'demo_2',
+                            meetingName: '青年干部能力提升班',
+                            startTime: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+                            endTime: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+                            venueName: '市委党校教学楼',
+                            status: 4,
+                            currentParticipants: 89
+                        },
+                        {
+                            id: 'demo_3',
+                            meetingName: '基层党建工作者培训班',
+                            startTime: new Date(Date.now() + 16 * 24 * 60 * 60 * 1000).toISOString(),
+                            endTime: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+                            venueName: '市委党校综合楼',
+                            status: 1,
+                            currentParticipants: 78
+                        }
+                    ];
+                },
+                formatDate(dateStr) {
+                    if (!dateStr) return '';
+                    const date = new Date(dateStr);
+                    return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-');
+                },
+                getStatusText(status) {
+                    const statusMap = {
+                        0: '草稿',
+                        1: '报名中',
+                        2: '报名截止',
+                        3: '进行中',
+                        4: '已结束',
+                        5: '已取消'
+                    };
+                    return statusMap[status] || '未知';
+                },
+                getStatusClass(status) {
+                    const classMap = {
+                        0: 'status-pending',
+                        1: 'status-active',
+                        2: 'status-pending',
+                        3: 'status-active',
+                        4: 'status-completed',
+                        5: 'status-cancelled'
+                    };
+                    return classMap[status] || '';
+                }
+            },
+            mounted() {
+                this.loadTrainings();
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

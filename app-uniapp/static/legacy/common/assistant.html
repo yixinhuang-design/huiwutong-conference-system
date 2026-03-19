@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI助手 - 智能对话</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            position: relative;
+            min-height: 0;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .chat-header-back {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .chat-header-title {
+            flex: 1;
+        }
+
+        .chat-header-title h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .chat-header-title p {
+            margin: 2px 0 0 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .chat-header-options {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #f8fafc;
+        }
+
+        .message {
+            display: flex;
+            gap: 8px;
+            animation: slideUp 0.3s ease;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .message.ai .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message.user .message-avatar {
+            background: #3b82f6;
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 0 12px 12px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #94a3b8;
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        .message-loading {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .message-loading span {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+
+        .message-loading span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .message-loading span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-suggestions {
+            padding: 12px 16px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+
+        .suggestion-chip {
+            padding: 8px 12px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            color: #475569;
+        }
+
+        .suggestion-chip:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            align-items: flex-end;
+            flex-shrink: 0;
+        }
+
+        .chat-input {
+            flex: 1;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            max-height: 100px;
+            color: #1e293b;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .chat-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .chat-send {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+
+        .chat-send:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-send:active {
+            transform: scale(0.95);
+        }
+
+        .voice-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            border: 2px solid #e2e8f0;
+            color: #667eea;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .voice-button:hover {
+            background: #e2e8f0;
+            border-color: #667eea;
+        }
+
+        .voice-button.recording {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #ef4444;
+            animation: pulse 0.6s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 16px;
+            color: #64748b;
+            padding: 0 16px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            color: #cbd5e1;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .welcome-tips {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            padding: 32px 16px;
+        }
+
+        .welcome-icon {
+            font-size: 56px;
+            color: #667eea;
+        }
+
+        .welcome-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            text-align: center;
+        }
+
+        .welcome-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .hot-questions {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .hot-question-btn {
+            padding: 12px 16px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #1e293b;
+            font-size: 13px;
+        }
+
+        .hot-question-btn:hover {
+            background: #f1f5f9;
+            border-color: #667eea;
+        }
+
+        .hot-question-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* phone-screen 需要使用 flexbox 来布局 */
+        .phone-screen {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        .status-bar {
+            flex-shrink: 0;
+        }
+
+        .bottom-nav {
+            flex-shrink: 0;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <!-- 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left"><span>9:41</span></div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- 聊天容器 -->
+            <div class="chat-container">
+                <!-- 聊天头部 -->
+                <div class="chat-header">
+                    <button class="chat-header-back" onclick="goBack()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="chat-header-title">
+                        <h2>AI助手</h2>
+                        <p>随时准备为您服务</p>
+                    </div>
+                    <button class="chat-header-options" onclick="showOptions()">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+
+                <!-- 聊天消息区域 -->
+                <div class="chat-messages" id="chatMessages">
+                    <!-- 欢迎页面（初始状态） -->
+                    <div id="welcomePage" class="welcome-tips">
+                        <div class="welcome-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div>
+                            <div class="welcome-title">智能会议助手</div>
+                            <div class="welcome-subtitle">随时准备为您解答<br>关于培训班的任何问题</div>
+                        </div>
+                        <div class="hot-questions">
+                            <button class="hot-question-btn" onclick="sendMessage('📅 培训班什么时候开始？')">
+                                📅 培训班什么时候开始？
+                            </button>
+                            <button class="hot-question-btn" onclick="sendMessage('📍 培训地点在哪里？如何到达？')">
+                                📍 培训地点在哪里？如何到达？
+                            </button>
+                            <button class="hot-question-btn" onclick="sendMessage('👨‍🏫 讲师介绍及课程亮点')">
+                                👨‍🏫 讲师介绍及课程亮点
+                            </button>
+                            <button class="hot-question-btn" onclick="sendMessage('✅ 如何进行签到？')">
+                                ✅ 如何进行签到？
+                            </button>
+                            <button class="hot-question-btn" onclick="sendMessage('🪑 如何查询我的座位？')">
+                                🪑 如何查询我的座位？
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 聊天消息（对话后显示） -->
+                    <div id="chatHistory" style="display: none;"></div>
+                </div>
+
+                <!-- 建议芯片区域 -->
+                <div class="chat-suggestions" id="suggestionsArea" style="display: none;">
+                    <div class="suggestion-chip" onclick="sendMessage('讲师介绍')">👨‍🏫 讲师介绍</div>
+                    <div class="suggestion-chip" onclick="sendMessage('座位信息')">🪑 座位查询</div>
+                    <div class="suggestion-chip" onclick="sendMessage('签到流程')">✅ 签到方式</div>
+                    <div class="suggestion-chip" onclick="sendMessage('考试信息')">📝 结业考试</div>
+                </div>
+
+                <!-- 输入区域 -->
+                <div class="chat-input-area">
+                    <button class="voice-button" id="voiceBtn" onclick="toggleVoiceChat()">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <textarea class="chat-input" id="chatInput" placeholder="输入您的问题..." rows="1" onkeypress="handleKeyPress(event)"></textarea>
+                    <button class="chat-send" onclick="sendChatMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 底部导航 -->
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                    <div class="nav-text">AI助理</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-comments"></i></div>
+                    <div class="nav-text">沟通</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-history"></i></div>
+                    <div class="nav-text">往期</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+
+        function showOptions() {
+            alert('更多选项：\n• 清除聊天记录\n• 反馈问题\n• 联系客服');
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // 隐藏欢迎页面，显示聊天历史
+            hidWelcomePage();
+
+            // 添加用户消息
+            addMessage(message, 'user');
+            input.value = '';
+            input.style.height = 'auto';
+
+            // 模拟AI响应延迟
+            setTimeout(() => {
+                addMessage('感谢您的问题！这是AI的自动回复。您的问题已记录，客服将在2分钟内为您解答。', 'ai');
+            }, 1000);
+        }
+
+        function sendMessage(text) {
+            // 隐藏欢迎页面，显示聊天历史
+            hideWelcomePage();
+            
+            document.getElementById('chatInput').value = text;
+            sendChatMessage();
+        }
+
+        function hideWelcomePage() {
+            const welcomePage = document.getElementById('welcomePage');
+            const chatHistory = document.getElementById('chatHistory');
+            const suggestionsArea = document.getElementById('suggestionsArea');
+            
+            if (welcomePage) {
+                welcomePage.style.display = 'none';
+            }
+            if (chatHistory) {
+                chatHistory.style.display = 'block';
+            }
+            if (suggestionsArea) {
+                suggestionsArea.style.display = 'flex';
+            }
+        }
+
+        function addMessage(content, type) {
+            const chatHistory = document.getElementById('chatHistory');
+            const messageEl = document.createElement('div');
+            messageEl.className = 'message ' + type;
+            
+            const avatar = type === 'user' ? '我' : '助';
+
+            messageEl.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">${content}</div>
+            `;
+            
+            chatHistory.appendChild(messageEl);
+            
+            // 滚动到底部
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendChatMessage();
+            }
+        }
+
+        let isRecording = false;
+        function toggleVoiceChat() {
+            const btn = document.getElementById('voiceBtn');
+            isRecording = !isRecording;
+            
+            if (isRecording) {
+                btn.classList.add('recording');
+                btn.title = '松开停止录音';
+            } else {
+                btn.classList.remove('recording');
+                btn.title = '点击开始语音';
+                
+                // 隐藏欢迎页面
+                hideWelcomePage();
+                
+                addMessage('我想咨询一下培训班的相关事项', 'user');
+                setTimeout(() => {
+                    addMessage('我已接收到您的语音问题，正在处理中...', 'ai');
+                }, 500);
+            }
+        }
+
+        // 自动调整textarea高度
+        document.getElementById('chatInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+    </script>
+</body>
+</html>

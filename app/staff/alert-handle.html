@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预警处理 - 协管员端</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <!-- iOS 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- 应用内容 -->
+            <div class="app-content">
+                <!-- 页面标题 -->
+                <div class="card card--no-margin fade-in">
+                    <div class="card-header">
+                        <a href="dashboard.html" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-bell"></i>
+                        <div class="card-title">预警事件列表</div>
+                    </div>
+                    <div id="alert-event-list" class="assistant-list">
+                        <!-- 预警事件数据由后端渲染，支持处理、标记、归档等操作 -->
+                    </div>
+                </div>
+
+                <!-- 预警效果评估 -->
+                <div class="card fade-in">
+                    <div class="card-header card-header--clickable" onclick="toggleEffectEvaluation()">
+                        <div class="icon-container icon-gradient-cyan">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="card-title">预警效果评估</div>
+                        <i class="fas fa-chevron-down text-muted"></i>
+                    </div>
+                    <div id="effectEvaluationPanel" style="display:none;">
+                        <div class="assistant-list">
+                            <div class="assistant-item">
+                                <div class="assistant-item-icon icon-gradient-blue">
+                                    <i class="fas fa-bullseye"></i>
+                                </div>
+                                <div class="assistant-item-content">
+                                    <div class="assistant-item-title">预警准确率</div>
+                                    <div class="assistant-item-desc">89% · 15次预警中13次准确</div>
+                                </div>
+                            </div>
+                            <div class="assistant-item">
+                                <div class="assistant-item-icon icon-gradient-orange">
+                                    <i class="fas fa-tools"></i>
+                                </div>
+                                <div class="assistant-item-content">
+                                    <div class="assistant-item-title">优化建议</div>
+                                    <div class="assistant-item-desc">签到率阈值建议调整至 75%</div>
+                                </div>
+                            </div>
+                            <div class="assistant-item">
+                                <div class="assistant-item-icon icon-gradient-green">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <div class="assistant-item-content">
+                                    <div class="assistant-item-title">处理效果</div>
+                                    <div class="assistant-item-desc">处理后指标改善率 78%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 筛选栏 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-filter text-muted"></i>
+                        <div class="card-title card-title--md">筛选预警</div>
+                    </div>
+                    <div class="btn-group--wrap">
+                        <button class="btn btn-secondary btn--sm">
+                            <i class="fas fa-calendar"></i> 按时间
+                        </button>
+                        <button class="btn btn-secondary btn--sm">
+                            <i class="fas fa-exclamation-circle"></i> 按级别
+                        </button>
+                        <button class="btn btn-secondary btn--sm">
+                            <i class="fas fa-users"></i> 按会议
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 预警列表 -->
+                <div class="section-title">预警事件列表</div>
+
+                <!-- 预警卡片1 - 高级别待处理 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-header-content">
+                            <div class="card-title card-title--md">签到率过低预警</div>
+                            <div class="card-subtitle">2025-02-06 10:30 · 签到率 65%</div>
+                        </div>
+                        <span class="status-chip status-warn"><i class="fas fa-exclamation-triangle"></i> 高</span>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-orange">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">预警指标</div>
+                                <div class="assistant-item-desc">签到率 65% < 阈值 70%</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-blue">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">关联会议</div>
+                                <div class="assistant-item-desc">2025党务干部培训班</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-cyan">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">预警原因</div>
+                                <div class="assistant-item-desc">开班仪式签到人数不足</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cta-bar">
+                        <button class="btn btn-secondary btn--flex">
+                            <i class="fas fa-eye"></i> 详情
+                        </button>
+                        <button class="btn btn-secondary btn--flex">
+                            <i class="fas fa-clock"></i> 标记处理中
+                        </button>
+                        <button class="btn btn-primary btn--flex">
+                            <i class="fas fa-check"></i> 完成
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 预警卡片2 - 中级别待处理 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-header-content">
+                            <div class="card-title card-title--md">报名率偏低预警</div>
+                            <div class="card-subtitle">2025-02-06 09:15 · 报名率 78%</div>
+                        </div>
+                        <span class="status-chip status-accent"><i class="fas fa-exclamation-circle"></i> 中</span>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-green">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">预警指标</div>
+                                <div class="assistant-item-desc">报名率 78% < 阈值 80%</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-blue">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">关联会议</div>
+                                <div class="assistant-item-desc">2025党务干部培训班</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-cyan">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">预警原因</div>
+                                <div class="assistant-item-desc">距离报名截止仅剩2天</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cta-bar">
+                        <button class="btn btn-secondary btn--flex">
+                            <i class="fas fa-eye"></i> 详情
+                        </button>
+                        <button class="btn btn-secondary btn--flex">
+                            <i class="fas fa-clock"></i> 标记处理中
+                        </button>
+                        <button class="btn btn-primary btn--flex">
+                            <i class="fas fa-check"></i> 完成
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 预警卡片3 - 处理中 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-header-content">
+                            <div class="card-title card-title--md">任务完成率预警</div>
+                            <div class="card-subtitle">2025-02-05 16:45 · 完成率 55%</div>
+                        </div>
+                        <span class="status-chip status-accent"><i class="fas fa-spinner"></i> 处理中</span>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-purple">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">预警指标</div>
+                                <div class="assistant-item-desc">任务完成率 55% < 阈值 60%</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-cyan">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">处理人</div>
+                                <div class="assistant-item-desc">张伟 · 开始于 2025-02-05 17:00</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-orange">
+                                <i class="fas fa-comment-dots"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">处理记录</div>
+                                <div class="assistant-item-desc">已联系相关人员催促</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cta-bar">
+                        <button class="btn btn-secondary btn--flex">
+                            <i class="fas fa-eye"></i> 详情
+                        </button>
+                        <button class="btn btn-primary btn--flex">
+                            <i class="fas fa-edit"></i> 更新进度
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 预警卡片4 - 已处理 -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-header-content">
+                            <div class="card-title card-title--md">API响应时间预警</div>
+                            <div class="card-subtitle">2025-02-05 14:20 · 响应 1200ms</div>
+                        </div>
+                        <span class="status-chip status-positive"><i class="fas fa-check-circle"></i> 已处理</span>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">预警指标</div>
+                                <div class="assistant-item-desc">API响应时间 1200ms > 阈值 1000ms</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-green">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">处理人</div>
+                                <div class="assistant-item-desc">李明 · 完成于 2025-02-05 15:30</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-cyan">
+                                <i class="fas fa-check-double"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">处理结果</div>
+                                <div class="assistant-item-desc">已优化数据库查询，响应恢复正常</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cta-bar">
+                        <button class="btn btn-secondary btn--flex">
+                            <i class="fas fa-eye"></i> 查看详情
+                        </button>
+                        <button class="btn btn-secondary btn--flex">
+                            <i class="fas fa-redo"></i> 重新打开
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 预警统计 -->
+                <div class="section-title">预警统计</div>
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="icon-container icon-gradient-purple">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="card-title">统计分析</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-list-ol"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">预警总数</div>
+                                <div class="assistant-item-desc">本月 15 条</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-orange">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">高级别预警</div>
+                                <div class="assistant-item-desc">3 条 · 占 20%</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-green">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">已处理</div>
+                                <div class="assistant-item-desc">10 条 · 占 67%</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon icon-gradient-cyan">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">未处理</div>
+                                <div class="assistant-item-desc">5 条 · 占 33%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 温馨提示 -->
+                <div class="info-banner fade-in">
+                    <strong>提示</strong>
+                    高级别预警请尽快处理。处理完成后系统会自动记录处理时间和处理结果，用于后续优化预警规则。
+                </div>
+
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="nav-text">沟通</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleTrendAnalysis() {
+            const panel = document.getElementById('trendAnalysisPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function toggleEffectEvaluation() {
+            const panel = document.getElementById('effectEvaluationPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>

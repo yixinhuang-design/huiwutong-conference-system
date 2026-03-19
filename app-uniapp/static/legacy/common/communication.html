@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能会议助手 - 沟通</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        .communication-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 16px;
+            background: #f8fafc;
+            overflow-x: auto;
+        }
+
+        .tab-card {
+            flex-shrink: 0;
+            padding: 12px 20px;
+            border-radius: 20px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #64748b;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-card:hover {
+            border-color: #cbd5e1;
+        }
+
+        .tab-card.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .tab-card i {
+            margin-right: 6px;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 0 16px 16px 16px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .empty-list {
+            text-align: center;
+            padding: 40px 16px;
+            color: #94a3b8;
+        }
+
+        .empty-list-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content communication-page">
+                <!-- 标签页卡片 -->
+                <div class="communication-tabs">
+                    <div class="tab-card active" onclick="switchTab('group')">
+                        <i class="fas fa-users"></i>群聊
+                    </div>
+                    <div class="tab-card" onclick="switchTab('private')">
+                        <i class="fas fa-user-circle"></i>私聊
+                    </div>
+                    <div class="tab-card" onclick="switchTab('system')">
+                        <i class="fas fa-bell"></i>系统
+                    </div>
+                </div>
+
+                <!-- 群聊标签内容 -->
+                <div id="group-tab" class="tab-content active">
+                    <div class="card fade-in">
+                        <div class="assistant-list">
+                            <a href="../staff/chat-room.html" class="assistant-item-link">
+                                <div class="assistant-item">
+                                    <div class="assistant-item-icon icon-gradient-blue">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="assistant-item-content">
+                                        <div class="assistant-item-title">2025党务干部培训班 · 工作人员群</div>
+                                        <div class="assistant-item-desc">12 名成员</div>
+                                    </div>
+                                    <div class="assistant-item-badge">
+                                        <span class="badge-count">3</span>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="../learner/chat-room.html" class="assistant-item-link">
+                                <div class="assistant-item">
+                                    <div class="assistant-item-icon icon-gradient-cyan">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="assistant-item-content">
+                                        <div class="assistant-item-title">2025党务干部培训班 · 全体学员群</div>
+                                        <div class="assistant-item-desc">142 名学员</div>
+                                    </div>
+                                    <div class="assistant-item-badge">
+                                        <span class="badge-count">4</span>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="#" class="assistant-item-link">
+                                <div class="assistant-item">
+                                    <div class="assistant-item-icon icon-gradient-purple">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="assistant-item-content">
+                                        <div class="assistant-item-title">2025党务干部培训班 · 第一学习小组</div>
+                                        <div class="assistant-item-desc">28 人</div>
+                                    </div>
+                                    <div class="assistant-item-badge">
+                                        <span class="badge-count">2</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 私聊标签内容 -->
+                <div id="private-tab" class="tab-content">
+                    <div class="card fade-in">
+                        <div class="assistant-list">
+                            <a href="../learner/chat-private.html" class="assistant-item-link">
+                                <div class="assistant-item">
+                                    <div class="assistant-item-icon icon-gradient-green">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="assistant-item-content">
+                                        <div class="assistant-item-title">张主任</div>
+                                        <div class="assistant-item-desc">管理员</div>
+                                    </div>
+                                    <div class="assistant-item-badge">
+                                        <span class="badge-count">1</span>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="#" class="assistant-item-link">
+                                <div class="assistant-item">
+                                    <div class="assistant-item-icon icon-gradient-orange">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="assistant-item-content">
+                                        <div class="assistant-item-title">李敏</div>
+                                        <div class="assistant-item-desc">第一组组长</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统消息标签内容 -->
+                <div id="system-tab" class="tab-content">
+                    <div class="card fade-in">
+                        <div class="assistant-list">
+                            <a href="#" class="assistant-item-link">
+                                <div class="assistant-item">
+                                    <div class="assistant-item-icon icon-gradient-sky">
+                                        <i class="fas fa-bell"></i>
+                                    </div>
+                                    <div class="assistant-item-content">
+                                        <div class="assistant-item-title">签到提醒</div>
+                                        <div class="assistant-item-desc">请在 09:00 前完成报到签到</div>
+                                    </div>
+                                    <div class="assistant-item-badge">
+                                        <span class="badge-count">1</span>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="#" class="assistant-item-link">
+                                <div class="assistant-item">
+                                    <div class="assistant-item-icon icon-gradient-amber">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    <div class="assistant-item-content">
+                                        <div class="assistant-item-title">座位确认成功</div>
+                                        <div class="assistant-item-desc">你的座位为前区 3 排 12 座</div>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="#" class="assistant-item-link">
+                                <div class="assistant-item">
+                                    <div class="assistant-item-icon icon-gradient-violet">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div class="assistant-item-content">
+                                        <div class="assistant-item-title">任务完成通知</div>
+                                        <div class="assistant-item-desc">分组讨论材料准备已完成</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="nav-text">沟通</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // 隐藏所有标签内容
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 移除所有标签卡片的active状态
+            const tabCards = document.querySelectorAll('.tab-card');
+            tabCards.forEach(card => {
+                card.classList.remove('active');
+            });
+
+            // 显示选中的标签内容
+            const activeTab = document.getElementById(tabName + '-tab');
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+
+            // 给点击的标签卡片添加active状态
+            event.target.closest('.tab-card').classList.add('active');
+        }
+    </script>
+</body>
+</html>

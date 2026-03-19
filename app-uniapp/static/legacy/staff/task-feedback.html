@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务完成反馈</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left"><span>9:41</span></div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="task-detail.html" class="btn btn-secondary" style="padding:8px 12px;">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                        <span class="status-chip status-warn"><i class="fas fa-clipboard-check"></i> 待审核</span>
+                    </div>
+                </div>
+
+                <form class="card fade-in" style="display:grid;gap:16px;padding-bottom:20px;">
+                    <div style="display:grid;gap:8px;">
+                        <label style="font-size:13px;color:#475569;">实际完成时间</label>
+                        <input type="datetime-local" value="2025-01-15T08:20" style="padding:12px;border-radius:10px;border:1px solid #cbd5e1;font-size:13px;">
+                    </div>
+
+                    <div style="display:grid;gap:8px;">
+                        <label style="font-size:13px;color:#475569;">完成情况</label>
+                        <select style="padding:12px;border-radius:10px;border:1px solid #cbd5e1;font-size:13px;color:#1e293b;">
+                            <option>全部完成（无异常）</option>
+                            <option>部分完成（待补充）</option>
+                            <option>无法完成（需重新安排）</option>
+                        </select>
+                    </div>
+
+                    <div style="display:grid;gap:8px;">
+                        <label style="font-size:13px;color:#475569;">补充说明</label>
+                        <textarea rows="4" placeholder="可填写执行情况、遇到问题及建议..." style="padding:12px;border-radius:10px;border:1px solid #cbd5e1;font-size:13px;line-height:1.5;"></textarea>
+                    </div>
+
+                    <div style="display:grid;gap:8px;">
+                        <label style="font-size:13px;color:#475569;">上传现场凭证</label>
+                        <div style="display:flex;gap:10px;">
+                            <button type="button" class="btn btn-secondary" style="flex:1;"><i class="fas fa-camera"></i> 拍照</button>
+                            <button type="button" class="btn btn-secondary" style="flex:1;"><i class="fas fa-upload"></i> 上传</button>
+                        </div>
+                        <div class="note-box" style="margin:0;">
+                            已上传：舞台布置完成.jpg、签到台.jpg
+                        </div>
+                    </div>
+
+                    <div class="cta-bar">
+                        <button type="button" class="btn btn-secondary" style="flex:1;"><i class="fas fa-save"></i> 临时保存</button>
+                        <button type="submit" class="btn btn-primary" style="flex:1;"><i class="fas fa-check-circle"></i> 提交完成</button>
+                    </div>
+                </form>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <i class="fas fa-history" style="color:#2563eb;"></i>
+                        <div class="card-title">历史记录</div>
+                    </div>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <h5>系统记录</h5>
+                            <p>如果任务完成获得审核通过，状态将更新为“已完成”，同时推送到相关群组。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

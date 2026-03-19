@@ -1,0 +1,2847 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报名汇总系统 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="../css/stat-cards-standard.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">报名汇总系统</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card">
+            <div>
+                <h2>报名汇总系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="goToSeating">
+                    <i class="fas fa-chair"></i>
+                    智能排座
+                </button>
+                <button class="btn-outline" @click="goToRosterGeneration">
+                    <i class="fas fa-file-export"></i>
+                    生成名册
+                </button>
+                <button class="btn-outline" @click="goToAudit">
+                    <i class="fas fa-user-check"></i>
+                    智能审核
+                </button>
+            </div>
+        </div>
+
+        <!-- 报名统计概览面板 -->
+        <div class="registration-stats-overview glass-card">
+            <h3>报名统计概览</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ registrationStats.total }}</div>
+                        <div class="stat-label">总报名数</div>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ registrationStats.approved }}</div>
+                        <div class="stat-label">已审核数</div>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ registrationStats.pending }}</div>
+                        <div class="stat-label">未审核数</div>
+                    </div>
+                </div>
+                <div class="stat-card info" v-if="registrationStats.limitCount">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-lock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ registrationStats.limitCount }}</div>
+                        <div class="stat-label">限定报名人数</div>
+                    </div>
+                </div>
+                <div class="stat-card danger" v-if="registrationStats.unregisteredUnits > 0">
+                    <div class="stat-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ registrationStats.unregisteredUnits }}</div>
+                        <div class="stat-label">未报名单位</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 报名趋势图 -->
+            <div class="trend-chart-section">
+                <div class="chart-header">
+                    <h4>报名趋势图</h4>
+                    <div class="chart-controls">
+                        <select v-model="trendTimeRange" @change="updateTrendChart">
+                            <option value="today">今天</option>
+                            <option value="week">本周</option>
+                            <option value="month">本月</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div id="trendChart" style="width: 100%; height: 300px;"></div>
+                </div>
+            </div>
+            
+            <!-- 快速操作 -->
+            <div class="quick-actions">
+                <a href="reminder-urge.html" class="btn-warning btn-lg">
+                    <i class="fas fa-bell"></i>
+                    催报催收系统
+                </a>
+                <button class="btn-outline" @click="exportStatsReport">
+                    <i class="fas fa-file-download"></i>
+                    导出统计报告
+                </button>
+            </div>
+        </div>
+
+        <!-- 多渠道报名管理 -->
+        <div class="channel-management glass-card">
+            <h3>📊 多渠道报名分析</h3>
+            <div class="channel-cards">
+                <div v-for="channel in channels" :key="channel.type" 
+                     class="channel-card" 
+                     :class="{ active: selectedChannel === channel.type }"
+                     @click="selectChannel(channel.type)">
+                    <i :class="channel.icon"></i>
+                    <span class="channel-name">{{ channel.name }}</span>
+                    <div class="channel-stats">
+                        <span class="stat-number">{{ channel.count }}</span>
+                        <span class="stat-label">人数</span>
+                    </div>
+                    <div class="channel-trend" :class="channel.trend > 0 ? 'trend-up' : 'trend-down'">
+                        {{ channel.trend > 0 ? '+' : '' }}{{ channel.trend }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 学员名册管理 -->
+        <div class="roster-management glass-card">
+            <h3>📋 学员名册管理</h3>
+            <div class="roster-actions">
+                <button class="btn-primary" @click="goToRosterGeneration">
+                    <i class="fas fa-file-export"></i>
+                    生成名册
+                </button>
+                <div class="export-options">
+                    <button class="btn-outline" @click="quickExportExcel">
+                        <i class="fas fa-file-excel"></i>
+                        快速导出Excel
+                    </button>
+                    <button class="btn-outline" @click="quickExportPDF">
+                        <i class="fas fa-file-pdf"></i>
+                        快速导出PDF
+                    </button>
+                </div>
+            </div>
+            <p class="roster-hint">点击"生成名册"进入完整的名册生成流程，支持自定义模板、分组、排序等功能</p>
+        </div>
+
+        <!-- 智能分组 -->
+        <div class="smart-grouping glass-card">
+            <h3>👥 智能分组管理</h3>
+            <div class="grouping-config">
+                <div class="config-item">
+                    <label>分组依据:</label>
+                    <select v-model="groupingCriteria" @change="updateGroupingPreview">
+                        <option value="department">按部门分组</option>
+                        <option value="position">按职级分组</option>
+                        <option value="expertise">按专业领域</option>
+                        <option value="mixed">混合分组</option>
+                        <option value="random">随机分组</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>每组人数:</label>
+                    <input type="number" v-model="groupSize" min="10" max="50" @change="updateGroupingPreview">
+                </div>
+                <div class="config-item">
+                    <label>分组数量:</label>
+                    <input type="number" v-model="groupCount" min="1" max="20" readonly>
+                </div>
+                <button class="btn-primary" @click="autoGrouping">
+                    <i class="fas fa-users-cog"></i>
+                    执行智能分组
+                </button>
+            </div>
+            <div class="grouping-preview">
+                <div v-if="groupingPreview.length === 0" class="empty-preview">
+                    <p>请先配置分组参数并执行智能分组</p>
+                </div>
+                <div v-else>
+                    <div class="preview-actions">
+                        <button class="btn-sm btn-outline" @click="generateGroups">
+                            <i class="fas fa-users"></i>
+                            自动生成群组
+                        </button>
+                        <button class="btn-sm btn-outline" @click="goToRosterGeneration">
+                            <i class="fas fa-file-export"></i>
+                            进入名册生成
+                        </button>
+                    </div>
+                    <table class="group-table">
+                        <thead>
+                            <tr>
+                                <th>组名</th>
+                                <th>人数</th>
+                                <th>组长</th>
+                                <th>工作人员</th>
+                                <th>分组依据</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="group in groupingPreview" :key="group.id">
+                                <td>
+                                    <input type="text" 
+                                           v-model="group.name" 
+                                           @blur="saveGroupName(group.id)"
+                                           class="group-name-input">
+                                </td>
+                                <td>{{ group.memberCount }}人</td>
+                                <td>
+                                    <select v-model="group.leader" 
+                                            @change="saveGroupLeader(group.id)"
+                                            class="leader-select">
+                                        <option value="">未指定</option>
+                                        <option v-for="member in getGroupMembers(group.id)" 
+                                                :key="member.id" 
+                                                :value="member.name">
+                                            {{ member.name }} ({{ member.unit }})
+                                        </option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button class="btn-sm btn-outline" @click="assignStaff(group.id)">
+                                        <i class="fas fa-user-tie"></i>
+                                        指定工作人员
+                                    </button>
+                                </td>
+                                <td>{{ group.criteria }}</td>
+                                <td>
+                                    <button class="btn-sm btn-outline" @click="editGroupMembers(group.id)">
+                                        <i class="fas fa-edit"></i>
+                                        调整成员
+                                    </button>
+                                    <button class="btn-sm btn-outline" @click="viewGroup(group.id)">
+                                        <i class="fas fa-eye"></i>
+                                        查看
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 一键催报功能 -->
+        <div class="reminder-system glass-card">
+            <h3>⏰ 一键催报系统</h3>
+            <div class="reminder-stats">
+                <div class="stat-card">
+                    <span class="stat-number">{{ reminderStats.unregisteredUnits }}</span>
+                    <span class="stat-label">未报名单位</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ reminderStats.involvedPersons }}</span>
+                    <span class="stat-label">涉及人数</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ reminderStats.sentReminders }}</span>
+                    <span class="stat-label">已发催报</span>
+                </div>
+            </div>
+            <div class="reminder-actions">
+                <button class="btn-warning" @click="sendReminderToAll">
+                    <i class="fas fa-bell"></i>
+                    全部催报
+                </button>
+                <button class="btn-outline" @click="selectiveReminder">
+                    <i class="fas fa-user-check"></i>
+                    选择催报
+                </button>
+                <div class="reminder-templates">
+                    <label>催报模板:</label>
+                    <select v-model="reminderTemplate">
+                        <option value="gentle">温和提醒模板</option>
+                        <option value="urgent">紧急催报模板</option>
+                        <option value="final">最后机会模板</option>
+                        <option value="custom">自定义模板</option>
+                    </select>
+                </div>
+            </div>
+            <div class="reminder-preview" v-if="reminderTemplate">
+                <h4>模板预览</h4>
+                <div class="template-content">
+                    {{ getReminderTemplateContent() }}
+                </div>
+            </div>
+        </div>
+
+        <!-- 报名数据表格 -->
+        <div class="registration-data glass-card">
+            <h3>📊 报名数据列表</h3>
+            <div class="data-filters">
+                <input type="text" 
+                       v-model="searchQuery" 
+                       @input="filterData"
+                       placeholder="搜索姓名、单位、部门..."
+                       class="search-input">
+                <select v-model="statusFilter" @change="filterData">
+                    <option value="">全部状态</option>
+                    <option value="approved">已通过</option>
+                    <option value="pending">待审核</option>
+                    <option value="rejected">已拒绝</option>
+                </select>
+                <select v-model="channelFilter" @change="filterData">
+                    <option value="">全部渠道</option>
+                    <option value="web">网页报名</option>
+                    <option value="miniprogram">小程序报名</option>
+                    <option value="mobile">移动端报名</option>
+                </select>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" v-model="selectAll" @change="toggleSelectAll"></th>
+                        <th>姓名</th>
+                        <th>单位</th>
+                        <th>部门</th>
+                        <th>职级</th>
+                        <th>报名渠道</th>
+                        <th>报名时间</th>
+                        <th>证件识别</th>
+                        <th>审核状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="registration in paginatedRegistrations" :key="registration.id">
+                        <td><input type="checkbox" :checked="selectedRegistrations.includes(registration.id)" @change="toggleRegistration(registration.id)"></td>
+                        <td>{{ registration.name }}</td>
+                        <td>{{ registration.unit }}</td>
+                        <td>{{ registration.department }}</td>
+                        <td>{{ registration.position }}</td>
+                        <td>{{ registration.channel }}</td>
+                        <td>{{ formatDate(registration.registeredAt) }}</td>
+                        <td>
+                            <span v-if="registration.ocrResult" class="ocr-status" :class="getOCRStatusClass(registration.ocrResult)">
+                                <i :class="getOCRStatusIcon(registration.ocrResult)"></i>
+                                {{ getOCRStatusText(registration.ocrResult) }}
+                            </span>
+                            <span v-else class="ocr-status no-ocr">
+                                <i class="fas fa-minus-circle"></i>
+                                未识别
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge" :class="'status-' + registration.status">
+                                {{ getStatusText(registration.status) }}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-sm btn-outline" @click="viewDetails(registration.id)">
+                                详情
+                            </button>
+                            <button class="btn-sm btn-primary" 
+                                    v-if="registration.status === 'pending'"
+                                    @click="quickApprove(registration.id)">
+                                通过
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <button @click="prevPage" :disabled="currentPage === 1">上一页</button>
+                <span>第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
+                <button @click="nextPage" :disabled="currentPage === totalPages">下一页</button>
+            </div>
+        </div>
+        </div><!-- 关闭page-with-nav -->
+
+        <!-- 一键催报弹窗 -->
+        <div v-if="showReminderModal" class="modal-overlay" @click.self="showReminderModal = false">
+            <div class="modal-content glass-card reminder-modal" @click.stop>
+                <div class="modal-header">
+                    <h3>⏰ 一键催报</h3>
+                    <button class="btn-icon" @click="showReminderModal = false">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- 步骤1: 选择单位 -->
+                    <div class="reminder-step" v-if="reminderStep === 1">
+                        <h4>步骤1: 选择要催报的单位</h4>
+                        <div class="unit-selection">
+                            <div class="selection-actions">
+                                <button class="btn-sm btn-outline" @click="selectAllUnits">
+                                    {{ allUnitsSelected ? '取消全选' : '全选' }}
+                                </button>
+                                <span class="selected-count">已选择 {{ selectedUnits.length }} 个单位</span>
+                            </div>
+                            <div class="unit-list">
+                                <div v-for="unit in unregisteredUnits" :key="unit.id" 
+                                     class="unit-item" 
+                                     :class="{ selected: selectedUnits.includes(unit.id) }"
+                                     @click="toggleUnit(unit.id)">
+                                    <input type="checkbox" 
+                                           :checked="selectedUnits.includes(unit.id)"
+                                           @change.stop="toggleUnit(unit.id)">
+                                    <div class="unit-info">
+                                        <div class="unit-name">{{ unit.name }}</div>
+                                        <div class="unit-meta">预计人数: {{ unit.expectedCount }}人</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn-outline" @click="showReminderModal = false">取消</button>
+                            <button class="btn-primary" @click="reminderStep = 2" :disabled="selectedUnits.length === 0">
+                                下一步：选择渠道
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2: 选择渠道 -->
+                    <div class="reminder-step" v-if="reminderStep === 2">
+                        <h4>步骤2: 选择催报渠道</h4>
+                        <div class="channel-selection">
+                            <label class="channel-option" 
+                                   v-for="channel in availableChannels" 
+                                   :key="channel.value"
+                                   :class="{ selected: reminderChannels.includes(channel.value) }">
+                                <input type="checkbox" 
+                                       :value="channel.value"
+                                       v-model="reminderChannels">
+                                <div class="channel-content">
+                                    <i :class="channel.icon"></i>
+                                    <div>
+                                        <div class="channel-name">{{ channel.name }}</div>
+                                        <div class="channel-desc">{{ channel.desc }}</div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn-outline" @click="reminderStep = 1">上一步</button>
+                            <button class="btn-primary" @click="reminderStep = 3" :disabled="reminderChannels.length === 0">
+                                下一步：选择模板
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 步骤3: 选择模板 -->
+                    <div class="reminder-step" v-if="reminderStep === 3">
+                        <h4>步骤3: 选择催报模板</h4>
+                        <div class="template-selection">
+                            <select v-model="reminderTemplate" class="template-select">
+                                <option value="gentle">温和提醒模板</option>
+                                <option value="urgent">紧急催报模板</option>
+                                <option value="final">最后机会模板</option>
+                                <option value="custom">自定义模板</option>
+                            </select>
+                            <div class="template-preview">
+                                <h5>模板预览：</h5>
+                                <div class="preview-content">
+                                    {{ getReminderTemplateContent() }}
+                                </div>
+                                <div v-if="reminderTemplate === 'custom'" class="custom-template-editor">
+                                    <textarea v-model="customTemplateContent" 
+                                              placeholder="请输入自定义催报内容..."
+                                              rows="6"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn-outline" @click="reminderStep = 2">上一步</button>
+                            <button class="btn-primary" @click="reminderStep = 4">
+                                下一步：确认发送
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 步骤4: 确认发送 -->
+                    <div class="reminder-step" v-if="reminderStep === 4">
+                        <h4>步骤4: 确认发送</h4>
+                        <div class="send-summary">
+                            <div class="summary-item">
+                                <span class="label">选择单位:</span>
+                                <span class="value">{{ selectedUnits.length }} 个单位</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">催报渠道:</span>
+                                <span class="value">{{ getChannelNames() }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">催报模板:</span>
+                                <span class="value">{{ getTemplateName() }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">预计发送:</span>
+                                <span class="value">{{ getEstimatedCount() }} 条消息</span>
+                            </div>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn-outline" @click="reminderStep = 3">上一步</button>
+                            <button class="btn-primary" @click="sendReminder">
+                                <i class="fas fa-paper-plane"></i>
+                                确认发送
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 智能分组 - 组详情弹窗 -->
+        <div v-if="showGroupDetailModal" class="modal-overlay" @click.self="showGroupDetailModal = false">
+            <div class="modal-content glass-card" @click.stop style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h3>组详情 - {{ currentGroup?.name }}</h3>
+                    <button class="btn-icon" @click="showGroupDetailModal = false">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="group-info">
+                        <div class="info-row">
+                            <span class="label">组名:</span>
+                            <input type="text" v-model="currentGroup.name" class="group-name-input">
+                        </div>
+                        <div class="info-row">
+                            <span class="label">人数:</span>
+                            <span class="value">{{ currentGroup?.memberCount }}人</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">组长:</span>
+                            <select v-model="currentGroup.leader" class="leader-select">
+                                <option value="">未指定</option>
+                                <option v-for="member in currentGroupMembers" 
+                                        :key="member.id" 
+                                        :value="member.name">
+                                    {{ member.name }} ({{ member.unit }})
+                                </option>
+                            </select>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">工作人员:</span>
+                            <button class="btn-sm btn-outline" @click="assignStaff(currentGroup.id)">
+                                <i class="fas fa-user-tie"></i>
+                                指定工作人员
+                            </button>
+                        </div>
+                    </div>
+                    <div class="members-list">
+                        <h4>成员列表 ({{ currentGroupMembers.length }}人)</h4>
+                        <div class="members-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>姓名</th>
+                                        <th>单位</th>
+                                        <th>部门</th>
+                                        <th>职级</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(member, index) in currentGroupMembers" :key="member.id">
+                                        <td>{{ index + 1 }}</td>
+                                        <td>{{ member.name }}</td>
+                                        <td>{{ member.unit }}</td>
+                                        <td>{{ member.department }}</td>
+                                        <td>{{ member.position }}</td>
+                                        <td>
+                                            <button class="btn-sm btn-danger" @click="removeMemberFromGroup(member.id)">
+                                                移除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-outline" @click="showGroupDetailModal = false">关闭</button>
+                        <button class="btn-primary" @click="saveGroupDetail">保存修改</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 智能分组 - 成员调整弹窗 -->
+        <div v-if="showMemberEditModal" class="modal-overlay" @click.self="showMemberEditModal = false">
+            <div class="modal-content glass-card member-edit-modal" @click.stop>
+                <div class="modal-header">
+                    <h3>调整组成员 - {{ editingGroup?.name }}</h3>
+                    <button class="btn-icon" @click="showMemberEditModal = false">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="edit-tabs">
+                        <button class="tab-btn" 
+                                :class="{ active: memberEditMode === 'drag' }"
+                                @click="memberEditMode = 'drag'">
+                            <i class="fas fa-arrows-alt"></i>
+                            拖动分组
+                        </button>
+                        <button class="tab-btn" 
+                                :class="{ active: memberEditMode === 'number' }"
+                                @click="memberEditMode = 'number'">
+                            <i class="fas fa-sort-numeric-down"></i>
+                            序号分组
+                        </button>
+                    </div>
+                    
+                    <!-- 拖动分组模式 -->
+                    <div v-if="memberEditMode === 'drag'" class="drag-mode">
+                        <div class="groups-container">
+                            <div v-for="group in allGroupsForEdit" :key="group.id" class="group-column">
+                                <h5>{{ group.name }} ({{ group.members.length }}人)</h5>
+                                <div class="members-drag-list" 
+                                     @dragover.prevent
+                                     @drop.prevent="handleDrop(group.id, $event)">
+                                    <div v-for="member in group.members" 
+                                         :key="member.id"
+                                         class="member-drag-item"
+                                         draggable="true"
+                                         @dragstart="handleDragStart(member, group.id)">
+                                        {{ member.name }} ({{ member.unit }})
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 序号分组模式 -->
+                    <div v-if="memberEditMode === 'number'" class="number-mode">
+                        <div class="number-edit-controls">
+                            <label>设置序号范围分组:</label>
+                            <input type="number" v-model.number="numberGroupSize" min="1" placeholder="每组人数">
+                            <button class="btn-primary" @click="applyNumberGrouping">应用分组</button>
+                        </div>
+                        <div class="members-number-list">
+                            <div v-for="(member, index) in allMembersForEdit" 
+                                 :key="member.id"
+                                 class="member-number-item">
+                                <span class="member-number">{{ index + 1 }}</span>
+                                <span class="member-info">{{ member.name }} ({{ member.unit }})</span>
+                                <select v-model="member.groupId" @change="updateMemberGroup(member.id, member.groupId)">
+                                    <option v-for="group in allGroupsForEdit" 
+                                            :key="group.id" 
+                                            :value="group.id">
+                                        {{ group.name }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button class="btn-outline" @click="showMemberEditModal = false">取消</button>
+                        <button class="btn-primary" @click="saveMemberEdit">保存调整</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 指定工作人员弹窗 -->
+        <div v-if="showStaffModal" class="modal-overlay" @click.self="showStaffModal = false">
+            <div class="modal-content glass-card staff-modal" @click.stop>
+                <div class="modal-header">
+                    <h3>指定工作人员 - {{ editingGroup?.name }}</h3>
+                    <button class="btn-icon" @click="showStaffModal = false">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="staff-selection">
+                        <p>从已报名人员中选择工作人员：</p>
+                        <div class="staff-list">
+                            <label v-for="member in availableStaff" 
+                                   :key="member.id"
+                                   class="staff-option"
+                                   :class="{ selected: editingGroup && editingGroup.staff && editingGroup.staff.includes(member.id) }">
+                                <input type="checkbox" 
+                                       :value="member.id"
+                                       :checked="editingGroup && editingGroup.staff && editingGroup.staff.includes(member.id)"
+                                       @change="toggleStaff(member.id)">
+                                <div class="staff-info">
+                                    <div class="staff-name">{{ member.name }}</div>
+                                    <div class="staff-meta">{{ member.unit }} - {{ member.position }}</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-outline" @click="showStaffModal = false">取消</button>
+                        <button class="btn-primary" @click="saveStaff">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    registrationStats: {
+                        total: 356,
+                        approved: 328,
+                        pending: 23,
+                        rejected: 5,
+                        limitCount: 500,
+                        unregisteredUnits: 7
+                    },
+                    trendTimeRange: 'month',
+                    trendChartData: [],
+                    trendChart: null,
+                    channels: [
+                        { type: 'web', name: '网页报名', icon: 'fas fa-globe', count: 156, trend: 12 },
+                        { type: 'miniprogram', name: '小程序报名', icon: 'fas fa-comment', count: 142, trend: 8 },
+                        { type: 'mobile', name: '移动端报名', icon: 'fas fa-mobile-alt', count: 58, trend: -3 }
+                    ],
+                    selectedChannel: null,
+                    showReminderModal: false,
+                    reminderStep: 1, // 催报步骤：1-选择单位, 2-选择渠道, 3-选择模板, 4-确认发送
+                    availableChannels: [
+                        { value: 'sms', name: '短信', icon: 'fas fa-sms', desc: '支持非注册用户，字数限制160字' },
+                        { value: 'wechat', name: '微信', icon: 'fab fa-weixin', desc: '需注册用户，模板消息' },
+                        { value: 'app', name: 'APP推送', icon: 'fas fa-mobile-alt', desc: '需注册用户，订阅消息' },
+                        { value: 'qr', name: '二维码查询', icon: 'fas fa-qrcode', desc: '非注册用户，生成唯一二维码' }
+                    ],
+                    customTemplateContent: '',
+                    ocrApiOnline: true,
+                    ocrResult: null,
+                    groupingCriteria: 'department',
+                    groupSize: 25,
+                    groupCount: 0,
+                    groupingPreview: [],
+                    groupMembers: {}, // 存储每个组的成员列表
+                    editingGroupId: null, // 当前正在编辑的组ID
+                    showGroupDetailModal: false, // 组详情弹窗
+                    showMemberEditModal: false, // 成员调整弹窗
+                    showStaffModal: false, // 指定工作人员弹窗
+                    currentGroup: null, // 当前查看的组
+                    currentGroupMembers: [], // 当前组的成员列表
+                    editingGroup: null, // 正在编辑的组
+                    memberEditMode: 'drag', // 成员编辑模式：drag-拖动, number-序号
+                    allGroupsForEdit: [], // 用于编辑的所有组
+                    allMembersForEdit: [], // 用于编辑的所有成员
+                    draggedMember: null, // 正在拖动的成员
+                    draggedFromGroup: null, // 成员来源组
+                    numberGroupSize: 25, // 序号分组每组人数
+                    availableStaff: [], // 可选的工作人员列表
+                    reminderStats: {
+                        unregisteredUnits: 0,
+                        involvedPersons: 0,
+                        sentReminders: 0
+                    },
+                    reminderTemplate: 'gentle',
+                    reminderChannels: ['sms'],
+                    selectedUnits: [],
+                    unregisteredUnits: [
+                        { id: 'unit_1', name: '示例单位A', expectedCount: 5 },
+                        { id: 'unit_2', name: '示例单位B', expectedCount: 3 },
+                        { id: 'unit_3', name: '示例单位C', expectedCount: 8 }
+                    ],
+                    searchQuery: '',
+                    statusFilter: '',
+                    channelFilter: '',
+                    registrations: [
+                        { id: 1, name: '张三', unit: '市委组织部', department: '干部科', position: '处长', phone: '13800138001', email: 'zhangsan@example.com', status: 'approved', submitTime: new Date('2024-01-10 09:30'), auditTime: new Date('2024-01-10 10:15'), reviewer: '审核员A' },
+                        { id: 2, name: '李四', unit: '市委宣传部', department: '宣传处', position: '副处长', phone: '13800138002', email: 'lisi@example.com', status: 'approved', submitTime: new Date('2024-01-10 10:00'), auditTime: new Date('2024-01-10 11:30'), reviewer: '审核员B' },
+                        { id: 3, name: '王五', unit: '市教育局', department: '人事科', position: '科长', phone: '13800138003', email: 'wangwu@example.com', status: 'pending', submitTime: new Date('2024-01-10 14:20'), auditTime: null, reviewer: null },
+                        { id: 4, name: '赵六', unit: '市财政局', department: '预算科', position: '副科长', phone: '13800138004', email: 'zhaoliu@example.com', status: 'pending', submitTime: new Date('2024-01-11 08:45'), auditTime: null, reviewer: null },
+                        { id: 5, name: '孙七', unit: '市卫健委', department: '疾控科', position: '科员', phone: '13800138005', email: 'sunqi@example.com', status: 'rejected', submitTime: new Date('2024-01-09 16:00'), auditTime: new Date('2024-01-09 17:00'), reviewer: '审核员C', rejectReason: '报名信息不完整' },
+                        { id: 6, name: '周八', unit: '市公安局', department: '治安科', position: '民警', phone: '13800138006', email: 'zhouba@example.com', status: 'approved', submitTime: new Date('2024-01-11 09:15'), auditTime: new Date('2024-01-11 10:00'), reviewer: '审核员A' },
+                        { id: 7, name: '吴九', unit: '市人社局', department: '就业科', position: '副科长', phone: '13800138007', email: 'wujiu@example.com', status: 'pending', submitTime: new Date('2024-01-11 11:30'), auditTime: null, reviewer: null },
+                        { id: 8, name: '郑十', unit: '市发改委', department: '规划科', position: '科员', phone: '13800138008', email: 'zhengshi@example.com', status: 'approved', submitTime: new Date('2024-01-12 08:00'), auditTime: new Date('2024-01-12 09:30'), reviewer: '审核员B' }
+                    ],
+                    filteredRegistrations: [],
+                    selectedRegistrations: [],
+                    selectAll: false,
+                    currentPage: 1,
+                    pageSize: 20
+                }
+            },
+            computed: {
+                paginatedRegistrations() {
+                    const start = (this.currentPage - 1) * this.pageSize;
+                    const end = start + this.pageSize;
+                    return this.filteredRegistrations.slice(start, end);
+                },
+                totalPages() {
+                    const pages = Math.ceil(this.filteredRegistrations.length / this.pageSize);
+                    return pages > 0 ? pages : 1;
+                },
+                allUnitsSelected() {
+                    return this.unregisteredUnits.length > 0 && 
+                           this.selectedUnits.length === this.unregisteredUnits.length;
+                }
+            },
+            watch: {
+                paginatedRegistrations: {
+                    handler() {
+                        // 当分页数据变化时，更新全选状态
+                        if (this.updateSelectAllState) {
+                            this.updateSelectAllState();
+                        }
+                    },
+                    immediate: false
+                }
+            },
+            async mounted() {
+                try {
+                    // 确保 interaction-utils 已加载
+                    if (!window.InteractionMixin) {
+                        console.warn('InteractionMixin 未加载，等待加载...');
+                        let retries = 0;
+                        while (!window.InteractionMixin && retries < 50) {
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            retries++;
+                        }
+                    }
+                    
+                    // 等待conferenceContext初始化完成
+                    await this.waitForConferenceContext();
+                    await this.initialize();
+                    this.initTrendChart();
+                } catch (error) {
+                    console.error('页面初始化失败:', error);
+                    // 即使初始化失败，也尝试显示页面
+                    this.$nextTick(() => {
+                        if (this.loadRegistrations) {
+                            this.loadRegistrations();
+                        }
+                    });
+                }
+            },
+            methods: {
+                async waitForConferenceContext() {
+                    // 等待conferenceContext初始化完成
+                    let retries = 0;
+                    while (!window.conferenceContext && retries < 10) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        retries++;
+                    }
+                    // 如果conferenceContext已初始化，等待其initialize完成
+                    if (window.conferenceContext && window.conferenceContext.initialize) {
+                        try {
+                            await window.conferenceContext.initialize();
+                        } catch (error) {
+                            console.warn('conferenceContext初始化警告:', error);
+                        }
+                    }
+                },
+                
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        if (window.conferenceContext) {
+                            try {
+                                // 如果conferenceContext已加载了该会议，直接使用
+                                if (window.conferenceContext.currentConference && 
+                                    window.conferenceContext.currentConference.id === conferenceId) {
+                                    this.conference = window.conferenceContext.currentConference;
+                                } else {
+                                    // 否则加载会议数据
+                                    this.conference = await window.conferenceContext.loadConference(conferenceId);
+                                }
+                            } catch (error) {
+                                console.error('加载会议数据失败:', error);
+                                // 使用示例数据作为fallback
+                                this.conference = {
+                                    id: conferenceId,
+                                    name: '示例会议'
+                                };
+                            }
+                        } else {
+                            // conferenceContext未初始化，使用示例数据
+                            this.conference = {
+                                id: conferenceId,
+                                name: '示例会议'
+                            };
+                        }
+                    } else {
+                        // 如果没有会议ID，使用示例数据
+                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '示例会议'
+                        };
+                    }
+                    // 无论是否有会议ID，都加载示例数据
+                    await this.loadRegistrations();
+                    // 确保数据加载完成后再更新统计和预览
+                    await this.loadRegistrationStats();
+                    this.updateGroupingPreview();
+                    // 初始化完成后更新全选状态
+                    this.$nextTick(() => {
+                        if (this.updateSelectAllState) {
+                            this.updateSelectAllState();
+                        }
+                    });
+                },
+                
+                async loadRegistrationStats() {
+                    // 根据实际报名数据计算统计数据
+                    const total = this.registrations.length;
+                    const approved = this.registrations.filter(r => r.status === 'approved').length;
+                    const pending = this.registrations.filter(r => r.status === 'pending').length;
+                    const rejected = this.registrations.filter(r => r.status === 'rejected').length;
+                    
+                    // 计算各渠道的报名数量
+                    const channelCounts = {
+                        web: this.registrations.filter(r => r.channel === 'web').length,
+                        miniprogram: this.registrations.filter(r => r.channel === 'miniprogram').length,
+                        mobile: this.registrations.filter(r => r.channel === 'mobile').length
+                    };
+                    
+                    // 更新渠道数据
+                    this.channels = [
+                        { 
+                            type: 'web', 
+                            name: '网页报名', 
+                            icon: 'fas fa-globe', 
+                            count: channelCounts.web,
+                            trend: channelCounts.web > 0 ? Math.floor((channelCounts.web / total) * 100) : 0
+                        },
+                        { 
+                            type: 'miniprogram', 
+                            name: '小程序报名', 
+                            icon: 'fas fa-comment', 
+                            count: channelCounts.miniprogram,
+                            trend: channelCounts.miniprogram > 0 ? Math.floor((channelCounts.miniprogram / total) * 100) : 0
+                        },
+                        { 
+                            type: 'mobile', 
+                            name: '移动端报名', 
+                            icon: 'fas fa-mobile-alt', 
+                            count: channelCounts.mobile,
+                            trend: channelCounts.mobile > 0 ? Math.floor((channelCounts.mobile / total) * 100) : 0
+                        }
+                    ];
+                    
+                    // 更新统计数据
+                    this.registrationStats = {
+                        total: total,
+                        approved: approved,
+                        pending: pending,
+                        rejected: rejected,
+                        limitCount: 500,
+                        unregisteredUnits: Math.max(0, 23 - Math.floor(total / 10)) // 根据报名数估算未报名单位
+                    };
+                    
+                    // 更新催报统计数据
+                    this.reminderStats = {
+                        unregisteredUnits: this.registrationStats.unregisteredUnits,
+                        involvedPersons: this.registrationStats.unregisteredUnits * 7, // 估算涉及人数
+                        sentReminders: Math.floor(this.registrationStats.unregisteredUnits * 0.5) // 估算已发送催报数
+                    };
+                    
+                    // 初始化未报名单位列表（实际应用中应该从API获取）
+                    if (this.registrationStats.unregisteredUnits > 0) {
+                        // 生成示例未报名单位
+                        const units = [];
+                        for (let i = 1; i <= Math.min(this.registrationStats.unregisteredUnits, 20); i++) {
+                            units.push({
+                                id: `unit_${i}`,
+                                name: `示例单位${String.fromCharCode(64 + i)}`,
+                                expectedCount: Math.floor(Math.random() * 10) + 3
+                            });
+                        }
+                        this.unregisteredUnits = units;
+                    }
+                },
+                
+                initTrendChart() {
+                    // 初始化趋势图（需要ECharts）
+                    this.$nextTick(() => {
+                        const chartDom = document.getElementById('trendChart');
+                        if (chartDom && typeof echarts !== 'undefined') {
+                            // 如果图表已存在，先销毁
+                            const existingChart = echarts.getInstanceByDom(chartDom);
+                            if (existingChart) {
+                                existingChart.dispose();
+                            }
+                            // 创建新图表实例
+                            this.trendChart = echarts.init(chartDom);
+                            this.updateTrendChart();
+                        }
+                    });
+                },
+                
+                updateTrendChart() {
+                    // 模拟生成趋势数据
+                    const days = this.trendTimeRange === 'today' ? 24 : 
+                                this.trendTimeRange === 'week' ? 7 : 
+                                this.trendTimeRange === 'month' ? 30 : 7;
+                    
+                    const data = [];
+                    for (let i = 0; i < days; i++) {
+                        data.push({
+                            date: new Date(Date.now() - (days - i - 1) * 86400000).toLocaleDateString(),
+                            count: Math.floor(Math.random() * 50) + 10
+                        });
+                    }
+                    
+                    this.trendChartData = data;
+                    
+                    // 更新图表
+                    if (this.trendChart) {
+                        const option = {
+                            xAxis: {
+                                type: 'category',
+                                data: data.map(d => d.date)
+                            },
+                            yAxis: {
+                                type: 'value'
+                            },
+                            series: [{
+                                data: data.map(d => d.count),
+                                type: 'line',
+                                smooth: true,
+                                areaStyle: {
+                                    color: {
+                                        type: 'linear',
+                                        x: 0,
+                                        y: 0,
+                                        x2: 0,
+                                        y2: 1,
+                                        colorStops: [
+                                            { offset: 0, color: 'rgba(102, 126, 234, 0.3)' },
+                                            { offset: 1, color: 'rgba(102, 126, 234, 0.1)' }
+                                        ]
+                                    }
+                                },
+                                lineStyle: {
+                                    color: '#667eea'
+                                }
+                            }]
+                        };
+                        this.trendChart.setOption(option);
+                    } else {
+                        // 如果图表实例不存在，重新初始化
+                        this.initTrendChart();
+                    }
+                },
+                
+                goToReminderFlow() {
+                    // 打开催报弹窗，开始催报流程
+                    this.reminderStep = 1;
+                    this.selectedUnits = [];
+                    this.reminderChannels = ['sms'];
+                    this.reminderTemplate = 'gentle';
+                    this.customTemplateContent = '';
+                    this.showReminderModal = true;
+                },
+                
+                toggleUnit(unitId) {
+                    const index = this.selectedUnits.indexOf(unitId);
+                    if (index > -1) {
+                        this.selectedUnits.splice(index, 1);
+                    } else {
+                        this.selectedUnits.push(unitId);
+                    }
+                },
+                
+                selectAllUnits() {
+                    if (this.allUnitsSelected) {
+                        this.selectedUnits = [];
+                    } else {
+                        this.selectedUnits = this.unregisteredUnits.map(u => u.id);
+                    }
+                },
+                
+                getChannelNames() {
+                    return this.reminderChannels.map(ch => {
+                        const channel = this.availableChannels.find(c => c.value === ch);
+                        return channel ? channel.name : ch;
+                    }).join('、');
+                },
+                
+                getTemplateName() {
+                    const names = {
+                        gentle: '温和提醒模板',
+                        urgent: '紧急催报模板',
+                        final: '最后机会模板',
+                        custom: '自定义模板'
+                    };
+                    return names[this.reminderTemplate] || '未知模板';
+                },
+                
+                getEstimatedCount() {
+                    let count = 0;
+                    this.selectedUnits.forEach(unitId => {
+                        const unit = this.unregisteredUnits.find(u => u.id === unitId);
+                        if (unit) {
+                            count += unit.expectedCount * this.reminderChannels.length;
+                        }
+                    });
+                    return count;
+                },
+                
+                openReminderModal() {
+                    this.showReminderModal = true;
+                },
+                
+                async exportStatsReport() {
+                    try {
+                        this.$showLoading('正在生成统计报告...');
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        this.$hideLoading();
+                        this.$showToast('统计报告已生成并下载', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导出失败，请重试', 'error');
+                    }
+                },
+                
+                goToRosterGeneration() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    const url = conferenceId ? `roster-generation.html?conferenceId=${conferenceId}` : 'roster-generation.html';
+                    window.location.href = url;
+                },
+                
+                goToAudit() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    const url = conferenceId ? `registration-audit.html?conferenceId=${conferenceId}` : 'registration-audit.html';
+                    window.location.href = url;
+                },
+
+                goToSeating() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    const url = conferenceId ? `seating-mgr.html?conferenceId=${conferenceId}` : 'seating-mgr.html';
+                    // 保存报名数据到localStorage，供排座系统使用
+                    this.saveRegistrationData();
+                    window.location.href = url;
+                },
+
+                // 保存报名数据到localStorage
+                saveRegistrationData() {
+                    const data = {
+                        registrations: this.registrations,
+                        timestamp: Date.now(),
+                        conference: this.conference
+                    };
+                    localStorage.setItem('registrationData', JSON.stringify(data));
+                    console.log('报名数据已保存到localStorage，共', this.registrations.length, '条记录');
+                },
+                
+                async quickExportExcel() {
+                    try {
+                        this.$showLoading('正在导出Excel...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.$hideLoading();
+                        this.$showToast('Excel文件已导出', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导出失败，请重试', 'error');
+                    }
+                },
+                
+                async quickExportPDF() {
+                    try {
+                        this.$showLoading('正在导出PDF...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.$hideLoading();
+                        this.$showToast('PDF文件已导出', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导出失败，请重试', 'error');
+                    }
+                },
+                
+                async loadRegistrations() {
+                    // 使用data中已定义的默认报名数据
+                    // 如果registrations数组为空，则使用默认数据
+                    if (this.registrations.length === 0) {
+                        // 保持data中定义的默认数据，不覆盖
+                        console.log('使用默认报名数据');
+                    }
+                    this.filterData();
+                },
+                
+                selectChannel(type) {
+                    this.selectedChannel = type;
+                    this.channelFilter = type;
+                    this.filterData();
+                },
+                
+                getConfidenceClass(confidence) {
+                    if (confidence >= 95) return 'high';
+                    if (confidence >= 85) return 'medium';
+                    return 'low';
+                },
+                
+                updateGroupingPreview() {
+                    const totalMembers = this.registrations.filter(r => r.status === 'approved').length;
+                    if (totalMembers === 0) {
+                        this.groupCount = 0;
+                        this.groupingPreview = [];
+                        this.groupMembers = {};
+                        return;
+                    }
+                    this.groupCount = Math.ceil(totalMembers / this.groupSize);
+                    
+                    // 根据分组依据进行实际分组
+                    const approvedRegistrations = this.registrations.filter(r => r.status === 'approved');
+                    const groups = this.performGrouping(approvedRegistrations);
+                    
+                    this.groupingPreview = groups.map((group, i) => ({
+                        id: `group_${i + 1}`,
+                        name: `第${i + 1}学习小组`,
+                        memberCount: group.members.length,
+                        leader: group.leader || '',
+                        staff: group.staff || [],
+                        criteria: this.getCriteriaText(),
+                        members: group.members
+                    }));
+                    
+                    // 保存每个组的成员列表
+                    this.groupMembers = {};
+                    this.groupingPreview.forEach(group => {
+                        this.groupMembers[group.id] = group.members || [];
+                    });
+                },
+                
+                performGrouping(registrations) {
+                    // 根据分组依据进行分组
+                    const groups = [];
+                    const groupCount = this.groupCount;
+                    
+                    if (this.groupingCriteria === 'department') {
+                        // 按部门分组
+                        const departmentMap = {};
+                        registrations.forEach(reg => {
+                            const dept = reg.department || '未分类';
+                            if (!departmentMap[dept]) {
+                                departmentMap[dept] = [];
+                            }
+                            departmentMap[dept].push(reg);
+                        });
+                        
+                        const departments = Object.keys(departmentMap);
+                        for (let i = 0; i < groupCount; i++) {
+                            const groupMembers = [];
+                            departments.forEach((dept, idx) => {
+                                if (idx % groupCount === i) {
+                                    groupMembers.push(...departmentMap[dept]);
+                                }
+                            });
+                            groups.push({ members: groupMembers, leader: '', staff: [] });
+                        }
+                    } else if (this.groupingCriteria === 'position') {
+                        // 按职级分组
+                        const positionMap = {};
+                        registrations.forEach(reg => {
+                            const pos = reg.position || '未分类';
+                            if (!positionMap[pos]) {
+                                positionMap[pos] = [];
+                            }
+                            positionMap[pos].push(reg);
+                        });
+                        
+                        const positions = Object.keys(positionMap);
+                        for (let i = 0; i < groupCount; i++) {
+                            const groupMembers = [];
+                            positions.forEach((pos, idx) => {
+                                if (idx % groupCount === i) {
+                                    groupMembers.push(...positionMap[pos]);
+                                }
+                            });
+                            groups.push({ members: groupMembers, leader: '', staff: [] });
+                        }
+                    } else if (this.groupingCriteria === 'random') {
+                        // 随机分组
+                        const shuffled = [...registrations].sort(() => Math.random() - 0.5);
+                        for (let i = 0; i < groupCount; i++) {
+                            const start = i * this.groupSize;
+                            const end = Math.min(start + this.groupSize, shuffled.length);
+                            groups.push({ 
+                                members: shuffled.slice(start, end), 
+                                leader: '', 
+                                staff: [] 
+                            });
+                        }
+                    } else {
+                        // 混合分组（默认）
+                        for (let i = 0; i < groupCount; i++) {
+                            const start = i * this.groupSize;
+                            const end = Math.min(start + this.groupSize, registrations.length);
+                            groups.push({ 
+                                members: registrations.slice(start, end), 
+                                leader: '', 
+                                staff: [] 
+                            });
+                        }
+                    }
+                    
+                    return groups;
+                },
+                
+                getGroupMembers(groupId) {
+                    return this.groupMembers[groupId] || [];
+                },
+                
+                saveGroupName(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (group) {
+                        // 保存组名（实际应用中应该调用API）
+                        console.log('保存组名:', group.name);
+                    }
+                },
+                
+                saveGroupLeader(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (group) {
+                        // 保存组长（实际应用中应该调用API）
+                        console.log('保存组长:', group.leader);
+                    }
+                },
+                
+                assignStaff(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (group) {
+                        this.editingGroup = { ...group, staff: group.staff || [] };
+                        // 准备可选工作人员列表（已报名人员）
+                        this.availableStaff = this.registrations
+                            .filter(r => r.status === 'approved')
+                            .map(r => ({
+                                id: r.id,
+                                name: r.name,
+                                unit: r.unit,
+                                position: r.position
+                            }));
+                        this.showStaffModal = true;
+                    }
+                },
+                
+                editGroupMembers(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (group) {
+                        this.editingGroup = { ...group };
+                        // 准备所有组和成员数据用于编辑
+                        this.allGroupsForEdit = this.groupingPreview.map(g => ({
+                            id: g.id,
+                            name: g.name,
+                            members: [...(this.groupMembers[g.id] || [])]
+                        }));
+                        // 收集所有成员
+                        const allMembers = [];
+                        this.groupingPreview.forEach(g => {
+                            const members = this.groupMembers[g.id] || [];
+                            members.forEach(m => {
+                                allMembers.push({ ...m, groupId: g.id });
+                            });
+                        });
+                        this.allMembersForEdit = allMembers;
+                        this.memberEditMode = 'drag';
+                        this.showMemberEditModal = true;
+                    }
+                },
+                
+                handleDragStart(member, groupId) {
+                    this.draggedMember = member;
+                    this.draggedFromGroup = groupId;
+                },
+                
+                handleDrop(targetGroupId, event) {
+                    if (!this.draggedMember || !this.draggedFromGroup) return;
+                    
+                    // 从原组移除
+                    const fromGroup = this.allGroupsForEdit.find(g => g.id === this.draggedFromGroup);
+                    const toGroup = this.allGroupsForEdit.find(g => g.id === targetGroupId);
+                    
+                    if (fromGroup && toGroup && fromGroup.id !== toGroup.id) {
+                        const memberIndex = fromGroup.members.findIndex(m => m.id === this.draggedMember.id);
+                        if (memberIndex > -1) {
+                            fromGroup.members.splice(memberIndex, 1);
+                            toGroup.members.push(this.draggedMember);
+                            // 更新成员的groupId
+                            const member = this.allMembersForEdit.find(m => m.id === this.draggedMember.id);
+                            if (member) {
+                                member.groupId = targetGroupId;
+                            }
+                        }
+                    }
+                    
+                    this.draggedMember = null;
+                    this.draggedFromGroup = null;
+                },
+                
+                applyNumberGrouping() {
+                    if (!this.numberGroupSize || this.numberGroupSize < 1) {
+                        this.$showToast('请输入有效的每组人数', 'warning');
+                        return;
+                    }
+                    
+                    // 按序号重新分组
+                    const groupCount = Math.ceil(this.allMembersForEdit.length / this.numberGroupSize);
+                    this.allGroupsForEdit.forEach((group, index) => {
+                        const start = index * this.numberGroupSize;
+                        const end = Math.min(start + this.numberGroupSize, this.allMembersForEdit.length);
+                        const members = this.allMembersForEdit.slice(start, end);
+                        group.members = members;
+                        members.forEach(m => {
+                            m.groupId = group.id;
+                        });
+                    });
+                    
+                    this.$showToast('序号分组已应用', 'success');
+                },
+                
+                updateMemberGroup(memberId, newGroupId) {
+                    const member = this.allMembersForEdit.find(m => m.id === memberId);
+                    if (!member) return;
+                    
+                    // 从原组移除
+                    const oldGroup = this.allGroupsForEdit.find(g => g.id === member.groupId);
+                    if (oldGroup) {
+                        const index = oldGroup.members.findIndex(m => m.id === memberId);
+                        if (index > -1) {
+                            oldGroup.members.splice(index, 1);
+                        }
+                    }
+                    
+                    // 添加到新组
+                    const newGroup = this.allGroupsForEdit.find(g => g.id === newGroupId);
+                    if (newGroup) {
+                        newGroup.members.push(member);
+                        member.groupId = newGroupId;
+                    }
+                },
+                
+                saveMemberEdit() {
+                    // 保存成员调整结果
+                    this.allGroupsForEdit.forEach(group => {
+                        const originalGroup = this.groupingPreview.find(g => g.id === group.id);
+                        if (originalGroup) {
+                            originalGroup.memberCount = group.members.length;
+                            this.groupMembers[group.id] = [...group.members];
+                        }
+                    });
+                    this.$showToast('成员调整已保存', 'success');
+                    this.showMemberEditModal = false;
+                },
+                
+                async generateGroups() {
+                    // 自动生成各组人员群（实际应用中应该调用API创建群组）
+                    if (this.groupingPreview.length === 0) {
+                        this.$showToast('请先执行智能分组', 'warning');
+                        return;
+                    }
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定要为 ${this.groupingPreview.length} 个组自动生成人员群吗？`,
+                        '自动生成群组',
+                        'info'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('正在生成群组...');
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            this.$hideLoading();
+                            this.$showToast(`已为 ${this.groupingPreview.length} 个组生成人员群`, 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('生成群组失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                goToRosterGeneration() {
+                    // 跳转到名册生成页面
+                    const conferenceId = this.conference.id || new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        window.location.href = `roster-generation.html?conferenceId=${conferenceId}`;
+                    } else {
+                        this.$showToast('会议信息缺失，无法跳转', 'warning');
+                    }
+                },
+                
+                getCriteriaText() {
+                    const map = {
+                        department: '按部门',
+                        position: '按职级',
+                        expertise: '按专业',
+                        mixed: '混合',
+                        random: '随机'
+                    };
+                    return map[this.groupingCriteria] || '未知';
+                },
+                
+                async autoGrouping() {
+                    try {
+                        this.$showLoading('正在执行智能分组...');
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        this.updateGroupingPreview();
+                        this.$hideLoading();
+                        this.$showToast('智能分组完成', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('分组失败，请重试', 'error');
+                    }
+                },
+                
+                viewGroup(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (group) {
+                        this.currentGroup = { ...group };
+                        this.currentGroupMembers = [...(this.groupMembers[groupId] || [])];
+                        this.showGroupDetailModal = true;
+                    }
+                },
+                
+                saveGroupDetail() {
+                    // 保存组详情修改
+                    const index = this.groupingPreview.findIndex(g => g.id === this.currentGroup.id);
+                    if (index > -1) {
+                        this.groupingPreview[index].name = this.currentGroup.name;
+                        this.groupingPreview[index].leader = this.currentGroup.leader;
+                        this.groupingPreview[index].memberCount = this.currentGroupMembers.length;
+                        // 更新成员列表
+                        this.groupMembers[this.currentGroup.id] = [...this.currentGroupMembers];
+                        this.$showToast('组详情已保存', 'success');
+                    }
+                    this.showGroupDetailModal = false;
+                },
+                
+                editGroupMembers(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (group) {
+                        this.editingGroup = { ...group };
+                        // 准备所有组和成员数据用于编辑
+                        this.allGroupsForEdit = this.groupingPreview.map(g => ({
+                            id: g.id,
+                            name: g.name,
+                            members: [...(this.groupMembers[g.id] || [])]
+                        }));
+                        // 收集所有成员
+                        const allMembers = [];
+                        this.groupingPreview.forEach(g => {
+                            const members = this.groupMembers[g.id] || [];
+                            members.forEach(m => {
+                                allMembers.push({ ...m, groupId: g.id });
+                            });
+                        });
+                        this.allMembersForEdit = allMembers;
+                        this.memberEditMode = 'drag';
+                        this.showMemberEditModal = true;
+                    }
+                },
+                
+                handleDragStart(member, groupId) {
+                    this.draggedMember = member;
+                    this.draggedFromGroup = groupId;
+                },
+                
+                handleDrop(targetGroupId, event) {
+                    if (!this.draggedMember || !this.draggedFromGroup) return;
+                    
+                    // 从原组移除
+                    const fromGroup = this.allGroupsForEdit.find(g => g.id === this.draggedFromGroup);
+                    const toGroup = this.allGroupsForEdit.find(g => g.id === targetGroupId);
+                    
+                    if (fromGroup && toGroup && fromGroup.id !== toGroup.id) {
+                        const memberIndex = fromGroup.members.findIndex(m => m.id === this.draggedMember.id);
+                        if (memberIndex > -1) {
+                            fromGroup.members.splice(memberIndex, 1);
+                            toGroup.members.push(this.draggedMember);
+                            // 更新成员的groupId
+                            const member = this.allMembersForEdit.find(m => m.id === this.draggedMember.id);
+                            if (member) {
+                                member.groupId = targetGroupId;
+                            }
+                        }
+                    }
+                    
+                    this.draggedMember = null;
+                    this.draggedFromGroup = null;
+                },
+                
+                applyNumberGrouping() {
+                    if (!this.numberGroupSize || this.numberGroupSize < 1) {
+                        this.$showToast('请输入有效的每组人数', 'warning');
+                        return;
+                    }
+                    
+                    // 按序号重新分组
+                    const groupCount = Math.ceil(this.allMembersForEdit.length / this.numberGroupSize);
+                    this.allGroupsForEdit.forEach((group, index) => {
+                        const start = index * this.numberGroupSize;
+                        const end = Math.min(start + this.numberGroupSize, this.allMembersForEdit.length);
+                        const members = this.allMembersForEdit.slice(start, end);
+                        group.members = members;
+                        members.forEach(m => {
+                            m.groupId = group.id;
+                        });
+                    });
+                    
+                    this.$showToast('序号分组已应用', 'success');
+                },
+                
+                updateMemberGroup(memberId, newGroupId) {
+                    const member = this.allMembersForEdit.find(m => m.id === memberId);
+                    if (!member) return;
+                    
+                    // 从原组移除
+                    const oldGroup = this.allGroupsForEdit.find(g => g.id === member.groupId);
+                    if (oldGroup) {
+                        const index = oldGroup.members.findIndex(m => m.id === memberId);
+                        if (index > -1) {
+                            oldGroup.members.splice(index, 1);
+                        }
+                    }
+                    
+                    // 添加到新组
+                    const newGroup = this.allGroupsForEdit.find(g => g.id === newGroupId);
+                    if (newGroup) {
+                        newGroup.members.push(member);
+                        member.groupId = newGroupId;
+                    }
+                },
+                
+                saveMemberEdit() {
+                    // 保存成员调整结果
+                    this.allGroupsForEdit.forEach(group => {
+                        const originalGroup = this.groupingPreview.find(g => g.id === group.id);
+                        if (originalGroup) {
+                            originalGroup.memberCount = group.members.length;
+                            this.groupMembers[group.id] = [...group.members];
+                        }
+                    });
+                    this.$showToast('成员调整已保存', 'success');
+                    this.showMemberEditModal = false;
+                },
+                
+                assignStaff(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (group) {
+                        this.editingGroup = { 
+                            ...group, 
+                            staff: group.staff ? [...group.staff] : [] 
+                        };
+                        // 准备可选工作人员列表（已报名人员）
+                        this.availableStaff = this.registrations
+                            .filter(r => r.status === 'approved')
+                            .map(r => ({
+                                id: r.id,
+                                name: r.name,
+                                unit: r.unit,
+                                position: r.position
+                            }));
+                        this.showStaffModal = true;
+                    }
+                },
+                
+                toggleStaff(memberId) {
+                    if (!this.editingGroup) return;
+                    if (!this.editingGroup.staff) {
+                        this.editingGroup.staff = [];
+                    }
+                    const index = this.editingGroup.staff.indexOf(memberId);
+                    if (index > -1) {
+                        this.editingGroup.staff.splice(index, 1);
+                    } else {
+                        this.editingGroup.staff.push(memberId);
+                    }
+                },
+                
+                saveStaff() {
+                    if (this.editingGroup) {
+                        const index = this.groupingPreview.findIndex(g => g.id === this.editingGroup.id);
+                        if (index > -1) {
+                            this.groupingPreview[index].staff = [...(this.editingGroup.staff || [])];
+                            this.$showToast('工作人员已保存', 'success');
+                        }
+                    }
+                    this.showStaffModal = false;
+                },
+                
+                removeMemberFromGroup(memberId) {
+                    const member = this.currentGroupMembers.find(m => m.id === memberId);
+                    if (member) {
+                        const index = this.currentGroupMembers.indexOf(member);
+                        if (index > -1) {
+                            this.currentGroupMembers.splice(index, 1);
+                            this.currentGroup.memberCount = this.currentGroupMembers.length;
+                            this.$showToast('成员已移除', 'success');
+                        }
+                    }
+                },
+                
+                getReminderTemplateContent() {
+                    const templates = {
+                        gentle: '尊敬的各位领导，2024年度技术峰会即将开始，诚邀贵单位参与报名...',
+                        urgent: '【紧急提醒】2024年度技术峰会报名即将截止，请尽快完成报名！',
+                        final: '【最后通知】2024年度技术峰会报名今日截止，这是最后的报名机会！',
+                        custom: '请在此处编辑自定义催报内容...'
+                    };
+                    return templates[this.reminderTemplate] || '';
+                },
+                
+                async sendReminder() {
+                    if (this.selectedUnits.length === 0) {
+                        this.$showToast('请选择要催报的单位', 'warning');
+                        return;
+                    }
+                    
+                    if (this.reminderChannels.length === 0) {
+                        this.$showToast('请选择至少一个催报渠道', 'warning');
+                        return;
+                    }
+                    
+                    const content = this.reminderTemplate === 'custom' 
+                        ? this.customTemplateContent 
+                        : this.getReminderTemplateContent();
+                    
+                    if (!content || !content.trim()) {
+                        this.$showToast('催报内容不能为空', 'warning');
+                        return;
+                    }
+                    
+                    try {
+                        this.$showLoading(`正在发送催报通知给 ${this.selectedUnits.length} 个单位...`);
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.reminderStats.sentReminders += this.selectedUnits.length;
+                        this.$hideLoading();
+                        this.$showToast(`已向 ${this.selectedUnits.length} 个单位发送催报通知`, 'success');
+                        this.showReminderModal = false;
+                        this.reminderStep = 1;
+                        this.selectedUnits = [];
+                        this.reminderChannels = ['sms'];
+                        this.reminderTemplate = 'gentle';
+                        this.customTemplateContent = '';
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('发送失败，请重试', 'error');
+                    }
+                },
+                
+                async sendReminderToAll() {
+                    if (this.reminderStats.unregisteredUnits === 0) {
+                        this.$showToast('当前没有未报名单位', 'info');
+                        return;
+                    }
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定要向所有 ${this.reminderStats.unregisteredUnits} 个未报名单位发送催报通知吗？`,
+                        '一键催报',
+                        'warning'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading(`正在发送催报通知给 ${this.reminderStats.unregisteredUnits} 个单位...`);
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            this.reminderStats.sentReminders += this.reminderStats.unregisteredUnits;
+                            this.$hideLoading();
+                            this.$showToast(`已向 ${this.reminderStats.unregisteredUnits} 个单位发送催报通知`, 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('发送失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                selectiveReminder() {
+                    if (this.reminderStats.unregisteredUnits === 0) {
+                        this.$showToast('当前没有未报名单位', 'info');
+                        return;
+                    }
+                    this.$showToast('请在下方的未报名单位列表中选择需要催报的单位', 'info', 3000);
+                },
+                
+                filterData() {
+                    let filtered = [...this.registrations];
+                    
+                    if (this.searchQuery) {
+                        filtered = filtered.filter(r => 
+                            r.name.includes(this.searchQuery) ||
+                            r.unit.includes(this.searchQuery) ||
+                            r.department.includes(this.searchQuery)
+                        );
+                    }
+                    
+                    if (this.statusFilter) {
+                        filtered = filtered.filter(r => r.status === this.statusFilter);
+                    }
+                    
+                    if (this.channelFilter) {
+                        filtered = filtered.filter(r => r.channel === this.channelFilter);
+                    }
+                    
+                    this.filteredRegistrations = filtered;
+                    // totalPages 现在是计算属性，不需要手动设置
+                    if (this.currentPage > Math.ceil(filtered.length / this.pageSize)) {
+                        this.currentPage = 1;
+                    }
+                    // 更新全选状态
+                    this.updateSelectAllState();
+                },
+                
+                toggleSelectAll() {
+                    if (this.selectAll) {
+                        // 只选择当前页面的记录
+                        const currentPageIds = this.paginatedRegistrations.map(r => r.id);
+                        currentPageIds.forEach(id => {
+                            if (!this.selectedRegistrations.includes(id)) {
+                                this.selectedRegistrations.push(id);
+                            }
+                        });
+                    } else {
+                        // 只取消选择当前页面的记录
+                        const currentPageIds = this.paginatedRegistrations.map(r => r.id);
+                        this.selectedRegistrations = this.selectedRegistrations.filter(id => !currentPageIds.includes(id));
+                    }
+                },
+                
+                toggleRegistration(id) {
+                    const index = this.selectedRegistrations.indexOf(id);
+                    if (index > -1) {
+                        this.selectedRegistrations.splice(index, 1);
+                    } else {
+                        this.selectedRegistrations.push(id);
+                    }
+                    // 更新全选状态
+                    this.updateSelectAllState();
+                },
+                
+                updateSelectAllState() {
+                    const currentPageIds = this.paginatedRegistrations.map(r => r.id);
+                    this.selectAll = currentPageIds.length > 0 && currentPageIds.every(id => this.selectedRegistrations.includes(id));
+                },
+                
+                formatDate(date) {
+                    if (!date) return '';
+                    if (date instanceof Date) {
+                        return date.toLocaleDateString('zh-CN');
+                    }
+                    // 如果是字符串或数字，尝试转换为Date
+                    const dateObj = new Date(date);
+                    if (!isNaN(dateObj.getTime())) {
+                        return dateObj.toLocaleDateString('zh-CN');
+                    }
+                    return '';
+                },
+                
+                getStatusText(status) {
+                    const map = {
+                        approved: '已通过',
+                        pending: '待审核',
+                        rejected: '已拒绝'
+                    };
+                    return map[status] || status;
+                },
+                
+                async viewDetails(id) {
+                    const registration = this.registrations.find(r => r.id === id);
+                    if (!registration) {
+                        this.$showToast('未找到该报名记录', 'error');
+                        return;
+                    }
+                    // 显示详情模态框（包含OCR识别结果）
+                    this.showRegistrationDetails(registration);
+                },
+                
+                showRegistrationDetails(registration) {
+                    // 创建详情模态框
+                    const modal = document.createElement('div');
+                    modal.className = 'modal-overlay';
+                    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center;';
+                    
+                    const ocrSection = registration.ocrResult ? `
+                        <div class="detail-section" style="margin-top: var(--space-5);">
+                            <h4>智能证件识别结果</h4>
+                            <div class="ocr-result-display">
+                                <div class="ocr-status-header">
+                                    <span class="ocr-status-badge ${this.getOCRStatusClass(registration.ocrResult)}">
+                                        <i class="${this.getOCRStatusIcon(registration.ocrResult)}"></i>
+                                        ${this.getOCRStatusText(registration.ocrResult)}
+                                    </span>
+                                    <span class="ocr-time">识别时间: ${this.formatDate(registration.ocrResult.recognizedAt)}</span>
+                                </div>
+                                <div class="ocr-details">
+                                    <div class="ocr-detail-item">
+                                        <span class="ocr-label">识别类型:</span>
+                                        <span class="ocr-value">${registration.ocrResult.type}</span>
+                                        <span class="ocr-confidence ${this.getConfidenceClass(registration.ocrResult.typeConfidence)}">
+                                            ${registration.ocrResult.typeConfidence}%
+                                        </span>
+                                    </div>
+                                    <div class="ocr-detail-item">
+                                        <span class="ocr-label">姓名:</span>
+                                        <span class="ocr-value">${registration.ocrResult.name}</span>
+                                        <span class="ocr-confidence ${this.getConfidenceClass(registration.ocrResult.nameConfidence)}">
+                                            ${registration.ocrResult.nameConfidence}%
+                                        </span>
+                                    </div>
+                                    <div class="ocr-detail-item">
+                                        <span class="ocr-label">身份证号:</span>
+                                        <span class="ocr-value">${registration.ocrResult.idNumber}</span>
+                                        <span class="ocr-confidence ${this.getConfidenceClass(registration.ocrResult.idConfidence)}">
+                                            ${registration.ocrResult.idConfidence}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="detail-section" style="margin-top: var(--space-5);">
+                            <h4>智能证件识别结果</h4>
+                            <div class="ocr-no-result">
+                                <i class="fas fa-info-circle"></i>
+                                <span>该报名记录未进行证件识别</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    modal.innerHTML = `
+                        <div class="modal-content glass-card" style="max-width: 800px; max-height: 90vh; overflow-y: auto; padding: var(--space-6);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5);">
+                                <h3>报名详情 - ${registration.name}</h3>
+                                <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="detail-section">
+                                <h4>基本信息</h4>
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <span class="detail-label">姓名:</span>
+                                        <span class="detail-value">${registration.name}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">单位:</span>
+                                        <span class="detail-value">${registration.unit}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">部门:</span>
+                                        <span class="detail-value">${registration.department}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">职级:</span>
+                                        <span class="detail-value">${registration.position}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">报名渠道:</span>
+                                        <span class="detail-value">${registration.channel}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">报名时间:</span>
+                                        <span class="detail-value">${this.formatDate(registration.registeredAt)}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">审核状态:</span>
+                                        <span class="detail-value">
+                                            <span class="status-badge status-${registration.status}">
+                                                ${this.getStatusText(registration.status)}
+                                            </span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            ${ocrSection}
+                            <div class="detail-actions" style="margin-top: var(--space-5); display: flex; gap: var(--space-3); justify-content: flex-end;">
+                                <button class="btn-outline" onclick="this.closest('.modal-overlay').remove()">关闭</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            modal.remove();
+                        }
+                    });
+                },
+                
+                getOCRStatusClass(ocrResult) {
+                    if (!ocrResult) return 'no-ocr';
+                    if (ocrResult.status === 'success') return 'ocr-success';
+                    if (ocrResult.status === 'low_confidence') return 'ocr-warning';
+                    if (ocrResult.status === 'failed') return 'ocr-error';
+                    return 'no-ocr';
+                },
+                
+                getOCRStatusIcon(ocrResult) {
+                    if (!ocrResult) return 'fas fa-minus-circle';
+                    if (ocrResult.status === 'success') return 'fas fa-check-circle';
+                    if (ocrResult.status === 'low_confidence') return 'fas fa-exclamation-triangle';
+                    if (ocrResult.status === 'failed') return 'fas fa-times-circle';
+                    return 'fas fa-minus-circle';
+                },
+                
+                getOCRStatusText(ocrResult) {
+                    if (!ocrResult) return '未识别';
+                    if (ocrResult.status === 'success') return '识别成功';
+                    if (ocrResult.status === 'low_confidence') return '识别待确认';
+                    if (ocrResult.status === 'failed') return '识别失败';
+                    return '未识别';
+                },
+                
+                async quickApprove(id) {
+                    const confirmed = await this.$showConfirm(
+                        '确定快速通过该报名申请吗？',
+                        '快速通过',
+                        'info'
+                    );
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('处理中...');
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            const registration = this.registrations.find(r => r.id === id);
+                            if (registration) {
+                                registration.status = 'approved';
+                                this.filterData();
+                                await this.loadRegistrationStats();
+                                this.$hideLoading();
+                                this.$showToast('报名已通过', 'success');
+                            }
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('操作失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                prevPage() {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                    }
+                },
+                
+                nextPage() {
+                    if (this.currentPage < this.totalPages) {
+                        this.currentPage++;
+                    }
+                },
+                
+                goBack() {
+                    window.history.back();
+                },
+                
+                
+                exportRoster() {
+                    this.goToRosterGeneration();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+    
+    <style>
+        /* ==================== 页面整体布局 ==================== */
+        .page-with-nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-4);
+        }
+
+        /* ==================== 卡片内边距标准 ==================== */
+        .glass-card {
+            padding: var(--space-5);
+        }
+
+        /* ==================== 标准按钮样式 ==================== */
+        .btn-sm {
+            padding: var(--space-1) var(--space-3);
+            font-size: var(--font-size-sm);
+            min-width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+
+        .btn-sm:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* OCR识别状态样式 */
+        .ocr-status {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+        }
+        
+        .ocr-status.ocr-success {
+            background: var(--success-bg);
+            color: var(--success-color);
+        }
+        
+        .ocr-status.ocr-warning {
+            background: var(--warning-bg);
+            color: var(--warning-color);
+        }
+        
+        .ocr-status.ocr-error {
+            background: var(--error-bg);
+            color: var(--error-color);
+        }
+        
+        .ocr-status.no-ocr {
+            background: var(--gray-100);
+            color: var(--gray-500);
+        }
+        
+        /* 详情模态框样式 */
+        .detail-section {
+            margin-bottom: var(--space-5);
+        }
+        
+        .detail-section h4 {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-2);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-4);
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+        
+        .detail-label {
+            font-size: var(--font-size-sm);
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            font-size: var(--font-size-base);
+            color: var(--gray-800);
+            font-weight: 500;
+        }
+        
+        /* OCR结果显示样式 */
+        .ocr-result-display {
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+        }
+        
+        .ocr-status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .ocr-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+        }
+        
+        .ocr-status-badge.ocr-success {
+            background: var(--success-bg);
+            color: var(--success-color);
+        }
+        
+        .ocr-status-badge.ocr-warning {
+            background: var(--warning-bg);
+            color: var(--warning-color);
+        }
+        
+        .ocr-status-badge.ocr-error {
+            background: var(--error-bg);
+            color: var(--error-color);
+        }
+        
+        .ocr-time {
+            font-size: var(--font-size-sm);
+            color: var(--gray-500);
+        }
+        
+        .ocr-details {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+        
+        .ocr-detail-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2) var(--space-3);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+        }
+        
+        .ocr-label {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            min-width: 80px;
+            font-weight: 500;
+        }
+        
+        .ocr-value {
+            flex: 1;
+            font-size: var(--font-size-base);
+            color: var(--gray-800);
+            font-weight: 500;
+        }
+        
+        .ocr-confidence {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+        }
+        
+        .ocr-confidence.high {
+            background: var(--success-bg);
+            color: var(--success-color);
+        }
+        
+        .ocr-confidence.medium {
+            background: var(--warning-bg);
+            color: var(--warning-color);
+        }
+        
+        .ocr-confidence.low {
+            background: var(--error-bg);
+            color: var(--error-color);
+        }
+        
+        .ocr-no-result {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            color: var(--gray-500);
+            font-size: var(--font-size-sm);
+        }
+        
+        .ocr-no-result i {
+            font-size: var(--font-size-xl);
+        }
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            background: var(--glass-bg);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            padding: var(--space-6);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--glass-border);
+            flex-shrink: 0;
+        }
+        
+        .modal-header h3 {
+            font-size: var(--font-size-lg);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin: 0;
+        }
+        
+        .modal-body {
+            padding: var(--space-3) 0;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-3);
+            margin-top: var(--space-4);
+            padding-top: var(--space-3);
+            border-top: 2px solid var(--glass-border);
+            flex-shrink: 0;
+        }
+        
+        /* 催报弹窗样式 */
+        .reminder-step {
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .reminder-step h4 {
+            font-size: var(--font-size-lg);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--glass-border);
+        }
+        
+        .unit-selection {
+            margin-bottom: var(--space-5);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .selection-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+            padding: var(--space-2) 0;
+        }
+        
+        .selected-count {
+            color: var(--gray-600);
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+        }
+        
+        .unit-list {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2);
+            flex: 1;
+        }
+        
+        .unit-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .unit-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .unit-item.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .unit-info {
+            flex: 1;
+        }
+        
+        .unit-name {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-1);
+        }
+        
+        .unit-meta {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+        
+        .channel-selection {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+        }
+        
+        .channel-option {
+            padding: var(--space-3);
+        }
+        
+        .channel-option {
+            display: flex;
+            align-items: center;
+            padding: var(--space-4);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .channel-option:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .channel-option.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .channel-content {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            flex: 1;
+        }
+        
+        .channel-content i {
+            font-size: var(--font-size-2xl);
+            color: var(--primary-color);
+        }
+        
+        .channel-name {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        .channel-desc {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+        
+        .template-selection {
+            margin-bottom: var(--space-5);
+        }
+        
+        .template-select {
+            width: 100%;
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-3);
+            font-size: var(--font-size-sm);
+        }
+        
+        .template-preview {
+            padding: var(--space-3);
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--glass-border);
+        }
+        
+        .template-preview h5 {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-2);
+            font-size: var(--font-size-sm);
+        }
+        
+        .preview-content {
+            padding: var(--space-3);
+            background: var(--glass-bg);
+            border-radius: var(--radius-md);
+            color: var(--gray-800);
+            line-height: 1.6;
+            min-height: 80px;
+            font-size: var(--font-size-sm);
+        }
+        
+        .custom-template-editor {
+            margin-top: var(--space-4);
+        }
+        
+        .custom-template-editor textarea {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-base);
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        .send-summary {
+            padding: var(--space-4);
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--glass-border);
+            margin-bottom: var(--space-4);
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--space-2);
+            border-bottom: 1px solid var(--glass-border);
+            font-size: var(--font-size-sm);
+        }
+        
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        
+        .summary-item .label {
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .summary-item .value {
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+        
+        .step-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-3);
+            margin-top: auto;
+            padding-top: var(--space-4);
+            border-top: 2px solid var(--glass-border);
+        }
+        
+        /* 智能分组弹窗样式 */
+        .group-info {
+            margin-bottom: var(--space-6);
+        }
+        
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-3);
+            margin-bottom: var(--space-2);
+        }
+        
+        .info-row .label {
+            min-width: 100px;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .group-name-input {
+            flex: 1;
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+        }
+        
+        .leader-select {
+            flex: 1;
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+        }
+        
+        .members-list {
+            margin-top: var(--space-6);
+        }
+        
+        .members-list h4 {
+            font-size: var(--font-size-lg);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-4);
+        }
+        
+        .members-table {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .members-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .members-table th,
+        .members-table td {
+            padding: var(--space-2) var(--space-3);
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .members-table th {
+            background: rgba(102, 126, 234, 0.05);
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        .edit-tabs {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-5);
+            border-bottom: 2px solid var(--glass-border);
+        }
+        
+        .tab-btn {
+            padding: var(--space-3) var(--space-5);
+            border: none;
+            background: transparent;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray-600);
+            transition: all var(--transition-fast);
+        }
+        
+        .tab-btn:hover {
+            color: var(--primary-color);
+        }
+        
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+        
+        .groups-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+        
+        .group-column {
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            background: rgba(102, 126, 234, 0.02);
+        }
+        
+        .group-column h5 {
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-3);
+            padding-bottom: var(--space-2);
+            border-bottom: 2px solid var(--glass-border);
+        }
+        
+        .members-drag-list {
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .member-drag-item {
+            padding: var(--space-3);
+            margin-bottom: var(--space-2);
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            cursor: move;
+            transition: all var(--transition-fast);
+        }
+        
+        .member-drag-item:hover {
+            border-color: var(--primary-color);
+            transform: translateX(4px);
+        }
+        
+        .member-drag-item:active {
+            opacity: 0.5;
+        }
+        
+        .number-edit-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+            padding: var(--space-4);
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: var(--radius-lg);
+        }
+        
+        .number-edit-controls label {
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .number-edit-controls input {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            width: 120px;
+        }
+        
+        .members-number-list {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-3);
+        }
+        
+        .member-number-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            margin-bottom: var(--space-2);
+            background: var(--glass-bg);
+            border-radius: var(--radius-md);
+        }
+        
+        .member-number {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .member-info {
+            flex: 1;
+            color: var(--gray-800);
+        }
+        
+        .member-number-item select {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            min-width: 150px;
+        }
+        
+        .staff-selection {
+            margin-bottom: var(--space-5);
+        }
+        
+        .staff-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-3);
+            margin-top: var(--space-4);
+        }
+        
+        .staff-option {
+            display: flex;
+            align-items: center;
+            padding: var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .staff-option:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .staff-option.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .staff-info {
+            flex: 1;
+            margin-left: var(--space-3);
+        }
+        
+        .staff-name {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        .staff-meta {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+        
+        .empty-preview {
+            text-align: center;
+            padding: var(--space-8);
+            color: var(--gray-600);
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+    </style>
+</body>
+</html>

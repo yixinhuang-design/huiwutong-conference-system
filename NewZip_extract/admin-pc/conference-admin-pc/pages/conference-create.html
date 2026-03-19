@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建新会议 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">创建新会议</h1>
+                <div class="nav-actions">
+                    <button class="btn-outline" @click="saveDraft">
+                        <i class="fas fa-save"></i>
+                        保存草稿
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+            <!-- 页面头部 -->
+            <div class="page-header glass-card">
+                <h2>创建新会议</h2>
+                <p>分步骤向导式创建会议，自动初始化所有关联系统</p>
+            </div>
+
+            <!-- 步骤导航 -->
+            <div class="wizard-navigation glass-card">
+                <div class="wizard-steps">
+                    <div class="step" 
+                         :class="{ active: currentStep === 1, completed: currentStep > 1 }"
+                         @click="goToStep(1)">
+                        <div class="step-number">1</div>
+                        <div class="step-label">基本信息</div>
+                    </div>
+                    <div class="step" 
+                         :class="{ active: currentStep === 2, completed: currentStep > 2 }"
+                         @click="goToStep(2)">
+                        <div class="step-number">2</div>
+                        <div class="step-label">会议日程</div>
+                    </div>
+                    <div class="step" 
+                         :class="{ active: currentStep === 3, completed: currentStep > 3 }"
+                         @click="goToStep(3)">
+                        <div class="step-number">3</div>
+                        <div class="step-label">报名设置</div>
+                    </div>
+                    <div class="step" 
+                         :class="{ active: currentStep === 4, completed: currentStep > 4 }"
+                         @click="goToStep(4)">
+                        <div class="step-number">4</div>
+                        <div class="step-label">报到设置</div>
+                    </div>
+                    <div class="step" 
+                         :class="{ active: currentStep === 5, completed: currentStep > 5 }"
+                         @click="goToStep(5)">
+                        <div class="step-number">5</div>
+                        <div class="step-label">通知设置</div>
+                    </div>
+                    <div class="step" 
+                         :class="{ active: currentStep === 6, completed: currentStep > 6 }"
+                         @click="goToStep(6)">
+                        <div class="step-number">6</div>
+                        <div class="step-label">权限设置</div>
+                    </div>
+                    <div class="step" 
+                         :class="{ active: currentStep === 7 }"
+                         @click="goToStep(7)">
+                        <div class="step-number">7</div>
+                        <div class="step-label">确认创建</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤1：基本信息 -->
+            <div v-if="currentStep === 1" class="step-content glass-card">
+                <h3>步骤1：基本信息</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>会议名称 *</label>
+                        <input type="text" v-model="form.name" required placeholder="请输入会议名称">
+                    </div>
+                    <div class="form-group">
+                        <label>会议类型</label>
+                        <select v-model="form.type">
+                            <option value="training">培训会议</option>
+                            <option value="seminar">研讨会</option>
+                            <option value="conference">大型会议</option>
+                            <option value="workshop">工作坊</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>会议主题</label>
+                        <input type="text" v-model="form.theme" placeholder="会议主题或标语">
+                    </div>
+                    <div class="form-group">
+                        <label>会议编号</label>
+                        <div class="input-with-button">
+                            <input type="text" v-model="form.code" placeholder="自动生成" readonly>
+                            <button type="button" class="btn-sm" @click="generateCode">生成</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>开始日期 *</label>
+                        <input type="date" v-model="form.startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>结束日期 *</label>
+                        <input type="date" v-model="form.endDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>会议地点</label>
+                        <input type="text" v-model="form.location.venue" placeholder="会议中心名称">
+                    </div>
+                    <div class="form-group">
+                        <label>详细地址</label>
+                        <input type="text" v-model="form.location.address" placeholder="详细地址">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>会议描述</label>
+                        <textarea v-model="form.description" rows="4" placeholder="请输入会议描述"></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>会议封面图</label>
+                        <div class="cover-upload-area" @click="triggerCoverUpload" v-if="!form.coverImage">
+                            <i class="fas fa-image"></i>
+                            <p>点击上传封面图</p>
+                            <input type="file" ref="coverInput" accept="image/*" style="display: none;" @change="handleCoverUpload">
+                        </div>
+                        <div v-else class="cover-preview">
+                            <img :src="form.coverImage" alt="封面预览">
+                            <button class="btn-sm btn-danger" @click="removeCover">
+                                <i class="fas fa-trash"></i>
+                                删除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤2：会议日程 -->
+            <div v-if="currentStep === 2" class="step-content glass-card">
+                <h3>步骤2：会议日程</h3>
+                
+                <div class="schedules-list">
+                    <div v-for="(schedule, index) in form.schedules" :key="index" class="schedule-item">
+                        <div class="schedule-header">
+                            <h4>日程 {{ index + 1 }}</h4>
+                            <div class="schedule-actions">
+                                <button class="btn-sm btn-outline" @click="duplicateSchedule(index)" v-if="form.schedules.length > 1">
+                                    <i class="fas fa-copy"></i>
+                                    复制
+                                </button>
+                                <button class="btn-sm btn-danger" @click="removeSchedule(index)" v-if="form.schedules.length > 1">
+                                    <i class="fas fa-trash"></i>
+                                    删除
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>日程主题 *</label>
+                                <input type="text" v-model="schedule.title" required placeholder="请输入日程主题">
+                            </div>
+                            <div class="form-group">
+                                <label>开始时间 *</label>
+                                <input type="datetime-local" v-model="schedule.startTime" required>
+                            </div>
+                            <div class="form-group">
+                                <label>结束时间 *</label>
+                                <input type="datetime-local" v-model="schedule.endTime" required>
+                            </div>
+                            <div class="form-group">
+                                <label>详细地址</label>
+                                <input type="text" v-model="schedule.location" placeholder="详细地址">
+                            </div>
+                            <div class="form-group">
+                                <label>主持人</label>
+                                <input type="text" v-model="schedule.host" placeholder="主持人姓名">
+                            </div>
+                            <div class="form-group">
+                                <label>主讲人</label>
+                                <input type="text" v-model="schedule.speaker" placeholder="主讲人姓名">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>其他备注</label>
+                                <textarea v-model="schedule.notes" rows="2" placeholder="其他备注信息"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-outline" @click="addSchedule">
+                    <i class="fas fa-plus"></i>
+                    添加日程
+                </button>
+
+                <div class="schedule-settings">
+                    <h4>日程设置</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" v-model="scheduleSettings.needCheckin">
+                                <span>是否需要签到</span>
+                            </label>
+                        </div>
+                        <div class="form-group" v-if="scheduleSettings.needCheckin">
+                            <label>签到方式</label>
+                            <select v-model="scheduleSettings.checkinMethod">
+                                <option value="print">打印表单签字</option>
+                                <option value="qrcode">二维码扫码+位置信息</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" v-model="scheduleSettings.needReminder">
+                                <span>是否需要提醒</span>
+                            </label>
+                        </div>
+                        <div class="form-group" v-if="scheduleSettings.needReminder">
+                            <label>提醒对象</label>
+                            <select v-model="scheduleSettings.reminderTarget">
+                                <option value="staff">工作人员</option>
+                                <option value="all">全体人员</option>
+                                <option value="user">用户自主设置</option>
+                            </select>
+                        </div>
+                        <div class="form-group" v-if="scheduleSettings.needReminder">
+                            <label>提醒方式</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" v-model="scheduleSettings.reminderMethods" value="app">APP推送</label>
+                                <label><input type="checkbox" v-model="scheduleSettings.reminderMethods" value="alarm">手机闹钟</label>
+                                <label><input type="checkbox" v-model="scheduleSettings.reminderMethods" value="sms">短信</label>
+                            </div>
+                        </div>
+                        <div class="form-group" v-if="scheduleSettings.needReminder">
+                            <label>提醒时间</label>
+                            <select v-model="scheduleSettings.reminderTime">
+                                <option value="10">提前10分钟</option>
+                                <option value="15">提前15分钟</option>
+                                <option value="30">提前30分钟</option>
+                                <option value="60">提前60分钟</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤3：报名设置 -->
+            <div v-if="currentStep === 3" class="step-content glass-card">
+                <h3>步骤3：报名设置</h3>
+                
+                <div class="registration-mode">
+                    <h4>报名方式选择 *</h4>
+                    <div class="mode-options">
+                        <label class="mode-option" :class="{ active: form.registration.mode === 'open' }">
+                            <input type="radio" value="open" v-model="form.registration.mode">
+                            <div class="mode-card">
+                                <i class="fas fa-unlock"></i>
+                                <h5>开放式报名</h5>
+                                <p>任何人都可以报名</p>
+                            </div>
+                        </label>
+                        <label class="mode-option" :class="{ active: form.registration.mode === 'limited' }">
+                            <input type="radio" value="limited" v-model="form.registration.mode">
+                            <div class="mode-card">
+                                <i class="fas fa-building"></i>
+                                <h5>限定式报名</h5>
+                                <p>仅限指定单位报名</p>
+                            </div>
+                        </label>
+                        <label class="mode-option" :class="{ active: form.registration.mode === 'import' }">
+                            <input type="radio" value="import" v-model="form.registration.mode">
+                            <div class="mode-card">
+                                <i class="fas fa-file-import"></i>
+                                <h5>导入式报名</h5>
+                                <p>导入或录入参会人员</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 开放式报名配置 -->
+                <div v-if="form.registration.mode === 'open'" class="registration-config">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" v-model="form.registration.open.limitTotal">
+                                <span>限制总人数</span>
+                            </label>
+                        </div>
+                        <div class="form-group" v-if="form.registration.open.limitTotal">
+                            <label>最大人数</label>
+                            <input type="number" v-model="form.registration.open.maxCount" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" v-model="form.registration.open.generateQRCode" checked>
+                                <span>生成报名二维码</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div v-if="form.registration.open.generateQRCode && form.registration.open.qrCode" class="qrcode-preview">
+                        <img :src="form.registration.open.qrCode" alt="报名二维码">
+                        <button class="btn-outline" @click="downloadQRCode('registration')">下载二维码</button>
+                    </div>
+                </div>
+
+                <!-- 限定式报名配置 -->
+                <div v-if="form.registration.mode === 'limited'" class="registration-config">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>导入单位名录</label>
+                            <div class="file-upload-area" @click="triggerUnitListUpload">
+                                <i class="fas fa-file-excel"></i>
+                                <p>点击上传Excel文件</p>
+                                <p class="upload-hint">支持Excel格式，请下载模板</p>
+                                <button type="button" class="btn-sm btn-outline" @click.stop="downloadUnitListTemplate">下载模板</button>
+                                <input type="file" ref="unitListInput" accept=".xlsx,.xls" style="display: none;" @change="handleUnitListUpload">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>每个单位报N人</label>
+                            <input type="number" v-model="form.registration.limited.perUnitCount" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" v-model="form.registration.limited.generateQRCode" checked>
+                                <span>生成报名二维码</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div v-if="form.registration.limited.unitList && form.registration.limited.unitList.length > 0" class="unit-list">
+                        <h5>已导入单位列表 ({{ form.registration.limited.unitList.length }}个)</h5>
+                        <button class="btn-outline" @click="manageUnitList">管理单位名录</button>
+                    </div>
+                </div>
+
+                <!-- 导入式报名配置 -->
+                <div v-if="form.registration.mode === 'import'" class="registration-config">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>导入或录入参会人员</label>
+                            <div class="file-upload-area" @click="triggerParticipantUpload">
+                                <i class="fas fa-file-excel"></i>
+                                <p>点击上传Excel文件或手动录入</p>
+                                <button type="button" class="btn-sm btn-outline" @click.stop="showManualEntry">手动录入</button>
+                                <input type="file" ref="participantInput" accept=".xlsx,.xls" style="display: none;" @change="handleParticipantUpload">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 报名时间设置 -->
+                <div class="registration-time">
+                    <h4>报名时间设置</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>报名开始时间 *</label>
+                            <input type="datetime-local" v-model="form.registration.startTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>报名截止时间 *</label>
+                            <input type="datetime-local" v-model="form.registration.endTime" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 报名审核方式 -->
+                <div class="registration-audit">
+                    <h4>报名审核方式 *</h4>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" value="required" v-model="form.registration.auditMode">
+                            <span>需审核</span>
+                        </label>
+                        <label>
+                            <input type="radio" value="not_required" v-model="form.registration.auditMode">
+                            <span>不需要审核</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 报名表单设置 -->
+                <div class="registration-form">
+                    <h4>报名表单设置</h4>
+                    <div class="form-fields-list">
+                        <div v-for="(field, index) in form.registration.formFields" :key="index" class="field-item">
+                            <label>
+                                <input type="checkbox" v-model="field.required">
+                                <span>{{ field.label }}</span>
+                                <span class="field-type">{{ field.required ? '必填' : '可选' }}</span>
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn-outline" @click="addCustomField">
+                        <i class="fas fa-plus"></i>
+                        添加自定义字段
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步骤4：报到设置 -->
+            <div v-if="currentStep === 4" class="step-content glass-card">
+                <h3>步骤4：报到设置</h3>
+                
+                <div class="checkin-mode">
+                    <h4>报到方式 *</h4>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" value="print" v-model="form.checkin.mode">
+                            <span>打印表单签字</span>
+                        </label>
+                        <label>
+                            <input type="radio" value="qrcode" v-model="form.checkin.mode">
+                            <span>二维码扫码+位置信息</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="checkin-time">
+                    <h4>报到时间</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>报到开始时间 *</label>
+                            <input type="datetime-local" v-model="form.checkin.startTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>报到截止时间 *</label>
+                            <input type="datetime-local" v-model="form.checkin.endTime" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="checkin-location">
+                    <h4>报到详细地址 *</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>报到地点</label>
+                            <input type="text" v-model="form.checkin.location.address" required placeholder="详细地址">
+                        </div>
+                        <div class="form-group" v-if="form.checkin.mode === 'qrcode'">
+                            <label>GPS坐标（可选）</label>
+                            <div class="input-group">
+                                <input type="text" v-model="form.checkin.location.latitude" placeholder="纬度">
+                                <input type="text" v-model="form.checkin.location.longitude" placeholder="经度">
+                                <button type="button" class="btn-sm" @click="getCurrentLocation">获取当前位置</button>
+                            </div>
+                        </div>
+                        <div class="form-group" v-if="form.checkin.mode === 'qrcode'">
+                            <label>报到范围（米）</label>
+                            <input type="number" v-model="form.checkin.location.radius" min="10" max="1000" placeholder="半径米数">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤5：通知设置 -->
+            <div v-if="currentStep === 5" class="step-content glass-card">
+                <h3>步骤5：通知设置</h3>
+                
+                <div class="notification-channels">
+                    <h4>默认通知方式（多选）</h4>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" v-model="form.notification.channels" value="app">
+                            <span>APP推送</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" v-model="form.notification.channels" value="sms">
+                            <span>短信</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" v-model="form.notification.channels" value="email">
+                            <span>邮件</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" v-model="form.notification.channels" value="wechat">
+                            <span>微信</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="notification-templates">
+                    <h4>通知文本设置</h4>
+                    <div class="template-list">
+                        <div v-for="(template, key) in form.notification.templates" :key="key" class="template-item">
+                            <label>{{ getTemplateLabel(key) }}</label>
+                            <div class="template-editor">
+                                <textarea v-model="template.content" rows="4" :placeholder="`请输入${getTemplateLabel(key)}内容`"></textarea>
+                                <button class="btn-sm btn-outline" @click="selectTemplate(key)">选择模板</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤6：权限设置 -->
+            <div v-if="currentStep === 6" class="step-content glass-card">
+                <h3>步骤6：权限设置</h3>
+                
+                <div class="permissions-section">
+                    <h4>会议工作人员权限</h4>
+                    <div class="staff-permissions">
+                        <div class="permission-item">
+                            <label>
+                                <input type="checkbox" v-model="form.permissions.staff.enterPhone">
+                                <span>录入用户手机号</span>
+                            </label>
+                        </div>
+                        <div class="permission-item">
+                            <label>
+                                <input type="checkbox" v-model="form.permissions.staff.selectMember">
+                                <span>选择系统内已加入会议的人员</span>
+                            </label>
+                        </div>
+                        <div class="permission-item">
+                            <label>
+                                <input type="checkbox" v-model="form.permissions.staff.markAsStaff">
+                                <span>标识为会议工作人员</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="permissions-section">
+                    <h4>参会者权限</h4>
+                    <div class="participant-permissions">
+                        <div class="permission-item">
+                            <label>
+                                <input type="checkbox" v-model="form.permissions.participant.viewInfo" checked>
+                                <span>查看会议信息</span>
+                            </label>
+                        </div>
+                        <div class="permission-item">
+                            <label>
+                                <input type="checkbox" v-model="form.permissions.participant.register" checked>
+                                <span>报名参会</span>
+                            </label>
+                        </div>
+                        <div class="permission-item">
+                            <label>
+                                <input type="checkbox" v-model="form.permissions.participant.viewSchedule" checked>
+                                <span>查看日程</span>
+                            </label>
+                        </div>
+                        <div class="permission-item">
+                            <label>
+                                <input type="checkbox" v-model="form.permissions.participant.viewMaterials">
+                                <span>查看资料</span>
+                            </label>
+                        </div>
+                        <div class="permission-item">
+                            <label>
+                                <input type="checkbox" v-model="form.permissions.participant.sendMessage">
+                                <span>发送消息</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤7：确认创建 -->
+            <div v-if="currentStep === 7" class="step-content glass-card">
+                <h3>步骤7：确认创建</h3>
+                
+                <div class="preview-summary">
+                    <div class="summary-section">
+                        <h4>基本信息</h4>
+                        <div class="summary-item">
+                            <span class="label">会议名称:</span>
+                            <span class="value">{{ form.name || '未填写' }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">会议类型:</span>
+                            <span class="value">{{ getTypeText(form.type) }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">时间:</span>
+                            <span class="value">{{ form.startDate }} 至 {{ form.endDate }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">地点:</span>
+                            <span class="value">{{ form.location.venue || '未填写' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-section">
+                        <h4>会议日程</h4>
+                        <div class="summary-item">
+                            <span class="label">日程数量:</span>
+                            <span class="value">{{ form.schedules.length }}个</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-section">
+                        <h4>报名设置</h4>
+                        <div class="summary-item">
+                            <span class="label">报名方式:</span>
+                            <span class="value">{{ getRegistrationModeText(form.registration.mode) }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">审核方式:</span>
+                            <span class="value">{{ form.registration.auditMode === 'required' ? '需审核' : '不需要审核' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-section">
+                        <h4>报到设置</h4>
+                        <div class="summary-item">
+                            <span class="label">报到方式:</span>
+                            <span class="value">{{ form.checkin.mode === 'print' ? '打印表单签字' : '二维码扫码+位置信息' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-section">
+                        <h4>通知设置</h4>
+                        <div class="summary-item">
+                            <span class="label">通知渠道:</span>
+                            <span class="value">{{ form.notification.channels.join(', ') || '未设置' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="create-actions">
+                    <button class="btn-outline" @click="saveDraft">
+                        <i class="fas fa-save"></i>
+                        保存草稿
+                    </button>
+                    <button class="btn-primary btn-lg" @click="createConference" :disabled="!canCreate">
+                        <i class="fas fa-check"></i>
+                        创建会议
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步骤导航按钮 -->
+            <div class="step-navigation glass-card">
+                <button class="btn-outline" @click="prevStep" :disabled="currentStep === 1">
+                    <i class="fas fa-arrow-left"></i>
+                    上一步
+                </button>
+                <button class="btn-outline" @click="saveDraft">
+                    <i class="fas fa-save"></i>
+                    保存草稿
+                </button>
+                <button class="btn-primary" @click="nextStep" :disabled="currentStep === 7 || !canProceed">
+                    下一步
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    currentStep: 1,
+                    form: {
+                        name: '',
+                        type: 'training',
+                        theme: '',
+                        code: '',
+                        startDate: '',
+                        endDate: '',
+                        location: {
+                            venue: '',
+                            address: ''
+                        },
+                        description: '',
+                        coverImage: null,
+                        schedules: [
+                            {
+                                title: '',
+                                startTime: '',
+                                endTime: '',
+                                location: '',
+                                host: '',
+                                speaker: '',
+                                notes: ''
+                            }
+                        ],
+                        registration: {
+                            mode: 'open',
+                            startTime: '',
+                            endTime: '',
+                            auditMode: 'required',
+                            open: {
+                                limitTotal: false,
+                                maxCount: 100,
+                                generateQRCode: true,
+                                qrCode: null
+                            },
+                            limited: {
+                                unitList: [],
+                                perUnitCount: 1,
+                                generateQRCode: true
+                            },
+                            import: {
+                                participants: []
+                            },
+                            formFields: [
+                                { label: '姓名', required: true },
+                                { label: '性别', required: true },
+                                { label: '单位', required: true },
+                                { label: '职务', required: true },
+                                { label: '手机号码', required: true },
+                                { label: '备注', required: false }
+                            ]
+                        },
+                        checkin: {
+                            mode: 'qrcode',
+                            startTime: '',
+                            endTime: '',
+                            location: {
+                                address: '',
+                                latitude: '',
+                                longitude: '',
+                                radius: 100
+                            }
+                        },
+                        notification: {
+                            channels: ['app'],
+                            templates: {
+                                meeting: { content: '' },
+                                registration: { content: '' },
+                                checkin: { content: '' },
+                                schedule: { content: '' }
+                            }
+                        },
+                        permissions: {
+                            staff: {
+                                enterPhone: true,
+                                selectMember: true,
+                                markAsStaff: true
+                            },
+                            participant: {
+                                viewInfo: true,
+                                register: true,
+                                viewSchedule: true,
+                                viewMaterials: false,
+                                sendMessage: false
+                            }
+                        }
+                    },
+                    scheduleSettings: {
+                        needCheckin: true,
+                        checkinMethod: 'qrcode',
+                        needReminder: true,
+                        reminderTarget: 'all',
+                        reminderMethods: ['app'],
+                        reminderTime: '30'
+                    }
+                }
+            },
+            computed: {
+                canProceed() {
+                    switch(this.currentStep) {
+                        case 1:
+                            return this.form.name && this.form.startDate && this.form.endDate;
+                        case 2:
+                            return this.form.schedules.every(s => s.title && s.startTime && s.endTime);
+                        case 3:
+                            return this.form.registration.mode && this.form.registration.startTime && this.form.registration.endTime && this.form.registration.auditMode;
+                        case 4:
+                            return this.form.checkin.mode && this.form.checkin.startTime && this.form.checkin.endTime && this.form.checkin.location.address;
+                        case 5:
+                            return this.form.notification.channels.length > 0;
+                        case 6:
+                            return true;
+                        default:
+                            return true;
+                    }
+                },
+                canCreate() {
+                    return this.canProceed && this.currentStep === 7;
+                }
+            },
+            methods: {
+                goToStep(step) {
+                    if (step <= this.currentStep || this.canProceed) {
+                        this.currentStep = step;
+                    }
+                },
+                prevStep() {
+                    if (this.currentStep > 1) {
+                        this.currentStep--;
+                    }
+                },
+                async nextStep() {
+                    // 验证当前步骤
+                    if (!await this.validateCurrentStep()) {
+                        return;
+                    }
+                    
+                    if (this.currentStep < 7) {
+                        this.currentStep++;
+                        // 滚动到顶部
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                },
+                
+                async validateCurrentStep() {
+                    const step = this.currentStep;
+                    let isValid = true;
+                    let errorMessage = '';
+                    
+                    // 步骤1：基本信息验证
+                    if (step === 1) {
+                        if (!this.form.name || !this.form.name.trim()) {
+                            isValid = false;
+                            errorMessage = '请输入会议名称';
+                        } else if (!this.form.startDate) {
+                            isValid = false;
+                            errorMessage = '请选择开始日期';
+                        } else if (!this.form.endDate) {
+                            isValid = false;
+                            errorMessage = '请选择结束日期';
+                        } else if (new Date(this.form.startDate) > new Date(this.form.endDate)) {
+                            isValid = false;
+                            errorMessage = '结束日期不能早于开始日期';
+                        }
+                    }
+                    
+                    // 步骤3：报名设置验证
+                    if (step === 3) {
+                        if (!this.form.registration.mode) {
+                            isValid = false;
+                            errorMessage = '请选择报名方式';
+                        } else if (!this.form.registration.startTime) {
+                            isValid = false;
+                            errorMessage = '请设置报名开始时间';
+                        } else if (!this.form.registration.endTime) {
+                            isValid = false;
+                            errorMessage = '请设置报名截止时间';
+                        }
+                    }
+                    
+                    // 步骤4：报到设置验证
+                    if (step === 4) {
+                        if (!this.form.checkin.mode) {
+                            isValid = false;
+                            errorMessage = '请选择报到方式';
+                        } else if (!this.form.checkin.startTime) {
+                            isValid = false;
+                            errorMessage = '请设置报到开始时间';
+                        } else if (!this.form.checkin.endTime) {
+                            isValid = false;
+                            errorMessage = '请设置报到截止时间';
+                        } else if (!this.form.checkin.location.address) {
+                            isValid = false;
+                            errorMessage = '请填写报到详细地址';
+                        }
+                    }
+                    
+                    if (!isValid) {
+                        this.$showToast(errorMessage, 'error');
+                        return false;
+                    }
+                    
+                    return true;
+                },
+                generateCode() {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    this.form.code = `CONF_${year}${month}${day}_${random}`;
+                },
+                triggerCoverUpload() {
+                    this.$refs.coverInput.click();
+                },
+                handleCoverUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.form.coverImage = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                },
+                removeCover() {
+                    this.form.coverImage = null;
+                },
+                addSchedule() {
+                    this.form.schedules.push({
+                        title: '',
+                        startTime: '',
+                        endTime: '',
+                        location: '',
+                        host: '',
+                        speaker: '',
+                        notes: ''
+                    });
+                },
+                async removeSchedule(index) {
+                    const confirmed = await this.$showConfirm(
+                        '确定要删除该日程吗？删除后无法恢复。',
+                        '删除日程',
+                        'warning'
+                    );
+                    if (confirmed) {
+                        this.form.schedules.splice(index, 1);
+                        this.$showToast('日程已删除', 'success');
+                    }
+                },
+                duplicateSchedule(index) {
+                    const schedule = { ...this.form.schedules[index] };
+                    schedule.title += ' (副本)';
+                    this.form.schedules.splice(index + 1, 0, schedule);
+                },
+                triggerUnitListUpload() {
+                    this.$refs.unitListInput.click();
+                },
+                handleUnitListUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        // 模拟解析Excel
+                        this.$showToast('单位名录上传功能需要后端支持', 'info');
+                        // 这里应该调用后端API解析Excel
+                    }
+                },
+                downloadUnitListTemplate() {
+                    this.$showToast('下载单位名录模板', 'info');
+                },
+                manageUnitList() {
+                    this.$showToast('管理单位名录功能', 'info');
+                },
+                triggerParticipantUpload() {
+                    this.$refs.participantInput.click();
+                },
+                handleParticipantUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        this.$showToast('参会人员上传功能需要后端支持', 'info');
+                    }
+                },
+                showManualEntry() {
+                    this.$showToast('手动录入功能', 'info');
+                },
+                addCustomField() {
+                    const name = prompt('请输入字段名称:');
+                    if (name && name.trim()) {
+                        this.form.registration.formFields.push({
+                            label: name.trim(),
+                            required: false
+                        });
+                        this.$showToast('自定义字段已添加', 'success');
+                    }
+                },
+                getCurrentLocation() {
+                    if (navigator.geolocation) {
+                        this.$showLoading('正在获取当前位置...');
+                        navigator.geolocation.getCurrentPosition((position) => {
+                            this.form.checkin.location.latitude = position.coords.latitude.toFixed(6);
+                            this.form.checkin.location.longitude = position.coords.longitude.toFixed(6);
+                            this.$hideLoading();
+                            this.$showToast('位置已获取', 'success');
+                        }, (error) => {
+                            this.$hideLoading();
+                            this.$showToast('获取位置失败', 'error');
+                        });
+                    } else {
+                        this.$showToast('浏览器不支持地理位置获取', 'warning');
+                    }
+                },
+                selectTemplate(key) {
+                    this.$showToast(`选择模板: ${key}`, 'info');
+                },
+                getTemplateLabel(key) {
+                    const map = {
+                        meeting: '会议通知模板',
+                        registration: '报名提醒模板',
+                        checkin: '签到提醒模板',
+                        schedule: '日程提醒模板'
+                    };
+                    return map[key] || key;
+                },
+                getTypeText(type) {
+                    const typeMap = {
+                        training: '培训会议',
+                        seminar: '研讨会',
+                        conference: '大型会议',
+                        workshop: '工作坊'
+                    };
+                    return typeMap[type] || type;
+                },
+                getRegistrationModeText(mode) {
+                    const map = {
+                        open: '开放式报名',
+                        limited: '限定式报名',
+                        import: '导入式报名'
+                    };
+                    return map[mode] || mode;
+                },
+                downloadQRCode(type) {
+                    this.$showLoading('正在生成二维码...');
+                    setTimeout(() => {
+                        this.$hideLoading();
+                        this.$showToast('二维码已生成，请下载', 'success');
+                    }, 1000);
+                },
+                async createConference() {
+                    // 最终验证
+                    if (!await this.validateCurrentStep()) {
+                        return;
+                    }
+                    
+                    // 确认创建
+                    const confirmed = await this.$showConfirm(
+                        '确定要创建会议吗？创建后将自动初始化所有关联系统。',
+                        '创建会议',
+                        'info'
+                    );
+                    
+                    if (!confirmed) {
+                        return;
+                    }
+                    
+                    try {
+                        this.$showLoading('正在创建会议，请稍候...');
+                        
+                        // 模拟API调用
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        
+                        const conferenceId = this.generateConferenceId();
+                        const conferenceData = {
+                            id: conferenceId,
+                            ...this.form,
+                            status: 'preparing',
+                            createdAt: new Date().toISOString(),
+                            createdBy: 'admin_001'
+                        };
+                        
+                        console.log('创建会议:', conferenceData);
+                        
+                        // 清除草稿
+                        localStorage.removeItem('conferenceDraft');
+                        
+                        this.$hideLoading();
+                        this.$showToast('会议创建成功！正在跳转...', 'success', 2000);
+                        
+                        setTimeout(() => {
+                            window.location.href = `conference-dashboard.html?conferenceId=${conferenceId}`;
+                        }, 2000);
+                    } catch (error) {
+                        this.$hideLoading();
+                        console.error('创建会议失败:', error);
+                        this.$showToast('创建会议失败，请重试', 'error');
+                    }
+                },
+                generateConferenceId() {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    return `conf_${year}${month}${day}_${random}`;
+                },
+                saveDraft() {
+                    const draft = {
+                        currentStep: this.currentStep,
+                        form: this.form,
+                        savedAt: new Date().toISOString()
+                    };
+                    localStorage.setItem('conferenceDraft', JSON.stringify(draft));
+                    this.$showToast('草稿已保存', 'success');
+                },
+                
+                initSampleData() {
+                    // 设置示例日期（明天开始，3天后结束）
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const endDate = new Date(tomorrow);
+                    endDate.setDate(endDate.getDate() + 2);
+                    
+                    // 格式化日期为 YYYY-MM-DD
+                    const formatDate = (date) => {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                    };
+                    
+                    // 格式化日期时间为 YYYY-MM-DDTHH:mm
+                    const formatDateTime = (date, hour = 9, minute = 0) => {
+                        const dateStr = formatDate(date);
+                        const hourStr = String(hour).padStart(2, '0');
+                        const minuteStr = String(minute).padStart(2, '0');
+                        return `${dateStr}T${hourStr}:${minuteStr}`;
+                    };
+                    
+                    // 基本信息示例数据
+                    this.form.name = '2024年度智能会议系统培训会议';
+                    this.form.type = 'training';
+                    this.form.theme = '智能会议系统应用与实践';
+                    this.form.startDate = formatDate(tomorrow);
+                    this.form.endDate = formatDate(endDate);
+                    this.form.location.address = '北京市朝阳区会议中心';
+                    this.form.description = '本次培训会议旨在帮助参会人员掌握智能会议系统的使用方法，提升会议管理效率。';
+                    
+                    // 自动生成会议编号
+                    this.generateCode();
+                    
+                    // 会议日程示例数据
+                    this.form.schedules = [
+                        {
+                            title: '开幕式及主题演讲',
+                            startTime: formatDateTime(tomorrow, 9, 0),
+                            endTime: formatDateTime(tomorrow, 10, 30),
+                            location: '主会场A厅',
+                            host: '张主任',
+                            speaker: '李教授',
+                            notes: '开幕式致辞，随后进行主题演讲'
+                        },
+                        {
+                            title: '智能会议系统功能演示',
+                            startTime: formatDateTime(tomorrow, 10, 45),
+                            endTime: formatDateTime(tomorrow, 12, 0),
+                            location: '主会场A厅',
+                            host: '王经理',
+                            speaker: '技术团队',
+                            notes: '现场演示系统各项功能'
+                        },
+                        {
+                            title: '分组讨论与实践操作',
+                            startTime: formatDateTime(tomorrow, 14, 0),
+                            endTime: formatDateTime(tomorrow, 17, 0),
+                            location: '分会场B厅、C厅',
+                            host: '各小组组长',
+                            speaker: '',
+                            notes: '分组进行实践操作，现场答疑'
+                        },
+                        {
+                            title: '总结与闭幕式',
+                            startTime: formatDateTime(endDate, 9, 0),
+                            endTime: formatDateTime(endDate, 11, 0),
+                            location: '主会场A厅',
+                            host: '张主任',
+                            speaker: '',
+                            notes: '总结培训内容，颁发证书'
+                        }
+                    ];
+                    
+                    // 报名设置示例数据
+                    this.form.registration.mode = 'open';
+                    const registrationStartDate = new Date(tomorrow.getTime() - 7 * 24 * 60 * 60 * 1000); // 7天前开始报名
+                    this.form.registration.startTime = formatDateTime(registrationStartDate, 9, 0);
+                    this.form.registration.endTime = formatDateTime(tomorrow, 8, 0); // 会议开始前一天截止
+                    this.form.registration.auditMode = 'required';
+                    this.form.registration.open.limitTotal = true;
+                    this.form.registration.open.maxCount = 200;
+                    
+                    // 报到设置示例数据
+                    this.form.checkin.mode = 'qrcode';
+                    this.form.checkin.startTime = formatDateTime(tomorrow, 8, 0);
+                    this.form.checkin.endTime = formatDateTime(tomorrow, 9, 30);
+                    this.form.checkin.location.address = '北京市朝阳区会议中心主入口';
+                    this.form.checkin.location.latitude = '39.9042';
+                    this.form.checkin.location.longitude = '116.4074';
+                    this.form.checkin.location.radius = 200;
+                    
+                    // 通知设置示例数据
+                    this.form.notification.channels = ['app', 'sms'];
+                    this.form.notification.templates = {
+                        meeting: {
+                            content: '尊敬的参会人员，您好！\n\n会议名称：{{conferenceName}}\n会议时间：{{startDate}} 至 {{endDate}}\n会议地点：{{location}}\n\n请准时参加，谢谢！'
+                        },
+                        registration: {
+                            content: '您好！\n\n您已成功报名参加"{{conferenceName}}"会议。\n报名时间：{{registrationTime}}\n\n请等待审核结果，审核通过后将收到确认通知。'
+                        },
+                        checkin: {
+                            content: '您好！\n\n"{{conferenceName}}"会议即将开始。\n报到时间：{{checkinStartTime}}\n报到地点：{{checkinLocation}}\n\n请携带有效证件准时报到。'
+                        },
+                        schedule: {
+                            content: '提醒：\n\n"{{scheduleTitle}}"即将开始。\n时间：{{scheduleStartTime}}\n地点：{{scheduleLocation}}\n\n请准时参加。'
+                        }
+                    };
+                }
+            },
+            mounted() {
+                // 优先加载草稿
+                const draft = localStorage.getItem('conferenceDraft');
+                if (draft) {
+                    try {
+                        const draftData = JSON.parse(draft);
+                        this.currentStep = draftData.currentStep || 1;
+                        this.form = { ...this.form, ...draftData.form };
+                        this.generateCode();
+                        return; // 如果有草稿，不加载示例数据
+                    } catch (error) {
+                        console.error('加载草稿失败:', error);
+                    }
+                }
+                
+                // 如果没有草稿，初始化示例数据
+                this.initSampleData();
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+
+    <style>
+        .wizard-navigation {
+            margin-bottom: 2rem;
+        }
+        
+        .wizard-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            padding: 1rem 0;
+        }
+        
+        .wizard-steps::before {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 1;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .step.active .step-number {
+            background: #667eea;
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background: #10b981;
+            color: white;
+        }
+        
+        .step-label {
+            font-size: 0.85rem;
+            color: #666;
+            text-align: center;
+        }
+        
+        .step.active .step-label {
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        .step-content {
+            margin-bottom: 2rem;
+            padding: 2rem;
+        }
+        
+        .step-content h3 {
+            margin-bottom: 2rem;
+            color: #333;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .input-with-button {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .input-with-button input {
+            flex: 1;
+        }
+        
+        .cover-upload-area {
+            padding: 3rem;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .cover-upload-area:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .cover-upload-area i {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .cover-preview {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .cover-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+        }
+        
+        .cover-preview button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+        
+        .schedules-list {
+            margin-bottom: 2rem;
+        }
+        
+        .schedule-item {
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .schedule-header h4 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .schedule-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .schedule-settings {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .schedule-settings h4 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .mode-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .mode-option {
+            cursor: pointer;
+        }
+        
+        .mode-option input[type="radio"] {
+            display: none;
+        }
+        
+        .mode-card {
+            padding: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .mode-card i {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .mode-card h5 {
+            margin: 0.5rem 0;
+            color: #333;
+        }
+        
+        .mode-card p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .mode-option.active .mode-card {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .registration-config,
+        .registration-time,
+        .registration-audit,
+        .registration-form {
+            margin-bottom: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .file-upload-area {
+            padding: 2rem;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .file-upload-area i {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-hint {
+            font-size: 0.85rem;
+            color: #666;
+            margin: 0.5rem 0;
+        }
+        
+        .qrcode-preview {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        .qrcode-preview img {
+            max-width: 200px;
+            margin-bottom: 1rem;
+        }
+        
+        .unit-list {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .form-fields-list {
+            margin-bottom: 1rem;
+        }
+        
+        .field-item {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .field-type {
+            margin-left: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+        
+        .radio-group,
+        .checkbox-group {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .radio-group label,
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .checkin-mode,
+        .checkin-time,
+        .checkin-location {
+            margin-bottom: 2rem;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .input-group input {
+            flex: 1;
+        }
+        
+        .notification-channels,
+        .notification-templates {
+            margin-bottom: 2rem;
+        }
+        
+        .template-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .template-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .template-editor {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .template-editor textarea {
+            flex: 1;
+        }
+        
+        .permissions-section {
+            margin-bottom: 2rem;
+        }
+        
+        .permissions-section h4 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .staff-permissions,
+        .participant-permissions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .permission-item {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+        
+        .permission-item label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .preview-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .summary-section {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .summary-section h4 {
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .summary-item .label {
+            color: #666;
+        }
+        
+        .summary-item .value {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .create-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .step-navigation {
+            display: flex;
+            justify-content: space-between;
+            padding: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .wizard-steps {
+                flex-wrap: wrap;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .mode-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

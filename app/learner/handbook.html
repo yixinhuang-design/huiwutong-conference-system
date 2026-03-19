@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学员手册 - 移动版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+    <style>
+        .handbook-viewer {
+            max-width: 425px;
+            margin: 0 auto;
+        }
+
+        .handbook-cover {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .handbook-cover-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+
+        .handbook-cover-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .handbook-cover-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .handbook-section {
+            margin-bottom: 16px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .handbook-section-header {
+            background: linear-gradient(135deg, #f0f9ff 0%, #f5f3ff 100%);
+            padding: 16px;
+            border-left: 4px solid #3b82f6;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .handbook-section-header-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 8px;
+            color: #3b82f6;
+        }
+
+        .handbook-section-header-text {
+            flex: 1;
+        }
+
+        .handbook-section-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .handbook-section-desc {
+            font-size: 12px;
+            color: #64748b;
+            margin: 2px 0 0 0;
+        }
+
+        .handbook-section-body {
+            background: white;
+            padding: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .handbook-content {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #475569;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .schedule-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .schedule-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .schedule-time {
+            flex-shrink: 0;
+            width: 60px;
+            font-weight: 600;
+            color: #3b82f6;
+            font-size: 12px;
+        }
+
+        .schedule-event {
+            flex: 1;
+        }
+
+        .schedule-event-title {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+
+        .schedule-event-location {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .roster-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .roster-stat {
+            background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .roster-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 4px;
+        }
+
+        .roster-stat-label {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .roster-group {
+            margin-bottom: 12px;
+        }
+
+        .roster-group-header {
+            background: #f1f5f9;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #3b82f6;
+            margin-bottom: 8px;
+        }
+
+        .roster-member {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+
+        .roster-member:last-child {
+            border-bottom: none;
+        }
+
+        .roster-member-name {
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .roster-member-unit {
+            color: #64748b;
+            font-size: 12px;
+            max-width: 150px;
+            text-align: right;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .download-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .download-btn {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .download-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .download-btn-icon {
+            font-size: 20px;
+        }
+
+        .print-friendly {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #92400e;
+            margin-top: 16px;
+        }
+
+        .page-break {
+            height: 20px;
+        }
+
+        .toc {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .toc-title {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .toc-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            font-size: 13px;
+            color: #475569;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .toc-item:last-child {
+            border-bottom: none;
+        }
+
+        .toc-icon {
+            color: #3b82f6;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+        }
+
+        .filter-btn {
+            flex-shrink: 0;
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover,
+        .filter-btn--active {
+            border-color: #3b82f6;
+            background: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <!-- 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left"><span>9:41</span></div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- 应用内容 -->
+            <div class="app-content">
+                <!-- 标题卡片 -->
+                <div class="card card--no-margin fade-in">
+                    <div class="card-header">
+                        <a href="schedule.html" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 目录 -->
+                <div class="card fade-in">
+                    <div class="toc">
+                        <div class="toc-title">📑 手册目录</div>
+                        <div class="toc-item">
+                            <span class="toc-icon">📄</span>
+                            <span>封面和说明</span>
+                        </div>
+                        <div class="toc-item">
+                            <span class="toc-icon">📋</span>
+                            <span>培训须知</span>
+                        </div>
+                        <div class="toc-item">
+                            <span class="toc-icon">📅</span>
+                            <span>会议日程</span>
+                        </div>
+                        <div class="toc-item">
+                            <span class="toc-icon">👥</span>
+                            <span>学员名册</span>
+                        </div>
+                        <div class="toc-item">
+                            <span class="toc-icon">📝</span>
+                            <span>备注说明</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 封面 -->
+                <div class="card fade-in">
+                    <div class="handbook-cover">
+                        <div class="handbook-cover-icon">🎓</div>
+                        <div class="handbook-cover-title">2025党务干部培训班</div>
+                        <div class="handbook-cover-subtitle">学员名册</div>
+                        <div style="font-size: 12px; opacity: 0.8;">2025年2月15日-19日</div>
+                    </div>
+                </div>
+
+                <!-- 培训须知 -->
+                <div class="card fade-in">
+                    <div class="handbook-section">
+                        <div class="handbook-section-header">
+                            <div class="handbook-section-header-icon">📋</div>
+                            <div class="handbook-section-header-text">
+                                <div class="handbook-section-title">培训须知</div>
+                                <div class="handbook-section-desc">8条重点提示</div>
+                            </div>
+                        </div>
+                        <div class="handbook-section-body">
+                            <div class="handbook-content">一、培训目标
+强化党务工作者的理论认识，提升党务管理能力。
+
+二、培训时间与地点
+• 时间：2025年2月15日-19日（5天）
+• 地点：市委党校报告厅
+
+三、参加对象
+各区县、市级机关党务工作者，共142人
+
+四、学习内容
+1. 党的最新理论知识
+2. 党务管理创新工作
+3. 党风廉政建设
+4. 党群工作经验交流
+
+五、注意事项
+1. 请按时参加，迟到视为缺席
+2. 期间将手机调至静音
+3. 遵守课堂纪律，认真听讲
+4. 做好学习笔记
+
+六、学习要求
+1. 参加全部培训课程
+2. 完成学习任务
+3. 参加结业考试
+4. 撰写学习心得
+
+七、配套材料
+本手册包含：培训日程、学员名册、重点内容
+
+八、联系方式
+培训办公室：0571-XXXX-XXXX</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 会议日程 -->
+                <div class="card fade-in">
+                    <div class="handbook-section">
+                        <div class="handbook-section-header">
+                            <div class="handbook-section-header-icon">📅</div>
+                            <div class="handbook-section-header-text">
+                                <div class="handbook-section-title">会议日程</div>
+                                <div class="handbook-section-desc">3天日程安排</div>
+                            </div>
+                        </div>
+                        <div class="handbook-section-body">
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-weight: 700; color: #1e293b; padding-bottom: 8px; border-bottom: 2px solid #f1f5f9; margin-bottom: 12px;">第1天 · 2月15日 (星期六)</div>
+                                <div class="schedule-item">
+                                    <div class="schedule-time">09:00-10:00</div>
+                                    <div class="schedule-event">
+                                        <div class="schedule-event-title">开班仪式</div>
+                                        <div class="schedule-event-location">报告厅</div>
+                                    </div>
+                                </div>
+                                <div class="schedule-item">
+                                    <div class="schedule-time">10:00-12:00</div>
+                                    <div class="schedule-event">
+                                        <div class="schedule-event-title">专题讲座：新时代党务工作</div>
+                                        <div class="schedule-event-location">报告厅</div>
+                                    </div>
+                                </div>
+                                <div class="schedule-item">
+                                    <div class="schedule-time">14:00-17:00</div>
+                                    <div class="schedule-event">
+                                        <div class="schedule-event-title">分组讨论：工作经验交流</div>
+                                        <div class="schedule-event-location">分组教室</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-weight: 700; color: #1e293b; padding-bottom: 8px; border-bottom: 2px solid #f1f5f9; margin-bottom: 12px;">第2天 · 2月16日 (星期日)</div>
+                                <div class="schedule-item">
+                                    <div class="schedule-time">09:00-11:30</div>
+                                    <div class="schedule-event">
+                                        <div class="schedule-event-title">党风廉政建设专题</div>
+                                        <div class="schedule-event-location">报告厅</div>
+                                    </div>
+                                </div>
+                                <div class="schedule-item">
+                                    <div class="schedule-time">14:00-16:30</div>
+                                    <div class="schedule-event">
+                                        <div class="schedule-event-title">党群关系管理实务</div>
+                                        <div class="schedule-event-location">报告厅</div>
+                                    </div>
+                                </div>
+                                <div class="schedule-item">
+                                    <div class="schedule-time">17:00-19:00</div>
+                                    <div class="schedule-event">
+                                        <div class="schedule-event-title">学员交流晚宴</div>
+                                        <div class="schedule-event-location">食堂餐厅</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style="font-weight: 700; color: #1e293b; padding-bottom: 8px; border-bottom: 2px solid #f1f5f9; margin-bottom: 12px;">第3天 · 2月17日 (星期一)</div>
+                                <div class="schedule-item">
+                                    <div class="schedule-time">09:00-11:00</div>
+                                    <div class="schedule-event">
+                                        <div class="schedule-event-title">案例分享与分析</div>
+                                        <div class="schedule-event-location">报告厅</div>
+                                    </div>
+                                </div>
+                                <div class="schedule-item">
+                                    <div class="schedule-time">11:00-12:00</div>
+                                    <div class="schedule-event">
+                                        <div class="schedule-event-title">结业考试</div>
+                                        <div class="schedule-event-location">教室</div>
+                                    </div>
+                                </div>
+                                <div class="schedule-item">
+                                    <div class="schedule-time">14:00-16:00</div>
+                                    <div class="schedule-event">
+                                        <div class="schedule-event-title">结业典礼与颁证</div>
+                                        <div class="schedule-event-location">报告厅</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 学员名册 -->
+                <div class="card fade-in">
+                    <div class="handbook-section">
+                        <div class="handbook-section-header">
+                            <div class="handbook-section-header-icon">👥</div>
+                            <div class="handbook-section-header-text">
+                                <div class="handbook-section-title">学员名册</div>
+                                <div class="handbook-section-desc">142人 · 6个分组</div>
+                            </div>
+                        </div>
+                        <div class="handbook-section-body">
+                            <div class="roster-stats">
+                                <div class="roster-stat">
+                                    <div class="roster-stat-value">142</div>
+                                    <div class="roster-stat-label">总人数</div>
+                                </div>
+                                <div class="roster-stat">
+                                    <div class="roster-stat-value">6</div>
+                                    <div class="roster-stat-label">分组数</div>
+                                </div>
+                                <div class="roster-stat">
+                                    <div class="roster-stat-value">100%</div>
+                                    <div class="roster-stat-label">分配率</div>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 12px;">
+                                <div class="filter-buttons">
+                                    <button class="filter-btn filter-btn--active" onclick="filterRoster('all')">全部</button>
+                                    <button class="filter-btn" onclick="filterRoster('g1')">第1组</button>
+                                    <button class="filter-btn" onclick="filterRoster('g2')">第2组</button>
+                                    <button class="filter-btn" onclick="filterRoster('g3')">第3组</button>
+                                </div>
+                            </div>
+
+                            <!-- 第1组 -->
+                            <div class="roster-group">
+                                <div class="roster-group-header">第1组 (24人) · 组长：张三</div>
+                                <div class="roster-member">
+                                    <span class="roster-member-name">张三</span>
+                                    <span class="roster-member-unit">市委组织部</span>
+                                </div>
+                                <div class="roster-member">
+                                    <span class="roster-member-name">李四</span>
+                                    <span class="roster-member-unit">市教育局</span>
+                                </div>
+                                <div class="roster-member">
+                                    <span class="roster-member-name">王五</span>
+                                    <span class="roster-member-unit">市卫健委</span>
+                                </div>
+                                <div class="roster-member" style="text-align: center; color: #64748b; font-size: 12px; padding: 8px;">
+                                    ... 显示部分成员，下载PDF查看全部
+                                </div>
+                            </div>
+
+                            <!-- 第2组 -->
+                            <div class="roster-group">
+                                <div class="roster-group-header">第2组 (23人) · 组长：赵六</div>
+                                <div class="roster-member">
+                                    <span class="roster-member-name">赵六</span>
+                                    <span class="roster-member-unit">市财政局</span>
+                                </div>
+                                <div class="roster-member">
+                                    <span class="roster-member-name">孙七</span>
+                                    <span class="roster-member-unit">市税务局</span>
+                                </div>
+                                <div class="roster-member" style="text-align: center; color: #64748b; font-size: 12px; padding: 8px;">
+                                    ... 显示部分成员，下载PDF查看全部
+                                </div>
+                            </div>
+
+                            <!-- 更多组 -->
+                            <div class="roster-group">
+                                <div class="roster-group-header">第3-6组 (95人)</div>
+                                <div style="text-align: center; color: #64748b; font-size: 12px; padding: 12px;">
+                                    共95人，下载PDF查看完整名册
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 下载和操作 -->
+                <div class="card fade-in">
+                    <div class="handbook-section">
+                        <div class="handbook-section-header">
+                            <div class="handbook-section-header-icon">💾</div>
+                            <div class="handbook-section-header-text">
+                                <div class="handbook-section-title">下载手册</div>
+                                <div class="handbook-section-desc">获取完整版本</div>
+                            </div>
+                        </div>
+                        <div class="handbook-section-body">
+                            <div class="download-buttons">
+                                <button class="download-btn" onclick="downloadPDF()">
+                                    <span class="download-btn-icon">📥</span>
+                                    <span>下载PDF</span>
+                                </button>
+                                <button class="download-btn" onclick="sharePDF()">
+                                    <span class="download-btn-icon">🔗</span>
+                                    <span>分享链接</span>
+                                </button>
+                            </div>
+                            <button class="download-btn" style="width: 100%; margin-top: 10px;" onclick="printPDF()">
+                                <span class="download-btn-icon">🖨️</span>
+                                <span>打印手册</span>
+                            </button>
+
+                            <div class="print-friendly">
+                                <i class="fas fa-lightbulb"></i> 
+                                提示：下载或打印前请确保网络连接，PDF包含142人的完整名册
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="height: 30px;"></div>
+            </div>
+
+            <!-- 底部导航 -->
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                    <div class="nav-text">AI助理</div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon"><i class="fas fa-comments"></i></div>
+                    <div class="nav-text">沟通</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-history"></i></div>
+                    <div class="nav-text">往期</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 筛选名册
+        function filterRoster(group) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('filter-btn--active');
+            });
+            event.currentTarget.classList.add('filter-btn--active');
+            
+            const groups = document.querySelectorAll('.roster-group');
+            if (group === 'all') {
+                groups.forEach(g => g.style.display = 'block');
+            } else {
+                groups.forEach(g => {
+                    g.style.display = g.textContent.includes(group) ? 'block' : 'none';
+                });
+            }
+        }
+
+        // 下载PDF
+        function downloadPDF() {
+            alert('📥 下载成功！\n\n文件：党务干部培训班学员手册.pdf\n大小：2.4MB\n位置：下载文件夹\n\n手册包含：封面、培训须知、日程、名册等完整内容');
+        }
+
+        // 分享链接
+        function sharePDF() {
+            alert('🔗 分享链接已生成！\n\n链接：https://example.com/handbook/abc123\n有效期：7天\n查看次数：限制5次\n\n可复制链接分享给其他学员');
+        }
+
+        // 打印手册
+        function printPDF() {
+            alert('🖨️ 打印已启动\n\n页数：8-10页\n推荐：彩色打印\n纸张：A4\n\n打印完成后可装订成册');
+        }
+
+        // 页面加载动画
+        document.addEventListener('DOMContentLoaded', () => {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach((el, index) => {
+                el.style.animation = `none`;
+                setTimeout(() => {
+                    el.style.animation = `fadeIn 0.5s ease forwards`;
+                }, index * 100);
+            });
+        });
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </script>
+</body>
+</html>

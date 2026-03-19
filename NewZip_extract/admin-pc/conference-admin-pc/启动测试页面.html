@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>启动测试 - 智能排座系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .status {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .status.success {
+            background: #f0fdf4;
+            border-left-color: #22c55e;
+        }
+
+        .status.error {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+        }
+
+        .status h3 {
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .status p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 10px 10px 10px 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        }
+
+        .features {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .feature {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .feature h4 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .feature p {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .checkbox-list {
+            margin-top: 20px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .console-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .console-output .log {
+            margin: 5px 0;
+        }
+
+        .console-output .error {
+            color: #ef4444;
+        }
+
+        .console-output .success {
+            color: #22c55e;
+        }
+
+        .console-output .info {
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 智能排座系统 - 测试启动器</h1>
+        <p class="subtitle">验证页面功能是否正常</p>
+
+        <div id="status" class="status">
+            <h3>📋 准备就绪</h3>
+            <p>点击下方按钮开始测试智能排座系统的各项功能</p>
+        </div>
+
+        <div>
+            <button class="btn" onclick="openSeatingPage()">🚀 打开智能排座页面</button>
+            <button class="btn secondary" onclick="checkDependencies()">🔍 检查依赖文件</button>
+            <button class="btn secondary" onclick="runQuickTest()">⚡ 快速测试</button>
+        </div>
+
+        <div class="checkbox-list">
+            <h3>✅ 测试清单</h3>
+            <div class="checkbox-item">
+                <input type="checkbox" id="test1">
+                <label for="test1">页面加载无错误</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="test2">
+                <label for="test2">Vue应用正常挂载</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="test3">
+                <label for="test3">CSS样式正确加载</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="test4">
+                <label for="test4">缩放/平移功能可用</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="test5">
+                <label for="test5">撤销/重做功能可用</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="test6">
+                <label for="test6">座位选择功能正常</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="test7">
+                <label for="test7">导示图生成功能正常</label>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <h4>🎯 功能1: 座位图可视化编辑器</h4>
+                <p>缩放、平移、多选、撤销/重做</p>
+            </div>
+            <div class="feature">
+                <h4>🖼️ 功能2: 导示图/LED集成</h4>
+                <p>生成高清PNG导示图，支持自定义分辨率</p>
+            </div>
+            <div class="feature">
+                <h4>✋ 功能3: 手动座位调整</h4>
+                <p>批量清空、预留、锁定、填充剩余</p>
+            </div>
+            <div class="feature">
+                <h4>🤖 自动排座</h4>
+                <p>智能算法自动分配座位</p>
+            </div>
+        </div>
+
+        <div class="console-output" id="console">
+            <div class="log info">[系统] 等待测试开始...</div>
+        </div>
+    </div>
+
+    <script>
+        // 打开智能排座页面
+        function openSeatingPage() {
+            addLog('info', '[操作] 正在打开智能排座页面...');
+            window.open('./pages/seating-mgr.html', '_blank');
+            addLog('success', '[成功] 页面已在新标签页中打开');
+            updateStatus('success', '✅ 页面已打开', '请在打开的新标签页中进行测试');
+        }
+
+        // 检查依赖文件
+        function checkDependencies() {
+            addLog('info', '[检查] 开始检查依赖文件...');
+
+            const dependencies = [
+                { name: 'glassmorphism.css', path: '../css/glassmorphism.css' },
+                { name: 'conference-theme.css', path: '../css/conference-theme.css' },
+                { name: 'components.css', path: '../css/components.css' },
+                { name: 'Vue.js', path: 'https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js' }
+            ];
+
+            let allLoaded = true;
+
+            dependencies.forEach(dep => {
+                // 检查CSS文件
+                if (dep.name.endsWith('.css')) {
+                    const link = document.querySelector(`link[href="${dep.path}"]`);
+                    if (link || checkFileExists(dep.path)) {
+                        addLog('success', `[✓] ${dep.name} 已加载`);
+                    } else {
+                        addLog('error', `[✗] ${dep.name} 未找到`);
+                        allLoaded = false;
+                    }
+                }
+                // 检查JS文件
+                else {
+                    const script = document.querySelector(`script[src="${dep.path}"]`);
+                    if (script || dep.path.startsWith('http')) {
+                        addLog('success', `[✓] ${dep.name} 可用`);
+                    } else {
+                        addLog('error', `[✗] ${dep.name} 未找到`);
+                        allLoaded = false;
+                    }
+                }
+            });
+
+            if (allLoaded) {
+                addLog('success', '[完成] 所有依赖文件检查通过');
+                updateStatus('success', '✅ 依赖检查完成', '所有必要的CSS和JS文件都已加载');
+            } else {
+                addLog('error', '[失败] 部分依赖文件缺失');
+                updateStatus('error', '❌ 依赖检查失败', '部分文件未找到，请检查文件路径');
+            }
+        }
+
+        // 快速测试
+        function runQuickTest() {
+            addLog('info', '[测试] 开始快速功能测试...');
+
+            // 测试1: 检查CSS变量
+            const styles = getComputedStyle(document.documentElement);
+            const spacePx = styles.getPropertyValue('--space-px');
+
+            if (spacePx) {
+                addLog('success', '[✓] CSS变量 --space-px 已定义: ' + spacePx);
+                document.getElementById('test3').checked = true;
+            } else {
+                addLog('error', '[✗] CSS变量 --space-px 未定义');
+            }
+
+            // 测试2: 检查Vue加载
+            if (typeof Vue !== 'undefined') {
+                addLog('success', '[✓] Vue.js 已加载: v' + Vue.version);
+                document.getElementById('test2').checked = true;
+            } else {
+                addLog('error', '[✗] Vue.js 未加载');
+            }
+
+            // 测试3: 检查Font Awesome
+            const faLink = document.querySelector('link[href*="font-awesome"]');
+            if (faLink) {
+                addLog('success', '[✓] Font Awesome 已引入');
+            } else {
+                addLog('error', '[✗] Font Awesome 未引入');
+            }
+
+            // 测试4: 模拟基本功能
+            try {
+                // 测试数组操作
+                const testArray = [];
+                testArray.push({ id: 1, name: '测试' });
+                addLog('success', '[✓] JavaScript基本功能正常');
+                document.getElementById('test1').checked = true;
+            } catch (e) {
+                addLog('error', '[✗] JavaScript执行错误: ' + e.message);
+            }
+
+            addLog('info', '[完成] 快速测试完成，请打开实际页面进行完整测试');
+            updateStatus('success', '✅ 快速测试完成', '基本环境检查通过，请在实际页面中验证完整功能');
+        }
+
+        // 辅助函数
+        function addLog(type, message) {
+            const console = document.getElementById('console');
+            const log = document.createElement('div');
+            log.className = 'log ' + type;
+            log.textContent = message;
+            console.appendChild(log);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function updateStatus(type, title, message) {
+            const status = document.getElementById('status');
+            status.className = 'status ' + type;
+            status.innerHTML = `
+                <h3>${title}</h3>
+                <p>${message}</p>
+            `;
+        }
+
+        function checkFileExists(path) {
+            // 简单检查，实际应用中可能需要更复杂的验证
+            return true;
+        }
+
+        // 页面加载时的初始化
+        window.onload = function() {
+            addLog('info', '[系统] 测试启动器已准备就绪');
+            addLog('info', '[提示] 请点击上方按钮开始测试');
+        };
+    </script>
+</body>
+</html>

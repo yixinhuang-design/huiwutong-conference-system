@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>辅助安排 - 学员视角</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="schedule.html" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div class="card-title">辅助安排</div>
+                    </div>
+                    <div class="pill-group">
+                        <div class="pill-active" onclick="showSection('vehicle')">车辆</div>
+                        <div class="pill" onclick="showSection('hotel')">住宿</div>
+                        <div class="pill" onclick="showSection('meal')">餐饮</div>
+                        <div class="pill" onclick="showSection('discussion')">分组</div>
+                    </div>
+                </div>
+
+                <!-- 车辆安排 -->
+                <div class="card fade-in" id="vehicle-section">
+                    <div class="card-header">
+                        <i class="fas fa-bus" style="color:#2563eb;"></i>
+                        <div class="card-title">车辆安排</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);">
+                                <i class="fas fa-bus"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">1号大巴车</div>
+                                <div class="arrangement-time">
+                                    <i class="fas fa-clock"></i> 1月10日 14:00
+                                </div>
+                                <div class="arrangement-detail">
+                                    <div class="detail-item">
+                                        <i class="fas fa-user"></i> 司机：李师傅
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-phone"></i> <a href="tel:138****0001" class="cta-chip cta-chip--primary"><i class="fas fa-phone"></i> 一键拨号</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#22c55e,#16a34a);">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">返程车辆</div>
+                                <div class="arrangement-time">
+                                    <i class="fas fa-clock"></i> 1月13日 09:00
+                                </div>
+                                <div class="arrangement-detail">
+                                    <div class="detail-item">
+                                        <i class="fas fa-map-marker-alt"></i> 集合地点：酒店大堂
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 住宿安排 -->
+                <div class="card fade-in" id="hotel-section" style="display:none;">
+                    <div class="card-header">
+                        <i class="fas fa-hotel" style="color:#22c55e;"></i>
+                        <div class="card-title">住宿安排</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#22c55e,#16a34a);">
+                                <i class="fas fa-hotel"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">维也纳酒店</div>
+                                <div class="arrangement-detail">
+                                    <div class="detail-item">
+                                        <i class="fas fa-door-open"></i> 房间号：806
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-user"></i> 同住：李四
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-phone"></i> <a href="tel:020-8888****8" class="cta-chip cta-chip--primary"><i class="fas fa-phone"></i> 一键拨号</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 餐饮安排 -->
+                <div class="card fade-in" id="meal-section" style="display:none;">
+                    <div class="card-header">
+                        <i class="fas fa-utensils" style="color:#f59e0b;"></i>
+                        <div class="card-title">餐饮安排</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                                <i class="fas fa-coffee"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">1月10日 晚餐</div>
+                                <div class="arrangement-time">
+                                    <i class="fas fa-clock"></i> 18:00-19:30
+                                </div>
+                                <div class="arrangement-detail">
+                                    <div class="detail-item">
+                                        <i class="fas fa-map-marker-alt"></i> 维也纳酒店自助餐厅
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626);">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">1月11日 午餐</div>
+                                <div class="arrangement-time">
+                                    <i class="fas fa-clock"></i> 12:00-13:30
+                                </div>
+                                <div class="arrangement-detail">
+                                    <div class="detail-item">
+                                        <i class="fas fa-map-marker-alt"></i> 越秀会议中心5F
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">
+                                <i class="fas fa-wine-glass"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">1月11日 晚宴</div>
+                                <div class="arrangement-time">
+                                    <i class="fas fa-clock"></i> 18:00-20:00
+                                </div>
+                                <div class="arrangement-detail">
+                                    <div class="detail-item">
+                                        <i class="fas fa-map-marker-alt"></i> 宴会厅
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-chair"></i> 1排2号桌
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 讨论安排 -->
+                <div class="card fade-in" id="discussion-section" style="display:none;">
+                    <div class="card-header">
+                        <i class="fas fa-comments" style="color:#8b5cf6;"></i>
+                        <div class="card-title">分组安排</div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">第一组</div>
+                                <div class="arrangement-time">
+                                    <i class="fas fa-clock"></i> 1月12日 14:00-16:00
+                                </div>
+                                <div class="arrangement-detail">
+                                    <div class="detail-item">
+                                        <i class="fas fa-map-marker-alt"></i> A栋302会议室
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-user-tie"></i> 主持人：张教授
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-users"></i> 参与人员：第一组全体成员
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='../common/home.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/assistant.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/navigation.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-compass"></i>
+                    </div>
+                    <div class="nav-text">导航</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='task-list.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="nav-text">任务</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/profile.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 切换显示区域
+        function showSection(section) {
+            // 更新pill状态
+            document.querySelectorAll('.pill-group .pill').forEach(pill => {
+                pill.classList.remove('pill-active');
+            });
+            event.target.classList.add('pill-active');
+
+            // 隐藏所有section
+            document.querySelectorAll('[id$="-section"]').forEach(el => {
+                el.style.display = 'none';
+            });
+
+            // 显示对应section
+            const sectionElement = document.getElementById(section + '-section');
+            if (sectionElement) {
+                sectionElement.style.display = 'block';
+                // 添加淡入动画
+                sectionElement.style.opacity = '0';
+                sectionElement.style.transform = 'translateY(10px)';
+                setTimeout(() => {
+                    sectionElement.style.opacity = '1';
+                    sectionElement.style.transform = 'translateY(0)';
+                }, 50);
+            }
+        }
+
+        // 联系司机
+        function callDriver(phone) {
+            alert('拨打电话：' + phone);
+        }
+
+        // 联系酒店
+        function callHotel(phone) {
+            alert('拨打电话：' + phone);
+        }
+
+        // 显示酒店地图
+        function showHotelMap() {
+            alert('正在打开地图导航...');
+        }
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+
+    <style>
+        .arrangement-time {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #6b7280;
+            margin: 8px 0;
+        }
+        .arrangement-detail {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        .detail-item {
+            font-size: 13px;
+            color: #4b5563;
+            margin: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .detail-item i {
+            color: #6366f1;
+            font-size: 12px;
+            width: 16px;
+        }
+        .arrangement-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .arrangement-actions .cta-chip {
+            flex: 1;
+            text-align: center;
+        }
+    </style>
+</body>
+</html>

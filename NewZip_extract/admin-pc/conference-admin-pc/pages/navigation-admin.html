@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>位置导航系统 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <style>
+        .map-container {
+            height: 600px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .map-canvas {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+        
+        .beacon-point {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .beacon-point:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .beacon-point::after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(102, 126, 234, 0.4);
+            border-radius: 50%;
+            animation: beacon-pulse 2s infinite;
+        }
+        
+        @keyframes beacon-pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+        
+        .poi-marker {
+            position: absolute;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .poi-marker:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .poi-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .route-line {
+            position: absolute;
+            height: 3px;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            transform-origin: left center;
+            animation: route-draw 1s ease-out;
+        }
+        
+        @keyframes route-draw {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+        
+        .ar-preview {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ar-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            border: 2px dashed rgba(79, 172, 254, 0.5);
+            border-radius: 0.5rem;
+        }
+        
+        .ar-direction {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 2rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">位置导航系统</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card">
+            <div>
+                <h2>🗺️ 位置导航系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    <span class="context-label">场馆:</span>
+                    <span class="context-value">{{ venue.name }}</span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="exportMap">
+                    <i class="fas fa-download"></i>
+                    导出地图
+                </button>
+            </div>
+        </div>
+
+        <!-- 导航技术概览 -->
+        <div class="navigation-overview glass-card">
+            <h3>🗺️ 导航技术</h3>
+            <div class="tech-grid">
+                <div class="tech-card" 
+                     v-for="tech in navigationTechs" 
+                     :key="tech.id"
+                     :class="{ active: tech.enabled }">
+                    <div class="tech-icon">
+                        <i :class="tech.icon"></i>
+                    </div>
+                    <div class="tech-content">
+                        <h5>{{ tech.name }}</h5>
+                        <p>{{ tech.description }}</p>
+                        <div class="tech-stats">
+                            <span>精度: {{ tech.accuracy }}</span>
+                            <span>覆盖: {{ tech.coverage }}</span>
+                        </div>
+                    </div>
+                    <div class="tech-toggle">
+                        <label class="switch">
+                            <input type="checkbox" v-model="tech.enabled">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 蓝牙信标管理 -->
+        <div class="beacon-management glass-card">
+            <h3>📡 蓝牙信标管理</h3>
+            
+            <div class="beacon-actions">
+                <button class="btn-primary" @click="addBeacon">
+                    <i class="fas fa-plus"></i>
+                    添加信标
+                </button>
+                <button class="btn-outline" @click="scanBeacons">
+                    <i class="fas fa-wifi"></i>
+                    扫描信标
+                </button>
+                <button class="btn-outline" @click="calibrateBeacons">
+                    <i class="fas fa-crosshairs"></i>
+                    校准信标
+                </button>
+                <button class="btn-outline" @click="testCoverage">
+                    <i class="fas fa-signal"></i>
+                    测试覆盖
+                </button>
+            </div>
+
+            <div class="beacon-stats">
+                <div class="stat-card">
+                    <div class="stat-value">{{ beaconStats.total }}</div>
+                    <div class="stat-label">信标总数</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-value">{{ beaconStats.online }}</div>
+                    <div class="stat-label">在线数量</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value">{{ beaconStats.offline }}</div>
+                    <div class="stat-label">离线数量</div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-value">{{ beaconStats.battery }}%</div>
+                    <div class="stat-label">平均电量</div>
+                </div>
+            </div>
+
+            <div class="beacon-list">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>信标ID</th>
+                            <th>位置</th>
+                            <th>状态</th>
+                            <th>信号强度</th>
+                            <th>电量</th>
+                            <th>最后更新</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="beacon in beacons" :key="beacon.id">
+                            <td>{{ beacon.id }}</td>
+                            <td>{{ beacon.location }}</td>
+                            <td>
+                                <span class="status-badge" 
+                                      :class="beacon.online ? 'status-success' : 'status-warning'">
+                                    {{ beacon.online ? '在线' : '离线' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="signal-strength">
+                                    <div class="signal-bars">
+                                        <div class="bar" 
+                                             v-for="i in 5" 
+                                             :key="i"
+                                             :class="{ active: i <= beacon.signal }"></div>
+                                    </div>
+                                    <span>{{ beacon.signal }}/5</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="battery-indicator">
+                                    <div class="battery-fill" 
+                                         :style="{ width: beacon.battery + '%' }"
+                                         :class="getBatteryClass(beacon.battery)"></div>
+                                    <span>{{ beacon.battery }}%</span>
+                                </div>
+                            </td>
+                            <td>{{ formatTime(beacon.lastUpdate) }}</td>
+                            <td>
+                                <button class="btn-sm btn-outline" @click="editBeacon(beacon.id)">
+                                    编辑
+                                </button>
+                                <button class="btn-sm btn-outline" @click="testBeacon(beacon.id)">
+                                    测试
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 室内地图编辑 -->
+        <div class="indoor-map glass-card">
+            <h3>🗺️ 室内地图</h3>
+            
+            <div class="map-toolbar">
+                <div class="tool-group">
+                    <button class="tool-btn" 
+                            :class="{ active: mapMode === 'view' }"
+                            @click="mapMode = 'view'">
+                        <i class="fas fa-eye"></i>
+                        查看
+                    </button>
+                    <button class="tool-btn" 
+                            :class="{ active: mapMode === 'beacon' }"
+                            @click="mapMode = 'beacon'">
+                        <i class="fas fa-broadcast-tower"></i>
+                        信标
+                    </button>
+                    <button class="tool-btn" 
+                            :class="{ active: mapMode === 'poi' }"
+                            @click="mapMode = 'poi'">
+                        <i class="fas fa-map-marker-alt"></i>
+                        兴趣点
+                    </button>
+                    <button class="tool-btn" 
+                            :class="{ active: mapMode === 'route' }"
+                            @click="mapMode = 'route'">
+                        <i class="fas fa-route"></i>
+                        路径
+                    </button>
+                </div>
+                <div class="tool-group">
+                    <select v-model="selectedFloor">
+                        <option v-for="floor in floors" :key="floor.id" :value="floor.id">
+                            {{ floor.name }}
+                        </option>
+                    </select>
+                    <button class="tool-btn" @click="zoomIn">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button class="tool-btn" @click="zoomOut">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button class="tool-btn" @click="resetView">
+                        <i class="fas fa-compress"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="map-container" @click="handleMapClick">
+                <div class="map-canvas" :style="{ transform: `scale(${mapZoom})` }">
+                    <!-- 蓝牙信标点 -->
+                    <div v-for="beacon in visibleBeacons" 
+                         :key="beacon.id"
+                         class="beacon-point"
+                         :style="{ left: beacon.x + 'px', top: beacon.y + 'px' }"
+                         @click.stop="selectBeacon(beacon)">
+                        <i class="fas fa-broadcast-tower"></i>
+                    </div>
+
+                    <!-- 兴趣点标记 -->
+                    <div v-for="poi in visiblePOIs" 
+                         :key="poi.id"
+                         class="poi-marker"
+                         :style="{ left: poi.x + 'px', top: poi.y + 'px' }"
+                         @click.stop="selectPOI(poi)">
+                        <div class="poi-icon" :style="{ background: poi.color }"></div>
+                        <span>{{ poi.name }}</span>
+                    </div>
+
+                    <!-- 路径线 -->
+                    <div v-for="route in visibleRoutes"
+                         :key="route.id"
+                         class="route-line"
+                         :style="getRouteStyle(route)"></div>
+                </div>
+            </div>
+
+            <div class="map-legend">
+                <div class="legend-item">
+                    <div class="legend-icon beacon"></div>
+                    <span>蓝牙信标</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon poi"></div>
+                    <span>兴趣点</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon route"></div>
+                    <span>导航路径</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- POI管理 -->
+        <div class="poi-management glass-card">
+            <h3>📍 兴趣点管理</h3>
+            
+            <div class="poi-actions">
+                <button class="btn-primary" @click="addPOI">
+                    <i class="fas fa-plus"></i>
+                    添加POI
+                </button>
+                <button class="btn-outline" @click="importPOIs">
+                    <i class="fas fa-upload"></i>
+                    批量导入
+                </button>
+                <button class="btn-outline" @click="exportPOIs">
+                    <i class="fas fa-download"></i>
+                    导出POI
+                </button>
+            </div>
+
+            <div class="poi-categories">
+                <div class="category-chip" 
+                     v-for="category in poiCategories" 
+                     :key="category.id"
+                     :class="{ active: selectedCategory === category.id }"
+                     @click="selectCategory(category.id)">
+                    <i :class="category.icon"></i>
+                    {{ category.name }}
+                    <span class="count">{{ category.count }}</span>
+                </div>
+            </div>
+
+            <div class="poi-grid">
+                <div class="poi-card" v-for="poi in filteredPOIs" :key="poi.id">
+                    <div class="poi-card-header">
+                        <div class="poi-icon" :style="{ background: poi.color }">
+                            <i :class="poi.icon"></i>
+                        </div>
+                        <div class="poi-info">
+                            <h5>{{ poi.name }}</h5>
+                            <p>{{ poi.description }}</p>
+                        </div>
+                    </div>
+                    <div class="poi-card-body">
+                        <div class="poi-meta">
+                            <span><i class="fas fa-layer-group"></i> {{ poi.floor }}</span>
+                            <span><i class="fas fa-tag"></i> {{ poi.category }}</span>
+                        </div>
+                    </div>
+                    <div class="poi-card-actions">
+                        <button class="btn-sm btn-outline" @click="editPOI(poi.id)">
+                            编辑
+                        </button>
+                        <button class="btn-sm btn-primary" @click="navigateToPOI(poi.id)">
+                            导航
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AR导航预览 -->
+        <div class="ar-navigation glass-card">
+            <h3>🎯 AR导航预览</h3>
+            
+            <div class="ar-preview">
+                <div class="ar-overlay">
+                    <div class="ar-direction">
+                        <i class="fas fa-arrow-up"></i>
+                        前方50米，右转
+                    </div>
+                </div>
+                <div class="ar-placeholder">
+                    <i class="fas fa-camera" style="font-size: 3rem; color: var(--gray-400);"></i>
+                    <p style="color: var(--gray-500); margin-top: 1rem;">AR导航预览</p>
+                </div>
+            </div>
+
+            <div class="ar-controls">
+                <button class="btn-outline" @click="enableAR">
+                    <i class="fas fa-vr-cardboard"></i>
+                    启用AR
+                </button>
+                <button class="btn-outline" @click="calibrateAR">
+                    <i class="fas fa-compass"></i>
+                    校准方向
+                </button>
+                <button class="btn-outline" @click="testAR">
+                    <i class="fas fa-play"></i>
+                    测试导航
+                </button>
+            </div>
+        </div>
+
+        <!-- 导航统计 -->
+        <div class="navigation-statistics glass-card">
+            <h3>📊 导航统计</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ navStats.totalRequests }}</div>
+                    <div class="stat-label">总导航次数</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-value">{{ navStats.successRate }}%</div>
+                    <div class="stat-label">成功率</div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-value">{{ navStats.avgTime }}秒</div>
+                    <div class="stat-label">平均用时</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value">{{ navStats.accuracy }}米</div>
+                    <div class="stat-label">平均精度</div>
+                </div>
+            </div>
+
+            <div class="hot-routes">
+                <h4>热门路径</h4>
+                <div class="route-list">
+                    <div class="route-item" v-for="route in hotRoutes" :key="route.id">
+                        <div class="route-info">
+                            <span class="route-from">{{ route.from }}</span>
+                            <i class="fas fa-arrow-right"></i>
+                            <span class="route-to">{{ route.to }}</span>
+                        </div>
+                        <div class="route-stats">
+                            <span>{{ route.count }}次</span>
+                            <div class="popularity-bar">
+                                <div class="bar-fill" 
+                                     :style="{ width: (route.count / navStats.totalRequests * 100) + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div><!-- 关闭page-with-nav -->
+
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    venue: {
+                        name: '北京国际会议中心'
+                    },
+                    navigationTechs: [
+                        {
+                            id: 'bluetooth',
+                            name: '蓝牙信标定位',
+                            description: '基于BLE蓝牙技术的室内定位',
+                            icon: 'fas fa-broadcast-tower',
+                            accuracy: '1-3米',
+                            coverage: '100%',
+                            enabled: true
+                        },
+                        {
+                            id: 'wifi',
+                            name: 'WiFi定位',
+                            description: '利用WiFi信号强度定位',
+                            icon: 'fas fa-wifi',
+                            accuracy: '5-10米',
+                            coverage: '100%',
+                            enabled: true
+                        },
+                        {
+                            id: 'ar',
+                            name: 'AR增强现实',
+                            description: '摄像头AR实景导航',
+                            icon: 'fas fa-vr-cardboard',
+                            accuracy: '< 1米',
+                            coverage: '支持设备',
+                            enabled: true
+                        },
+                        {
+                            id: 'gps',
+                            name: 'GPS定位',
+                            description: '户外GPS卫星定位',
+                            icon: 'fas fa-satellite',
+                            accuracy: '5-20米',
+                            coverage: '室外',
+                            enabled: false
+                        }
+                    ],
+                    beaconStats: {
+                        total: 45,
+                        online: 42,
+                        offline: 3,
+                        battery: 87
+                    },
+                    beacons: Array.from({ length: 10 }, (_, i) => ({
+                        id: `BLE-${1000 + i}`,
+                        location: ['主会场入口', '分会场A', '分会场B', '餐厅', '休息区'][i % 5],
+                        online: i < 9,
+                        signal: Math.floor(Math.random() * 2) + 4,
+                        battery: Math.floor(Math.random() * 30) + 70,
+                        lastUpdate: new Date(Date.now() - i * 300000),
+                        x: Math.random() * 500 + 50,
+                        y: Math.random() * 400 + 50
+                    })),
+                    mapMode: 'view',
+                    selectedFloor: 'floor_1',
+                    floors: [
+                        { id: 'floor_1', name: '1层' },
+                        { id: 'floor_2', name: '2层' },
+                        { id: 'floor_3', name: '3层' }
+                    ],
+                    mapZoom: 1,
+                    poiCategories: [
+                        { id: 'all', name: '全部', icon: 'fas fa-th', count: 28 },
+                        { id: 'meeting', name: '会议室', icon: 'fas fa-door-open', count: 8 },
+                        { id: 'dining', name: '餐饮', icon: 'fas fa-utensils', count: 5 },
+                        { id: 'restroom', name: '洗手间', icon: 'fas fa-restroom', count: 6 },
+                        { id: 'service', name: '服务台', icon: 'fas fa-concierge-bell', count: 4 },
+                        { id: 'parking', name: '停车场', icon: 'fas fa-parking', count: 3 },
+                        { id: 'exit', name: '出口', icon: 'fas fa-door-open', count: 2 }
+                    ],
+                    selectedCategory: 'all',
+                    pois: [
+                        { id: 'poi_1', name: '主会场', description: '可容纳500人', category: 'meeting', floor: '1层', icon: 'fas fa-door-open', color: '#667eea', x: 300, y: 200 },
+                        { id: 'poi_2', name: '分会场A', description: '可容纳100人', category: 'meeting', floor: '1层', icon: 'fas fa-door-open', color: '#764ba2', x: 450, y: 150 },
+                        { id: 'poi_3', name: '餐厅', description: '自助餐区域', category: 'dining', floor: '1层', icon: 'fas fa-utensils', color: '#f093fb', x: 150, y: 350 }
+                    ],
+                    navStats: {
+                        totalRequests: 1247,
+                        successRate: 96.8,
+                        avgTime: 145,
+                        accuracy: 2.3
+                    },
+                    hotRoutes: [
+                        { id: 'r1', from: '主入口', to: '主会场', count: 356 },
+                        { id: 'r2', from: '主会场', to: '餐厅', count: 289 },
+                        { id: 'r3', from: '分会场A', to: '洗手间', count: 178 }
+                    ]
+                }
+            },
+            computed: {
+                visibleBeacons() {
+                    return this.beacons.filter(b => b.location.includes('会场') || b.location.includes('入口'));
+                },
+                visiblePOIs() {
+                    return this.pois;
+                },
+                visibleRoutes() {
+                    return [];
+                },
+                filteredPOIs() {
+                    if (this.selectedCategory === 'all') {
+                        return this.pois;
+                    }
+                    return this.pois.filter(p => p.category === this.selectedCategory);
+                }
+            },
+            async mounted() {
+                await this.initialize();
+            },
+            methods: {
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                    } else {
+                        // 如果没有会议ID，使用示例数据
+                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '示例会议'
+                        };
+                    }
+                },
+                
+                addBeacon() {
+                    this.$showToast('添加蓝牙信标功能', 'info');
+                },
+                
+                async scanBeacons() {
+                    try {
+                        this.$showLoading('正在扫描附近的蓝牙信标...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.$hideLoading();
+                        this.$showToast('扫描完成', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('扫描失败，请重试', 'error');
+                    }
+                },
+                
+                async calibrateBeacons() {
+                    try {
+                        this.$showLoading('正在校准信标位置...');
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        this.$hideLoading();
+                        this.$showToast('校准完成', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('校准失败，请重试', 'error');
+                    }
+                },
+                
+                async testCoverage() {
+                    try {
+                        this.$showLoading('正在测试信号覆盖...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.$hideLoading();
+                        this.$showToast('测试完成', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('测试失败，请重试', 'error');
+                    }
+                },
+                
+                editBeacon(id) {
+                    this.$showToast(`编辑信标: ${id}`, 'info');
+                },
+                
+                async testBeacon(id) {
+                    try {
+                        this.$showLoading(`正在测试信标: ${id}...`);
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        this.$hideLoading();
+                        this.$showToast('测试完成', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('测试失败，请重试', 'error');
+                    }
+                },
+                
+                getBatteryClass(battery) {
+                    if (battery > 50) return 'high';
+                    if (battery > 20) return 'medium';
+                    return 'low';
+                },
+                
+                handleMapClick(event) {
+                    if (this.mapMode === 'beacon') {
+                        console.log('添加信标点');
+                    } else if (this.mapMode === 'poi') {
+                        console.log('添加兴趣点');
+                    }
+                },
+                
+                selectBeacon(beacon) {
+                    console.log('选中信标:', beacon);
+                },
+                
+                selectPOI(poi) {
+                    console.log('选中POI:', poi);
+                },
+                
+                zoomIn() {
+                    this.mapZoom = Math.min(this.mapZoom + 0.1, 2);
+                },
+                
+                zoomOut() {
+                    this.mapZoom = Math.max(this.mapZoom - 0.1, 0.5);
+                },
+                
+                resetView() {
+                    this.mapZoom = 1;
+                },
+                
+                getRouteStyle(route) {
+                    return {};
+                },
+                
+                addPOI() {
+                    this.$showToast('添加POI功能', 'info');
+                },
+                
+                async importPOIs() {
+                    try {
+                        this.$showLoading('正在批量导入POI...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.$hideLoading();
+                        this.$showToast('POI导入完成', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导入失败，请重试', 'error');
+                    }
+                },
+                
+                async exportPOIs() {
+                    try {
+                        this.$showLoading('正在导出POI...');
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        this.$hideLoading();
+                        this.$showToast('POI已导出', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导出失败，请重试', 'error');
+                    }
+                },
+                
+                selectCategory(categoryId) {
+                    this.selectedCategory = categoryId;
+                },
+                
+                editPOI(id) {
+                    this.$showToast(`编辑POI: ${id}`, 'info');
+                },
+                
+                navigateToPOI(id) {
+                    this.$showToast(`导航到POI: ${id}`, 'info');
+                },
+                
+                enableAR() {
+                    this.$showToast('启用AR导航功能', 'info');
+                },
+                
+                async calibrateAR() {
+                    try {
+                        this.$showLoading('正在校准AR方向...');
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        this.$hideLoading();
+                        this.$showToast('AR方向校准完成', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('校准失败，请重试', 'error');
+                    }
+                },
+                
+                async testAR() {
+                    try {
+                        this.$showLoading('正在测试AR导航...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.$hideLoading();
+                        this.$showToast('AR导航测试完成', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('测试失败，请重试', 'error');
+                    }
+                },
+                
+                async exportMap() {
+                    try {
+                        this.$showLoading('正在导出地图数据...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.$hideLoading();
+                        this.$showToast('地图数据已导出', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导出失败，请重试', 'error');
+                    }
+                },
+                
+                formatTime(date) {
+                    return date.toLocaleString('zh-CN');
+                },
+                
+                goBack() {
+                    window.history.back();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+</body>
+</html>

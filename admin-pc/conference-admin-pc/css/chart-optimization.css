@@ -1,0 +1,362 @@
+/* 图表优化通用样式 - 智能会议系统 */
+
+/* ==========================================
+   全局图表容器优化
+   ========================================== */
+
+/* 可视化区域 */
+.visualization-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: var(--space-6);
+    margin-bottom: var(--space-6);
+    width: 100%;
+}
+
+/* 标准图表容器 */
+.chart-container {
+    padding: var(--space-6);
+    min-height: 400px;
+    max-height: 500px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: visible;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-xl);
+    backdrop-filter: blur(10px);
+}
+
+/* 图表Canvas统一尺寸 */
+.chart-container canvas {
+    max-width: 100%;
+    max-height: 350px;
+    height: 350px !important;
+    width: 100% !important;
+    display: block;
+    margin: 0 auto;
+}
+
+/* 图表标题栏 */
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-4);
+    flex-shrink: 0;
+}
+
+.chart-header h4 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--gray-800);
+    margin: 0;
+}
+
+.chart-context {
+    font-size: var(--font-size-sm);
+    color: var(--gray-500);
+}
+
+.chart-controls select {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--gray-700);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.chart-controls select:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--primary-color);
+}
+
+/* ==========================================
+   监控图表样式（小型图表）
+   ========================================== */
+
+.monitor-chart {
+    height: 80px;
+    margin-top: 0.5rem;
+    position: relative;
+    overflow: visible;
+}
+
+.monitor-chart canvas {
+    max-width: 100%;
+    max-height: 80px;
+    height: 80px !important;
+    width: 100% !important;
+    display: block;
+}
+
+/* ==========================================
+   性能分析图表样式
+   ========================================== */
+
+.performance-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.performance-charts .chart-container {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    min-height: 350px;
+    max-height: 450px;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+}
+
+.performance-charts .chart-container h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+}
+
+.performance-charts .chart-container canvas {
+    max-width: 100%;
+    max-height: 280px;
+    height: 280px !important;
+    width: 100% !important;
+    display: block;
+    margin: 0 auto;
+}
+
+/* ==========================================
+   数据监控网格
+   ========================================== */
+
+.system-monitor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.monitor-card {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-fast);
+}
+
+.monitor-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.monitor-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 0.25rem;
+}
+
+.monitor-label {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+    margin-bottom: 0.5rem;
+}
+
+/* ==========================================
+   响应式设计
+   ========================================== */
+
+/* 平板设备 */
+@media (max-width: 1024px) {
+    .visualization-section {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
+    
+    .chart-container {
+        min-height: 350px;
+        max-height: 450px;
+    }
+    
+    .chart-container canvas {
+        max-height: 300px;
+        height: 300px !important;
+    }
+}
+
+/* 移动设备 */
+@media (max-width: 768px) {
+    .visualization-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-container {
+        min-height: 320px;
+        max-height: 400px;
+        padding: var(--space-4);
+    }
+    
+    .chart-container canvas {
+        max-height: 250px;
+        height: 250px !important;
+    }
+    
+    .performance-charts {
+        grid-template-columns: 1fr;
+    }
+    
+    .performance-charts .chart-container {
+        min-height: 320px;
+        max-height: 400px;
+    }
+    
+    .performance-charts .chart-container canvas {
+        max-height: 220px;
+        height: 220px !important;
+    }
+    
+    .system-monitor-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .monitor-chart {
+        height: 60px;
+    }
+    
+    .monitor-chart canvas {
+        max-height: 60px;
+        height: 60px !important;
+    }
+}
+
+/* 小屏移动设备 */
+@media (max-width: 480px) {
+    .chart-container {
+        padding: var(--space-3);
+        min-height: 280px;
+        max-height: 350px;
+    }
+    
+    .chart-container canvas {
+        max-height: 200px;
+        height: 200px !important;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-2);
+    }
+    
+    .chart-controls {
+        width: 100%;
+    }
+    
+    .chart-controls select {
+        width: 100%;
+    }
+}
+
+/* ==========================================
+   图表加载状态
+   ========================================== */
+
+.chart-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 350px;
+    color: var(--gray-500);
+    font-size: var(--font-size-lg);
+}
+
+.chart-loading i {
+    animation: spin 1s linear infinite;
+    margin-right: 0.5rem;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* 图表错误状态 */
+.chart-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 350px;
+    color: var(--error-color);
+    text-align: center;
+    padding: var(--space-4);
+}
+
+.chart-error i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* 图表空状态 */
+.chart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 350px;
+    color: var(--gray-400);
+    text-align: center;
+    padding: var(--space-4);
+}
+
+.chart-empty i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* ==========================================
+   图表动画
+   ========================================== */
+
+.chart-container {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================
+   打印样式
+   ========================================== */
+
+@media print {
+    .chart-container {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    .chart-controls {
+        display: none;
+    }
+    
+    .chart-container canvas {
+        max-height: none !important;
+        height: auto !important;
+    }
+}
+

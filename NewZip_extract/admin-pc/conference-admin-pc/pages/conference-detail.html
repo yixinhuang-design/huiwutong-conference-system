@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会议详情 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">会议详情</h1>
+                <div class="nav-actions">
+                    <button class="btn-outline" @click="editConference">
+                        <i class="fas fa-edit"></i>
+                        编辑会议
+                    </button>
+                    <button class="btn-primary" @click="duplicateConference">
+                        <i class="fas fa-copy"></i>
+                        复制会议
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+            <!-- 会议头部信息 -->
+            <div class="conference-header glass-card">
+                <div class="header-main">
+                    <h1>{{ conference.name }}</h1>
+                    <div class="conference-status">
+                        <span class="status-badge" :class="'status-' + conference.status">
+                            {{ getStatusText(conference.status) }}
+                        </span>
+                        <span class="conference-id">ID: {{ conference.id }}</span>
+                    </div>
+                </div>
+                <div class="header-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>{{ formatDateRange(conference.timeRange) }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ conference.location.venue }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-users"></i>
+                        <span>{{ conference.capacity.registered }}/{{ conference.capacity.total }}人</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 会议信息详情 -->
+            <div class="conference-details glass-card">
+                <h3>📋 会议基本信息</h3>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <label>会议类型</label>
+                        <span>{{ getTypeText(conference.type) }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>会议主题</label>
+                        <span>{{ conference.theme || '未设置' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>创建时间</label>
+                        <span>{{ formatDateTime(conference.createdAt) }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>创建者</label>
+                        <span>{{ conference.createdBy }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>会议描述</label>
+                        <span>{{ conference.description || '暂无描述' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>详细地址</label>
+                        <span>{{ conference.location.address }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快速统计 -->
+            <div class="quick-stats glass-card">
+                <h3>📊 快速统计</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ conference.capacity.registered }}</div>
+                            <div class="stat-label">已报名</div>
+                        </div>
+                        <div class="stat-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" :style="{ width: getRegistrationProgress() + '%' }"></div>
+                            </div>
+                            <span class="progress-text">{{ getRegistrationProgress() }}%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ taskStats.completed }}/{{ taskStats.total }}</div>
+                            <div class="stat-label">任务完成</div>
+                        </div>
+                        <div class="stat-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" :style="{ width: getTaskProgress() + '%' }"></div>
+                            </div>
+                            <span class="progress-text">{{ getTaskProgress() }}%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ groupStats.total }}</div>
+                            <div class="stat-label">群组数量</div>
+                        </div>
+                        <div class="stat-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" :style="{ width: groupStats.activeRate + '%' }"></div>
+                            </div>
+                            <span class="progress-text">{{ groupStats.activeRate }}%活跃</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ attendanceStats.checkedIn }}/{{ attendanceStats.total }}</div>
+                            <div class="stat-label">已签到</div>
+                        </div>
+                        <div class="stat-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" :style="{ width: attendanceStats.rate + '%' }"></div>
+                            </div>
+                            <span class="progress-text">{{ attendanceStats.rate }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 系统状态 -->
+            <div class="system-status glass-card">
+                <h3>⚙️ 系统状态</h3>
+                <div class="status-grid">
+                    <div class="status-item" v-for="system in systemStatus" :key="system.id">
+                        <div class="status-icon" :class="{ active: system.active }">
+                            <i :class="system.icon"></i>
+                        </div>
+                        <div class="status-info">
+                            <div class="status-name">{{ system.name }}</div>
+                            <div class="status-desc">{{ system.description }}</div>
+                        </div>
+                        <div class="status-indicator" :class="{ active: system.active }">
+                            {{ system.active ? '运行中' : '已停止' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作历史 -->
+            <div class="operation-history glass-card">
+                <h3>📝 操作历史</h3>
+                <div class="history-list">
+                    <div class="history-item" v-for="log in operationLogs" :key="log.id">
+                        <div class="log-icon">
+                            <i :class="getLogIcon(log.type)"></i>
+                        </div>
+                        <div class="log-content">
+                            <div class="log-action">{{ log.action }}</div>
+                            <div class="log-desc">{{ log.description }}</div>
+                            <div class="log-meta">
+                                <span class="log-user">{{ log.user }}</span>
+                                <span class="log-time">{{ formatDateTime(log.timestamp) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: 'conf_20240615_001',
+                        name: '2024年度技术峰会',
+                        type: 'conference',
+                        theme: '技术创新与数字化转型',
+                        status: 'preparing',
+                        timeRange: {
+                            start: '2024-06-15 09:00:00',
+                            end: '2024-06-16 18:00:00'
+                        },
+                        location: {
+                            venue: '北京国际会议中心',
+                            address: '北京市朝阳区北辰东路8号'
+                        },
+                        capacity: {
+                            total: 500,
+                            registered: 356,
+                            available: 144
+                        },
+                        description: '本次技术峰会聚焦人工智能、云计算、大数据等前沿技术，邀请业界专家分享最新技术趋势和实践经验。',
+                        createdAt: '2024-05-15 10:30:00',
+                        createdBy: 'admin_001'
+                    },
+                    taskStats: {
+                        total: 58,
+                        completed: 42,
+                        inProgress: 12,
+                        pending: 4
+                    },
+                    groupStats: {
+                        total: 15,
+                        active: 12,
+                        activeRate: 80
+                    },
+                    attendanceStats: {
+                        total: 356,
+                        checkedIn: 328,
+                        notCheckedIn: 28,
+                        rate: 92
+                    },
+                    systemStatus: [
+                        {
+                            id: 'registration',
+                            name: '报名系统',
+                            description: '处理会议报名和审核',
+                            icon: 'fas fa-user-plus',
+                            active: true
+                        },
+                        {
+                            id: 'notification',
+                            name: '通知系统',
+                            description: '发送会议通知和提醒',
+                            icon: 'fas fa-bell',
+                            active: true
+                        },
+                        {
+                            id: 'collaboration',
+                            name: '协同系统',
+                            description: '任务分配和团队协作',
+                            icon: 'fas fa-users-cog',
+                            active: true
+                        },
+                        {
+                            id: 'ai',
+                            name: 'AI助教系统',
+                            description: '智能问答和语音识别',
+                            icon: 'fas fa-robot',
+                            active: false
+                        },
+                        {
+                            id: 'navigation',
+                            name: '导航系统',
+                            description: '室内定位和路线规划',
+                            icon: 'fas fa-map-marked-alt',
+                            active: true
+                        },
+                        {
+                            id: 'seating',
+                            name: '排座系统',
+                            description: '智能座位分配',
+                            icon: 'fas fa-chair',
+                            active: true
+                        }
+                    ],
+                    operationLogs: [
+                        {
+                            id: 'log_001',
+                            type: 'create',
+                            action: '创建会议',
+                            description: '管理员创建了新的会议',
+                            user: 'admin_001',
+                            timestamp: '2024-05-15 10:30:00'
+                        },
+                        {
+                            id: 'log_002',
+                            type: 'update',
+                            action: '更新会议信息',
+                            description: '修改了会议时间和地点',
+                            user: 'admin_001',
+                            timestamp: '2024-05-16 14:20:00'
+                        },
+                        {
+                            id: 'log_003',
+                            type: 'system',
+                            action: '启动报名系统',
+                            description: '启用了会议报名功能',
+                            user: 'admin_001',
+                            timestamp: '2024-05-20 09:00:00'
+                        },
+                        {
+                            id: 'log_004',
+                            type: 'user',
+                            action: '批量导入用户',
+                            description: '导入了200个参会人员',
+                            user: 'admin_002',
+                            timestamp: '2024-05-25 16:45:00'
+                        }
+                    ]
+                }
+            },
+            methods: {
+                getStatusText(status) {
+                    const statusMap = {
+                        'preparing': '筹备中',
+                        'ongoing': '进行中',
+                        'ended': '已结束'
+                    };
+                    return statusMap[status] || status;
+                },
+                
+                getTypeText(type) {
+                    const typeMap = {
+                        'training': '培训会议',
+                        'seminar': '研讨会',
+                        'conference': '大型会议',
+                        'workshop': '工作坊'
+                    };
+                    return typeMap[type] || type;
+                },
+                
+                formatDateRange(timeRange) {
+                    const start = new Date(timeRange.start);
+                    const end = new Date(timeRange.end);
+                    return `${start.toLocaleDateString()} ${start.toLocaleTimeString()} - ${end.toLocaleDateString()} ${end.toLocaleTimeString()}`;
+                },
+                
+                formatDateTime(datetime) {
+                    return new Date(datetime).toLocaleString();
+                },
+                
+                getRegistrationProgress() {
+                    return Math.round((this.conference.capacity.registered / this.conference.capacity.total) * 100);
+                },
+                
+                getTaskProgress() {
+                    return Math.round((this.taskStats.completed / this.taskStats.total) * 100);
+                },
+                
+                getLogIcon(type) {
+                    const iconMap = {
+                        'create': 'fas fa-plus-circle text-success',
+                        'update': 'fas fa-edit text-warning',
+                        'delete': 'fas fa-trash text-danger',
+                        'system': 'fas fa-cog text-info',
+                        'user': 'fas fa-user text-primary'
+                    };
+                    return iconMap[type] || 'fas fa-info-circle text-secondary';
+                },
+                
+                editConference() {
+                    // 跳转到会议编辑页面
+                    window.location.href = `conference-create.html?conferenceId=${this.conference.id}&mode=edit`;
+                },
+                
+                async duplicateConference() {
+                    const confirmed = await this.$showConfirm(
+                        '确定要复制这个会议吗？',
+                        '复制会议',
+                        'info'
+                    );
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('正在复制会议...');
+                            await new Promise(resolve => setTimeout(resolve, 1500));
+                            console.log('复制会议:', this.conference.id);
+                            this.$hideLoading();
+                            this.$showToast('会议复制成功！', 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('复制失败，请重试', 'error');
+                        }
+                    }
+                }
+            },
+            
+            mounted() {
+                // 从URL参数获取会议ID
+                const urlParams = new URLSearchParams(window.location.search);
+                const conferenceId = urlParams.get('conferenceId');
+                
+                if (conferenceId) {
+                    this.conference.id = conferenceId;
+                    // 根据会议ID加载会议数据
+                    this.loadConferenceData(conferenceId);
+                }
+            },
+            
+            async loadConferenceData(conferenceId) {
+                try {
+                    if (window.conferenceContext) {
+                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                    } else {
+                        // 如果没有conferenceContext，使用示例数据
+                        this.conference = {
+                            id: conferenceId,
+                            name: '示例会议',
+                            status: 'preparing',
+                            startDate: '2024-06-15',
+                            endDate: '2024-06-17',
+                            location: {
+                                venue: '会议中心',
+                                address: '示例地址'
+                            }
+                        };
+                    }
+                } catch (error) {
+                    console.error('加载会议数据失败:', error);
+                    // 使用示例数据作为fallback
+                    this.conference = {
+                        id: conferenceId,
+                        name: '示例会议',
+                        status: 'preparing'
+                    };
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+    <script src="../js/conference-context.js"></script>
+
+    <style>
+        .conference-header {
+            margin-bottom: 2rem;
+            padding: 2rem;
+        }
+        
+        .header-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .header-main h1 {
+            font-size: 2.5rem;
+            color: #333;
+            margin: 0;
+        }
+        
+        .conference-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .status-preparing {
+            background: #fbbf24;
+            color: white;
+        }
+        
+        .status-ongoing {
+            background: #10b981;
+            color: white;
+        }
+        
+        .status-ended {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .conference-id {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .header-meta {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #666;
+        }
+        
+        .meta-item i {
+            color: #667eea;
+        }
+        
+        .conference-details {
+            margin-bottom: 2rem;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .detail-item label {
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .detail-item span {
+            color: #333;
+        }
+        
+        .quick-stats {
+            margin-bottom: 2rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .stat-card {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .stat-icon {
+            font-size: 2rem;
+            color: #667eea;
+        }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .stat-progress {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            min-width: 80px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s;
+        }
+        
+        .progress-text {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .system-status {
+            margin-bottom: 2rem;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .status-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            color: #666;
+        }
+        
+        .status-icon.active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .status-info {
+            flex: 1;
+        }
+        
+        .status-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+        
+        .status-desc {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .status-indicator {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .status-indicator.active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .operation-history {
+            margin-bottom: 2rem;
+        }
+        
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .history-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .log-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .log-content {
+            flex: 1;
+        }
+        
+        .log-action {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+        
+        .log-desc {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .log-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: #999;
+        }
+        
+        .text-success { color: #10b981 !important; }
+        .text-warning { color: #f59e0b !important; }
+        .text-danger { color: #ef4444 !important; }
+        .text-info { color: #3b82f6 !important; }
+        .text-primary { color: #667eea !important; }
+        .text-secondary { color: #6b7280 !important; }
+        
+        @media (max-width: 768px) {
+            .header-main {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .header-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .details-grid,
+            .stats-grid,
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stat-card {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</body>
+</html>
+

@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务分派系统 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="../css/stat-cards-standard.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <style>
+        /* ==================== 页面整体布局 ==================== */
+        .page-with-nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-4);
+        }
+
+        /* ==================== 卡片内边距标准 ==================== */
+        .glass-card {
+            padding: var(--space-5);
+        }
+
+        /* ==================== 任务列表 ==================== */
+        .task-list {
+            display: grid;
+            gap: var(--space-3);
+        }
+
+        .task-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            transition: all var(--transition-normal);
+        }
+
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 var(--space-1) var(--space-4) rgba(0, 0, 0, 0.08);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-3);
+            gap: var(--space-4);
+        }
+
+        .task-title {
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            color: var(--gray-800);
+            flex: 1;
+        }
+
+        .task-status-badge {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-2xl);
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .status-pending {
+            background: rgba(234, 179, 8, 0.15);
+            color: #ca8a04;
+        }
+
+        .status-in_progress {
+            background: rgba(59, 130, 246, 0.15);
+            color: #2563eb;
+        }
+
+        .status-completed {
+            background: rgba(34, 197, 94, 0.15);
+            color: #16a34a;
+        }
+
+        .status-overdue {
+            background: rgba(239, 68, 68, 0.15);
+            color: #dc2626;
+        }
+
+        .task-desc {
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
+            margin-bottom: var(--space-3);
+            line-height: 1.5;
+        }
+
+        .task-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-4);
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+            margin-bottom: var(--space-3);
+        }
+
+        .task-meta-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .task-meta-item i {
+            font-size: var(--font-size-sm);
+        }
+
+        .task-progress-bar {
+            width: 100%;
+            height: var(--space-1);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin-bottom: var(--space-3);
+        }
+
+        .task-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: var(--radius-sm);
+        }
+
+        .task-assignees {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-3);
+            flex-wrap: wrap;
+        }
+
+        .assignee-avatar {
+            width: var(--space-8);
+            height: var(--space-8);
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        .task-actions .btn-sm {
+            padding: var(--space-1) var(--space-3);
+            font-size: var(--font-size-sm);
+            min-width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+
+        .task-actions .btn-sm:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* ==================== 任务类型卡片 ==================== */
+        .task-type-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-3);
+            margin: var(--space-4) 0;
+        }
+
+        @media (max-width: 1024px) {
+            .task-type-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .task-type-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .task-type-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid transparent;
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            text-align: center;
+            position: relative;
+        }
+
+        .task-type-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            opacity: 0;
+            border-radius: var(--radius-lg);
+            transition: opacity var(--transition-normal);
+        }
+
+        .task-type-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 var(--space-1) var(--space-3) rgba(0, 0, 0, 0.1);
+        }
+
+        .task-type-card:hover::before {
+            opacity: 1;
+        }
+
+        .task-type-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.15);
+            box-shadow: 0 0 0 var(--space-1) rgba(102, 126, 234, 0.1);
+        }
+
+        .type-icon {
+            font-size: var(--font-size-xl);
+            margin-bottom: var(--space-2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .type-name {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+            font-size: var(--font-size-base);
+            position: relative;
+            z-index: 1;
+        }
+
+        .type-desc {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ==================== 创建表单 ==================== */
+        .create-form {
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin: var(--space-5) 0;
+            animation: slideDown var(--transition-normal) ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-section {
+            margin-bottom: var(--space-5);
+            padding-bottom: var(--space-5);
+            border-bottom: var(--space-px) solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .form-section h4 {
+            margin-bottom: var(--space-3);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: var(--space-2);
+            font-size: var(--font-size-sm);
+            color: var(--gray-700);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: var(--space-2) var(--space-3);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.05);
+            font-size: var(--font-size-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .assignee-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+            margin-top: var(--space-2);
+        }
+
+        .assignee-option {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: var(--font-size-sm);
+        }
+
+        .assignee-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .assignee-option.selected {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        /* ==================== 筛选标签 ==================== */
+        .filter-tabs {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+            overflow-x: auto;
+        }
+
+        .filter-tab {
+            padding: var(--space-2) var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: var(--font-size-sm);
+            white-space: nowrap;
+        }
+
+        .filter-tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .filter-tab.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* ==================== 标题样式 ==================== */
+        .task-stats-overview h3,
+        .create-form h3 {
+            margin-bottom: var(--space-4);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+
+        /* ==================== 统计概览 ==================== */
+        .task-stats-overview {
+            margin-bottom: var(--space-6);
+        }
+
+        /* ==================== 批量操作 ==================== */
+        .bulk-operations {
+            margin-top: var(--space-6);
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+        }
+
+        .bulk-actions button {
+            padding: var(--space-2) var(--space-4);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-1);
+        }
+
+        .bulk-actions button:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">任务分派系统</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card">
+            <div>
+                <h2>📋 任务分派系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    <span class="context-label">任务范围:</span>
+                    <span class="context-value">仅限本会议任务</span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="showCreateForm = true">
+                    <i class="fas fa-plus"></i>
+                    创建任务
+                </button>
+            </div>
+        </div>
+
+        <!-- 任务统计概览 -->
+        <div class="task-stats-overview glass-card">
+            <h3>📊 任务统计概览</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ taskStats.total }}</div>
+                        <div class="stat-label">任务总数</div>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ taskStats.completed }}</div>
+                        <div class="stat-label">已完成</div>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-spinner"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ taskStats.inProgress }}</div>
+                        <div class="stat-label">进行中</div>
+                    </div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ taskStats.overdue }}</div>
+                        <div class="stat-label">已超时</div>
+                    </div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ taskStats.completionRate }}%</div>
+                        <div class="stat-label">完成率</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 创建任务表单 -->
+        <div class="create-form glass-card" v-if="showCreateForm">
+            <h3>✏️ 创建/编辑任务</h3>
+
+            <div class="form-section">
+                <h4>1. 任务基本信息</h4>
+                <div class="form-group">
+                    <label>任务标题 *</label>
+                    <input type="text" v-model="newTask.title" class="input" placeholder="请输入任务标题">
+                </div>
+                <div class="form-group">
+                    <label>任务描述</label>
+                    <textarea v-model="newTask.description" class="input" rows="3" placeholder="请输入任务描述"></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4>2. 选择任务类型</h4>
+                <div class="task-type-cards">
+                    <div class="task-type-card"
+                         :class="{ selected: newTask.type === 'checkin' }"
+                         @click="newTask.type = 'checkin'">
+                        <div class="type-icon" style="color: #3b82f6;">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="type-name">签到任务</div>
+                        <div class="type-desc">位置+点击/拍照确认</div>
+                    </div>
+                    <div class="task-type-card"
+                         :class="{ selected: newTask.type === 'room' }"
+                         @click="newTask.type = 'room'">
+                        <div class="type-icon" style="color: #8b5cf6;">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                        <div class="type-name">就寝任务</div>
+                        <div class="type-desc">位置+点击/拍照确认</div>
+                    </div>
+                    <div class="task-type-card"
+                         :class="{ selected: newTask.type === 'questionnaire' }"
+                         @click="newTask.type = 'questionnaire'">
+                        <div class="type-icon" style="color: #22c55e;">
+                            <i class="fas fa-poll"></i>
+                        </div>
+                        <div class="type-name">问卷任务</div>
+                        <div class="type-desc">填写问卷调查表</div>
+                    </div>
+                    <div class="task-type-card"
+                         :class="{ selected: newTask.type === 'evaluation' }"
+                         @click="newTask.type = 'evaluation'">
+                        <div class="type-icon" style="color: #f59e0b;">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="type-name">评价任务</div>
+                        <div class="type-desc">课程/老师评价打分</div>
+                    </div>
+                    <div class="task-type-card"
+                         :class="{ selected: newTask.type === 'onsite' }"
+                         @click="newTask.type = 'onsite'">
+                        <div class="type-icon" style="color: #ef4444;">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <div class="type-name">现场任务</div>
+                        <div class="type-desc">现场完成并拍照反馈</div>
+                    </div>
+                    <div class="task-type-card"
+                         :class="{ selected: newTask.type === 'collection' }"
+                         @click="newTask.type = 'collection'">
+                        <div class="type-icon" style="color: #06b6d4;">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="type-name">征集任务</div>
+                        <div class="type-desc">自动汇总分类统计</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4>3. 任务优先级与截止时间</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>优先级</label>
+                        <select v-model="newTask.priority" class="select">
+                            <option value="low">低</option>
+                            <option value="medium">中</option>
+                            <option value="high">高</option>
+                            <option value="urgent">紧急</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>截止时间 *</label>
+                        <input type="datetime-local" v-model="newTask.deadline" class="input">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4>4. 选择任务执行者</h4>
+                <div class="form-group">
+                    <label>任务负责人</label>
+                    <select v-model="newTask.owner" class="select">
+                        <option value="">选择负责人...</option>
+                        <option v-for="staff in staffList" :key="staff.id" :value="staff.id">
+                            {{ staff.name }} - {{ staff.role }}
+                        </option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>主执行人（可多选）</label>
+                    <div class="assignee-selector">
+                        <div v-for="member in memberList"
+                             :key="member.id"
+                             class="assignee-option"
+                             :class="{ selected: newTask.assignees.includes(member.id) }"
+                             @click="toggleAssignee(member.id)">
+                            <input type="checkbox" :checked="newTask.assignees.includes(member.id)" readonly>
+                            <span>{{ member.name }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>副执行人（可多选）</label>
+                    <div class="assignee-selector">
+                        <div v-for="member in memberList"
+                             :key="member.id"
+                             class="assignee-option"
+                             :class="{ selected: newTask.assistants.includes(member.id) }"
+                             @click="toggleAssistant(member.id)">
+                            <input type="checkbox" :checked="newTask.assistants.includes(member.id)" readonly>
+                            <span>{{ member.name }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4>5. 任务附件</h4>
+                <div class="form-group">
+                    <label>上传任务提示图片/附件资料</label>
+                    <input type="file" @change="handleFileUpload" class="input" multiple>
+                    <div v-if="newTask.attachments.length > 0" class="file-list">
+                        <div v-for="(file, index) in newTask.attachments" :key="index" class="file-item">
+                            <i class="fas fa-file"></i>
+                            {{ file.name }}
+                            <i class="fas fa-times" @click="removeAttachment(index)" style="cursor: pointer;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn-outline" @click="cancelCreate">
+                    <i class="fas fa-times"></i>
+                    取消
+                </button>
+                <button class="btn-primary" @click="saveTask">
+                    <i class="fas fa-save"></i>
+                    保存并分派
+                </button>
+            </div>
+        </div>
+
+        <!-- 任务列表 -->
+        <div class="tasks-list-container glass-card">
+            <h3>📋 任务列表</h3>
+
+            <div class="filter-tabs">
+                <div class="filter-tab" :class="{ active: taskFilter === 'all' }" @click="taskFilter = 'all'">
+                    全部 ({{ taskStats.total }})
+                </div>
+                <div class="filter-tab" :class="{ active: taskFilter === 'pending' }" @click="taskFilter = 'pending'">
+                    待开始 ({{ taskStats.pending }})
+                </div>
+                <div class="filter-tab" :class="{ active: taskFilter === 'in_progress' }" @click="taskFilter = 'in_progress'">
+                    进行中 ({{ taskStats.inProgress }})
+                </div>
+                <div class="filter-tab" :class="{ active: taskFilter === 'completed' }" @click="taskFilter = 'completed'">
+                    已完成 ({{ taskStats.completed }})
+                </div>
+                <div class="filter-tab" :class="{ active: taskFilter === 'overdue' }" @click="taskFilter = 'overdue'">
+                    已超时 ({{ taskStats.overdue }})
+                </div>
+            </div>
+
+            <div class="task-list">
+                <div v-for="task in filteredTasks" :key="task.id" class="task-item">
+                    <div class="task-header">
+                        <div class="task-title">
+                            <i :class="getTaskTypeIcon(task.type)" :style="{ color: getTaskTypeColor(task.type) }"></i>
+                            {{ task.title }}
+                        </div>
+                        <div class="task-status-badge" :class="'status-' + task.status">
+                            {{ getTaskStatusText(task.status) }}
+                        </div>
+                    </div>
+
+                    <div class="task-desc">{{ task.description }}</div>
+
+                    <div class="task-meta">
+                        <div class="task-meta-item">
+                            <i class="fas fa-flag"></i>
+                            <span>优先级: {{ getPriorityText(task.priority) }}</span>
+                        </div>
+                        <div class="task-meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>截止: {{ formatDateTime(task.deadline) }}</span>
+                        </div>
+                        <div class="task-meta-item">
+                            <i class="fas fa-user"></i>
+                            <span>负责人: {{ getMemberName(task.owner) }}</span>
+                        </div>
+                        <div class="task-meta-item">
+                            <i class="fas fa-users"></i>
+                            <span>执行人: {{ task.assignees.length }}人</span>
+                        </div>
+                    </div>
+
+                    <div class="task-progress-bar" v-if="task.status === 'in_progress'">
+                        <div class="task-progress-fill" :style="{ width: task.progress + '%' }"></div>
+                    </div>
+
+                    <div class="task-assignees">
+                        <div v-for="assigneeId in task.assignees.slice(0, 5)" :key="assigneeId" class="assignee-avatar">
+                            {{ getMemberName(assigneeId)[0] }}
+                        </div>
+                        <div v-if="task.assignees.length > 5" class="assignee-avatar" style="background: var(--gray-400);">
+                            +{{ task.assignees.length - 5 }}
+                        </div>
+                        <span style="font-size: 0.875rem; color: var(--gray-600); margin-left: auto;">
+                            进度: {{ task.progress }}%
+                        </span>
+                    </div>
+
+                    <div class="task-actions">
+                        <button class="btn-sm btn-outline" @click="viewTaskDetail(task.id)">
+                            <i class="fas fa-eye"></i>
+                            详情
+                        </button>
+                        <button class="btn-sm btn-outline" @click="editTask(task.id)" v-if="task.status === 'pending'">
+                            <i class="fas fa-edit"></i>
+                            编辑
+                        </button>
+                        <button class="btn-sm btn-primary" @click="viewProgress(task.id)" v-if="task.status === 'in_progress'">
+                            <i class="fas fa-chart-line"></i>
+                            进度
+                        </button>
+                        <button class="btn-sm btn-success" @click="markCompleted(task.id)" v-if="task.status === 'in_progress'">
+                            <i class="fas fa-check"></i>
+                            完成
+                        </button>
+                        <button class="btn-sm btn-outline" @click="reminderTask(task.id)" v-if="task.status === 'pending' || task.status === 'in_progress'">
+                            <i class="fas fa-bell"></i>
+                            催办
+                        </button>
+                        <button class="btn-sm btn-danger" @click="deleteTask(task.id)">
+                            <i class="fas fa-trash"></i>
+                            删除
+                        </button>
+                    </div>
+                </div>
+
+                <div v-if="filteredTasks.length === 0" class="empty-state">
+                    <i class="fas fa-inbox" style="font-size: 3rem; color: var(--gray-400); margin-bottom: 1rem;"></i>
+                    <p>暂无任务</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 批量操作 -->
+        <div class="bulk-operations glass-card">
+            <h3>⚡ 批量操作</h3>
+            <div class="bulk-actions">
+                <button class="btn-outline" @click="bulkRemind">
+                    <i class="fas fa-bell"></i>
+                    批量催办
+                </button>
+                <button class="btn-outline" @click="exportTasks">
+                    <i class="fas fa-download"></i>
+                    导出任务
+                </button>
+                <button class="btn-outline" @click="viewStatistics">
+                    <i class="fas fa-chart-bar"></i>
+                    统计报表
+                </button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    showCreateForm: false,
+                    taskFilter: 'all',
+
+                    // 任务统计
+                    taskStats: {
+                        total: 12,
+                        completed: 5,
+                        inProgress: 4,
+                        pending: 2,
+                        overdue: 1,
+                        completionRate: 41.7
+                    },
+
+                    // 任务列表
+                    tasks: [
+                        {
+                            id: 1,
+                            title: '学员签到任务',
+                            description: '请所有学员在09:00前完成签到，支持位置验证和拍照确认',
+                            type: 'checkin',
+                            status: 'in_progress',
+                            priority: 'high',
+                            deadline: new Date(Date.now() + 3600000),
+                            owner: 'staff1',
+                            assignees: ['member1', 'member2', 'member3'],
+                            assistants: [],
+                            progress: 75,
+                            attachments: []
+                        },
+                        {
+                            id: 2,
+                            title: '课程评价',
+                            description: '请对上午的课程进行评价打分',
+                            type: 'evaluation',
+                            status: 'pending',
+                            priority: 'medium',
+                            deadline: new Date(Date.now() + 86400000),
+                            owner: 'staff1',
+                            assignees: ['member4', 'member5'],
+                            assistants: [],
+                            progress: 0,
+                            attachments: []
+                        },
+                        {
+                            id: 3,
+                            title: '晚间查寝',
+                            description: '工作人员对学员宿舍进行查寝确认',
+                            type: 'room',
+                            status: 'in_progress',
+                            priority: 'high',
+                            deadline: new Date(Date.now() - 3600000),
+                            owner: 'staff2',
+                            assignees: ['staff2', 'staff3'],
+                            assistants: [],
+                            progress: 80,
+                            attachments: []
+                        },
+                        {
+                            id: 4,
+                            title: '用餐征集',
+                            description: '征集学员晚餐用餐需求（是否用餐、饮食禁忌等）',
+                            type: 'collection',
+                            status: 'completed',
+                            priority: 'medium',
+                            deadline: new Date(Date.now() - 86400000),
+                            owner: 'staff1',
+                            assignees: ['member1', 'member2', 'member3', 'member4'],
+                            assistants: [],
+                            progress: 100,
+                            attachments: []
+                        },
+                        {
+                            id: 5,
+                            title: '问卷调查',
+                            description: '请填写培训满意度调查问卷',
+                            type: 'questionnaire',
+                            status: 'overdue',
+                            priority: 'high',
+                            deadline: new Date(Date.now() - 172800000),
+                            owner: 'staff2',
+                            assignees: ['member5', 'member6'],
+                            assistants: [],
+                            progress: 60,
+                            attachments: []
+                        },
+                        {
+                            id: 6,
+                            title: '现场拍照任务',
+                            description: '请到指定地点拍照确认场地布置完成',
+                            type: 'onsite',
+                            status: 'pending',
+                            priority: 'high',
+                            deadline: new Date(Date.now() + 7200000),
+                            owner: 'staff2',
+                            assignees: ['staff3'],
+                            assistants: ['member7'],
+                            progress: 0,
+                            attachments: []
+                        }
+                    ],
+
+                    // 新建任务
+                    newTask: {
+                        title: '',
+                        description: '',
+                        type: '',
+                        priority: 'medium',
+                        deadline: '',
+                        owner: '',
+                        assignees: [],
+                        assistants: [],
+                        attachments: []
+                    },
+
+                    // 人员列表
+                    staffList: [
+                        { id: 'staff1', name: '张三', role: '会场管理' },
+                        { id: 'staff2', name: '李四', role: '接待服务' },
+                        { id: 'staff3', name: '王五', role: '后勤保障' }
+                    ],
+                    memberList: [
+                        { id: 'member1', name: '学员A', unit: '市委组织部' },
+                        { id: 'member2', name: '学员B', unit: '市委宣传部' },
+                        { id: 'member3', name: '学员C', unit: '市教育局' },
+                        { id: 'member4', name: '学员D', unit: '市财政局' },
+                        { id: 'member5', name: '学员E', unit: '市卫健委' },
+                        { id: 'member6', name: '学员F', unit: '市公安局' },
+                        { id: 'member7', name: '学员G', unit: '市人社局' }
+                    ]
+                }
+            },
+            computed: {
+                filteredTasks() {
+                    if (this.taskFilter === 'all') {
+                        return this.tasks;
+                    }
+                    return this.tasks.filter(t => t.status === this.taskFilter);
+                }
+            },
+            async mounted() {
+                await this.initialize();
+
+                // 设置默认截止时间为明天同一时间
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                this.newTask.deadline = tomorrow.toISOString().slice(0, 16);
+            },
+            methods: {
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                    } else {
+                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '示例会议'
+                        };
+                    }
+                },
+
+                toggleAssignee(memberId) {
+                    const index = this.newTask.assignees.indexOf(memberId);
+                    if (index > -1) {
+                        this.newTask.assignees.splice(index, 1);
+                    } else {
+                        this.newTask.assignees.push(memberId);
+                    }
+                },
+
+                toggleAssistant(memberId) {
+                    const index = this.newTask.assistants.indexOf(memberId);
+                    if (index > -1) {
+                        this.newTask.assistants.splice(index, 1);
+                    } else {
+                        this.newTask.assistants.push(memberId);
+                    }
+                },
+
+                handleFileUpload(event) {
+                    const files = Array.from(event.target.files);
+                    this.newTask.attachments.push(...files);
+                },
+
+                removeAttachment(index) {
+                    this.newTask.attachments.splice(index, 1);
+                },
+
+                async saveTask() {
+                    if (!this.newTask.title || !this.newTask.deadline) {
+                        this.$showToast('请填写任务标题和截止时间', 'warning');
+                        return;
+                    }
+
+                    if (this.newTask.assignees.length === 0) {
+                        this.$showToast('请选择至少一个执行人', 'warning');
+                        return;
+                    }
+
+                    try {
+                        this.$showLoading('正在保存任务...');
+
+                        // 创建新任务
+                        const task = {
+                            id: Date.now(),
+                            ...this.newTask,
+                            status: 'pending',
+                            progress: 0,
+                            deadline: new Date(this.newTask.deadline)
+                        };
+
+                        this.tasks.unshift(task);
+                        this.updateTaskStats();
+
+                        // 重置表单
+                        this.newTask = {
+                            title: '',
+                            description: '',
+                            type: '',
+                            priority: 'medium',
+                            deadline: '',
+                            owner: '',
+                            assignees: [],
+                            assistants: [],
+                            attachments: []
+                        };
+                        this.showCreateForm = false;
+
+                        this.$hideLoading();
+                        this.$showToast('任务创建成功并已分发到群组', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('创建失败，请重试', 'error');
+                    }
+                },
+
+                cancelCreate() {
+                    this.showCreateForm = false;
+                    this.newTask = {
+                        title: '',
+                        description: '',
+                        type: '',
+                        priority: 'medium',
+                        deadline: '',
+                        owner: '',
+                        assignees: [],
+                        assistants: [],
+                        attachments: []
+                    };
+                },
+
+                updateTaskStats() {
+                    this.taskStats.total = this.tasks.length;
+                    this.taskStats.completed = this.tasks.filter(t => t.status === 'completed').length;
+                    this.taskStats.inProgress = this.tasks.filter(t => t.status === 'in_progress').length;
+                    this.taskStats.pending = this.tasks.filter(t => t.status === 'pending').length;
+                    this.taskStats.overdue = this.tasks.filter(t => t.status === 'overdue').length;
+                    this.taskStats.completionRate = ((this.taskStats.completed / this.taskStats.total) * 100).toFixed(1);
+                },
+
+                viewTaskDetail(taskId) {
+                    this.$showToast(`查看任务详情: ${taskId}`, 'info');
+                },
+
+                editTask(taskId) {
+                    this.$showToast(`编辑任务: ${taskId}`, 'info');
+                },
+
+                viewProgress(taskId) {
+                    this.$showToast(`查看任务进度: ${taskId}`, 'info');
+                },
+
+                async markCompleted(taskId) {
+                    const confirmed = await this.$showConfirm(
+                        '确定要标记该任务为完成吗？',
+                        '完成任务',
+                        'info'
+                    );
+
+                    if (confirmed) {
+                        const task = this.tasks.find(t => t.id === taskId);
+                        if (task) {
+                            task.status = 'completed';
+                            task.progress = 100;
+                            this.updateTaskStats();
+                            this.$showToast('任务已标记为完成', 'success');
+                        }
+                    }
+                },
+
+                async reminderTask(taskId) {
+                    const confirmed = await this.$showConfirm(
+                        '确定要催办该任务吗？',
+                        '催办任务',
+                        'warning'
+                    );
+
+                    if (confirmed) {
+                        this.$showToast('催办通知已发送', 'success');
+                    }
+                },
+
+                async deleteTask(taskId) {
+                    const confirmed = await this.$showConfirm(
+                        '确定要删除该任务吗？此操作不可恢复！',
+                        '删除任务',
+                        'danger'
+                    );
+
+                    if (confirmed) {
+                        this.tasks = this.tasks.filter(t => t.id !== taskId);
+                        this.updateTaskStats();
+                        this.$showToast('任务已删除', 'success');
+                    }
+                },
+
+                bulkRemind() {
+                    this.$showToast('批量催办功能', 'info');
+                },
+
+                exportTasks() {
+                    this.$showToast('导出任务功能', 'info');
+                },
+
+                viewStatistics() {
+                    this.$showToast('统计报表功能', 'info');
+                },
+
+                getTaskStatusText(status) {
+                    const statusMap = {
+                        pending: '待开始',
+                        in_progress: '进行中',
+                        completed: '已完成',
+                        overdue: '已超时'
+                    };
+                    return statusMap[status] || status;
+                },
+
+                getTaskTypeIcon(type) {
+                    const icons = {
+                        checkin: 'fas fa-clipboard-check',
+                        room: 'fas fa-bed',
+                        questionnaire: 'fas fa-poll',
+                        evaluation: 'fas fa-star',
+                        onsite: 'fas fa-running',
+                        collection: 'fas fa-clipboard-list'
+                    };
+                    return icons[type] || 'fas fa-tasks';
+                },
+
+                getTaskTypeColor(type) {
+                    const colors = {
+                        checkin: '#3b82f6',
+                        room: '#8b5cf6',
+                        questionnaire: '#22c55e',
+                        evaluation: '#f59e0b',
+                        onsite: '#ef4444',
+                        collection: '#06b6d4'
+                    };
+                    return colors[type] || '#6b7280';
+                },
+
+                getPriorityText(priority) {
+                    const map = {
+                        low: '低',
+                        medium: '中',
+                        high: '高',
+                        urgent: '紧急'
+                    };
+                    return map[priority] || priority;
+                },
+
+                getMemberName(memberId) {
+                    const member = [...this.staffList, ...this.memberList].find(m => m.id === memberId);
+                    return member ? member.name : '未知';
+                },
+
+                formatDateTime(dateStr) {
+                    if (!dateStr) return '';
+                    const date = new Date(dateStr);
+                    return date.toLocaleString('zh-CN');
+                },
+
+                goBack() {
+                    window.history.back();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+</body>
+</html>

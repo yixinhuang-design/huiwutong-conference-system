@@ -1,0 +1,48 @@
+{
+  "name": "智能会议系统-uniapp",
+  "appid": "__UNI__CONFERENCE_APP",
+  "description": "智能会议系统多端应用",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "app-plus": {
+    "usingComponents": true,
+    "nvueStyleCompiler": "uni-app",
+    "compilerVersion": 3,
+    "splashscreen": {
+      "alwaysShowBeforeRender": true,
+      "waiting": true,
+      "autoclose": true,
+      "delay": 0
+    },
+    "distribute": {
+      "android": {
+        "permissions": [
+          "<uses-permission android:name=\"android.permission.INTERNET\"/>",
+          "<uses-permission android:name=\"android.permission.CAMERA\"/>",
+          "<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"/>",
+          "<uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\"/>",
+          "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>"
+        ]
+      }
+    }
+  },
+  "h5": {
+    "title": "智能会议系统",
+    "router": {
+      "mode": "hash",
+      "base": "/"
+    },
+    "devServer": {
+      "port": 8090,
+      "https": false,
+      "headers": {
+        "Permissions-Policy": "unload=()"
+      }
+    }
+  },
+  "mp-weixin": {
+    "appid": "",
+    "usingComponents": true
+  }
+}

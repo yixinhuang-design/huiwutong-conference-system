@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI助教系统 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/marked/9.1.0/marked.min.js"></script>
+    <style>
+        /* 语音输入按钮样式 */
+        .btn-voice {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 50%;
+            background: var(--gray-100, #f5f5f5);
+            border: 1px solid var(--gray-200, #e5e5e5);
+            color: var(--gray-600, #525252);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .btn-voice:hover {
+            background: var(--gray-200, #e5e5e5);
+            color: var(--gray-900, #171717);
+            transform: scale(1.05);
+        }
+        
+        .btn-voice.recording {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+            animation: pulse-recording 1.5s infinite;
+        }
+        
+        .btn-voice .recording-indicator {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border-radius: 50%;
+            border: 2px solid white;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes pulse-recording {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* 语音状态提示 */
+        .voice-status {
+            margin-top: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: var(--gray-50, #fafafa);
+            border: 1px solid var(--gray-200, #e5e5e5);
+        }
+        
+        .voice-status-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--gray-700, #404040);
+        }
+        
+        .voice-status-content.recording {
+            color: #ef4444;
+        }
+        
+        .voice-status-content.recording i {
+            animation: pulse 1s infinite;
+        }
+        
+        .voice-status-content.error {
+            color: #ef4444;
+        }
+        
+        .voice-status-content.error i {
+            color: #ef4444;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        /* 语音波形动画 */
+        .voice-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 20px;
+            margin-left: auto;
+        }
+        
+        .voice-wave span {
+            display: block;
+            width: 3px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 2px;
+            animation: wave 0.8s ease-in-out infinite;
+        }
+        
+        .voice-wave span:nth-child(1) { animation-delay: 0s; }
+        .voice-wave span:nth-child(2) { animation-delay: 0.1s; }
+        .voice-wave span:nth-child(3) { animation-delay: 0.2s; }
+        .voice-wave span:nth-child(4) { animation-delay: 0.3s; }
+        .voice-wave span:nth-child(5) { animation-delay: 0.4s; }
+        
+        @keyframes wave {
+            0%, 100% { height: 8px; }
+            50% { height: 20px; }
+        }
+        
+        /* 输入操作区域调整 */
+        .input-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">AI助教系统</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav" style="padding-top: 90px !important;">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card">
+            <div>
+                <h2>🤖 AI助教系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    <span class="ai-status">
+                        <span class="status-indicator" :class="{ active: aiOnline }"></span>
+                        {{ aiOnline ? 'AI在线' : 'AI离线' }}
+                    </span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="exportConversation">
+                    <i class="fas fa-download"></i>
+                    导出对话
+                </button>
+            </div>
+        </div>
+
+        <!-- AI功能概览 -->
+        <div class="ai-overview glass-card">
+            <h3>🤖 AI功能概览</h3>
+            <div class="features-grid">
+                <div class="feature-card" 
+                     v-for="feature in aiFeatures" 
+                     :key="feature.id"
+                     :class="{ active: feature.enabled }">
+                    <div class="feature-icon">
+                        <i :class="feature.icon"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h5>{{ feature.name }}</h5>
+                        <p>{{ feature.description }}</p>
+                        <div class="feature-stats">
+                            <span>今日使用: {{ feature.usage }}次</span>
+                        </div>
+                    </div>
+                    <div class="feature-toggle">
+                        <label class="switch">
+                            <input type="checkbox" v-model="feature.enabled">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI对话界面 -->
+        <div class="ai-chat glass-card">
+            <h3>💬 AI助教对话</h3>
+            
+            <div class="chat-container">
+                <!-- 对话历史侧边栏 -->
+                <div class="chat-sidebar">
+                    <button class="btn-primary" @click="newConversation">
+                        <i class="fas fa-plus"></i>
+                        新建对话
+                    </button>
+                    
+                    <div class="conversation-list">
+                        <div class="conversation-item"
+                             v-for="conv in conversations"
+                             :key="conv.id"
+                             :class="{ active: currentConversation === conv.id }"
+                             @click="switchConversation(conv.id)">
+                            <div class="conversation-title">{{ conv.title }}</div>
+                            <div class="conversation-preview">{{ conv.lastMessage }}</div>
+                            <div class="conversation-time">{{ formatTime(conv.updatedAt) }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 对话主区域 -->
+                <div class="chat-main">
+                    <div class="chat-header">
+                        <div>
+                            <h4>{{ getCurrentConversationTitle() }}</h4>
+                            <span class="chat-meta">{{ messages.length }}条消息</span>
+                        </div>
+                        <div class="chat-actions">
+                            <button class="btn-icon" @click="clearConversation" title="清空对话">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn-icon" @click="exportConversation" title="导出对话">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chat-messages" ref="chatMessages">
+                        <div v-for="message in messages" 
+                             :key="message.id" 
+                             class="message"
+                             :class="message.role">
+                            <div class="message-avatar">
+                                <i :class="message.role === 'ai' ? 'fas fa-robot' : 'fas fa-user'"></i>
+                            </div>
+                            <div class="message-content">
+                                <div class="message-bubble" v-html="renderMarkdown(message.content)"></div>
+                                <div class="message-meta">
+                                    <span>{{ formatTime(message.timestamp) }}</span>
+                                    <span v-if="message.model">{{ message.model }}</span>
+                                </div>
+                                <div class="message-actions" v-if="message.role === 'ai'">
+                                    <button class="message-action-btn" @click="copyMessage(message.content)">
+                                        <i class="fas fa-copy"></i>
+                                        复制
+                                    </button>
+                                    <button class="message-action-btn" @click="regenerateResponse(message.id)">
+                                        <i class="fas fa-redo"></i>
+                                        重新生成
+                                    </button>
+                                    <button class="message-action-btn" @click="rateMessage(message.id, 'good')">
+                                        <i class="fas fa-thumbs-up"></i>
+                                        有用
+                                    </button>
+                                    <button class="message-action-btn" @click="rateMessage(message.id, 'bad')">
+                                        <i class="fas fa-thumbs-down"></i>
+                                        无用
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 输入中指示器 -->
+                        <div v-if="isTyping" class="message ai">
+                            <div class="message-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                <div class="typing-indicator">
+                                    <div class="typing-dot"></div>
+                                    <div class="typing-dot"></div>
+                                    <div class="typing-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input">
+                        <div class="quick-prompts">
+                            <div class="prompt-chip" 
+                                 v-for="prompt in quickPrompts" 
+                                 :key="prompt.id"
+                                 @click="useQuickPrompt(prompt.text)">
+                                {{ prompt.text }}
+                            </div>
+                        </div>
+                        
+                        <div class="input-wrapper">
+                            <textarea class="input-field"
+                                      v-model="inputMessage"
+                                      @keydown.enter.ctrl="sendMessage"
+                                      placeholder="输入您的问题... (Ctrl+Enter发送)"></textarea>
+                            <div class="input-actions">
+                                <button class="btn-voice" 
+                                        @click="toggleVoiceInput"
+                                        :class="{ recording: isRecording }"
+                                        :title="isRecording ? '停止录音' : '语音输入'">
+                                    <i :class="isRecording ? 'fas fa-stop' : 'fas fa-microphone'"></i>
+                                    <span v-if="isRecording" class="recording-indicator"></span>
+                                </button>
+                                <button class="btn-primary" 
+                                        @click="sendMessage"
+                                        :disabled="!inputMessage.trim() || isTyping">
+                                    <i class="fas fa-paper-plane"></i>
+                                    发送
+                                </button>
+                                <button class="btn-outline" @click="attachFile">
+                                    <i class="fas fa-paperclip"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- 语音输入状态提示 -->
+                        <div class="voice-status" v-if="isRecording || voiceStatus">
+                            <div class="voice-status-content" :class="{ recording: isRecording, error: voiceError }">
+                                <i :class="voiceError ? 'fas fa-exclamation-circle' : (isRecording ? 'fas fa-waveform' : 'fas fa-check-circle')"></i>
+                                <span>{{ voiceStatus }}</span>
+                                <div class="voice-wave" v-if="isRecording">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 知识库管理 -->
+        <div class="knowledge-base glass-card">
+            <h3>📚 知识库管理</h3>
+
+            <div class="knowledge-tabs">
+                <button class="tab-btn" :class="{ active: knowledgeTab === 'docs' }" @click="knowledgeTab = 'docs'">
+                    <i class="fas fa-file-alt"></i>
+                    文档管理
+                </button>
+                <button class="tab-btn" :class="{ active: knowledgeTab === 'faq' }" @click="knowledgeTab = 'faq'">
+                    <i class="fas fa-question-circle"></i>
+                    常见问题
+                </button>
+                <button class="tab-btn" :class="{ active: knowledgeTab === 'feedback' }" @click="knowledgeTab = 'feedback'">
+                    <i class="fas fa-thumbs-up"></i>
+                    反馈统计
+                </button>
+                <button class="tab-btn" :class="{ active: knowledgeTab === 'context' }" @click="knowledgeTab = 'context'">
+                    <i class="fas fa-history"></i>
+                    上下文记忆
+                </button>
+            </div>
+
+            <!-- 文档管理 -->
+            <div v-show="knowledgeTab === 'docs'" class="tab-content">
+                <div class="knowledge-actions">
+                    <button class="btn-primary" @click="addKnowledge">
+                        <i class="fas fa-plus"></i>
+                        添加知识
+                    </button>
+                    <button class="btn-outline" @click="importKnowledge">
+                        <i class="fas fa-upload"></i>
+                        导入文档
+                    </button>
+                    <button class="btn-outline" @click="exportKnowledge">
+                        <i class="fas fa-download"></i>
+                        导出知识库
+                    </button>
+                    <button class="btn-outline" @click="trainModel">
+                        <i class="fas fa-brain"></i>
+                        训练模型
+                    </button>
+                </div>
+
+                <div class="knowledge-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ knowledgeStats.total }}</div>
+                        <div class="stat-label">知识条目</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ knowledgeStats.categories }}</div>
+                        <div class="stat-label">分类数量</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ knowledgeStats.updated }}</div>
+                        <div class="stat-label">最近更新</div>
+                    </div>
+                </div>
+
+                <div class="knowledge-list">
+                    <div class="knowledge-card"
+                         v-for="item in knowledgeItems"
+                         :key="item.id"
+                         @click="editKnowledge(item.id)">
+                        <div class="knowledge-title">
+                            <i :class="item.icon"></i>
+                            {{ item.title }}
+                        </div>
+                        <div class="knowledge-content">{{ item.summary }}</div>
+                        <div class="knowledge-meta">
+                            <span class="category">{{ item.category }}</span>
+                            <span class="views">浏览: {{ item.views }}次</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 常见问题管理 -->
+            <div v-show="knowledgeTab === 'faq'" class="tab-content">
+                <div class="knowledge-actions">
+                    <button class="btn-primary" @click="addFAQ">
+                        <i class="fas fa-plus"></i>
+                        添加问题
+                    </button>
+                    <button class="btn-outline" @click="importFAQ">
+                        <i class="fas fa-upload"></i>
+                        批量导入
+                    </button>
+                    <button class="btn-outline" @click="exportFAQ">
+                        <i class="fas fa-download"></i>
+                        导出问题
+                    </button>
+                </div>
+
+                <div class="faq-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ faqStats.total }}</div>
+                        <div class="stat-label">问题总数</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-value">{{ faqStats.resolved }}</div>
+                        <div class="stat-label">已解决</div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="stat-value">{{ faqStats.avgRating }}</div>
+                        <div class="stat-label">平均评分</div>
+                    </div>
+                </div>
+
+                <div class="faq-list">
+                    <div class="faq-item" v-for="faq in faqList" :key="faq.id">
+                        <div class="faq-header">
+                            <h4>{{ faq.question }}</h4>
+                            <div class="faq-actions">
+                                <button class="btn-icon" @click="editFAQ(faq.id)" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon" @click="deleteFAQ(faq.id)" title="删除">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="faq-answer">{{ faq.answer }}</div>
+                        <div class="faq-meta">
+                            <span class="category"><i class="fas fa-tag"></i> {{ faq.category }}</span>
+                            <span class="views"><i class="fas fa-eye"></i> {{ faq.views }}次</span>
+                            <span class="rating"><i class="fas fa-star"></i> {{ faq.rating }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 反馈统计 -->
+            <div v-show="knowledgeTab === 'feedback'" class="tab-content">
+                <div class="feedback-chart">
+                    <h4>📊 用户反馈统计</h4>
+                    <div class="feedback-summary">
+                        <div class="feedback-card positive">
+                            <div class="feedback-icon">
+                                <i class="fas fa-thumbs-up"></i>
+                            </div>
+                            <div class="feedback-info">
+                                <div class="feedback-value">{{ feedbackStats.positive }}</div>
+                                <div class="feedback-label">有用</div>
+                            </div>
+                        </div>
+                        <div class="feedback-card negative">
+                            <div class="feedback-icon">
+                                <i class="fas fa-thumbs-down"></i>
+                            </div>
+                            <div class="feedback-info">
+                                <div class="feedback-value">{{ feedbackStats.negative }}</div>
+                                <div class="feedback-label">无用</div>
+                            </div>
+                        </div>
+                        <div class="feedback-card neutral">
+                            <div class="feedback-icon">
+                                <i class="fas fa-minus"></i>
+                            </div>
+                            <div class="feedback-info">
+                                <div class="feedback-value">{{ feedbackStats.neutral }}</div>
+                                <div class="feedback-label">未评价</div>
+                            </div>
+                        </div>
+                        <div class="feedback-card rate">
+                            <div class="feedback-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="feedback-info">
+                                <div class="feedback-value">{{ feedbackStats.rate }}%</div>
+                                <div class="feedback-label">满意度</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feedback-list">
+                    <h4>反馈详情</h4>
+                    <div class="feedback-item" v-for="item in feedbackList" :key="item.id">
+                        <div class="feedback-question">{{ item.question }}</div>
+                        <div class="feedback-answer-preview">{{ item.answer }}</div>
+                        <div class="feedback-meta">
+                            <span class="feedback-type" :class="item.feedback">
+                                <i :class="getFeedbackIcon(item.feedback)"></i>
+                                {{ getFeedbackText(item.feedback) }}
+                            </span>
+                            <span class="feedback-time">{{ formatTime(item.timestamp) }}</span>
+                            <span class="feedback-user">{{ item.userName }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 上下文记忆 -->
+            <div v-show="knowledgeTab === 'context'" class="tab-content">
+                <div class="context-actions">
+                    <button class="btn-outline" @click="clearAllContext">
+                        <i class="fas fa-trash"></i>
+                        清空所有上下文
+                    </button>
+                    <button class="btn-outline" @click="exportContext">
+                        <i class="fas fa-download"></i>
+                        导出上下文
+                    </button>
+                </div>
+
+                <div class="context-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ contextStats.totalUsers }}</div>
+                        <div class="stat-label">活跃用户</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ contextStats.totalContexts }}</div>
+                        <div class="stat-label">上下文数量</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ contextStats.avgTurns }}</div>
+                        <div class="stat-label">平均轮次</div>
+                    </div>
+                </div>
+
+                <div class="context-list">
+                    <div class="context-item" v-for="ctx in contextList" :key="ctx.userId">
+                        <div class="context-header">
+                            <div class="context-user">
+                                <i class="fas fa-user"></i>
+                                {{ ctx.userName }}
+                            </div>
+                            <div class="context-time">{{ formatTime(ctx.lastUpdate) }}</div>
+                        </div>
+                        <div class="context-turns">
+                            <span>{{ ctx.turns }}轮对话</span>
+                            <span class="context-duration">时长: {{ ctx.duration }}</span>
+                        </div>
+                        <div class="context-preview">
+                            最后消息: {{ ctx.lastMessage }}
+                        </div>
+                        <button class="btn-sm btn-outline" @click="viewContext(ctx.userId)">
+                            查看详情
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI统计 -->
+        <div class="ai-statistics glass-card">
+            <h3>📊 AI使用统计</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ aiStats.totalQueries }}</div>
+                    <div class="stat-label">总查询数</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-value">{{ aiStats.todayQueries }}</div>
+                    <div class="stat-label">今日查询</div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-value">{{ aiStats.avgResponse }}ms</div>
+                    <div class="stat-label">平均响应</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value">{{ aiStats.satisfaction }}%</div>
+                    <div class="stat-label">满意度</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    aiOnline: true,
+                    knowledgeTab: 'docs',
+                    aiFeatures: [
+                        {
+                            id: 'qa',
+                            name: '智能问答',
+                            description: '回答会议相关问题',
+                            icon: 'fas fa-comments',
+                            enabled: true,
+                            usage: 234
+                        },
+                        {
+                            id: 'translate',
+                            name: '实时翻译',
+                            description: '多语言实时翻译',
+                            icon: 'fas fa-language',
+                            enabled: true,
+                            usage: 89
+                        },
+                        {
+                            id: 'summary',
+                            name: '内容总结',
+                            description: '自动总结会议内容',
+                            icon: 'fas fa-file-alt',
+                            enabled: true,
+                            usage: 45
+                        },
+                        {
+                            id: 'recommend',
+                            name: '智能推荐',
+                            description: '个性化内容推荐',
+                            icon: 'fas fa-lightbulb',
+                            enabled: false,
+                            usage: 12
+                        }
+                    ],
+                    conversations: [
+                        {
+                            id: 'conv_1',
+                            title: '会议日程咨询',
+                            lastMessage: '明天上午有什么安排？',
+                            updatedAt: new Date(Date.now() - 1000 * 60 * 5)
+                        },
+                        {
+                            id: 'conv_2',
+                            title: '场地信息查询',
+                            lastMessage: '主会场在哪里？',
+                            updatedAt: new Date(Date.now() - 1000 * 60 * 30)
+                        }
+                    ],
+                    currentConversation: 'conv_1',
+                    messages: [
+                        {
+                            id: 'msg_1',
+                            role: 'user',
+                            content: '你好，请介绍一下这次会议',
+                            timestamp: new Date(Date.now() - 1000 * 60 * 10)
+                        },
+                        {
+                            id: 'msg_2',
+                            role: 'ai',
+                            content: '您好！这是**2024年度技术峰会**，会议将于6月15-16日在北京国际会议中心举行。\n\n主要议题包括：\n- 前沿技术分享\n- 行业趋势探讨\n- 技术实践案例\n\n已有356人报名参会。',
+                            timestamp: new Date(Date.now() - 1000 * 60 * 9),
+                            model: 'GPT-4'
+                        }
+                    ],
+                    inputMessage: '',
+                    isTyping: false,
+                    // 语音输入相关
+                    isRecording: false,
+                    voiceStatus: '',
+                    voiceError: false,
+                    recognition: null,
+                    quickPrompts: [
+                        { id: 1, text: '会议日程安排' },
+                        { id: 2, text: '如何到达会场' },
+                        { id: 3, text: '我的座位信息' },
+                        { id: 4, text: '会议资料下载' }
+                    ],
+                    knowledgeStats: {
+                        total: 156,
+                        categories: 12,
+                        updated: '2小时前'
+                    },
+                    knowledgeItems: [
+                        {
+                            id: 'k1',
+                            title: '会议日程表',
+                            summary: '完整的会议日程安排，包括时间、地点、主题等信息',
+                            category: '会议信息',
+                            icon: 'fas fa-calendar',
+                            views: 234
+                        },
+                        {
+                            id: 'k2',
+                            title: '交通指南',
+                            summary: '如何到达会场的详细交通指南',
+                            category: '出行指南',
+                            icon: 'fas fa-map-marker-alt',
+                            views: 189
+                        },
+                        {
+                            id: 'k3',
+                            title: '住宿信息',
+                            summary: '推荐的酒店和住宿安排',
+                            category: '出行指南',
+                            icon: 'fas fa-hotel',
+                            views: 145
+                        }
+                    ],
+                    // 常见问题数据
+                    faqStats: {
+                        total: 45,
+                        resolved: 42,
+                        avgRating: 4.7
+                    },
+                    faqList: [
+                        {
+                            id: 'faq1',
+                            question: '会议的具体时间是什么时候？',
+                            answer: '会议将于2024年6月15-16日举行，为期两天。',
+                            category: '会议信息',
+                            views: 312,
+                            rating: 4.8
+                        },
+                        {
+                            id: 'faq2',
+                            question: '如何报名参加会议？',
+                            answer: '请登录会议官网，点击"报名入口"，填写个人信息完成报名。',
+                            category: '报名咨询',
+                            views: 289,
+                            rating: 4.6
+                        },
+                        {
+                            id: 'faq3',
+                            question: '会议提供餐饮吗？',
+                            answer: '是的，会议为参会人员提供午餐和茶歇。',
+                            category: '会务服务',
+                            views: 234,
+                            rating: 4.7
+                        },
+                        {
+                            id: 'faq4',
+                            question: '可以开车去会场吗？有停车位吗？',
+                            answer: '可以，会场有地下停车场，提供免费停车位。',
+                            category: '交通出行',
+                            views: 198,
+                            rating: 4.5
+                        }
+                    ],
+                    // 反馈统计数据
+                    feedbackStats: {
+                        positive: 892,
+                        negative: 23,
+                        neutral: 134,
+                        rate: 94
+                    },
+                    feedbackList: [
+                        {
+                            id: 'fb1',
+                            question: '会议的具体时间是什么时候？',
+                            answer: '会议将于2024年6月15-16日举行...',
+                            feedback: 'good',
+                            timestamp: new Date(Date.now() - 1000 * 60 * 5),
+                            userName: '张三'
+                        },
+                        {
+                            id: 'fb2',
+                            question: '如何报名参加会议？',
+                            answer: '请登录会议官网...',
+                            feedback: 'good',
+                            timestamp: new Date(Date.now() - 1000 * 60 * 15),
+                            userName: '李四'
+                        },
+                        {
+                            id: 'fb3',
+                            question: '会议提供餐饮吗？',
+                            answer: '是的，会议为参会人员提供...',
+                            feedback: 'bad',
+                            timestamp: new Date(Date.now() - 1000 * 60 * 30),
+                            userName: '王五'
+                        },
+                        {
+                            id: 'fb4',
+                            question: '可以开车去会场吗？',
+                            answer: '可以，会场有地下停车场...',
+                            feedback: 'neutral',
+                            timestamp: new Date(Date.now() - 1000 * 60 * 45),
+                            userName: '赵六'
+                        }
+                    ],
+                    // 上下文记忆数据
+                    contextStats: {
+                        totalUsers: 89,
+                        totalContexts: 156,
+                        avgTurns: 5.2
+                    },
+                    contextList: [
+                        {
+                            userId: 'u1',
+                            userName: '张三',
+                            turns: 8,
+                            duration: '15分钟',
+                            lastUpdate: new Date(Date.now() - 1000 * 60 * 2),
+                            lastMessage: '谢谢，我已经了解了'
+                        },
+                        {
+                            userId: 'u2',
+                            userName: '李四',
+                            turns: 5,
+                            duration: '8分钟',
+                            lastUpdate: new Date(Date.now() - 1000 * 60 * 10),
+                            lastMessage: '座位在哪里查看？'
+                        },
+                        {
+                            userId: 'u3',
+                            userName: '王五',
+                            turns: 3,
+                            duration: '5分钟',
+                            lastUpdate: new Date(Date.now() - 1000 * 60 * 20),
+                            lastMessage: '会议资料在哪里下载？'
+                        }
+                    ],
+                    aiStats: {
+                        totalQueries: 1247,
+                        todayQueries: 89,
+                        avgResponse: 245,
+                        satisfaction: 94
+                    }
+                }
+            },
+            async mounted() {
+                await this.initialize();
+                this.scrollToBottom();
+            },
+            methods: {
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                    } else {
+                        // 如果没有会议ID，使用示例数据
+                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '示例会议'
+                        };
+                    }
+                },
+                
+                newConversation() {
+                    const id = 'conv_' + Date.now();
+                    this.conversations.unshift({
+                        id: id,
+                        title: '新对话',
+                        lastMessage: '',
+                        updatedAt: new Date()
+                    });
+                    this.currentConversation = id;
+                    this.messages = [];
+                },
+                
+                switchConversation(convId) {
+                    this.currentConversation = convId;
+                    // 加载对话历史
+                    this.loadConversationMessages(convId);
+                },
+                
+                loadConversationMessages(convId) {
+                    // 模拟加载消息
+                    console.log('加载对话消息:', convId);
+                },
+                
+                getCurrentConversationTitle() {
+                    const conv = this.conversations.find(c => c.id === this.currentConversation);
+                    return conv ? conv.title : '新对话';
+                },
+                
+                async sendMessage() {
+                    if (!this.inputMessage.trim() || this.isTyping) return;
+                    
+                    // 添加用户消息
+                    const userMessage = {
+                        id: 'msg_' + Date.now(),
+                        role: 'user',
+                        content: this.inputMessage,
+                        timestamp: new Date()
+                    };
+                    this.messages.push(userMessage);
+                    
+                    const question = this.inputMessage;
+                    this.inputMessage = '';
+                    this.isTyping = true;
+                    
+                    this.$nextTick(() => {
+                        this.scrollToBottom();
+                    });
+                    
+                    // 模拟AI响应
+                    setTimeout(() => {
+                        const aiMessage = {
+                            id: 'msg_' + Date.now(),
+                            role: 'ai',
+                            content: this.generateAIResponse(question),
+                            timestamp: new Date(),
+                            model: 'GPT-4'
+                        };
+                        this.messages.push(aiMessage);
+                        this.isTyping = false;
+                        
+                        this.$nextTick(() => {
+                            this.scrollToBottom();
+                        });
+                    }, 1500);
+                },
+                
+                generateAIResponse(question) {
+                    // 简单的模拟响应
+                    const responses = {
+                        '日程': '会议日程如下：\n\n**6月15日**\n- 09:00-10:00 开幕式\n- 10:00-12:00 主题演讲\n- 14:00-17:00 分论坛\n\n**6月16日**\n- 09:00-12:00 技术分享\n- 14:00-16:00 圆桌讨论',
+                        '座位': '您的座位信息：\n- 区域：A区\n- 排号：3排\n- 座位号：12座\n\n座位位置较好，视野开阔。',
+                        '交通': '会场交通指南：\n\n**地铁**：乘坐8号线到奥体中心站，步行10分钟\n**公交**：328路、379路、419路到会议中心站\n**自驾**：导航"北京国际会议中心"',
+                        '资料': '会议资料下载：\n\n1. [会议手册](link)\n2. [演讲PPT](link)\n3. [参会指南](link)\n\n请登录会议系统查看更多资料。'
+                    };
+                    
+                    for (let key in responses) {
+                        if (question.includes(key)) {
+                            return responses[key];
+                        }
+                    }
+                    
+                    return `我理解您的问题是："${question}"。\n\n关于这个问题，我建议您查看会议手册或联系会务组获取更详细的信息。如有其他疑问，请随时询问！`;
+                },
+                
+                useQuickPrompt(text) {
+                    this.inputMessage = text;
+                    this.sendMessage();
+                },
+                
+                renderMarkdown(content) {
+                    if (typeof marked !== 'undefined') {
+                        return marked.parse(content);
+                    }
+                    return content.replace(/\n/g, '<br>');
+                },
+                
+                formatTime(date) {
+                    if (!date) return '';
+                    const now = new Date();
+                    const diff = now - date;
+                    
+                    if (diff < 60000) return '刚刚';
+                    if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+                    if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+                    return date.toLocaleDateString('zh-CN');
+                },
+                
+                scrollToBottom() {
+                    const container = this.$refs.chatMessages;
+                    if (container) {
+                        container.scrollTop = container.scrollHeight;
+                    }
+                },
+                
+                async copyMessage(content) {
+                    try {
+                        await navigator.clipboard.writeText(content);
+                        this.$showToast('已复制到剪贴板', 'success');
+                    } catch (error) {
+                        this.$showToast('复制失败，请重试', 'error');
+                    }
+                },
+                
+                regenerateResponse(messageId) {
+                    this.$showToast(`重新生成响应: ${messageId}`, 'info');
+                },
+                
+                rateMessage(messageId, rating) {
+                    this.$showToast(`评价消息 ${messageId}: ${rating}`, 'success');
+                },
+                
+                async clearConversation() {
+                    const confirmed = await this.$showConfirm(
+                        '确定要清空当前对话吗？',
+                        '清空对话',
+                        'warning'
+                    );
+                    if (confirmed) {
+                        this.messages = [];
+                        this.$showToast('对话已清空', 'success');
+                    }
+                },
+                
+                async exportConversation() {
+                    try {
+                        this.$showLoading('正在导出对话...');
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        this.$hideLoading();
+                        this.$showToast('对话已导出', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导出失败，请重试', 'error');
+                    }
+                },
+                
+                attachFile() {
+                    this.$showToast('附加文件功能', 'info');
+                },
+                
+                // 语音输入功能
+                toggleVoiceInput() {
+                    if (this.isRecording) {
+                        this.stopVoiceInput();
+                    } else {
+                        this.startVoiceInput();
+                    }
+                },
+                
+                startVoiceInput() {
+                    // 检查浏览器是否支持语音识别
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    if (!SpeechRecognition) {
+                        this.voiceError = true;
+                        this.voiceStatus = '您的浏览器不支持语音输入功能';
+                        setTimeout(() => {
+                            this.voiceStatus = '';
+                            this.voiceError = false;
+                        }, 3000);
+                        return;
+                    }
+                    
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.lang = 'zh-CN';
+                    this.recognition.continuous = true;
+                    this.recognition.interimResults = true;
+                    
+                    this.recognition.onstart = () => {
+                        this.isRecording = true;
+                        this.voiceError = false;
+                        this.voiceStatus = '正在聆听，请说话...';
+                    };
+                    
+                    this.recognition.onresult = (event) => {
+                        let finalTranscript = '';
+                        let interimTranscript = '';
+                        
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += transcript;
+                            } else {
+                                interimTranscript += transcript;
+                            }
+                        }
+                        
+                        if (finalTranscript) {
+                            this.inputMessage += finalTranscript;
+                            this.voiceStatus = '识别成功';
+                        } else if (interimTranscript) {
+                            this.voiceStatus = '识别中: ' + interimTranscript.substring(0, 30) + (interimTranscript.length > 30 ? '...' : '');
+                        }
+                    };
+                    
+                    this.recognition.onerror = (event) => {
+                        this.voiceError = true;
+                        switch (event.error) {
+                            case 'no-speech':
+                                this.voiceStatus = '未检测到语音，请重试';
+                                break;
+                            case 'audio-capture':
+                                this.voiceStatus = '未找到麦克风设备';
+                                break;
+                            case 'not-allowed':
+                                this.voiceStatus = '请允许使用麦克风权限';
+                                break;
+                            default:
+                                this.voiceStatus = '语音识别出错: ' + event.error;
+                        }
+                        this.isRecording = false;
+                        setTimeout(() => {
+                            this.voiceStatus = '';
+                            this.voiceError = false;
+                        }, 3000);
+                    };
+                    
+                    this.recognition.onend = () => {
+                        this.isRecording = false;
+                        if (!this.voiceError && this.voiceStatus === '正在聆听，请说话...') {
+                            this.voiceStatus = '';
+                        } else if (!this.voiceError) {
+                            setTimeout(() => {
+                                this.voiceStatus = '';
+                            }, 2000);
+                        }
+                    };
+                    
+                    try {
+                        this.recognition.start();
+                    } catch (error) {
+                        this.voiceError = true;
+                        this.voiceStatus = '启动语音识别失败';
+                        setTimeout(() => {
+                            this.voiceStatus = '';
+                            this.voiceError = false;
+                        }, 3000);
+                    }
+                },
+                
+                stopVoiceInput() {
+                    if (this.recognition) {
+                        this.recognition.stop();
+                        this.voiceStatus = '语音输入已停止';
+                        setTimeout(() => {
+                            this.voiceStatus = '';
+                        }, 1500);
+                    }
+                    this.isRecording = false;
+                },
+                
+                addKnowledge() {
+                    this.$showToast('添加知识', 'info');
+                },
+                
+                importKnowledge() {
+                    this.$showToast('导入知识库', 'info');
+                },
+                
+                exportKnowledge() {
+                    this.$showToast('导出知识库', 'info');
+                },
+                
+                async trainModel() {
+                    try {
+                        this.$showLoading('正在训练AI模型...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.$hideLoading();
+                        this.$showToast('AI模型训练完成', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('训练失败，请重试', 'error');
+                    }
+                },
+                
+                editKnowledge(id) {
+                    this.$showToast(`编辑知识: ${id}`, 'info');
+                },
+
+                // 常见问题管理
+                addFAQ() {
+                    this.$showToast('添加常见问题', 'info');
+                },
+
+                editFAQ(id) {
+                    this.$showToast(`编辑问题: ${id}`, 'info');
+                },
+
+                async deleteFAQ(id) {
+                    const confirmed = await this.$showConfirm(
+                        '确定要删除这个问题吗？',
+                        '删除问题',
+                        'warning'
+                    );
+                    if (confirmed) {
+                        this.$showToast(`已删除问题: ${id}`, 'success');
+                    }
+                },
+
+                importFAQ() {
+                    this.$showToast('批量导入常见问题', 'info');
+                },
+
+                exportFAQ() {
+                    this.$showToast('导出常见问题', 'info');
+                },
+
+                // 反馈统计
+                getFeedbackIcon(feedback) {
+                    const icons = {
+                        good: 'fas fa-thumbs-up',
+                        bad: 'fas fa-thumbs-down',
+                        neutral: 'fas fa-minus'
+                    };
+                    return icons[feedback] || icons.neutral;
+                },
+
+                getFeedbackText(feedback) {
+                    const texts = {
+                        good: '有用',
+                        bad: '无用',
+                        neutral: '未评价'
+                    };
+                    return texts[feedback] || texts.neutral;
+                },
+
+                // 上下文记忆管理
+                viewContext(userId) {
+                    this.$showToast(`查看上下文: ${userId}`, 'info');
+                },
+
+                async clearAllContext() {
+                    const confirmed = await this.$showConfirm(
+                        '确定要清空所有用户的上下文记忆吗？此操作不可恢复。',
+                        '清空上下文',
+                        'warning'
+                    );
+                    if (confirmed) {
+                        this.$showToast('已清空所有上下文', 'success');
+                    }
+                },
+
+                exportContext() {
+                    this.$showToast('导出上下文数据', 'info');
+                },
+
+                goBack() {
+                    window.history.back();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+        </div><!-- 关闭page-with-nav -->
+</body>
+</html>

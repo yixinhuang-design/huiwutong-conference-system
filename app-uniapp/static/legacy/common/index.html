@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能会议助手 - 原型展示</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 原型展示页面样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #fff;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .section-title {
+            color: #fff;
+            margin: 40px 0 20px;
+            font-size: 1.8rem;
+            font-weight: 600;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title .badge {
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .prototype-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .prototype-item {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .prototype-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .prototype-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .prototype-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        .prototype-info h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .prototype-info p {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .prototype-iframe {
+            width: 100%;
+            height: 650px;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            background: #f8fafc;
+        }
+
+        /* 响应式iframe高度 */
+        @media (max-height: 800px) {
+            .prototype-iframe {
+                height: 500px;
+            }
+        }
+
+        @media (min-height: 1000px) {
+            .prototype-iframe {
+                height: 750px;
+            }
+        }
+
+        .role-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .role-common {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #fff;
+        }
+
+        .role-learner {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+        }
+
+        .role-staff {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: #fff;
+        }
+
+        .role-archive {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: #fff;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .prototype-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .prototype-iframe {
+                height: 550px;
+            }
+        }
+
+        /* 移动端优化 */
+        @media (max-width: 480px) {
+            .prototype-iframe {
+                height: 500px;
+            }
+
+            .prototype-item {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 页面标题 -->
+        <div class="header">
+            <h1>智能会议助手</h1>
+            <p>高保真原型设计 - 按角色分类展示</p>
+        </div>
+
+        <!-- ==================== 全部功能导航 ==================== -->
+        <h2 class="section-title">
+            <i class="fas fa-th-large"></i>
+            全部功能导航
+            <span class="badge">40个页面 · 完整功能索引</span>
+        </h2>
+        <div class="prototype-grid">
+            <div class="prototype-item" style="grid-column: 1 / -1;">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                        <i class="fas fa-th-large"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>全部功能导航 <span class="role-tag role-common">共有</span></h3>
+                        <p>40个页面完整列表 · 按角色（共有/学员/协管员/归档）筛选查看 · 包含所有功能入口</p>
+                    </div>
+                </div>
+                <iframe src="../nav-all.html" class="prototype-iframe" style="height:850px;" title="全部功能"></iframe>
+            </div>
+        </div>
+
+        <!-- ==================== 共有界面 ==================== -->
+        <h2 class="section-title">
+            <i class="fas fa-users"></i>
+            共有界面
+            <span class="badge">9个页面 · 所有角色共用</span>
+        </h2>
+        <div class="prototype-grid">
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                        <i class="fas fa-house-user"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>首页 <span class="role-tag role-common">共有</span></h3>
+                        <p>角色化欢迎、培训动态、快捷工作入口</p>
+                    </div>
+                </div>
+                <iframe src="home.html" class="prototype-iframe" title="首页"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>AI 助理 <span class="role-tag role-common">共有</span></h3>
+                        <p>会议概览、语音问答、智能推送、服务工具</p>
+                    </div>
+                </div>
+                <iframe src="assistant.html" class="prototype-iframe" title="AI助理"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>沟通中心 <span class="role-tag role-common">共有</span></h3>
+                        <p>工作人员/学员双视角群聊、私聊入口</p>
+                    </div>
+                </div>
+                <iframe src="communication.html" class="prototype-iframe" title="沟通中心"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>往期档案 <span class="role-tag role-common">共有</span></h3>
+                        <p>往期培训、互动内容、资料归档与数据复盘</p>
+                    </div>
+                </div>
+                <iframe src="past.html" class="prototype-iframe" title="往期"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>我的 <span class="role-tag role-common">共有</span></h3>
+                        <p>个人统计、日程管理、任务提醒与系统设置</p>
+                    </div>
+                </div>
+                <iframe src="profile.html" class="prototype-iframe" title="我的主页"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>位置导航 <span class="role-tag role-common">共有</span></h3>
+                        <p>会场导航、路线规划、周边设施查询（流程13）</p>
+                    </div>
+                </div>
+                <iframe src="navigation.html" class="prototype-iframe" title="位置导航"></iframe>
+            </div>
+        </div>
+
+        <!-- ==================== 学员端界面 ==================== -->
+        <h2 class="section-title">
+            <i class="fas fa-user-graduate"></i>
+            学员端界面
+            <span class="badge">26个页面 · 普通参会人员</span>
+        </h2>
+        <div class="prototype-grid">
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #38bdf8, #0ea5e9);">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>培训详情 <span class="role-tag role-learner">学员</span></h3>
+                        <p>须知、日程、签到、资料、花絮等学习入口</p>
+                    </div>
+                </div>
+                <iframe src="../learner/meeting-detail.html" class="prototype-iframe" title="培训详情"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>日程&签到 <span class="role-tag role-learner">学员</span></h3>
+                        <p>日程提醒、签到补录、查寝反馈等功能</p>
+                    </div>
+                </div>
+                <iframe src="../learner/schedule.html" class="prototype-iframe" title="日程签到"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #facc15, #eab308);">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>签到页面 <span class="role-tag role-learner">学员</span></h3>
+                        <p>二维码签到、位置验证、补录申请</p>
+                    </div>
+                </div>
+                <iframe src="../learner/checkin.html" class="prototype-iframe" title="签到"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                        <i class="fas fa-th-large"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>座位查询 <span class="role-tag role-learner">学员</span></h3>
+                        <p>查看座位安排、分组信息、导航路线</p>
+                    </div>
+                </div>
+                <iframe src="../learner/seat.html" class="prototype-iframe" title="座位"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>学习资料 <span class="role-tag role-learner">学员</span></h3>
+                        <p>课件下载、资料查看、学习记录</p>
+                    </div>
+                </div>
+                <iframe src="../learner/materials.html" class="prototype-iframe" title="资料"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>群组列表 <span class="role-tag role-learner">学员</span></h3>
+                        <p>学习小组、班级群、分组信息</p>
+                    </div>
+                </div>
+                <iframe src="../learner/groups.html" class="prototype-iframe" title="群组"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>学员聊天室 <span class="role-tag role-learner">学员</span></h3>
+                        <p>学员群聊、任务卡片、公告问答</p>
+                    </div>
+                </div>
+                <iframe src="../learner/chat-room.html" class="prototype-iframe" title="学员聊天"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+                        <i class="fas fa-comment-dots"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>学员私聊 <span class="role-tag role-learner">学员</span></h3>
+                        <p>与工作人员一对一沟通、快捷操作</p>
+                    </div>
+                </div>
+                <iframe src="../learner/chat-private.html" class="prototype-iframe" title="学员私聊"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #a855f7, #9333ea);">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>留言赠语 <span class="role-tag role-learner">学员</span></h3>
+                        <p>分享心得、发表祝福、论坛交流</p>
+                    </div>
+                </div>
+                <iframe src="../learner/guestbook.html" class="prototype-iframe" title="留言赠语"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #f43f5e, #e11d48);">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>精彩瞬间 <span class="role-tag role-learner">学员</span></h3>
+                        <p>培训花絮、照片视频查看</p>
+                    </div>
+                </div>
+                <iframe src="../learner/highlights.html" class="prototype-iframe" title="花絮"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                        <i class="fas fa-address-book"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>联系方式 <span class="role-tag role-learner">学员</span></h3>
+                        <p>通讯录、工作人员联系方式</p>
+                    </div>
+                </div>
+                <iframe src="../learner/contact.html" class="prototype-iframe" title="联系"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #84cc16, #65a30d);">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>使用指南 <span class="role-tag role-learner">学员</span></h3>
+                        <p>参会须知、使用说明、常见问题</p>
+                    </div>
+                </div>
+                <iframe src="../learner/guide.html" class="prototype-iframe" title="指南"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #f43f5e, #e11d48);">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>扫码报名 <span class="role-tag role-learner">学员</span></h3>
+                        <p>扫码填写报名表</p>
+                    </div>
+                </div>
+                <iframe src="../learner/scan-register.html" class="prototype-iframe" title="扫码报名"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>报名状态查询 <span class="role-tag role-learner">学员</span></h3>
+                        <p>查询审核状态</p>
+                    </div>
+                </div>
+                <iframe src="../learner/registration-status.html" class="prototype-iframe" title="报名状态查询"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>通知中心 <span class="role-tag role-learner">学员</span></h3>
+                        <p>查看各类通知</p>
+                    </div>
+                </div>
+                <iframe src="../learner/notifications.html" class="prototype-iframe" title="通知中心"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>任务列表 <span class="role-tag role-learner">学员</span></h3>
+                        <p>查看待完成任务</p>
+                    </div>
+                </div>
+                <iframe src="../learner/task-list.html" class="prototype-iframe" title="任务列表"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>任务详情 <span class="role-tag role-learner">学员</span></h3>
+                        <p>任务详情页面</p>
+                    </div>
+                </div>
+                <iframe src="../learner/task-detail.html" class="prototype-iframe" title="任务详情"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>问卷填写 <span class="role-tag role-learner">学员</span></h3>
+                        <p>填写调查问卷</p>
+                    </div>
+                </div>
+                <iframe src="../learner/feedback.html" class="prototype-iframe" title="问卷填写"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>评价打分 <span class="role-tag role-learner">学员</span></h3>
+                        <p>课程评价</p>
+                    </div>
+                </div>
+                <iframe src="../learner/evaluation.html" class="prototype-iframe" title="评价打分"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+                        <i class="fas fa-chair"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>扫码查座 <span class="role-tag role-learner">学员</span></h3>
+                        <p>扫码快速查座</p>
+                    </div>
+                </div>
+                <iframe src="../learner/scan-seat.html" class="prototype-iframe" title="扫码查座"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">
+                        <i class="fas fa-couch"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>座位详情 <span class="role-tag role-learner">学员</span></h3>
+                        <p>座位详细信息</p>
+                    </div>
+                </div>
+                <iframe src="../learner/seat-detail.html" class="prototype-iframe" title="座位详情"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                        <i class="fas fa-concierge-bell"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>辅助安排 <span class="role-tag role-learner">学员</span></h3>
+                        <p>车/宿/餐安排</p>
+                    </div>
+                </div>
+                <iframe src="../learner/arrangements.html" class="prototype-iframe" title="辅助安排"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>登录注册 <span class="role-tag role-common">共有</span></h3>
+                        <p>用户登录注册</p>
+                    </div>
+                </div>
+                <iframe src="login.html" class="prototype-iframe" title="登录注册"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #64748b, #475569);">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>设置 <span class="role-tag role-common">共有</span></h3>
+                        <p>系统设置</p>
+                    </div>
+                </div>
+                <iframe src="settings.html" class="prototype-iframe" title="设置"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>帮助中心 <span class="role-tag role-common">共有</span></h3>
+                        <p>使用帮助</p>
+                    </div>
+                </div>
+                <iframe src="help.html" class="prototype-iframe" title="帮助中心"></iframe>
+            </div>
+        </div>
+
+        <!-- ==================== 协管员端界面 ==================== -->
+        <h2 class="section-title">
+            <i class="fas fa-user-tie"></i>
+            协管员端界面
+            <span class="badge">19个页面 · 会议工作人员</span>
+        </h2>
+        <div class="prototype-grid">
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>数据看板 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>实时指标、异常提醒、可导出总结报告</p>
+                    </div>
+                </div>
+                <iframe src="../staff/dashboard.html" class="prototype-iframe" title="数据看板"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>培训详情 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>任务派发、数据指标、推送与提醒统一入口</p>
+                    </div>
+                </div>
+                <iframe src="../staff/meeting-detail.html" class="prototype-iframe" title="培训详情"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #facc15, #eab308);">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>工作日程 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>工作人员维护课程、教室、讲师与提醒</p>
+                    </div>
+                </div>
+                <iframe src="../staff/schedule.html" class="prototype-iframe" title="日程"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>任务列表 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>会务任务创建、分配、执行进度跟踪</p>
+                    </div>
+                </div>
+                <iframe src="../staff/task-list.html" class="prototype-iframe" title="任务"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #16a34a, #15803d);">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>任务详情 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>任务执行进度、附件、完成/延期操作</p>
+                    </div>
+                </div>
+                <iframe src="../staff/task-detail.html" class="prototype-iframe" title="任务详情"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>任务反馈 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>执行人提交完成时间、说明与凭证，支持审核流转</p>
+                    </div>
+                </div>
+                <iframe src="../staff/task-feedback.html" class="prototype-iframe" title="任务反馈"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>报名管理 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>查看、批量处理报名信息与异常提示</p>
+                    </div>
+                </div>
+                <iframe src="../staff/registration-manage.html" class="prototype-iframe" title="报名"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>分组管理 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>拖拽编组、同步座位与群聊的操作界面</p>
+                    </div>
+                </div>
+                <iframe src="../staff/grouping-manage.html" class="prototype-iframe" title="分组"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-th-large"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>座位管理 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>座位分配、冲突提醒与导出打印</p>
+                    </div>
+                </div>
+                <iframe src="../staff/seat-manage.html" class="prototype-iframe" title="座位"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                        <i class="fas fa-bullhorn"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>通知管理 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>车次、座位、住宿等通知审核与发送</p>
+                    </div>
+                </div>
+                <iframe src="../staff/notice-manage.html" class="prototype-iframe" title="通知"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>工作人员聊天 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>工作人员群实时消息、任务卡片、附件</p>
+                    </div>
+                </div>
+                <iframe src="../staff/chat-room.html" class="prototype-iframe" title="工作人员聊天"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>租户管理 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>多租户管理、创建编辑、锁定解锁（流程01）</p>
+                    </div>
+                </div>
+                <iframe src="../staff/tenant-manage.html" class="prototype-iframe" title="租户管理"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>名册生成 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>分组排序、格式配置、PDF生成（流程05）</p>
+                    </div>
+                </div>
+                <iframe src="../staff/handbook-generate.html" class="prototype-iframe" title="名册生成"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>数据分析 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>历史数据查询、统计报表、数据导出（流程17）</p>
+                    </div>
+                </div>
+                <iframe src="../staff/data-analysis.html" class="prototype-iframe" title="数据分析"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>预警配置 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>预警规则、阈值设置、通知方式（流程18）</p>
+                    </div>
+                </div>
+                <iframe src="../staff/alert-config.html" class="prototype-iframe" title="预警配置"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>预警处理 <span class="role-tag role-staff">协管员</span></h3>
+                        <p>预警列表、事件处理、统计分析（流程18）</p>
+                    </div>
+                </div>
+                <iframe src="../staff/alert-handle.html" class="prototype-iframe" title="预警处理"></iframe>
+            </div>
+        </div>
+
+        <!-- ==================== 归档界面 ==================== -->
+        <h2 class="section-title">
+            <i class="fas fa-archive"></i>
+            归档界面
+            <span class="badge">5个页面 · 会议结束后查看</span>
+        </h2>
+        <div class="prototype-grid">
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                        <i class="fas fa-folder"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>资料归档 <span class="role-tag role-archive">归档</span></h3>
+                        <p>课件、影像、文档自动归类与导出</p>
+                    </div>
+                </div>
+                <iframe src="../archive/materials.html" class="prototype-iframe" title="资料归档"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                        <i class="fas fa-poll-h"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>互动反馈 <span class="role-tag role-archive">归档</span></h3>
+                        <p>课程评价、问卷、测试等互动数据统计</p>
+                    </div>
+                </div>
+                <iframe src="../archive/feedback.html" class="prototype-iframe" title="互动反馈"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                        <i class="fas fa-camera-retro"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>精彩花絮 <span class="role-tag role-archive">归档</span></h3>
+                        <p>精选照片与视频，支持宣传展示</p>
+                    </div>
+                </div>
+                <iframe src="../archive/highlights.html" class="prototype-iframe" title="精彩花絮"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>总结报告 <span class="role-tag role-archive">归档</span></h3>
+                        <p>培训总结、成果指标、输出文档管理</p>
+                    </div>
+                </div>
+                <iframe src="../archive/reports.html" class="prototype-iframe" title="总结报告"></iframe>
+            </div>
+
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #f43f5e, #e11d48);">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>留言赠语 <span class="role-tag role-archive">归档</span></h3>
+                        <p>学员感言、赠言汇总，可生成留声墙</p>
+                    </div>
+                </div>
+                <iframe src="../archive/messages.html" class="prototype-iframe" title="留言赠语"></iframe>
+            </div>
+        </div>
+
+        <!-- ==================== 系统全流程介绍 ==================== -->
+        <h2 class="section-title">
+            <i class="fas fa-globe"></i>
+            系统全流程介绍
+            <span class="badge">1080×1920 · 会前/会中/会后</span>
+        </h2>
+        <div class="prototype-grid">
+            <div class="prototype-item">
+                <div class="prototype-header">
+                    <div class="prototype-icon" style="background: linear-gradient(135deg, #6366f1, #a855f7);">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <div class="prototype-info">
+                        <h3>智能会议系统 · 全流程 <span class="role-tag role-common">共有</span></h3>
+                        <p>1080×1920 竖版介绍 · 会前/会中/会后亮点汇总</p>
+                    </div>
+                </div>
+                <iframe src="system-intro.html" class="prototype-iframe" style="height:820px;" title="系统全流程"></iframe>
+            </div>
+        </div>
+
+        <!-- 页脚统计 -->
+        <div style="background: #fff; border-radius: 20px; padding: 30px; margin-top: 40px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); text-align: center;">
+            <h2 style="font-size: 1.8rem; font-weight: 600; color: #1e293b; margin-bottom: 20px;">页面统计</h2>
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+                <div style="flex: 1; min-width: 150px; padding: 20px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 12px; color: #fff;">
+                    <div style="font-size: 2rem; font-weight: 700; margin-bottom: 5px;">9</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">共有界面</div>
+                </div>
+                <div style="flex: 1; min-width: 150px; padding: 20px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px; color: #fff;">
+                    <div style="font-size: 2rem; font-weight: 700; margin-bottom: 5px;">26</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">学员端界面</div>
+                </div>
+                <div style="flex: 1; min-width: 150px; padding: 20px; background: linear-gradient(135deg, #f97316, #ea580c); border-radius: 12px; color: #fff;">
+                    <div style="font-size: 2rem; font-weight: 700; margin-bottom: 5px;">19</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">协管员端界面</div>
+                </div>
+                <div style="flex: 1; min-width: 150px; padding: 20px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-radius: 12px; color: #fff;">
+                    <div style="font-size: 2rem; font-weight: 700; margin-bottom: 5px;">5</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">归档界面</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; font-size: 1.2rem; font-weight: 600; color: #1e293b;">
+                总计：<span style="color: #3b82f6; font-size: 2rem;">59</span> 个页面
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后添加一些交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 为iframe添加加载状态
+            const iframes = document.querySelectorAll('.prototype-iframe');
+            iframes.forEach(iframe => {
+                iframe.addEventListener('load', function() {
+                    console.log('iframe加载完成:', this.src);
+                });
+            });
+
+            // 添加滚动动画效果
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // 观察所有原型项
+            const prototypeItems = document.querySelectorAll('.prototype-item');
+            prototypeItems.forEach(item => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                item.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(item);
+            });
+        });
+    </script>
+</body>
+</html>

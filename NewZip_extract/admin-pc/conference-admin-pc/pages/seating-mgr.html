@@ -1,0 +1,4789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能排座系统 - 智能会议系统</title>
+
+    <!-- 基础样式系统 -->
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+
+    <!-- 交互增强 -->
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+
+    <!-- 统计卡片标准样式 -->
+    <link rel="stylesheet" href="../css/stat-cards-standard.css">
+
+    <!-- 图标库 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- Vue.js框架 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+
+    <!-- 交互工具库 -->
+    <script src="../js/interaction-utils.js"></script>
+
+    <!-- 特殊功能库 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- 会议上下文 -->
+    <script src="../js/conference-context.js"></script>
+
+    <style>
+        /* ===== 智能排座系统专用样式 ===== */
+
+        /* 页面整体布局 */
+        .page-with-nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-4);
+        }
+
+        /* 卡片内边距标准 */
+        .glass-card {
+            padding: var(--space-5);
+        }
+
+        /* ===== 会场布局选择样式 ===== */
+        .layout-selection {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+
+        @media (max-width: 768px) {
+            .layout-selection {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .layout-option {
+            flex: 1;
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.5);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-2);
+            text-align: center;
+        }
+
+        .layout-option:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .layout-option.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .layout-option i {
+            font-size: var(--font-size-2xl);
+        }
+
+        .layout-option span {
+            font-weight: 600;
+            font-size: var(--font-size-base);
+        }
+
+        .layout-option small {
+            font-size: var(--font-size-xs);
+            opacity: 0.8;
+        }
+
+        /* ===== 参会人员紧凑样式 ===== */
+        .attendee-compact {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-3);
+            margin-bottom: var(--space-3);
+        }
+
+        .attendee-stats {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        .attendee-stats strong {
+            font-size: var(--font-size-lg);
+            color: var(--gray-800);
+        }
+
+        .attendee-actions {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        /* ===== 快捷操作按钮组 ===== */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3);
+        }
+
+        @media (max-width: 640px) {
+            .quick-actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== 辅助安排紧凑列表 ===== */
+        .arrangement-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+
+        .arrangement-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+
+        .arrangement-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary-color);
+        }
+
+        .arrangement-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            flex: 1;
+        }
+
+        .arrangement-info i {
+            font-size: var(--font-size-lg);
+            color: var(--primary-color);
+            width: 24px;
+            text-align: center;
+        }
+
+        .arrangement-name {
+            font-weight: 600;
+            color: var(--gray-800);
+            font-size: var(--font-size-sm);
+        }
+
+        .arrangement-count {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+            margin-left: var(--space-1);
+        }
+
+        .arrangement-actions {
+            display: flex;
+            gap: var(--space-1);
+        }
+
+        .arrangement-bulk-actions {
+            display: flex;
+            gap: var(--space-2);
+            margin-top: var(--space-4);
+        }
+
+        /* ===== 变更历史紧凑样式 ===== */
+        .history-compact {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-3);
+        }
+
+        .history-stats {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        .history-stats strong {
+            font-size: var(--font-size-lg);
+            color: var(--gray-800);
+        }
+
+        .history-actions {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        /* 专用卡片覆盖默认padding */
+        .seating-chart-section,
+        .side-panel > .glass-card {
+            padding: var(--space-5);
+        }
+
+        /* 章节标题 */
+        .section-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        /* 会议状态 - 使用全局变量 */
+        .conference-status {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: var(--space-2);
+        }
+
+        .status-preparing {
+            background: var(--warning-bg);
+            color: var(--warning-color);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .status-ongoing {
+            background: var(--success-bg);
+            color: var(--success-color);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-finished {
+            background: var(--info-bg);
+            color: var(--info-color);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* 页面布局 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--space-5);
+            margin-top: var(--space-5);
+        }
+
+        /* 批量操作工具栏 */
+        .batch-operations {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            background: var(--success-bg);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-4);
+        }
+
+        .batch-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-weight: 500;
+            color: var(--success-color);
+        }
+
+        /* 算法选择器 */
+        .algorithm-select {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            background: var(--white);
+            color: var(--gray-700);
+            font-size: var(--font-size-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .algorithm-select:hover {
+            border-color: var(--primary-color);
+        }
+
+        .algorithm-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.1);
+        }
+
+        /* 座位图容器 */
+        .seating-chart-container {
+            position: relative;
+            min-height: 500px;
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            overflow: auto;
+        }
+
+        /* 舞台 */
+        .stage {
+            background: var(--gradient-primary);
+            color: var(--white);
+            text-align: center;
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-8);
+            font-weight: 600;
+            font-size: var(--font-size-lg);
+            letter-spacing: 0.05em;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* 座位区 */
+        .seating-area {
+            margin-bottom: var(--space-6);
+        }
+
+        .area-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-3) var(--space-4);
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-4);
+            border: 1px solid var(--glass-border);
+        }
+
+        .area-name {
+            font-weight: 600;
+            color: var(--gray-800);
+            font-size: var(--font-size-base);
+        }
+
+        .area-badge {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .area-stats {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        /* 座位行 */
+        .seat-row {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-2);
+        }
+
+        .row-label {
+            min-width: 48px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--gray-500);
+            font-size: var(--font-size-sm);
+        }
+
+        /* 座位 - 优化设计 */
+        .seat {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            position: relative;
+            border: 2px solid var(--gray-200);
+            background: var(--white);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .seat.available {
+            background: var(--white);
+            border-color: var(--gray-200);
+            color: var(--gray-400);
+        }
+
+        .seat.available:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: scale(1.15);
+            box-shadow: var(--shadow-md);
+        }
+
+        .seat.occupied {
+            background: var(--gradient-primary);
+            border-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .seat.vip {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-color: #f5576c;
+            color: var(--white);
+        }
+
+        .seat.reserved {
+            background: var(--info-color);
+            border-color: var(--info-color);
+            color: var(--white);
+        }
+
+        .seat.aisle {
+            background: transparent;
+            border: 2px dashed var(--gray-300);
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+
+        .seat.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.15);
+            transform: scale(1.1);
+        }
+
+        /* 座位提示 */
+        .seat-tooltip {
+            position: absolute;
+            bottom: calc(100% + var(--space-2));
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gray-900);
+            color: var(--white);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            white-space: nowrap;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-fast);
+        }
+
+        .seat:hover .seat-tooltip {
+            opacity: 1;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-16) var(--space-8);
+            color: var(--gray-500);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: var(--space-4);
+            opacity: 0.4;
+            color: var(--gray-400);
+        }
+
+        .empty-state p {
+            margin-bottom: var(--space-6);
+            font-size: var(--font-size-base);
+        }
+
+        /* 加载状态 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--gray-200);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 右侧面板 */
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-5);
+        }
+
+        .side-panel > .glass-card {
+            padding: var(--space-5);
+        }
+
+        .side-panel h3 {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        /* 参会人员列表 */
+        .attendee-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .attendee-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-3);
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+            transition: all var(--transition-fast);
+        }
+
+        .attendee-item:hover {
+            background: var(--gray-100);
+        }
+
+        .attendee-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .attendee-name {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .attendee-dept {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        .attendee-badge {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== Modal弹窗样式 - 使用全局标准 ===== */
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: var(--space-6);
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .large-modal {
+            width: 900px;
+            max-width: 95vw;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-5);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: var(--font-size-xl);
+            color: var(--gray-500);
+            cursor: pointer;
+            padding: var(--space-1);
+            transition: all var(--transition-fast);
+        }
+
+        .close-btn:hover {
+            color: var(--gray-800);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: var(--space-5);
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-3);
+            padding: var(--space-5);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        /* 配置网格 */
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-5);
+            margin-bottom: var(--space-6);
+        }
+
+        .config-section {
+            background: var(--gray-50);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+        }
+
+        .config-section h4 {
+            margin: 0 0 var(--space-4) 0;
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            color: var(--gray-800);
+            padding-bottom: var(--space-2);
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        /* 表单元素 */
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: var(--space-2);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="datetime-local"],
+        .form-group select {
+            width: 100%;
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.1);
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .number-input {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .number-input button {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--gray-300);
+            background: var(--white);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .number-input button:hover {
+            background: var(--gray-100);
+            border-color: var(--primary-color);
+        }
+
+        .number-input input {
+            width: 60px;
+            text-align: center;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            cursor: pointer;
+        }
+
+        .quick-angles {
+            display: flex;
+            gap: var(--space-2);
+            margin-top: var(--space-3);
+        }
+
+        .quick-angles button {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--gray-300);
+            background: var(--white);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .quick-angles button.active {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        /* 预览区域 */
+        .preview-section {
+            margin-top: var(--space-6);
+        }
+
+        .preview-section h4 {
+            margin-bottom: var(--space-4);
+            font-size: var(--font-size-base);
+            font-weight: 600;
+        }
+
+        .area-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-4);
+            background: var(--gray-100);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-4);
+        }
+
+        .preview-row {
+            display: flex;
+            gap: 2px;
+        }
+
+        .preview-seat {
+            width: 20px;
+            height: 20px;
+            border-radius: 2px;
+            background: var(--white);
+            border: 1px solid var(--gray-300);
+        }
+
+        .preview-seat.aisle {
+            background: transparent;
+            border: 1px dashed var(--gray-400);
+        }
+
+        .preview-seat.fixed {
+            background: var(--info-color);
+            border-color: var(--info-color);
+        }
+
+        .preview-seat.vip {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .preview-stats {
+            text-align: center;
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            border: 2px solid var(--border-color);
+            background: white;
+        }
+
+        .seat.available {
+            background: white;
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .seat.available:hover {
+            border-color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .seat.occupied {
+            background: var(--primary-gradient);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .seat.vip {
+            background: var(--accent-gradient);
+            border-color: #f5576c;
+            color: white;
+        }
+
+        .seat.reserved {
+            background: var(--info-gradient);
+            border-color: var(--info-color);
+            color: white;
+        }
+
+        .seat.aisle {
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border-color);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .seat.selected {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(240, 147, 251, 0.3);
+        }
+
+        /* 座位提示 */
+        .seat-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            white-space: nowrap;
+            z-index: 100;
+            display: none;
+        }
+
+        .seat:hover .seat-tooltip {
+            display: block;
+        }
+
+        /* 右侧面板 */
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 统计卡片 */
+        .stats-card {
+            background: var(--glass-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* 参会人员列表 */
+        .attendees-card {
+            background: var(--glass-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .attendee-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .attendee-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+        }
+
+        .attendee-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .attendee-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .attendee-dept {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+        }
+
+        .attendee-badge {
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* 加载状态 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== 座位区配置弹窗样式 ===== */
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .large-modal {
+            width: 900px;
+            max-width: 95vw;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+            color: var(--text-primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: var(--font-size-xl);
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .config-section {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 15px;
+            border-radius: var(--radius-md);
+        }
+
+        .config-section h4 {
+            margin: 0 0 15px 0;
+            font-size: var(--font-size-base);
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 8px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .number-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .number-input button {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: var(--font-size-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .number-input button:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .number-input input {
+            width: 60px;
+            text-align: center;
+        }
+
+        .quick-angles {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quick-angles button {
+            padding: 5px 12px;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: var(--font-size-sm);
+        }
+
+        .quick-angles button.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .angle-preview {
+            margin-top: 15px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: var(--radius-md);
+        }
+
+        .angle-preview i {
+            font-size: var(--font-size-2xl);
+            color: var(--primary-color);
+            transition: transform 0.3s;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .preview-section {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 20px;
+            border-radius: var(--radius-md);
+        }
+
+        .preview-section h4 {
+            margin: 0 0 15px 0;
+            font-size: var(--font-size-base);
+            color: var(--text-primary);
+        }
+
+        .area-preview {
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 20px;
+            background: white;
+            border-radius: var(--radius-md);
+            margin-bottom: 15px;
+            transition: transform 0.3s;
+        }
+
+        .preview-row {
+            display: flex;
+            gap: 3px;
+        }
+
+        .preview-seat {
+            width: 25px;
+            height: 25px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            background: white;
+        }
+
+        .preview-seat.aisle {
+            background: var(--bg-secondary);
+            border-style: dashed;
+        }
+
+        .preview-seat.fixed {
+            border-color: var(--warning-color);
+            border-width: 2px;
+        }
+
+        .preview-seat.vip {
+            background: var(--accent-gradient);
+            color: white;
+            border-color: #f5576c;
+        }
+
+        .preview-stats {
+            text-align: center;
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 算法选择器 */
+        .algorithm-select {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: var(--font-size-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .algorithm-select:hover {
+            border-color: var(--primary-color);
+        }
+
+        .algorithm-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* 批量操作工具栏 */
+        .batch-operations {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--info-gradient);
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .batch-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .batch-operations .toolbar {
+            display: flex;
+            gap: 8px;
+        }
+
+        .batch-operations .btn {
+            padding: 6px 12px;
+            font-size: var(--font-size-sm);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: var(--font-size-sm);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">智能排座系统</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card" v-if="conference">
+            <div>
+                <h2>🪑 智能排座系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="saveData">
+                    <i class="fas fa-save"></i>
+                    保存
+                </button>
+            </div>
+        </div>
+
+        <!-- 加载状态 -->
+        <div class="loading-overlay" v-if="loading">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- 主内容 -->
+        <div v-if="!loading">
+            <!-- 第一步：会场布局选择 -->
+            <div class="glass-card">
+                <h3 class="section-title" style="margin-bottom: var(--space-4);">
+                    <i class="fas fa-th-large"></i>
+                    第一步：选择会场布局
+                </h3>
+                <div class="layout-selection">
+                    <div
+                        class="layout-option"
+                        :class="{ active: selectedLayout === 'normal' }"
+                        @click="selectLayout('normal')"
+                    >
+                        <i class="fas fa-chalkboard"></i>
+                        <span>普通式</span>
+                        <small>标准教室/会议室布局</small>
+                    </div>
+                    <div
+                        class="layout-option"
+                        :class="{ active: selectedLayout === 'utype' }"
+                        @click="selectLayout('utype')"
+                    >
+                        <i class="fas fa-shapes"></i>
+                        <span>U型</span>
+                        <small>U型桌会议布局</small>
+                    </div>
+                    <div
+                        class="layout-option"
+                        :class="{ active: selectedLayout === 'round' }"
+                        @click="selectLayout('round')"
+                    >
+                        <i class="fas fa-circle"></i>
+                        <span>圆形</span>
+                        <small>圆桌会议布局</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主内容区域：左右布局 -->
+            <div class="main-content">
+                <!-- 左侧：座位图 -->
+                <div class="glass-card seating-chart-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            🪑 座位布局
+                        </h2>
+                        <div class="toolbar">
+                            <button class="btn-outline" @click="addArea">
+                                <i class="fas fa-plus"></i>
+                                添加区域
+                            </button>
+                            <select v-model="selectedAlgorithm" class="algorithm-select">
+                                <option value="smart">智能推荐</option>
+                                <option value="department">按部门排座</option>
+                                <option value="position">按职级排座</option>
+                                <option value="zone">按分区排座</option>
+                            </select>
+                            <button class="btn-primary" @click="executeAutoArrange">
+                                <i class="fas fa-magic"></i>
+                                执行排座
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 批量操作工具栏 -->
+                    <div v-if="selectedSeats.length > 0" class="batch-operations">
+                        <div class="batch-info">
+                            <i class="fas fa-check-circle"></i>
+                            已选择 {{ selectedSeats.length }} 个座位
+                        </div>
+                        <div class="toolbar">
+                            <button class="btn-sm btn-outline" @click="clearSelection">
+                                <i class="fas fa-times"></i>
+                                取消选择
+                            </button>
+                            <button class="btn-sm btn-outline" @click="batchClearSeats">
+                                <i class="fas fa-eraser"></i>
+                                清空座位
+                            </button>
+                            <button class="btn-sm btn-outline" @click="fillRemainingSeats">
+                                <i class="fas fa-fill-drip"></i>
+                                填充剩余
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 座位图 -->
+                    <div class="seating-chart-container">
+                        <div class="stage">主席台</div>
+
+                        <div v-for="area in seatingAreas" :key="area.id" class="seating-area">
+                            <div class="area-header">
+                                <span class="area-name">{{ area.name }}</span>
+                                <span v-if="area.type === 'vip'" class="area-badge">VIP</span>
+                                <span class="area-stats">
+                                    {{ getAreaOccupied(area) }}/{{ getAreaCapacity(area) }}
+                                </span>
+                            </div>
+
+                            <div v-for="row in area.rows" :key="row.id" class="seat-row">
+                                <span class="row-label">{{ row.number }}排</span>
+                                <div
+                                    v-for="seat in row.seats"
+                                    :key="seat.id"
+                                    class="seat"
+                                    :class="getSeatClass(seat)"
+                                    @click="handleSeatClick(seat)"
+                                >
+                                    {{ seat.number }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 空状态 -->
+                        <div class="empty-state" v-if="seatingAreas.length === 0">
+                            <i class="fas fa-chair"></i>
+                            <p>尚未创建座位区域</p>
+                            <button class="btn-primary" @click="addArea">
+                                添加第一个区域
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：控制面板 -->
+                <div class="glass-card side-panel">
+                    <!-- 统计信息 -->
+                    <div class="glass-card">
+                        <h3>
+                            <i class="fas fa-chart-bar"></i>
+                            📊 座位统计
+                        </h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-chair"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value">{{ statistics.totalSeats }}</div>
+                                    <div class="stat-label">总座位</div>
+                                </div>
+                            </div>
+                            <div class="stat-card success">
+                                <div class="stat-icon">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value">{{ statistics.assigned }}</div>
+                                    <div class="stat-label">已分配</div>
+                                </div>
+                            </div>
+                            <div class="stat-card warning">
+                                <div class="stat-icon">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value">{{ statistics.vip }}</div>
+                                    <div class="stat-label">VIP</div>
+                                </div>
+                            </div>
+                            <div class="stat-card info">
+                                <div class="stat-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value">{{ statistics.available }}</div>
+                                    <div class="stat-label">可用</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 参会人员 - 紧凑化 -->
+                    <div class="glass-card">
+                        <h3>
+                            <i class="fas fa-users"></i>
+                            👥 参会人员
+                        </h3>
+                        <div class="attendee-compact">
+                            <div class="attendee-stats">
+                                已导入 <strong>{{ attendees.length }}</strong> 人
+                                <span v-if="vipCount > 0">（VIP <strong>{{ vipCount }}</strong> 人）</span>
+                            </div>
+                            <div class="attendee-actions">
+                                <button class="btn-sm btn-outline" @click="importFromRegistration">
+                                    <i class="fas fa-download"></i>
+                                    从报名导入
+                                </button>
+                                <button class="btn-sm btn-primary" @click="showAddAttendee">
+                                    <i class="fas fa-plus"></i>
+                                    添加人员
+                                </button>
+                                <button class="btn-sm btn-outline" @click="$refs.excelFileInput.click()">
+                                    <i class="fas fa-file-excel"></i>
+                                    Excel导入
+                                </button>
+                                <input
+                                    type="file"
+                                    ref="excelFileInput"
+                                    accept=".xlsx,.xls"
+                                    style="display: none;"
+                                    @change="handleExcelImport"
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 快捷操作 - 按钮组布局 -->
+                    <div class="glass-card">
+                        <h3>
+                            <i class="fas fa-bolt"></i>
+                            ⚡ 快捷操作
+                        </h3>
+                        <div class="quick-actions-grid">
+                            <button class="btn-outline" @click="clearAllSeats">
+                                <i class="fas fa-eraser"></i>
+                                清空所有座位
+                            </button>
+                            <button class="btn-outline" @click="generateQRCode">
+                                <i class="fas fa-qrcode"></i>
+                                生成查座二维码
+                            </button>
+                            <button class="btn-outline" @click="exportSeatingChart">
+                                <i class="fas fa-file-export"></i>
+                                导出座位表
+                            </button>
+                            <button class="btn-primary" @click="generateLEDMap">
+                                <i class="fas fa-tv"></i>
+                                LED导示图
+                            </button>
+                        </div>
+                        <hr style="border: none; border-top: 1px solid var(--border-color); margin: var(--space-4) 0;">
+                        <div class="form-group">
+                            <label style="font-size: var(--font-size-sm); color: var(--text-secondary);">
+                                Excel导入模式：
+                            </label>
+                            <select v-model="excelImportMode" style="width: 100%; padding: var(--space-2) var(--space-3); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                                <option value="list">仅导入名单（自动排座）</option>
+                                <option value="seating">导入名单+座位号（所见即所得）</option>
+                            </select>
+                        </div>
+                        <button class="btn-primary" style="width: 100%;" @click="$refs.excelFileInput2.click()">
+                            <i class="fas fa-file-excel"></i>
+                            导入Excel
+                        </button>
+                        <input
+                            type="file"
+                            ref="excelFileInput2"
+                            accept=".xlsx,.xls"
+                            style="display: none;"
+                            @change="handleExcelImport"
+                        >
+                    </div>
+
+                    <!-- 辅助安排 - 紧凑列表 -->
+                    <div class="glass-card">
+                        <h3>
+                            <i class="fas fa-concierge-bell"></i>
+                            🛎️ 辅助安排
+                        </h3>
+                        <div class="arrangement-list">
+                            <!-- 乘车安排 -->
+                            <div class="arrangement-item">
+                                <div class="arrangement-info">
+                                    <i class="fas fa-bus"></i>
+                                    <div>
+                                        <div class="arrangement-name">乘车安排</div>
+                                        <div class="arrangement-count">
+                                            {{ transportList.length > 0 ? `已添加${transportList.length}辆` : '未添加' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="arrangement-actions">
+                                    <button class="btn-sm btn-outline" @click="showTransportModal">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button class="btn-sm btn-outline" @click="autoAssignTransport" v-if="transportList.length > 0">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 住宿安排 -->
+                            <div class="arrangement-item">
+                                <div class="arrangement-info">
+                                    <i class="fas fa-hotel"></i>
+                                    <div>
+                                        <div class="arrangement-name">住宿安排</div>
+                                        <div class="arrangement-count">
+                                            {{ accommodationList.length > 0 ? `已添加${accommodationList.length}间` : '未添加' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="arrangement-actions">
+                                    <button class="btn-sm btn-outline" @click="showAccommodationModal">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button class="btn-sm btn-outline" @click="autoAssignAccommodation" v-if="accommodationList.length > 0">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 讨论室安排 -->
+                            <div class="arrangement-item">
+                                <div class="arrangement-info">
+                                    <i class="fas fa-comments"></i>
+                                    <div>
+                                        <div class="arrangement-name">讨论室</div>
+                                        <div class="arrangement-count">
+                                            {{ discussionList.length > 0 ? `已添加${discussionList.length}间` : '未添加' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="arrangement-actions">
+                                    <button class="btn-sm btn-outline" @click="showDiscussionModal">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button class="btn-sm btn-outline" @click="autoAssignDiscussion" v-if="discussionList.length > 0">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 用餐安排 -->
+                            <div class="arrangement-item">
+                                <div class="arrangement-info">
+                                    <i class="fas fa-utensils"></i>
+                                    <div>
+                                        <div class="arrangement-name">用餐安排</div>
+                                        <div class="arrangement-count">
+                                            {{ diningList.length > 0 ? `已添加${diningList.length}桌` : '未添加' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="arrangement-actions">
+                                    <button class="btn-sm btn-outline" @click="showDiningModal">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button class="btn-sm btn-outline" @click="autoAssignDining" v-if="diningList.length > 0">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 接送机安排 -->
+                            <div class="arrangement-item">
+                                <div class="arrangement-info">
+                                    <i class="fas fa-plane"></i>
+                                    <div>
+                                        <div class="arrangement-name">接送机</div>
+                                        <div class="arrangement-count">
+                                            {{ airportTransferList.length > 0 ? `已添加${airportTransferList.length}班` : '未添加' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="arrangement-actions">
+                                    <button class="btn-sm btn-outline" @click="showAirportTransferModal">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button class="btn-sm btn-outline" @click="autoAssignAirportTransfer" v-if="airportTransferList.length > 0">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="arrangement-bulk-actions">
+                            <button class="btn-primary" style="flex: 1;" @click="autoAssignAllArrangements">
+                                <i class="fas fa-magic"></i>
+                                智能分配所有
+                            </button>
+                            <button class="btn-outline" style="flex: 1;" @click="viewArrangements">
+                                <i class="fas fa-list"></i>
+                                查看分配结果
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 变更历史 - 简化 -->
+                    <div class="glass-card">
+                        <h3>
+                            <i class="fas fa-history"></i>
+                            📋 变更历史
+                        </h3>
+                        <div class="history-compact">
+                            <div class="history-stats">
+                                已记录 <strong>{{ seatChangeHistory.length }}</strong> 次变更
+                            </div>
+                            <div class="history-actions">
+                                <button class="btn-sm btn-outline" @click="viewChangeHistory">
+                                    <i class="fas fa-eye"></i>
+                                    查看历史
+                                </button>
+                                <button class="btn-sm btn-primary" @click="undoLastChange" :disabled="seatChangeHistory.length === 0">
+                                    <i class="fas fa-undo"></i>
+                                    撤销
+                                </button>
+                                <button class="btn-sm btn-outline" @click="exportChangeHistory">
+                                    <i class="fas fa-file-export"></i>
+                                    导出记录
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+
+    <!-- 乘车安排弹窗 -->
+    <div class="modal-overlay" v-if="showTransportModalFlag" @click.self="closeTransportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加车辆</h3>
+                <button class="close-btn" @click="closeTransportModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>车辆名称</label>
+                    <input type="text" v-model="newTransport.name" placeholder="例如：1号车">
+                </div>
+                <div class="form-group">
+                    <label>车辆类型</label>
+                    <select v-model="newTransport.type">
+                        <option value="小车">小车 (4座)</option>
+                        <option value="中巴">中巴 (15座)</option>
+                        <option value="大巴">大巴 (45座)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>车牌号</label>
+                    <input type="text" v-model="newTransport.plateNumber" placeholder="例如：京A12345">
+                </div>
+                <div class="form-group">
+                    <label>出发地</label>
+                    <input type="text" v-model="newTransport.departure" placeholder="例如：会议中心">
+                </div>
+                <div class="form-group">
+                    <label>目的地</label>
+                    <input type="text" v-model="newTransport.destination" placeholder="例如：XX酒店">
+                </div>
+                <div class="form-group">
+                    <label>出发时间</label>
+                    <input type="datetime-local" v-model="newTransport.departureTime">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" @click="closeTransportModal">取消</button>
+                <button class="btn-primary" @click="saveTransport">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 住宿安排弹窗 -->
+    <div class="modal-overlay" v-if="showAccommodationModalFlag" @click.self="closeAccommodationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加房间</h3>
+                <button class="close-btn" @click="closeAccommodationModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>酒店名称</label>
+                    <input type="text" v-model="newAccommodation.hotelName" placeholder="例如：XX酒店">
+                </div>
+                <div class="form-group">
+                    <label>房间号</label>
+                    <input type="text" v-model="newAccommodation.roomNumber" placeholder="例如：301">
+                </div>
+                <div class="form-group">
+                    <label>房间类型</label>
+                    <select v-model="newAccommodation.type">
+                        <option value="单人间">单人间</option>
+                        <option value="标准间">标准间 (双床)</option>
+                        <option value="大床房">大床房</option>
+                        <option value="套房">套房</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>容量</label>
+                    <input type="number" v-model.number="newAccommodation.capacity" min="1" max="10" value="2">
+                </div>
+                <div class="form-group">
+                    <label>入住时间</label>
+                    <input type="datetime-local" v-model="newAccommodation.checkInTime">
+                </div>
+                <div class="form-group">
+                    <label>退房时间</label>
+                    <input type="datetime-local" v-model="newAccommodation.checkOutTime">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" @click="closeAccommodationModal">取消</button>
+                <button class="btn-primary" @click="saveAccommodation">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 讨论室安排弹窗 -->
+    <div class="modal-overlay" v-if="showDiscussionModalFlag" @click.self="closeDiscussionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加讨论室</h3>
+                <button class="close-btn" @click="closeDiscussionModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>讨论室名称</label>
+                    <input type="text" v-model="newDiscussion.name" placeholder="例如：第一讨论室">
+                </div>
+                <div class="form-group">
+                    <label>位置</label>
+                    <input type="text" v-model="newDiscussion.location" placeholder="例如：A栋301">
+                </div>
+                <div class="form-group">
+                    <label>容量</label>
+                    <input type="number" v-model.number="newDiscussion.capacity" min="1" max="100" value="15">
+                </div>
+                <div class="form-group">
+                    <label>开始时间</label>
+                    <input type="datetime-local" v-model="newDiscussion.startTime">
+                </div>
+                <div class="form-group">
+                    <label>结束时间</label>
+                    <input type="datetime-local" v-model="newDiscussion.endTime">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" @click="closeDiscussionModal">取消</button>
+                <button class="btn-primary" @click="saveDiscussion">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用餐安排弹窗 -->
+    <div class="modal-overlay" v-if="showDiningModalFlag" @click.self="closeDiningModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加用餐安排</h3>
+                <button class="close-btn" @click="closeDiningModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>用餐名称</label>
+                    <input type="text" v-model="newDining.name" placeholder="例如：第一桌">
+                </div>
+                <div class="form-group">
+                    <label>用餐类型</label>
+                    <select v-model="newDining.type">
+                        <option value="早餐">早餐</option>
+                        <option value="午餐">午餐</option>
+                        <option value="晚餐">晚餐</option>
+                        <option value="茶歇">茶歇</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>餐桌容量</label>
+                    <input type="number" v-model.number="newDining.capacity" min="1" max="20" value="10">
+                </div>
+                <div class="form-group">
+                    <label>用餐时间</label>
+                    <input type="datetime-local" v-model="newDining.time">
+                </div>
+                <div class="form-group">
+                    <label>用餐地点</label>
+                    <input type="text" v-model="newDining.location" placeholder="例如：宴会厅">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" @click="closeDiningModal">取消</button>
+                <button class="btn-primary" @click="saveDining">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 接送机安排弹窗 -->
+    <div class="modal-overlay" v-if="showAirportTransferModalFlag" @click.self="closeAirportTransferModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加接送机安排</h3>
+                <button class="close-btn" @click="closeAirportTransferModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>安排名称</label>
+                    <input type="text" v-model="newAirportTransfer.name" placeholder="例如：第一班">
+                </div>
+                <div class="form-group">
+                    <label>接送类型</label>
+                    <select v-model="newAirportTransfer.type">
+                        <option value="接机">接机</option>
+                        <option value="送机">送机</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>航班号</label>
+                    <input type="text" v-model="newAirportTransfer.flightNumber" placeholder="例如：CA1234">
+                </div>
+                <div class="form-group">
+                    <label>车辆容量</label>
+                    <input type="number" v-model.number="newAirportTransfer.capacity" min="1" max="50" value="4">
+                </div>
+                <div class="form-group">
+                    <label>时间</label>
+                    <input type="datetime-local" v-model="newAirportTransfer.time">
+                </div>
+                <div class="form-group">
+                    <label>机场</label>
+                    <input type="text" v-model="newAirportTransfer.fromAirport" placeholder="例如：首都国际机场">
+                </div>
+                <div class="form-group">
+                    <label>目的地</label>
+                    <input type="text" v-model="newAirportTransfer.toDestination" placeholder="例如：XX酒店">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" @click="closeAirportTransferModal">取消</button>
+                <button class="btn-primary" @click="saveAirportTransfer">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 座位区配置弹窗 -->
+    <div class="modal-overlay" v-if="showAreaConfigModal" @click.self="closeAreaConfigModal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3>{{ isEditMode ? '编辑座位区' : '创建座位区' }}</h3>
+                <button class="close-btn" @click="closeAreaConfigModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="config-grid">
+                    <!-- 基本信息 -->
+                    <div class="config-section">
+                        <h4>基本信息</h4>
+                        <div class="form-group">
+                            <label>区域名称 *</label>
+                            <input type="text" v-model="areaConfig.name" placeholder="例如：A区 (VIP区域)">
+                        </div>
+                        <div class="form-group">
+                            <label>区域类型</label>
+                            <select v-model="areaConfig.type">
+                                <option value="regular">普通区域</option>
+                                <option value="vip">VIP区域</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 会议类型 -->
+                    <div class="config-section">
+                        <h4>会议类型</h4>
+                        <div class="form-group">
+                            <label>会场布局</label>
+                            <select v-model="areaConfig.venueType">
+                                <option value="normal">普通式（教室式）</option>
+                                <option value="ushape">U型布局</option>
+                                <option value="round">圆桌布局</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 尺寸配置 -->
+                    <div class="config-section">
+                        <h4>尺寸配置</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>行数 (1-20)</label>
+                                <div class="number-input">
+                                    <button @click="adjustRows(-1)">-</button>
+                                    <input type="number" v-model.number="areaConfig.rows" min="1" max="20">
+                                    <button @click="adjustRows(1)">+</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>列数 (1-30)</label>
+                                <div class="number-input">
+                                    <button @click="adjustCols(-1)">-</button>
+                                    <input type="number" v-model.number="areaConfig.cols" min="1" max="30">
+                                    <button @click="adjustCols(1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 角度配置 -->
+                    <div class="config-section">
+                        <h4>角度配置</h4>
+                        <div class="form-group">
+                            <label>旋转角度: {{ areaConfig.angle }}°</label>
+                            <input type="range" v-model.number="areaConfig.angle" min="0" max="360" step="15">
+                            <div class="quick-angles">
+                                <button
+                                    v-for="angle in [0, 45, 90, 180]"
+                                    :key="angle"
+                                    @click="areaConfig.angle = angle"
+                                    :class="{ active: areaConfig.angle === angle }"
+                                >
+                                    {{ angle }}°
+                                </button>
+                            </div>
+                            <div class="angle-preview">
+                                <div :style="{ transform: `rotate(${areaConfig.angle}deg)` }">
+                                    <i class="fas fa-chair"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 排座方式 -->
+                    <div class="config-section">
+                        <h4>排座方式</h4>
+                        <div class="form-group">
+                            <label>布局方向</label>
+                            <select v-model="areaConfig.layoutDirection">
+                                <option value="horizontal">横向排列</option>
+                                <option value="vertical">纵向排列</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 过道配置 -->
+                    <div class="config-section">
+                        <h4>过道配置</h4>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" v-model="areaConfig.hasAisle">
+                                <span>启用过道</span>
+                            </label>
+                        </div>
+                        <template v-if="areaConfig.hasAisle">
+                            <div class="form-group">
+                                <label>过道位置</label>
+                                <select v-model="areaConfig.aislePosition">
+                                    <option value="left">左侧</option>
+                                    <option value="center">中间</option>
+                                    <option value="right">右侧</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>过道宽度 (列数)</label>
+                                <input type="number" v-model.number="areaConfig.aisleWidth" min="1" max="5">
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- 固定座位 -->
+                    <div class="config-section">
+                        <h4>固定座位</h4>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" v-model="areaConfig.hasFixedSeats">
+                                <span>设置固定座位</span>
+                            </label>
+                        </div>
+                        <template v-if="areaConfig.hasFixedSeats">
+                            <div class="form-group">
+                                <label>固定座位位置</label>
+                                <input
+                                    type="text"
+                                    v-model="areaConfig.fixedSeatsPattern"
+                                    placeholder="例如: 1排1号, 1排2号, 2排1-5号"
+                                >
+                                <small>格式：单座位用逗号分隔，范围用连字符</small>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- 预览 -->
+                <div class="preview-section">
+                    <h4>布局预览</h4>
+                    <div class="area-preview" :style="{ transform: `rotate(${areaConfig.angle}deg)` }">
+                        <div
+                            v-for="row in previewRows"
+                            :key="row.number"
+                            class="preview-row"
+                        >
+                            <div
+                                v-for="seat in row.seats"
+                                :key="seat.id"
+                                class="preview-seat"
+                                :class="{
+                                    'aisle': seat.isAisle,
+                                    'fixed': seat.isFixed,
+                                    'vip': areaConfig.type === 'vip' && row.number === 1
+                                }"
+                            >
+                                {{ seat.isAisle ? '' : seat.number }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="preview-stats">
+                        总座位: {{ previewStats.total }} |
+                        实际: {{ previewStats.actual }} |
+                        过道: {{ previewStats.aisle }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-outline" @click="closeAreaConfigModal">取消</button>
+                <button class="btn-primary" @click="saveAreaConfig">
+                    {{ isEditMode ? '保存修改' : '创建座位区' }}
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, computed, onMounted, watch } = Vue;
+
+        createApp({
+            setup() {
+                // ===== 数据状态 =====
+                const loading = ref(false);
+                const conference = ref(null);
+                const seatingAreas = ref([]);
+                const attendees = ref([]);
+                const selectedSeats = ref([]);
+
+                // 会场布局类型
+                const layoutTypes = [
+                    { id: 'normal', name: '普通式', icon: 'fas fa-chalkboard', desc: '标准教室/会议室布局' },
+                    { id: 'utype', name: 'U型', icon: 'fas fa-shapes', desc: 'U型桌会议布局' },
+                    { id: 'round', name: '圆形', icon: 'fas fa-circle', desc: '圆桌会议布局' }
+                ];
+                const selectedLayout = ref('normal');
+
+                // 统计信息
+                const statistics = reactive({
+                    totalSeats: 0,
+                    assigned: 0,
+                    vip: 0,
+                    available: 0
+                });
+
+                // 座位区配置弹窗状态
+                const showAreaConfigModal = ref(false);
+                const isEditMode = ref(false);
+                const editingAreaId = ref(null);
+
+                // 排座算法选择
+                const selectedAlgorithm = ref('smart');
+
+                // Excel导入模式
+                const excelImportMode = ref('list');
+
+                // 辅助安排数据
+                const transportList = ref([]);
+                const accommodationList = ref([]);
+                const discussionList = ref([]);
+                const diningList = ref([]);  // 用餐安排
+                const airportTransferList = ref([]);  // 接送机安排
+
+                // 座位变更历史记录
+                const seatChangeHistory = ref([]);
+
+                // 辅助安排弹窗状态
+
+                // 辅助安排弹窗状态
+                const showTransportModalFlag = ref(false);
+                const showAccommodationModalFlag = ref(false);
+                const showDiscussionModalFlag = ref(false);
+
+                // 新建辅助安排对象
+                const newTransport = reactive({
+                    name: '',
+                    type: '大巴',
+                    plateNumber: '',
+                    departure: '',
+                    destination: '',
+                    departureTime: '',
+                    capacity: 45,
+                    assignedCount: 0,
+                    passengers: []
+                });
+
+                const newAccommodation = reactive({
+                    hotelName: '',
+                    roomNumber: '',
+                    type: '标准间',
+                    capacity: 2,
+                    assignedCount: 0,
+                    occupants: [],
+                    checkInTime: '',
+                    checkOutTime: ''
+                });
+
+                const newDiscussion = reactive({
+                    name: '',
+                    location: '',
+                    capacity: 15,
+                    assignedCount: 0,
+                    groups: [],
+                    startTime: '',
+                    endTime: ''
+                });
+
+                // 座位区配置对象
+                const areaConfig = reactive({
+                    name: '',
+                    type: 'regular',
+                    venueType: 'normal',
+                    rows: 10,
+                    cols: 15,
+                    angle: 0,
+                    layoutDirection: 'horizontal',
+                    hasAisle: false,
+                    aislePosition: 'center',
+                    aisleWidth: 1,
+                    hasFixedSeats: false,
+                    fixedSeatsPattern: ''
+                });
+
+                // ===== 会议上下文集成 =====
+                const initializeConference = async () => {
+                    try {
+                        loading.value = true;
+
+                        // 等待会议上下文初始化
+                        if (window.conferenceContext) {
+                            // 尝试从URL获取会议ID
+                            const urlParams = new URLSearchParams(window.location.search);
+                            let conferenceId = urlParams.get('conferenceId');
+
+                            // 如果URL中没有，尝试从已加载的会议上下文获取
+                            if (!conferenceId && window.conferenceContext.currentConference) {
+                                conferenceId = window.conferenceContext.currentConference.id;
+                                console.log('使用已加载的会议ID:', conferenceId);
+                            }
+
+                            // 如果还是没有，尝试从localStorage获取
+                            if (!conferenceId) {
+                                conferenceId = localStorage.getItem('currentConferenceId');
+                            }
+
+                            // 如果还是没有，使用默认会议ID
+                            if (!conferenceId) {
+                                conferenceId = 'conf_20240615_001';
+                                console.warn('未找到会议ID，使用默认ID:', conferenceId);
+                            }
+
+                            // 如果会议ID与当前加载的不同，重新加载
+                            if (window.conferenceContext.currentConference?.id !== conferenceId) {
+                                await window.conferenceContext.loadConference(conferenceId);
+                            }
+
+                            conference.value = window.conferenceContext.getConferenceData();
+
+                            if (!conference.value) {
+                                console.error('会议数据加载失败，使用默认会议数据');
+                                // 创建默认会议数据
+                                conference.value = {
+                                    id: conferenceId,
+                                    name: '2024年度技术峰会',
+                                    status: 'preparing',
+                                    location: { venue: '北京国际会议中心' }
+                                };
+                            }
+
+                            console.log('会议数据加载成功:', conference.value);
+
+                            // 初始化座位数据
+                            await loadSeatingData();
+                        } else {
+                            console.warn('会议上下文未初始化，创建默认会议数据');
+                            // 创建默认会议数据
+                            conference.value = {
+                                id: 'conf_20240615_001',
+                                name: '2024年度技术峰会',
+                                status: 'preparing',
+                                location: { venue: '北京国际会议中心' }
+                            };
+
+                            // 初始化座位数据
+                            await loadSeatingData();
+                        }
+                    } catch (error) {
+                        console.error('初始化会议失败:', error);
+                        // 使用默认会议数据
+                        conference.value = {
+                            id: 'conf_20240615_001',
+                            name: '2024年度技术峰会',
+                            status: 'preparing',
+                            location: { venue: '北京国际会议中心' }
+                        };
+
+                        // 初始化座位数据
+                        await loadSeatingData();
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                // ===== 数据加载 =====
+                const loadSeatingData = async () => {
+                    try {
+                        // 从localStorage加载座位数据
+                        const seatingKey = `seating_${conference.value.id}`;
+                        const savedData = localStorage.getItem(seatingKey);
+
+                        if (savedData) {
+                            const data = JSON.parse(savedData);
+                            seatingAreas.value = data.seatingAreas || [];
+                            attendees.value = data.attendees || [];
+
+                            // 加载辅助安排数据
+                            if (data.arrangements) {
+                                transportList.value = data.arrangements.transport || [];
+                                accommodationList.value = data.arrangements.accommodation || [];
+                                discussionList.value = data.arrangements.discussion || [];
+                            }
+                        } else {
+                            // 初始化默认数据
+                            initializeDefaultData();
+                        }
+
+                        // 加载变更历史
+                        const historyKey = `seat_history_${conference.value.id}`;
+                        const savedHistory = localStorage.getItem(historyKey);
+                        if (savedHistory) {
+                            seatChangeHistory.value = JSON.parse(savedHistory);
+                        }
+
+                        updateStatistics();
+                    } catch (error) {
+                        console.error('加载座位数据失败:', error);
+                    }
+                };
+
+                // 初始化默认数据
+                const initializeDefaultData = () => {
+                    seatingAreas.value = [
+                        createSeatingArea('area_a', 'A区 (VIP区)', 'vip', 5, 10, 0),
+                        createSeatingArea('area_b', 'B区', 'regular', 10, 15, 0),
+                        createSeatingArea('area_c', 'C区', 'regular', 10, 15, 0)
+                    ];
+                };
+
+                // 创建座位区域
+                const createSeatingArea = (id, name, type, rows, cols, angle, venueType = 'normal', layoutDirection = 'horizontal', aisleConfig = null, fixedSeatsPattern = null) => {
+                    const seatRows = [];
+
+                    for (let r = 1; r <= rows; r++) {
+                        const seats = [];
+
+                        for (let c = 1; c <= cols; c++) {
+                            // 判断是否是过道
+                            let isAisle = false;
+                            if (aisleConfig) {
+                                const { position, width } = aisleConfig;
+                                if (position === 'left' && c <= width) {
+                                    isAisle = true;
+                                } else if (position === 'right' && c > cols - width) {
+                                    isAisle = true;
+                                } else if (position === 'center') {
+                                    const centerStart = Math.floor(cols / 2) - Math.floor(width / 2);
+                                    const centerEnd = Math.floor(cols / 2) + Math.floor(width / 2);
+                                    if (c > centerStart && c <= centerEnd) {
+                                        isAisle = true;
+                                    }
+                                }
+                            }
+
+                            // 计算座位坐标（考虑角度）
+                            const seatX = calculateX(r, c, angle);
+                            const seatY = calculateY(r, c, angle);
+
+                            seats.push({
+                                id: `${id}_${r}_${c}`,
+                                number: c,
+                                row: r,
+                                col: c,
+                                x: seatX,
+                                y: seatY,
+                                status: isAisle ? 'aisle' : 'available',
+                                type: type === 'vip' && r === 1 ? 'vip' : 'regular',
+                                isAisle: isAisle,
+                                occupant: null
+                            });
+                        }
+
+                        seatRows.push({
+                            id: `${id}_row_${r}`,
+                            number: r,
+                            seats: seats
+                        });
+                    }
+
+                    // 应用固定座位
+                    if (fixedSeatsPattern) {
+                        applyFixedSeatsToRows(seatRows, fixedSeatsPattern);
+                    }
+
+                    return {
+                        id,
+                        name,
+                        type,
+                        venueType,
+                        layoutDirection,
+                        angle: angle || 0,
+                        rows: seatRows
+                    };
+                };
+
+                // 计算座位X坐标（考虑角度）
+                const calculateX = (row, col, angle) => {
+                    if (!angle || angle === 0) return col;
+                    const radian = (angle * Math.PI) / 180;
+                    return col * Math.cos(radian) - row * Math.sin(radian);
+                };
+
+                // 计算座位Y坐标（考虑角度）
+                const calculateY = (row, col, angle) => {
+                    if (!angle || angle === 0) return row;
+                    const radian = (angle * Math.PI) / 180;
+                    return col * Math.sin(radian) + row * Math.cos(radian);
+                };
+
+                // 解析固定座位模式并应用到行
+                const applyFixedSeatsToRows = (rows, pattern) => {
+                    if (!pattern) return;
+
+                    const parts = pattern.split(',').map(p => p.trim());
+                    parts.forEach(part => {
+                        const match = part.match(/(\d+)排(\d+)(?:-(\d+))?号/);
+                        if (match) {
+                            const rowNum = parseInt(match[1]);
+                            const startCol = parseInt(match[2]);
+                            const endCol = match[3] ? parseInt(match[3]) : startCol;
+
+                            const row = rows.find(r => r.number === rowNum);
+                            if (row && row.seats) {
+                                for (let col = startCol; col <= endCol; col++) {
+                                    const seat = row.seats.find(s => s.number === col);
+                                    if (seat && !seat.isAisle) {
+                                        seat.isReserved = true;
+                                        seat.status = 'reserved';
+                                    }
+                                }
+                            }
+                        }
+                    });
+                };
+
+                // ===== 统计更新 =====
+                const updateStatistics = () => {
+                    let totalSeats = 0;
+                    let assigned = 0;
+                    let vip = 0;
+
+                    seatingAreas.value.forEach(area => {
+                        if (area && area.rows) {
+                            area.rows.forEach(row => {
+                                if (row && row.seats) {
+                                    row.seats.forEach(seat => {
+                                        if (seat) {
+                                            totalSeats++;
+                                            if (seat.status === 'occupied') {
+                                                assigned++;
+                                                if (seat.type === 'vip') {
+                                                    vip++;
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+
+                    statistics.totalSeats = totalSeats;
+                    statistics.assigned = assigned;
+                    statistics.vip = vip;
+                    statistics.available = totalSeats - assigned;
+                };
+
+                // ===== 座位操作 =====
+                const getSeatClass = (seat) => {
+                    if (!seat) return '';
+                    const classes = [seat.status || 'available'];
+                    if (seat.type === 'vip') classes.push('vip');
+                    if (seat.isReserved) classes.push('reserved');
+                    if (seat.isAisle) classes.push('aisle');
+                    if (selectedSeats.value.find(s => s && s.id === seat.id)) {
+                        classes.push('selected');
+                    }
+                    return classes.join(' ');
+                };
+
+                const handleSeatClick = (seat) => {
+                    if (!seat || seat.isAisle) return;
+
+                    // 如果已经选中了座位
+                    if (selectedSeats.value.length > 0) {
+                        const firstSelected = selectedSeats.value[0];
+
+                        if (firstSelected.id === seat.id) {
+                            // 点击同一个座位，取消选择
+                            selectedSeats.value = [];
+                            return;
+                        }
+
+                        if (seat.status === 'available') {
+                            // 移动参会者到新座位
+                            if (confirm(`将 ${firstSelected.occupant?.name || '参会者'} 移动到此座位？`)) {
+                                moveAttendeeToSeat(firstSelected, seat);
+                                selectedSeats.value = [];
+                            }
+                        } else if (seat.status === 'occupied') {
+                            // 交换两个参会者的座位
+                            if (confirm(`交换 ${firstSelected.occupant?.name} 和 ${seat.occupant?.name} 的座位？`)) {
+                                swapSeats(firstSelected, seat);
+                                selectedSeats.value = [];
+                            }
+                        }
+                    } else {
+                        // 选择座位
+                        if (seat.status === 'occupied' || seat.status === 'reserved') {
+                            selectedSeats.value = [seat];
+                            const occupant = seat.occupant;
+                            console.log(`已选择：${occupant?.name} ${seat.row}排${seat.number}号`);
+                        } else if (seat.status === 'available') {
+                            // 空座位，可以选择分配某人
+                            const action = prompt('操作：\n1. 输入参会者姓名进行分配\n2. 输入 "clear" 清空座位\n3. 取消');
+                            if (action && action !== 'clear') {
+                                const attendee = attendees.value.find(a => a.name === action);
+                                if (attendee) {
+                                    assignAttendeeToSeat(attendee, seat);
+                                } else {
+                                    console.warn('未找到该参会者');
+                                }
+                            }
+                        }
+                    }
+                };
+
+                // 移动参会者到新座位
+                const moveAttendeeToSeat = (fromSeat, toSeat) => {
+                    if (!fromSeat.occupant) return;
+
+                    const attendee = fromSeat.occupant;
+                    const oldPosition = `${fromSeat.row}排${fromSeat.number}号`;
+                    const newPosition = `${toSeat.row}排${toSeat.number}号`;
+
+                    // 记录变更历史
+                    recordSeatChange({
+                        type: 'move',
+                        attendeeName: attendee.name,
+                        oldPosition: oldPosition,
+                        newPosition: newPosition,
+                        reason: '手动调整',
+                        timestamp: new Date().toLocaleString()
+                    });
+
+                    // 清空原座位
+                    fromSeat.status = 'available';
+                    fromSeat.occupant = null;
+                    if (fromSeat.type === 'vip') fromSeat.type = 'regular';
+
+                    // 分配到新座位
+                    toSeat.status = 'occupied';
+                    toSeat.occupant = attendee;
+                    if (attendee.isVip) toSeat.type = 'vip';
+
+                    saveData();
+                    updateStatistics();
+                };
+
+                // 交换两个座位
+                const swapSeats = (seat1, seat2) => {
+                    if (!seat1.occupant || !seat2.occupant) return;
+
+                    const temp = seat1.occupant;
+                    seat1.occupant = seat2.occupant;
+                    seat2.occupant = temp;
+
+                    saveData();
+                };
+
+                // 将参会者分配到座位
+                const assignAttendeeToSeat = (attendee, seat) => {
+                    seat.status = 'occupied';
+                    seat.occupant = attendee;
+                    if (attendee.isVip) seat.type = 'vip';
+
+                    saveData();
+                    updateStatistics();
+                };
+
+                // 清除选择
+                const clearSelection = () => {
+                    selectedSeats.value = [];
+                };
+
+                // 批量清空座位
+                const batchClearSeats = () => {
+                    if (selectedSeats.value.length === 0) {
+                        console.warn('请先选择座位');
+                        return;
+                    }
+
+                    if (!confirm(`确定要清空 ${selectedSeats.value.length} 个座位吗？`)) {
+                        return;
+                    }
+
+                    selectedSeats.value.forEach(seat => {
+                        if (seat && seat.occupant) {
+                            // 记录变更历史
+                            recordSeatChange({
+                                type: 'clear',
+                                attendeeName: seat.occupant.name,
+                                oldPosition: `${seat.row}排${seat.number}号`,
+                                newPosition: '（已清空）',
+                                reason: '批量清空',
+                                timestamp: new Date().toLocaleString()
+                            });
+
+                            seat.status = 'available';
+                            seat.occupant = null;
+                            if (seat.type === 'vip') seat.type = 'regular';
+                        }
+                    });
+
+                    saveData();
+                    updateStatistics();
+                    selectedSeats.value = [];
+                };
+
+                // 填充剩余座位
+                const fillRemainingSeats = async () => {
+                    // 获取未分配的参会者
+                    const unassignedAttendees = attendees.value.filter(att => {
+                        // 检查参会者是否已分配座位
+                        for (const area of seatingAreas.value) {
+                            if (area && area.rows) {
+                                for (const row of area.rows) {
+                                    if (row && row.seats) {
+                                        for (const seat of row.seats) {
+                                            if (seat && seat.occupant && seat.occupant.id === att.id) {
+                                                return false; // 已分配
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return true; // 未分配
+                    });
+
+                    if (unassignedAttendees.length === 0) {
+                        console.log('所有参会者都已分配座位');
+                        return;
+                    }
+
+                    // 获取所有可用座位
+                    const availableSeats = [];
+                    for (const area of seatingAreas.value) {
+                        if (area && area.rows) {
+                            for (const row of area.rows) {
+                                if (row && row.seats) {
+                                    for (const seat of row.seats) {
+                                        if (seat && seat.status === 'available' && !seat.isAisle) {
+                                            availableSeats.push(seat);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (availableSeats.length === 0) {
+                        console.warn('没有可用座位');
+                        return;
+                    }
+
+                    // 分配参会者到座位
+                    const fillCount = Math.min(unassignedAttendees.length, availableSeats.length);
+                    for (let i = 0; i < fillCount; i++) {
+                        const attendee = unassignedAttendees[i];
+                        const seat = availableSeats[i];
+
+                        seat.status = 'occupied';
+                        seat.occupant = attendee;
+                        if (attendee.isVip) seat.type = 'vip';
+                    }
+
+                    saveData();
+                    updateStatistics();
+
+                    console.log(`成功填充 ${fillCount} 个座位`);
+                };
+
+                // 记录座位变更
+                const recordSeatChange = (change) => {
+                    const record = {
+                        id: `change_${Date.now()}`,
+                        ...change
+                    };
+                    seatChangeHistory.value.push(record);
+
+                    // 保存到localStorage
+                    const historyKey = `seat_history_${conference.value.id}`;
+                    localStorage.setItem(historyKey, JSON.stringify(seatChangeHistory.value));
+                };
+
+                // 查看变更历史
+                const viewChangeHistory = () => {
+                    if (seatChangeHistory.value.length === 0) {
+                        console.log('暂无座位变更记录');
+                        return;
+                    }
+
+                    let history = '座位变更历史记录\n\n';
+                    seatChangeHistory.value.forEach((record, index) => {
+                        history += `${index + 1}. ${record.timestamp}\n`;
+                        history += `   操作: ${record.type === 'move' ? '移动' : record.type === 'clear' ? '清空' : '分配'}\n`;
+                        history += `   人员: ${record.attendeeName}\n`;
+                        history += `   从: ${record.oldPosition}\n`;
+                        history += `   到: ${record.newPosition}\n`;
+                        history += `   原因: ${record.reason}\n`;
+                        history += '\n';
+                    });
+
+                    console.log(history);
+                };
+
+                // 撤销最后一次变更
+                const undoLastChange = () => {
+                    if (seatChangeHistory.value.length === 0) {
+                        console.warn('没有可撤销的变更记录');
+                        return;
+                    }
+
+                    const lastChange = seatChangeHistory.value[seatChangeHistory.value.length - 1];
+
+                    if (!confirm(`确定要撤销最后一次变更吗？\n\n${lastChange.attendeeName}: ${lastChange.oldPosition} → ${lastChange.newPosition}`)) {
+                        return;
+                    }
+
+                    // 移除最后一条记录
+                    seatChangeHistory.value.pop();
+
+                    // 注意：这里简化了撤销逻辑，实际应该保存变更前的状态
+                    // 在实际应用中，需要保存每个座位变更前的完整状态
+                    console.log('撤销操作已记录（需要实现完整的状态恢复功能）');
+
+                    // 保存到localStorage
+                    const historyKey = `seat_history_${conference.value.id}`;
+                    localStorage.setItem(historyKey, JSON.stringify(seatChangeHistory.value));
+                };
+
+                // 导出变更历史
+                const exportChangeHistory = () => {
+                    if (seatChangeHistory.value.length === 0) {
+                        console.warn('暂无变更记录可导出');
+                        return;
+                    }
+
+                    // 导出为Excel
+                    const excelData = [
+                        ['变更时间', '操作类型', '人员姓名', '原座位', '新座位', '变更原因']
+                    ];
+
+                    seatChangeHistory.value.forEach(record => {
+                        excelData.push([
+                            record.timestamp,
+                            record.type === 'move' ? '移动' : record.type === 'clear' ? '清空' : '分配',
+                            record.attendeeName,
+                            record.oldPosition,
+                            record.newPosition,
+                            record.reason
+                        ]);
+                    });
+
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.aoa_to_sheet(excelData);
+                    XLSX.utils.book_append_sheet(wb, ws, '变更历史');
+
+                    const fileName = `${conference.value.name}_座位变更历史_${Date.now()}.xlsx`;
+                    XLSX.writeFile(wb, fileName);
+
+                    console.log('变更历史已导出');
+                };
+
+                // ===== 会场布局选择 =====
+                const selectLayout = (layoutType) => {
+                    selectedLayout.value = layoutType;
+
+                    // 根据选择的布局类型自动创建初始座位布局
+                    createInitialLayout(layoutType);
+                };
+
+                const createInitialLayout = (layoutType) => {
+                    let config = {};
+
+                    switch (layoutType) {
+                        case 'normal':
+                            // 普通式：标准教室布局
+                            config = {
+                                name: '普通座位区',
+                                type: 'regular',
+                                venueType: 'normal',
+                                rows: 8,
+                                cols: 12,
+                                angle: 0,
+                                layoutDirection: 'horizontal',
+                                hasAisle: true,
+                                aislePosition: 'center',
+                                aisleWidth: 1,
+                                hasFixedSeats: false
+                            };
+                            break;
+                        case 'utype':
+                            // U型布局
+                            config = {
+                                name: 'U型座位区',
+                                type: 'regular',
+                                venueType: 'ushape',
+                                rows: 3,
+                                cols: 15,
+                                angle: 0,
+                                layoutDirection: 'horizontal',
+                                hasAisle: false,
+                                hasFixedSeats: false
+                            };
+                            break;
+                        case 'round':
+                            // 圆桌布局
+                            config = {
+                                name: '圆桌座位区',
+                                type: 'regular',
+                                venueType: 'round',
+                                rows: 4,
+                                cols: 10,
+                                angle: 0,
+                                layoutDirection: 'horizontal',
+                                hasAisle: true,
+                                aislePosition: 'center',
+                                aisleWidth: 1,
+                                hasFixedSeats: false
+                            };
+                            break;
+                    }
+
+                    // 创建座位区
+                    if (config.name) {
+                        const newArea = createSeatingArea(
+                            `area_${Date.now()}`,
+                            config.name,
+                            config.type,
+                            config.rows,
+                            config.cols,
+                            config.angle,
+                            config.venueType,
+                            config.layoutDirection,
+                            config.hasAisle ? { position: config.aislePosition, width: config.aisleWidth } : null,
+                            config.hasFixedSeats ? '' : null
+                        );
+                        seatingAreas.value = [newArea];
+                        updateStatistics();
+
+                        // 提示用户
+                        console.log(`已创建${layoutTypes.find(l => l.id === layoutType)?.name || ''}布局`);
+                    }
+                };
+
+                // ===== 区域操作 =====
+
+                // 打开创建座位区弹窗
+                const addArea = () => {
+                    isEditMode.value = false;
+                    editingAreaId.value = null;
+                    // 重置配置
+                    Object.assign(areaConfig, {
+                        name: '',
+                        type: 'regular',
+                        venueType: 'normal',
+                        rows: 10,
+                        cols: 15,
+                        angle: 0,
+                        layoutDirection: 'horizontal',
+                        hasAisle: false,
+                        aislePosition: 'center',
+                        aisleWidth: 1,
+                        hasFixedSeats: false,
+                        fixedSeatsPattern: ''
+                    });
+                    showAreaConfigModal.value = true;
+                };
+
+                // 关闭配置弹窗
+                const closeAreaConfigModal = () => {
+                    showAreaConfigModal.value = false;
+                };
+
+                // 调整行数
+                const adjustRows = (delta) => {
+                    const newValue = areaConfig.rows + delta;
+                    if (newValue >= 1 && newValue <= 20) {
+                        areaConfig.rows = newValue;
+                    }
+                };
+
+                // 调整列数
+                const adjustCols = (delta) => {
+                    const newValue = areaConfig.cols + delta;
+                    if (newValue >= 1 && newValue <= 30) {
+                        areaConfig.cols = newValue;
+                    }
+                };
+
+                // ===== 计算属性 =====
+                // VIP人数统计
+                const vipCount = computed(() => {
+                    return attendees.value.filter(a => a.isVip).length;
+                });
+
+                // 生成预览行
+                const previewRows = computed(() => {
+                    if (!areaConfig.rows || !areaConfig.cols) return [];
+
+                    const rows = [];
+                    for (let r = 1; r <= areaConfig.rows; r++) {
+                        const seats = [];
+                        for (let c = 1; c <= areaConfig.cols; c++) {
+                            const isAisle = areaConfig.hasAisle && (
+                                (areaConfig.aislePosition === 'left' && c <= areaConfig.aisleWidth) ||
+                                (areaConfig.aislePosition === 'right' && c > areaConfig.cols - areaConfig.aisleWidth) ||
+                                (areaConfig.aislePosition === 'center' &&
+                                 c > Math.floor(areaConfig.cols / 2) - Math.floor(areaConfig.aisleWidth / 2) &&
+                                 c <= Math.floor(areaConfig.cols / 2) + Math.floor(areaConfig.aisleWidth / 2))
+                            );
+
+                            seats.push({
+                                id: `preview_${r}_${c}`,
+                                number: c,
+                                row: r,
+                                isAisle: isAisle,
+                                isFixed: false
+                            });
+                        }
+                        rows.push({
+                            number: r,
+                            seats: seats
+                        });
+                    }
+
+                    // 应用固定座位
+                    if (areaConfig.hasFixedSeats && areaConfig.fixedSeatsPattern) {
+                        applyFixedSeatsToPreview(rows, areaConfig.fixedSeatsPattern);
+                    }
+
+                    return rows;
+                });
+
+                // 解析固定座位模式并应用到预览
+                const applyFixedSeatsToPreview = (rows, pattern) => {
+                    if (!pattern) return;
+
+                    const parts = pattern.split(',').map(p => p.trim());
+                    parts.forEach(part => {
+                        const match = part.match(/(\d+)排(\d+)(?:-(\d+))?号/);
+                        if (match) {
+                            const rowNum = parseInt(match[1]);
+                            const startCol = parseInt(match[2]);
+                            const endCol = match[3] ? parseInt(match[3]) : startCol;
+
+                            const row = rows.find(r => r.number === rowNum);
+                            if (row && row.seats) {
+                                for (let col = startCol; col <= endCol; col++) {
+                                    const seat = row.seats.find(s => s.number === col);
+                                    if (seat && !seat.isAisle) {
+                                        seat.isFixed = true;
+                                    }
+                                }
+                            }
+                        }
+                    });
+                };
+
+                // 预览统计
+                const previewStats = computed(() => {
+                    let total = 0;
+                    let actual = 0;
+                    let aisle = 0;
+
+                    previewRows.value.forEach(row => {
+                        row.seats.forEach(seat => {
+                            total++;
+                            if (seat.isAisle) {
+                                aisle++;
+                            } else {
+                                actual++;
+                            }
+                        });
+                    });
+
+                    return { total, actual, aisle };
+                });
+
+                // 保存座位区配置
+                const saveAreaConfig = () => {
+                    if (!areaConfig.name) {
+                        console.warn('请输入区域名称');
+                        return;
+                    }
+
+                    const id = isEditMode.value ? editingAreaId.value : `area_${Date.now()}`;
+
+                    // 创建座位区数据
+                    const newArea = createSeatingArea(
+                        id,
+                        areaConfig.name,
+                        areaConfig.type,
+                        areaConfig.rows,
+                        areaConfig.cols,
+                        areaConfig.angle,
+                        areaConfig.venueType,
+                        areaConfig.layoutDirection,
+                        areaConfig.hasAisle ? {
+                            position: areaConfig.aislePosition,
+                            width: areaConfig.aisleWidth
+                        } : null,
+                        areaConfig.hasFixedSeats ? areaConfig.fixedSeatsPattern : null
+                    );
+
+                    if (isEditMode.value) {
+                        // 编辑模式：更新现有座位区
+                        const index = seatingAreas.value.findIndex(a => a && a.id === id);
+                        if (index !== -1) {
+                            seatingAreas.value[index] = newArea;
+                        }
+                    } else {
+                        // 创建模式：添加新座位区
+                        seatingAreas.value.push(newArea);
+                    }
+
+                    saveData();
+                    updateStatistics();
+                    closeAreaConfigModal();
+                };
+
+                const getAreaOccupied = (area) => {
+                    if (!area || !area.rows) return 0;
+                    let count = 0;
+                    area.rows.forEach(row => {
+                        if (row && row.seats) {
+                            row.seats.forEach(seat => {
+                                if (seat && seat.status === 'occupied') {
+                                    count++;
+                                }
+                            });
+                        }
+                    });
+                    return count;
+                };
+
+                const getAreaCapacity = (area) => {
+                    if (!area || !area.rows) return 0;
+                    let count = 0;
+                    area.rows.forEach(row => {
+                        if (row && row.seats) {
+                            count += row.seats.filter(s => s && !s.isAisle).length;
+                        }
+                    });
+                    return count;
+                };
+
+                // ===== 参会人员操作 =====
+                const importFromRegistration = async () => {
+                    try {
+                        loading.value = true;
+
+                        // 从localStorage获取报名数据
+                        const registrationData = localStorage.getItem('registrationData');
+                        if (!registrationData) {
+                            console.warn('未找到报名数据，请先在报名系统中添加参会人员');
+                            return;
+                        }
+
+                        const data = JSON.parse(registrationData);
+                        const registrations = data.registrations || [];
+
+                        // 筛选已审核通过的人员
+                        const approved = registrations.filter(r => r.status === 'approved');
+
+                        // 转换为参会人员
+                        attendees.value = approved.map((reg, index) => ({
+                            id: `att_${reg.id}`,
+                            name: reg.name,
+                            department: reg.unit || '未知单位',
+                            position: reg.position || '未知职位',
+                            isVip: isVipByPosition(reg.position || ''),
+                            phone: reg.phone,
+                            email: reg.email,
+                            registrationId: reg.id
+                        }));
+
+                        saveData();
+                        updateStatistics();
+
+                        console.log(`成功导入 ${attendees.value.length} 名参会人员`);
+                    } catch (error) {
+                        console.error('导入失败:', error);
+                        console.error('导入失败:', error);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const isVipByPosition = (position) => {
+                    if (!position) return false;
+                    const vipPositions = ['书记', '市长', '局长', '主任', '部长', '主席', '副主席'];
+                    return vipPositions.some(keyword => position.includes(keyword));
+                };
+
+                const showAddAttendee = () => {
+                    console.log('添加参会人员功能开发中...');
+                };
+
+                // ===== Excel导入 =====
+                const handleExcelImport = async (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    try {
+                        loading.value = true;
+
+                        // 读取Excel文件
+                        const data = await file.arrayBuffer();
+                        const workbook = XLSX.read(data, { type: 'array' });
+
+                        // 获取第一个工作表
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+
+                        // 转换为JSON
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                        if (jsonData.length === 0) {
+                            console.warn('Excel文件为空');
+                            return;
+                        }
+
+                        console.log('Excel数据:', jsonData);
+
+                        // 根据导入模式处理
+                        if (excelImportMode.value === 'list') {
+                            // 模式1：仅导入名单
+                            await importAttendeeListFromExcel(jsonData);
+                        } else {
+                            // 模式2：导入名单+座位号（所见即所得）
+                            await importSeatingFromExcel(jsonData);
+                        }
+
+                        saveData();
+                        updateStatistics();
+
+                        console.log(`成功从Excel导入 ${jsonData.length} 条记录`);
+                    } catch (error) {
+                        console.error('Excel导入失败:', error);
+                        console.error('Excel导入失败:', error);
+                    } finally {
+                        loading.value = false;
+                        // 清空文件输入
+                        event.target.value = '';
+                    }
+                };
+
+                // 模式1：仅导入参会名单
+                const importAttendeeListFromExcel = async (jsonData) => {
+                    const newAttendees = jsonData.map((row, index) => {
+                        // 尝试不同的列名
+                        const name = row['姓名'] || row['name'] || row['Name'] || '';
+                        const department = row['单位'] || row['部门'] || row['department'] || '未知单位';
+                        const position = row['职位'] || row['职务'] || row['position'] || '未知职位';
+                        const phone = row['手机'] || row['电话'] || row['phone'] || '';
+                        const email = row['邮箱'] || row['email'] || '';
+
+                        return {
+                            id: `att_excel_${Date.now()}_${index}`,
+                            name,
+                            department,
+                            position,
+                            phone,
+                            email,
+                            isVip: isVipByPosition(position)
+                        };
+                    }).filter(att => att.name); // 过滤掉没有姓名的记录
+
+                    // 追加到现有参会人员
+                    attendees.value = [...attendees.value, ...newAttendees];
+                };
+
+                // 模式2：导入名单+座位号（所见即所得）
+                const importSeatingFromExcel = async (jsonData) => {
+                    if (seatingAreas.value.length === 0) {
+                        console.warn('请先创建座位区域');
+                        return;
+                    }
+
+                    // 清空现有座位分配
+                    clearAllSeatsInternal();
+
+                    const newAttendees = [];
+
+                    for (let i = 0; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+
+                        // 提取参会者信息
+                        const name = row['姓名'] || row['name'] || '';
+                        const department = row['单位'] || row['部门'] || '未知单位';
+                        const position = row['职位'] || row['职务'] || '未知职位';
+                        const phone = row['手机'] || row['电话'] || '';
+                        const email = row['邮箱'] || '';
+
+                        // 提取座位信息
+                        const seatArea = row['区域'] || row['座位区'] || '';
+                        const seatRow = parseInt(row['排'] || row['行'] || row['row'] || '');
+                        const seatCol = parseInt(row['号'] || row['列'] || row['col'] || '');
+
+                        if (!name) continue;
+
+                        // 创建参会者对象
+                        const attendee = {
+                            id: `att_excel_${Date.now()}_${i}`,
+                            name,
+                            department,
+                            position,
+                            phone,
+                            email,
+                            isVip: isVipByPosition(position)
+                        };
+
+                        newAttendees.push(attendee);
+
+                        // 如果有座位信息，分配座位
+                        if (!isNaN(seatRow) && !isNaN(seatCol)) {
+                            await assignSeatByPosition(attendee, seatArea, seatRow, seatCol);
+                        }
+                    }
+
+                    attendees.value = newAttendees;
+                };
+
+                // 根据位置分配座位
+                const assignSeatByPosition = async (attendee, areaName, row, col) => {
+                    // 查找指定的座位区域
+                    let targetArea = null;
+                    if (areaName) {
+                        targetArea = seatingAreas.value.find(a => a && a.name.includes(areaName));
+                    }
+
+                    // 如果没找到指定区域，使用第一个区域
+                    if (!targetArea && seatingAreas.value.length > 0) {
+                        targetArea = seatingAreas.value[0];
+                    }
+
+                    if (!targetArea || !targetArea.rows) {
+                        console.warn(`未找到座位区: ${areaName}，参会者 ${attendee.name} 未分配座位`);
+                        return;
+                    }
+
+                    // 查找指定行
+                    const targetRow = targetArea.rows.find(r => r && r.number === row);
+                    if (!targetRow || !targetRow.seats) {
+                        console.warn(`未找到第 ${row} 排，参会者 ${attendee.name} 未分配座位`);
+                        return;
+                    }
+
+                    // 查找指定座位
+                    const targetSeat = targetRow.seats.find(s => s && s.number === col);
+                    if (!targetSeat) {
+                        console.warn(`未找到 ${row}排${col}号，参会者 ${attendee.name} 未分配座位`);
+                        return;
+                    }
+
+                    if (targetSeat.isAisle) {
+                        console.warn(`${row}排${col}号是过道，参会者 ${attendee.name} 未分配座位`);
+                        return;
+                    }
+
+                    // 分配座位
+                    if (targetSeat.status === 'available') {
+                        targetSeat.status = 'occupied';
+                        targetSeat.occupant = attendee;
+                    } else {
+                        console.warn(`${row}排${col}号已被占用，参会者 ${attendee.name} 未分配座位`);
+                    }
+                };
+
+                // ===== 自动排座 =====
+                const executeAutoArrange = async () => {
+                    if (attendees.value.length === 0) {
+                        console.warn('请先导入参会人员');
+                        return;
+                    }
+
+                    if (!confirm(`确定要为 ${attendees.value.length} 名参会人员执行【${getAlgorithmName(selectedAlgorithm.value)}】排座吗？`)) {
+                        return;
+                    }
+
+                    try {
+                        loading.value = true;
+
+                        // 清空现有座位分配
+                        clearAllSeatsInternal();
+
+                        // 根据选择的算法执行排座
+                        switch (selectedAlgorithm.value) {
+                            case 'smart':
+                                await executeSmartAlgorithm();
+                                break;
+                            case 'department':
+                                await executeDepartmentAlgorithm();
+                                break;
+                            case 'position':
+                                await executePositionAlgorithm();
+                                break;
+                            case 'zone':
+                                await executeZoneAlgorithm();
+                                break;
+                            default:
+                                await executeSmartAlgorithm();
+                        }
+
+                        saveData();
+                        updateStatistics();
+
+                        console.log('自动排座完成！');
+                    } catch (error) {
+                        console.error('自动排座失败:', error);
+                        console.error('自动排座失败:', error);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                // 获取算法名称
+                const getAlgorithmName = (algorithm) => {
+                    const names = {
+                        'smart': '智能推荐',
+                        'department': '按部门',
+                        'position': '按职级',
+                        'zone': '按分区'
+                    };
+                    return names[algorithm] || algorithm;
+                };
+
+                // 算法1：智能推荐算法（VIP优先 + 按部门集中）
+                const executeSmartAlgorithm = async () => {
+                    // 分离VIP和普通参会人员
+                    const vipAttendees = attendees.value.filter(a => a.isVip);
+                    const regularAttendees = attendees.value.filter(a => !a.isVip);
+
+                    // 1. 分配VIP座位（前排居中）
+                    await assignVipSeats(vipAttendees);
+
+                    // 2. 按部门分配普通参会人员
+                    await assignByDepartmentWithPosition(regularAttendees);
+                };
+
+                // 算法2：按部门排座算法
+                const executeDepartmentAlgorithm = async () => {
+                    // 1. 先分配VIP（优先）
+                    const vipAttendees = attendees.value.filter(a => a.isVip);
+                    await assignVipSeats(vipAttendees);
+
+                    // 2. 按部门集中分配
+                    const regularAttendees = attendees.value.filter(a => !a.isVip);
+                    await assignByDepartmentOnly(regularAttendees);
+                };
+
+                // 算法3：按职级排座算法
+                const executePositionAlgorithm = async () => {
+                    // 1. 先分配VIP（优先）
+                    const vipAttendees = attendees.value.filter(a => a.isVip);
+                    await assignVipSeats(vipAttendees);
+
+                    // 2. 按职级排序分配
+                    const regularAttendees = attendees.value.filter(a => !a.isVip);
+                    await assignByPosition(regularAttendees);
+                };
+
+                // 算法4：按分区排座算法
+                const executeZoneAlgorithm = async () => {
+                    if (seatingAreas.value.length === 0) {
+                        console.warn('请先创建座位区域');
+                        return;
+                    }
+
+                    // 1. 分离VIP和普通参会人员
+                    const vipAttendees = attendees.value.filter(a => a.isVip);
+                    const regularAttendees = attendees.value.filter(a => !a.isVip);
+
+                    // 2. 为每个区域分配参会人员
+                    const areasPerAttendee = Math.floor(regularAttendees.length / seatingAreas.value.length);
+
+                    let attendeeIndex = 0;
+                    for (const area of seatingAreas.value) {
+                        if (!area || !area.rows) continue;
+
+                        // 收集该区域的所有可用座位
+                        const availableSeats = [];
+                        for (const row of area.rows) {
+                            if (!row || !row.seats) continue;
+                            for (const seat of row.seats) {
+                                if (seat && seat.status === 'available' && !seat.isAisle) {
+                                    availableSeats.push(seat);
+                                }
+                            }
+                        }
+
+                        // 为该区域分配参会者
+                        const assignCount = Math.min(availableSeats.length, areasPerAttendee);
+                        for (let i = 0; i < assignCount && attendeeIndex < regularAttendees.length; i++) {
+                            const seat = availableSeats[i];
+                            const attendee = regularAttendees[attendeeIndex++];
+                            seat.status = 'occupied';
+                            seat.occupant = attendee;
+                        }
+                    }
+
+                    // 分配剩余参会者到任何可用座位
+                    if (attendeeIndex < regularAttendees.length) {
+                        await assignRegularSeats(regularAttendees.slice(attendeeIndex));
+                    }
+
+                    // 最后分配VIP
+                    await assignVipSeats(vipAttendees);
+                };
+
+                // 按部门+职级排座
+                const assignByDepartmentWithPosition = async (attendees) => {
+                    // 按部门分组
+                    const deptGroups = {};
+                    attendees.forEach(att => {
+                        const dept = att.department || '未知单位';
+                        if (!deptGroups[dept]) {
+                            deptGroups[dept] = [];
+                        }
+                        deptGroups[dept].push(att);
+                    });
+
+                    // 对每个部门内按职级排序
+                    const sortedDepts = Object.keys(deptGroups).sort((a, b) => {
+                        return deptGroups[b].length - deptGroups[a].length;
+                    });
+
+                    // 为每个部门分配座位区域
+                    const areaCount = seatingAreas.value.length || 1;
+                    const deptPerArea = Math.ceil(sortedDepts.length / areaCount);
+
+                    let deptIndex = 0;
+                    for (const dept of sortedDepts) {
+                        const deptMembers = deptGroups[dept];
+
+                        // 对部门成员按职级排序
+                        deptMembers.sort((a, b) => {
+                            return getPositionLevel(b.position) - getPositionLevel(a.position);
+                        });
+
+                        // 确定使用哪个座位区
+                        const areaIndex = Math.floor(deptIndex / deptPerArea);
+                        const area = seatingAreas.value[areaIndex] || seatingAreas.value[0];
+
+                        if (area && area.rows) {
+                            await assignAttendeesToArea(deptMembers, area);
+                        }
+
+                        deptIndex++;
+                    }
+                };
+
+                // 按部门排座（仅按部门，不按职级）
+                const assignByDepartmentOnly = async (attendees) => {
+                    // 按部门分组
+                    const deptGroups = {};
+                    attendees.forEach(att => {
+                        const dept = att.department || '未知单位';
+                        if (!deptGroups[dept]) {
+                            deptGroups[dept] = [];
+                        }
+                        deptGroups[dept].push(att);
+                    });
+
+                    // 按部门人数排序
+                    const sortedDepts = Object.keys(deptGroups).sort((a, b) => {
+                        return deptGroups[b].length - deptGroups[a].length;
+                    });
+
+                    // 为每个部门分配座位
+                    for (const dept of sortedDepts) {
+                        const deptMembers = deptGroups[dept];
+                        await assignRegularSeats(deptMembers);
+                    }
+                };
+
+                // 按职级排座
+                const assignByPosition = async (attendees) => {
+                    // 按职级排序
+                    const sortedAttendees = [...attendees].sort((a, b) => {
+                        return getPositionLevel(b.position) - getPositionLevel(a.position);
+                    });
+
+                    // 从前到后依次分配
+                    await assignRegularSeats(sortedAttendees);
+                };
+
+                // 获取职级等级
+                const getPositionLevel = (position) => {
+                    if (!position) return 0;
+
+                    const levels = {
+                        '书记': 100, '市长': 100, '主席': 100,
+                        '副主席': 90, '副主任': 90, '副部长': 90,
+                        '秘书长': 85, '副秘书长': 80,
+                        '局长': 75, '部长': 75,
+                        '处长': 60, '部长': 60,
+                        '副处长': 50, '副部长': 50,
+                        '科长': 40, '主任': 40,
+                        '副科长': 30, '副主任': 30,
+                        '经理': 35, '主管': 25,
+                        '专员': 10, '职员': 5
+                    };
+
+                    for (const [key, level] of Object.entries(levels)) {
+                        if (position.includes(key)) {
+                            return level;
+                        }
+                    }
+
+                    return 0;
+                };
+
+                // 将参会者分配到指定区域
+                const assignAttendeesToArea = async (attendees, area) => {
+                    if (!area || !area.rows) return;
+
+                    let attendeeIndex = 0;
+                    for (const row of area.rows) {
+                        if (!row || !row.seats) continue;
+
+                        for (const seat of row.seats) {
+                            if (!seat || seat.status !== 'available' || seat.isAisle) continue;
+
+                            if (attendeeIndex < attendees.length) {
+                                seat.status = 'occupied';
+                                seat.occupant = attendees[attendeeIndex++];
+                            } else {
+                                return;
+                            }
+                        }
+                    }
+                };
+
+                const assignVipSeats = async (vipAttendees) => {
+                    // 获取VIP区域的前排座位
+                    const vipArea = seatingAreas.value.find(a => a && a.type === 'vip');
+                    if (!vipArea) {
+                        console.log('未找到VIP区域，使用A区');
+                        // 如果没有VIP区域，使用第一个区域
+                        if (seatingAreas.value.length > 0) {
+                            vipArea = seatingAreas.value[0];
+                        }
+                    }
+
+                    if (!vipArea || !vipArea.rows) return;
+
+                    let vipIndex = 0;
+                    for (const row of vipArea.rows) {
+                        if (!row || !row.seats) continue;
+
+                        for (const seat of row.seats) {
+                            if (!seat || seat.status !== 'available' || seat.isAisle) continue;
+
+                            if (vipIndex < vipAttendees.length) {
+                                seat.status = 'occupied';
+                                seat.type = 'vip';
+                                seat.occupant = vipAttendees[vipIndex];
+                                vipIndex++;
+                            } else {
+                                return;
+                            }
+                        }
+                    }
+
+                    // 如果VIP区域不够，继续使用其他区域
+                    if (vipIndex < vipAttendees.length) {
+                        await assignRegularSeats(vipAttendees.slice(vipIndex));
+                    }
+                };
+
+                const assignRegularSeats = async (attendees) => {
+                    for (const area of seatingAreas.value) {
+                        if (!area || !area.rows) continue;
+
+                        for (const row of area.rows) {
+                            if (!row || !row.seats) continue;
+
+                            for (const seat of row.seats) {
+                                if (!seat || seat.status !== 'available' || seat.isAisle) continue;
+
+                                if (attendees.length === 0) return;
+
+                                const attendee = attendees.shift();
+                                seat.status = 'occupied';
+                                seat.occupant = attendee;
+                            }
+                        }
+                    }
+                };
+
+                // ===== 辅助功能 =====
+                const clearAllSeats = () => {
+                    if (!confirm('确定要清空所有座位分配吗？')) {
+                        return;
+                    }
+                    clearAllSeatsInternal();
+                    saveData();
+                    updateStatistics();
+                };
+
+                const clearAllSeatsInternal = () => {
+                    seatingAreas.value.forEach(area => {
+                        if (area && area.rows) {
+                            area.rows.forEach(row => {
+                                if (row && row.seats) {
+                                    row.seats.forEach(seat => {
+                                        if (seat) {
+                                            seat.status = 'available';
+                                            seat.occupant = null;
+                                            if (seat.type === 'vip' && !seat.occupant) {
+                                                seat.type = 'regular';
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                };
+
+                const generateQRCode = () => {
+                    const baseUrl = window.location.origin;
+                    const checkInUrl = `${baseUrl}/pages/check-seat.html?conf=${conference.value.id}`;
+
+                    prompt('查座链接已生成，可以复制后分享:', checkInUrl);
+                };
+
+                // 生成LED导示图
+                const generateLEDMap = async () => {
+                    if (seatingAreas.value.length === 0) {
+                        console.warn('请先创建座位区域');
+                        return;
+                    }
+
+                    try {
+                        loading.value = true;
+
+                        // 创建临时容器用于生成图片
+                        const container = document.createElement('div');
+                        container.style.cssText = `
+                            position: fixed;
+                            top: -9999px;
+                            left: -9999px;
+                            width: 1920px;
+                            height: 1080px;
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            padding: 60px;
+                            font-family: 'Microsoft YaHei', sans-serif;
+                        `;
+
+                        // 标题
+                        const title = document.createElement('h1');
+                        title.textContent = `${conference.value.name} - 座位导示图`;
+                        title.style.cssText = `
+                            text-align: center;
+                            color: white;
+                            font-size: 48px;
+                            margin: 0 0 40px 0;
+                            font-weight: bold;
+                        `;
+                        container.appendChild(title);
+
+                        // 座位图容器
+                        const seatingChart = document.createElement('div');
+                        seatingChart.style.cssText = `
+                            display: flex;
+                            flex-direction: column;
+                            gap: 30px;
+                        `;
+
+                        // 主席台
+                        const stage = document.createElement('div');
+                        stage.textContent = '主席台';
+                        stage.style.cssText = `
+                            text-align: center;
+                            background: rgba(255, 255, 255, 0.9);
+                            padding: 20px;
+                            font-size: 36px;
+                            font-weight: bold;
+                            border-radius: 10px;
+                            color: #333;
+                        `;
+                        seatingChart.appendChild(stage);
+
+                        // 渲染每个座位区
+                        for (const area of seatingAreas.value) {
+                            if (!area || !area.rows) continue;
+
+                            const areaDiv = document.createElement('div');
+                            areaDiv.style.cssText = `
+                                background: rgba(255, 255, 255, 0.95);
+                                padding: 30px;
+                                border-radius: 15px;
+                                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                            `;
+
+                            // 区域标题
+                            const areaTitle = document.createElement('h3');
+                            areaTitle.textContent = `${area.name} (${getAreaOccupied(area)}/${getAreaCapacity(area)})`;
+                            areaTitle.style.cssText = `
+                                font-size: 32px;
+                                margin: 0 0 20px 0;
+                                color: #333;
+                                border-bottom: 3px solid #667eea;
+                                padding-bottom: 10px;
+                            `;
+                            areaDiv.appendChild(areaTitle);
+
+                            // 座位行
+                            for (const row of area.rows) {
+                                if (!row || !row.seats) continue;
+
+                                const rowDiv = document.createElement('div');
+                                rowDiv.style.cssText = `
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 8px;
+                                    margin-bottom: 8px;
+                                `;
+
+                                // 行标签
+                                const rowLabel = document.createElement('span');
+                                rowLabel.textContent = `${row.number}排`;
+                                rowLabel.style.cssText = `
+                                    font-size: 24px;
+                                    font-weight: bold;
+                                    color: #666;
+                                    min-width: 80px;
+                                `;
+                                rowDiv.appendChild(rowLabel);
+
+                                // 座位
+                                for (const seat of row.seats) {
+                                    if (!seat) continue;
+
+                                    const seatDiv = document.createElement('div');
+                                    let bgColor = '#fff';
+                                    let textColor = '#666';
+
+                                    if (seat.isAisle) {
+                                        bgColor = '#f0f0f0';
+                                        textColor = '#ccc';
+                                    } else if (seat.status === 'occupied') {
+                                        bgColor = '#667eea';
+                                        textColor = '#fff';
+                                    } else if (seat.type === 'vip') {
+                                        bgColor = '#f5576c';
+                                        textColor = '#fff';
+                                    }
+
+                                    seatDiv.style.cssText = `
+                                        width: 50px;
+                                        height: 50px;
+                                        background: ${bgColor};
+                                        color: ${textColor};
+                                        border: 2px solid ${seat.isAisle ? '#ccc' : '#667eea'};
+                                        border-radius: 8px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 20px;
+                                        font-weight: bold;
+                                        position: relative;
+                                    `;
+
+                                    if (seat.status === 'occupied' && seat.occupant) {
+                                        const nameSpan = document.createElement('span');
+                                        nameSpan.textContent = seat.occupant.name;
+                                        nameSpan.style.cssText = `
+                                            position: absolute;
+                                            bottom: -25px;
+                                            left: 50%;
+                                            transform: translateX(-50%);
+                                            font-size: 16px;
+                                            white-space: nowrap;
+                                            color: #333;
+                                            font-weight: normal;
+                                        `;
+                                        seatDiv.appendChild(nameSpan);
+                                    }
+
+                                    rowDiv.appendChild(seatDiv);
+                                }
+
+                                areaDiv.appendChild(rowDiv);
+                            }
+
+                            seatingChart.appendChild(areaDiv);
+                        }
+
+                        container.appendChild(seatingChart);
+                        document.body.appendChild(container);
+
+                        // 使用 html2canvas 生成图片
+                        const canvas = await html2canvas(container, {
+                            scale: 2,
+                            useCORS: true,
+                            backgroundColor: '#667eea'
+                        });
+
+                        // 移除临时容器
+                        document.body.removeChild(container);
+
+                        // 转换为图片并下载
+                        canvas.toBlob(blob => {
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `${conference.value.name}_座位导示图_${Date.now()}.png`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+
+                            console.log('LED导示图已生成并下载！');
+                        });
+
+                    } catch (error) {
+                        console.error('生成导示图失败:', error);
+                        console.error('生成导示图失败:', error);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const exportSeatingChart = () => {
+                    const options = [
+                        { text: '导出为Excel表格', value: 'excel' },
+                        { text: '导出为PDF文档', value: 'pdf' },
+                        { text: '取消', value: 'cancel' }
+                    ];
+
+                    const choice = prompt(
+                        '请选择导出格式：\n1. 输入 1 导出为Excel\n2. 输入 2 导出为PDF\n3. 输入 0 或取消'
+                    );
+
+                    if (choice === '1') {
+                        exportToExcel();
+                    } else if (choice === '2') {
+                        exportToPDF();
+                    }
+                };
+
+                // 导出为Excel
+                const exportToExcel = () => {
+                    try {
+                        // 准备Excel数据
+                        const excelData = [];
+
+                        // 添加标题行
+                        excelData.push(['会议名称', conference.value.name]);
+                        excelData.push(['导出时间', new Date().toLocaleString()]);
+                        excelData.push([]); // 空行
+
+                        // 添加表头
+                        excelData.push(['区域', '排号', '座位号', '姓名', '单位', '职位', '手机号', '座位类型']);
+
+                        // 添加座位数据
+                        for (const area of seatingAreas.value) {
+                            if (!area || !area.rows) continue;
+
+                            for (const row of area.rows) {
+                                if (!row || !row.seats) continue;
+
+                                for (const seat of row.seats) {
+                                    if (!seat || seat.isAisle) continue;
+
+                                    const rowData = {
+                                        '区域': area.name,
+                                        '排号': row.number,
+                                        '座位号': seat.number,
+                                        '姓名': seat.occupant ? seat.occupant.name : '',
+                                        '单位': seat.occupant ? seat.occupant.department : '',
+                                        '职位': seat.occupant ? seat.occupant.position : '',
+                                        '手机号': seat.occupant ? seat.occupant.phone || '' : '',
+                                        '座位类型': seat.type === 'vip' ? 'VIP' : '普通'
+                                    };
+
+                                    // 只导出有人的座位
+                                    if (seat.occupant) {
+                                        excelData.push(rowData);
+                                    }
+                                }
+                            }
+                        }
+
+                        // 添加统计信息
+                        excelData.push([]);
+                        excelData.push(['统计信息']);
+                        excelData.push(['总座位数', statistics.totalSeats]);
+                        excelData.push(['已分配', statistics.assigned]);
+                        excelData.push(['VIP人数', statistics.vip]);
+                        excelData.push(['可用座位', statistics.available]);
+
+                        // 创建工作簿
+                        const wb = XLSX.utils.book_new();
+                        const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+                        // 设置列宽
+                        ws['!cols'] = [
+                            { wch: 15 }, // 区域
+                            { wch: 8 },  // 排号
+                            { wch: 8 },  // 座位号
+                            { wch: 12 }, // 姓名
+                            { wch: 20 }, // 单位
+                            { wch: 15 }, // 职位
+                            { wch: 15 }, // 手机号
+                            { wch: 10 }  // 座位类型
+                        ];
+
+                        XLSX.utils.book_append_sheet(wb, ws, '座位表');
+
+                        // 导出文件
+                        const fileName = `${conference.value.name}_座位表_${Date.now()}.xlsx`;
+                        XLSX.writeFile(wb, fileName);
+
+                        console.log('Excel座位表导出成功！');
+                    } catch (error) {
+                        console.error('导出Excel失败:', error);
+                        console.error('导出Excel失败:', error);
+                    }
+                };
+
+                // 导出为PDF
+                const exportToPDF = () => {
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF();
+
+                        // 添加标题
+                        doc.setFontSize(20);
+                        doc.text(conference.value.name, 105, 20, { align: 'center' });
+                        doc.setFontSize(16);
+                        doc.text('座位表', 105, 30, { align: 'center' });
+
+                        // 添加导出时间
+                        doc.setFontSize(10);
+                        doc.text(`导出时间: ${new Date().toLocaleString()}`, 105, 40, { align: 'center' });
+
+                        let yPos = 55;
+                        const lineHeight = 10;
+                        const pageHeight = 280;
+
+                        // 遍历每个座位区域
+                        for (const area of seatingAreas.value) {
+                            if (!area || !area.rows) continue;
+
+                            // 检查是否需要新页面
+                            if (yPos > pageHeight) {
+                                doc.addPage();
+                                yPos = 20;
+                            }
+
+                            // 区域标题
+                            doc.setFontSize(14);
+                            doc.setTextColor(102, 126, 234);
+                            doc.text(`${area.name} (${getAreaOccupied(area)}/${getAreaCapacity(area)})`, 20, yPos);
+                            yPos += lineHeight;
+
+                            // 表头
+                            doc.setFontSize(10);
+                            doc.setTextColor(0, 0, 0);
+                            doc.text('排号  座位号  姓名           单位           职位', 20, yPos);
+                            yPos += 3;
+                            doc.setDrawColor(200, 200, 200);
+                            doc.line(20, yPos, 190, yPos);
+                            yPos += lineHeight;
+
+                            // 座位数据
+                            doc.setFontSize(9);
+
+                            for (const row of area.rows) {
+                                if (!row || !row.seats) continue;
+
+                                for (const seat of row.seats) {
+                                    if (!seat || seat.isAisle) continue;
+
+                                    if (seat.occupant) {
+                                        const occupant = seat.occupant;
+                                        const line = `${row.number}      ${seat.number}      ${occupant.name.padEnd(12)} ${occupant.department.substring(0, 10).padEnd(12)} ${occupant.position.substring(0, 10)}`;
+
+                                        if (yPos > pageHeight) {
+                                            doc.addPage();
+                                            yPos = 20;
+                                        }
+
+                                        doc.text(line, 20, yPos);
+                                        yPos += lineHeight;
+                                    }
+                                }
+                            }
+
+                            yPos += lineHeight;
+                        }
+
+                        // 添加统计信息
+                        if (yPos > pageHeight - 40) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+
+                        yPos += 10;
+                        doc.setFontSize(12);
+                        doc.setTextColor(102, 126, 234);
+                        doc.text('统计信息', 20, yPos);
+                        yPos += lineHeight;
+
+                        doc.setFontSize(10);
+                        doc.setTextColor(0, 0, 0);
+                        doc.text(`总座位数: ${statistics.totalSeats}   已分配: ${statistics.assigned}   VIP: ${statistics.vip}   可用: ${statistics.available}`, 20, yPos);
+
+                        // 保存PDF
+                        const fileName = `${conference.value.name}_座位表_${Date.now()}.pdf`;
+                        doc.save(fileName);
+
+                        console.log('PDF座位表导出成功！');
+                    } catch (error) {
+                        console.error('导出PDF失败:', error);
+                        console.error('导出PDF失败:', error);
+                    }
+                };
+
+                // ===== 辅助安排管理 =====
+
+                // 1. 乘车安排管理
+                const showTransportModal = () => {
+                    Object.assign(newTransport, {
+                        name: '',
+                        type: '大巴',
+                        plateNumber: '',
+                        departure: '',
+                        destination: '',
+                        departureTime: '',
+                        capacity: 45,
+                        assignedCount: 0,
+                        passengers: []
+                    });
+                    showTransportModalFlag.value = true;
+                };
+
+                const closeTransportModal = () => {
+                    showTransportModalFlag.value = false;
+                };
+
+                const saveTransport = () => {
+                    if (!newTransport.name) {
+                        console.warn('请输入车辆名称');
+                        return;
+                    }
+
+                    const capacityMap = {
+                        '小车': 4,
+                        '中巴': 15,
+                        '大巴': 45
+                    };
+                    newTransport.capacity = capacityMap[newTransport.type] || 45;
+
+                    transportList.value.push({
+                        id: `transport_${Date.now()}`,
+                        ...JSON.parse(JSON.stringify(newTransport))
+                    });
+
+                    saveData();
+                    closeTransportModal();
+                    console.log('车辆添加成功');
+                };
+
+                // 2. 住宿安排管理
+                const showAccommodationModal = () => {
+                    Object.assign(newAccommodation, {
+                        hotelName: '',
+                        roomNumber: '',
+                        type: '标准间',
+                        capacity: 2,
+                        assignedCount: 0,
+                        occupants: [],
+                        checkInTime: '',
+                        checkOutTime: ''
+                    });
+                    showAccommodationModalFlag.value = true;
+                };
+
+                const closeAccommodationModal = () => {
+                    showAccommodationModalFlag.value = false;
+                };
+
+                const saveAccommodation = () => {
+                    if (!newAccommodation.hotelName || !newAccommodation.roomNumber) {
+                        console.warn('请填写完整信息');
+                        return;
+                    }
+
+                    accommodationList.value.push({
+                        id: `accommodation_${Date.now()}`,
+                        ...JSON.parse(JSON.stringify(newAccommodation))
+                    });
+
+                    saveData();
+                    closeAccommodationModal();
+                    console.log('房间添加成功');
+                };
+
+                // 3. 讨论室安排管理
+                const showDiscussionModal = () => {
+                    Object.assign(newDiscussion, {
+                        name: '',
+                        location: '',
+                        capacity: 15,
+                        assignedCount: 0,
+                        groups: [],
+                        startTime: '',
+                        endTime: ''
+                    });
+                    showDiscussionModalFlag.value = true;
+                };
+
+                const closeDiscussionModal = () => {
+                    showDiscussionModalFlag.value = false;
+                };
+
+                const saveDiscussion = () => {
+                    if (!newDiscussion.name || !newDiscussion.location) {
+                        console.warn('请填写完整信息');
+                        return;
+                    }
+
+                    discussionList.value.push({
+                        id: `discussion_${Date.now()}`,
+                        ...JSON.parse(JSON.stringify(newDiscussion))
+                    });
+
+                    saveData();
+                    closeDiscussionModal();
+                    console.log('讨论室添加成功');
+                };
+
+                // ===== 用餐安排相关方法 =====
+                const showDiningModalFlag = ref(false);
+                const newDining = reactive({
+                    name: '',
+                    type: '午餐',
+                    capacity: 10,
+                    assignedCount: 0,
+                    groups: [],
+                    time: '',
+                    location: ''
+                });
+
+                const showDiningModal = () => {
+                    Object.assign(newDining, {
+                        name: '',
+                        type: '午餐',
+                        capacity: 10,
+                        assignedCount: 0,
+                        groups: [],
+                        time: '',
+                        location: ''
+                    });
+                    showDiningModalFlag.value = true;
+                };
+
+                const closeDiningModal = () => {
+                    showDiningModalFlag.value = false;
+                };
+
+                const saveDining = () => {
+                    if (!newDining.name || !newDining.location) {
+                        console.warn('请填写完整信息');
+                        return;
+                    }
+
+                    diningList.value.push({
+                        id: `dining_${Date.now()}`,
+                        ...JSON.parse(JSON.stringify(newDining))
+                    });
+
+                    saveData();
+                    closeDiningModal();
+                    console.log('用餐安排添加成功');
+                };
+
+                const autoAssignDining = async () => {
+                    if (diningList.value.length === 0) return;
+
+                    const unassigned = attendees.value.filter(a => !a.diningAssigned);
+                    // 简单的平均分配逻辑
+                    let tableIndex = 0;
+                    unassigned.forEach(att => {
+                        if (tableIndex < diningList.value.length) {
+                            diningList.value[tableIndex].assignedCount++;
+                            att.diningAssigned = true;
+                            att.diningTableId = diningList.value[tableIndex].id;
+                            tableIndex = (tableIndex + 1) % diningList.value.length;
+                        }
+                    });
+                };
+
+                // ===== 接送机安排相关方法 =====
+                const showAirportTransferModalFlag = ref(false);
+                const newAirportTransfer = reactive({
+                    name: '',
+                    type: '接机',
+                    flightNumber: '',
+                    capacity: 4,
+                    assignedCount: 0,
+                    passengers: [],
+                    time: '',
+                    fromAirport: '',
+                    toDestination: ''
+                });
+
+                const showAirportTransferModal = () => {
+                    Object.assign(newAirportTransfer, {
+                        name: '',
+                        type: '接机',
+                        flightNumber: '',
+                        capacity: 4,
+                        assignedCount: 0,
+                        passengers: [],
+                        time: '',
+                        fromAirport: '',
+                        toDestination: ''
+                    });
+                    showAirportTransferModalFlag.value = true;
+                };
+
+                const closeAirportTransferModal = () => {
+                    showAirportTransferModalFlag.value = false;
+                };
+
+                const saveAirportTransfer = () => {
+                    if (!newAirportTransfer.name || !newAirportTransfer.flightNumber) {
+                        console.warn('请填写完整信息');
+                        return;
+                    }
+
+                    airportTransferList.value.push({
+                        id: `transfer_${Date.now()}`,
+                        ...JSON.parse(JSON.stringify(newAirportTransfer))
+                    });
+
+                    saveData();
+                    closeAirportTransferModal();
+                    console.log('接送机安排添加成功');
+                };
+
+                const autoAssignAirportTransfer = async () => {
+                    if (airportTransferList.value.length === 0) return;
+
+                    const unassigned = attendees.value.filter(a => !a.airportTransferAssigned);
+                    // 按航班号分配
+                    unassigned.forEach(att => {
+                        const transfer = airportTransferList.value.find(t =>
+                            t.flightNumber === att.flightNumber && t.assignedCount < t.capacity
+                        );
+                        if (transfer) {
+                            transfer.assignedCount++;
+                            att.airportTransferAssigned = true;
+                            att.transferId = transfer.id;
+                        }
+                    });
+                };
+
+                // 4. 智能分配所有辅助安排
+                const autoAssignAllArrangements = async () => {
+                    if (attendees.value.length === 0) {
+                        console.warn('请先导入参会人员');
+                        return;
+                    }
+
+                    try {
+                        loading.value = true;
+                        console.log('正在智能分配...');
+
+                        await autoAssignTransport();
+                        await autoAssignAccommodation();
+                        await autoAssignDiscussion();
+                        await autoAssignDining();
+                        await autoAssignAirportTransfer();
+
+                        saveData();
+                        console.log('智能分配完成！');
+                    } catch (error) {
+                        console.error('智能分配失败:', error);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const autoAssignTransport = async () => {
+                    if (transportList.value.length === 0) return;
+
+                    const unassigned = attendees.value.filter(a => !a.transportAssigned);
+                    const deptGroups = {};
+                    unassigned.forEach(att => {
+                        const dept = att.department || '未知单位';
+                        if (!deptGroups[dept]) deptGroups[dept] = [];
+                        deptGroups[dept].push(att);
+                    });
+
+                    for (const vehicle of transportList.value) {
+                        const remainingCapacity = vehicle.capacity - vehicle.assignedCount;
+                        if (remainingCapacity <= 0) continue;
+
+                        let assignedCount = 0;
+                        for (const dept in deptGroups) {
+                            if (deptGroups[dept].length === 0) continue;
+
+                            const canAssign = Math.min(remainingCapacity - assignedCount, deptGroups[dept].length);
+                            const assigned = deptGroups[dept].splice(0, canAssign);
+
+                            assigned.forEach(attendee => {
+                                attendee.transportAssigned = true;
+                                attendee.vehicleId = vehicle.id;
+                                vehicle.passengers.push(attendee);
+                            });
+
+                            assignedCount += canAssign;
+                            vehicle.assignedCount += canAssign;
+
+                            if (assignedCount >= remainingCapacity) break;
+                        }
+                    }
+                };
+
+                const autoAssignAccommodation = async () => {
+                    if (accommodationList.value.length === 0) return;
+
+                    const unassigned = attendees.value.filter(a => !a.roomAssigned);
+                    const maleAttendees = unassigned.filter(a => a.gender === '男');
+                    const femaleAttendees = unassigned.filter(a => a.gender === '女');
+                    const unknownAttendees = unassigned.filter(a => !a.gender || a.gender === '未知');
+
+                    for (const room of accommodationList.value) {
+                        const remainingCapacity = room.capacity - room.assignedCount;
+                        if (remainingCapacity <= 0) continue;
+
+                        let attendeesToAssign = [];
+
+                        if (room.type === '单人间') {
+                            if (unknownAttendees.length > 0) {
+                                attendeesToAssign = [unknownAttendees.shift()];
+                            } else if (maleAttendees.length > 0) {
+                                attendeesToAssign = [maleAttendees.shift()];
+                            } else if (femaleAttendees.length > 0) {
+                                attendeesToAssign = [femaleAttendees.shift()];
+                            }
+                        } else {
+                            if (room.capacity === 2) {
+                                if (maleAttendees.length >= 2) {
+                                    attendeesToAssign = maleAttendees.splice(0, 2);
+                                } else if (femaleAttendees.length >= 2) {
+                                    attendeesToAssign = femaleAttendees.splice(0, 2);
+                                } else {
+                                    attendeesToAssign = unknownAttendees.splice(0, 2);
+                                }
+                            } else {
+                                attendeesToAssign = unknownAttendees.splice(0, remainingCapacity);
+                            }
+                        }
+
+                        attendeesToAssign.forEach(attendee => {
+                            if (attendee) {
+                                attendee.roomAssigned = true;
+                                attendee.roomId = room.id;
+                                room.occupants.push(attendee);
+                                room.assignedCount++;
+                            }
+                        });
+                    }
+                };
+
+                // 别名，用于单个讨论室的智能分配
+                const autoAssignDiscussion = autoAssignDiscussions;
+
+                const autoAssignDiscussions = async () => {
+                    if (discussionList.value.length === 0) return;
+
+                    const unassigned = attendees.value.filter(a => !a.discussionAssigned);
+
+                    const deptGroups = {};
+                    unassigned.forEach(att => {
+                        const dept = att.department || '未知单位';
+                        if (!deptGroups[dept]) deptGroups[dept] = [];
+                        deptGroups[dept].push(att);
+                    });
+
+                    for (const discussion of discussionList.value) {
+                        const remainingCapacity = discussion.capacity - discussion.assignedCount;
+                        if (remainingCapacity <= 0) continue;
+
+                        for (const dept in deptGroups) {
+                            if (deptGroups[dept].length <= remainingCapacity && deptGroups[dept].length > 0) {
+                                const group = deptGroups[dept];
+
+                                group.forEach(attendee => {
+                                    attendee.discussionAssigned = true;
+                                    attendee.discussionId = discussion.id;
+                                    discussion.groups.push({
+                                        department: dept,
+                                        attendees: group
+                                    });
+                                    discussion.assignedCount++;
+                                });
+
+                                delete deptGroups[dept];
+                                break;
+                            }
+                        }
+                    }
+
+                    const remainingAttendees = Object.values(deptGroups).flat();
+                    for (const attendee of remainingAttendees) {
+                        for (const discussion of discussionList.value) {
+                            if (discussion.assignedCount < discussion.capacity) {
+                                attendee.discussionAssigned = true;
+                                attendee.discussionId = discussion.id;
+                                discussion.assignedCount++;
+                                break;
+                            }
+                        }
+                    }
+                };
+
+                const viewArrangements = () => {
+                    let result = '辅助安排分配结果\n\n';
+
+                    result += '=== 乘车安排 ===\n';
+                    if (transportList.value.length === 0) {
+                        result += '暂无车辆\n';
+                    } else {
+                        transportList.value.forEach(vehicle => {
+                            result += `${vehicle.name} (${vehicle.type})\n`;
+                            result += `  已分配: ${vehicle.assignedCount}/${vehicle.capacity}人\n`;
+                            if (vehicle.passengers.length > 0) {
+                                result += `  乘车人员: ${vehicle.passengers.map(p => p.name).join(', ')}\n`;
+                            }
+                            result += '\n';
+                        });
+                    }
+
+                    result += '\n=== 住宿安排 ===\n';
+                    if (accommodationList.value.length === 0) {
+                        result += '暂无房间\n';
+                    } else {
+                        accommodationList.value.forEach(room => {
+                            result += `${room.hotelName} - ${room.roomNumber} (${room.type})\n`;
+                            result += `  已分配: ${room.assignedCount}/${room.capacity}人\n`;
+                            if (room.occupants.length > 0) {
+                                result += `  入住人员: ${room.occupants.map(o => o.name).join(', ')}\n`;
+                            }
+                            result += '\n';
+                        });
+                    }
+
+                    result += '\n=== 讨论室安排 ===\n';
+                    if (discussionList.value.length === 0) {
+                        result += '暂无讨论室\n';
+                    } else {
+                        discussionList.value.forEach(discussion => {
+                            result += `${discussion.name} - ${discussion.location}\n`;
+                            result += `  已分配: ${discussion.assignedCount}/${discussion.capacity}人\n`;
+                            if (discussion.groups.length > 0) {
+                                discussion.groups.forEach(group => {
+                                    result += `  ${group.department}: ${group.attendees.map(a => a.name).join(', ')}\n`;
+                                });
+                            }
+                            result += '\n';
+                        });
+                    }
+
+                    console.log(result);
+                };
+
+                // ===== 数据持久化 =====
+                const saveData = () => {
+                    try {
+                        const seatingKey = `seating_${conference.value.id}`;
+                        const data = {
+                            version: '2.0',
+                            timestamp: Date.now(),
+                            seatingAreas: seatingAreas.value,
+                            attendees: attendees.value,
+                            arrangements: {
+                                transport: transportList.value,
+                                accommodation: accommodationList.value,
+                                discussion: discussionList.value
+                            }
+                        };
+                        localStorage.setItem(seatingKey, JSON.stringify(data));
+                        console.log('数据已保存');
+                    } catch (error) {
+                        console.error('保存数据失败:', error);
+                    }
+                };
+
+                // ===== 工具方法 =====
+                const getStatusText = (status) => {
+                    const statusMap = {
+                        'preparing': '准备中',
+                        'ongoing': '进行中',
+                        'finished': '已结束'
+                    };
+                    return statusMap[status] || status;
+                };
+
+                const goBack = () => {
+                    window.location.href = '../index.html';
+                };
+
+                // ===== 生命周期 =====
+                onMounted(() => {
+                    initializeConference();
+                });
+
+                // ===== 返回 =====
+                return {
+                    // 状态
+                    loading,
+                    conference,
+                    seatingAreas,
+                    attendees,
+                    statistics,
+                    selectedSeats,
+
+                    // 会场布局
+                    layoutTypes,
+                    selectedLayout,
+                    selectLayout,
+
+                    // 弹窗状态
+                    showAreaConfigModal,
+                    isEditMode,
+                    areaConfig,
+                    previewRows,
+                    previewStats,
+
+                    // 排座算法
+                    selectedAlgorithm,
+                    excelImportMode,
+                    getAlgorithmName,
+
+                    // 辅助安排
+                    transportList,
+                    accommodationList,
+                    discussionList,
+                    diningList,
+                    airportTransferList,
+                    showTransportModalFlag,
+                    showAccommodationModalFlag,
+                    showDiscussionModalFlag,
+                    showDiningModalFlag,
+                    showAirportTransferModalFlag,
+                    newTransport,
+                    newAccommodation,
+                    newDiscussion,
+                    newDining,
+                    newAirportTransfer,
+
+                    // 变更历史
+                    seatChangeHistory,
+                    viewChangeHistory,
+                    undoLastChange,
+                    exportChangeHistory,
+
+                    // 会议
+                    initializeConference,
+                    getStatusText,
+                    goBack,
+
+                    // 座位操作
+                    getSeatClass,
+                    handleSeatClick,
+                    clearSelection,
+                    batchClearSeats,
+                    fillRemainingSeats,
+
+                    // 区域操作
+                    addArea,
+                    closeAreaConfigModal,
+                    adjustRows,
+                    adjustCols,
+                    saveAreaConfig,
+                    getAreaOccupied,
+                    getAreaCapacity,
+
+                    // 参会人员
+                    importFromRegistration,
+                    showAddAttendee,
+                    handleExcelImport,
+                    vipCount,
+
+                    // 排座
+                    executeAutoArrange,
+
+                    // 辅助安排管理
+                    showTransportModal,
+                    closeTransportModal,
+                    saveTransport,
+                    autoAssignTransport,
+                    showAccommodationModal,
+                    closeAccommodationModal,
+                    saveAccommodation,
+                    autoAssignAccommodation,
+                    showDiscussionModal,
+                    closeDiscussionModal,
+                    saveDiscussion,
+                    autoAssignDiscussion,
+                    showDiningModal,
+                    closeDiningModal,
+                    saveDining,
+                    autoAssignDining,
+                    showAirportTransferModal,
+                    closeAirportTransferModal,
+                    saveAirportTransfer,
+                    autoAssignAirportTransfer,
+                    autoAssignAllArrangements,
+                    viewArrangements,
+
+                    // 辅助功能
+                    clearAllSeats,
+                    generateQRCode,
+                    generateLEDMap,
+                    exportSeatingChart,
+
+                    // 数据
+                    saveData
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

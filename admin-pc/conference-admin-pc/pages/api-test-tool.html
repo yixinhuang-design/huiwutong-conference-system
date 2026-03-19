@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 测试工具 - 租户管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .test-item {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .test-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .test-item p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        button.secondary {
+            background: #6b7280;
+        }
+        
+        button.secondary:hover {
+            background: #4b5563;
+        }
+        
+        button.danger {
+            background: #ef4444;
+        }
+        
+        button.danger:hover {
+            background: #dc2626;
+        }
+        
+        .result-box {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .result-box.error {
+            color: #ef4444;
+        }
+        
+        .result-box.success {
+            color: #10b981;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .status-badge.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .status-badge.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .status-badge.warning {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+        
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+        
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            border-radius: 6px;
+            color: #1e40af;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            border-radius: 6px;
+            color: #065f46;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 客户管理 API 测试工具</h1>
+            <p>用于测试和调试租户管理后端接口</p>
+        </div>
+        
+        <!-- 环境检查 -->
+        <div class="test-section">
+            <h2>1️⃣ 环境检查</h2>
+            
+            <div class="test-item">
+                <h3>检查后端连接</h3>
+                <p>验证后端服务是否正在运行</p>
+                <div class="button-group">
+                    <button onclick="checkBackendConnection()">检查后端 (GET /)</button>
+                    <button onclick="checkAPIEndpoint()" class="secondary">检查API端点 (GET /api/tenant/list)</button>
+                </div>
+                <div id="connectionResult"></div>
+            </div>
+            
+            <div class="test-item">
+                <h3>检查数据库连接</h3>
+                <p>通过查询MySQL验证数据库是否可用</p>
+                <div class="button-group">
+                    <button onclick="checkDatabaseTenants()">查询租户数据</button>
+                </div>
+                <div id="databaseResult"></div>
+            </div>
+        </div>
+        
+        <!-- API 测试 -->
+        <div class="test-section">
+            <h2>2️⃣ API 调用测试</h2>
+            
+            <div class="test-item">
+                <h3>测试认证 Token</h3>
+                <p>输入你的认证令牌（可选，如果有的话）</p>
+                <input type="text" id="tokenInput" placeholder="Bearer eyJ..." style="width: 100%; margin: 10px 0;">
+                <button onclick="saveToken()">保存 Token</button>
+                <button onclick="clearToken()" class="secondary">清除 Token</button>
+                <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                    当前 Token: <span id="currentToken" style="font-family: monospace;">无</span>
+                </p>
+            </div>
+            
+            <div class="test-item">
+                <h3>获取租户列表</h3>
+                <p>GET /api/tenant/list</p>
+                <div class="button-group">
+                    <button onclick="callTenantListAPI()">获取列表（使用示例参数）</button>
+                    <button onclick="callTenantListAPINoParams()" class="secondary">获取列表（无参数）</button>
+                    <button onclick="copyAPIUrl('list')" class="secondary">复制 API URL</button>
+                </div>
+                <div id="listResult"></div>
+            </div>
+            
+            <div class="test-item">
+                <h3>获取租户详情</h3>
+                <p>GET /api/tenant/{id}</p>
+                <input type="number" id="tenantIdInput" placeholder="输入租户ID (例如: 1)" style="max-width: 200px;">
+                <div class="button-group">
+                    <button onclick="callTenantDetailAPI()">获取详情</button>
+                </div>
+                <div id="detailResult"></div>
+            </div>
+            
+            <div class="test-item">
+                <h3>创建租户</h3>
+                <p>POST /api/tenant/create</p>
+                <textarea id="createPayload" placeholder="输入JSON格式的租户信息" rows="6" style="font-family: monospace;"></textarea>
+                <div class="button-group">
+                    <button onclick="loadSampleCreatePayload()" class="secondary">加载示例</button>
+                    <button onclick="callCreateTenantAPI()">创建租户</button>
+                </div>
+                <div id="createResult"></div>
+            </div>
+        </div>
+        
+        <!-- 调试信息 -->
+        <div class="test-section">
+            <h2>3️⃣ 调试信息</h2>
+            
+            <div class="test-item">
+                <h3>浏览器控制台</h3>
+                <p>打开 F12 开发者工具，查看 Console 标签页，可以看到更详细的错误信息</p>
+                <button onclick="window.open('about:blank'); console.clear(); alert('Console已清空，重新加载页面可看到日志');">清空 Console 日志</button>
+            </div>
+            
+            <div class="test-item">
+                <h3>常见问题排查</h3>
+                <div class="info-box">
+                    <strong>问题1: 400 Bad Request</strong><br>
+                    → 请求参数格式不正确，或缺少必要的认证令牌<br>
+                    → 解决: 检查是否有有效的 Authorization header
+                </div>
+                <div class="info-box">
+                    <strong>问题2: 404 Not Found</strong><br>
+                    → API 端点不存在，检查URL是否正确<br>
+                    → 后端服务可能没有启动
+                </div>
+                <div class="info-box">
+                    <strong>问题3: CORS 错误</strong><br>
+                    → 跨域请求被浏览器阻止<br>
+                    → 解决: 检查后端是否配置了 CORS
+                </div>
+                <div class="info-box">
+                    <strong>问题4: 403 Forbidden</strong><br>
+                    → 用户权限不足，需要超级管理员权限<br>
+                    → 解决: 确保使用了有效的超级管理员 token
+                </div>
+            </div>
+        </div>
+        
+        <!-- 快速开始 -->
+        <div class="test-section">
+            <h2>🚀 快速开始</h2>
+            <div class="success-box">
+                <strong>1. 启动后端服务:</strong><br>
+                <code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">
+                    cd backend/conference-backend<br>
+                    mvn spring-boot:run -pl conference-auth
+                </code>
+                <br><br>
+                <strong>2. 检查后端连接:</strong><br>
+                点击上面的"检查后端"按钮，看是否返回200状态码<br><br>
+                <strong>3. 获取租户列表:</strong><br>
+                如果连接成功，点击"获取列表"按钮查看所有租户<br><br>
+                <strong>4. 如遇到错误:</strong><br>
+                - 查看浏览器 F12 Console 标签的详细错误信息<br>
+                - 检查后端服务日志<br>
+                - 确认数据库连接正常
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 获取当前保存的Token
+        function getCurrentToken() {
+            const token = localStorage.getItem('testToken') || '';
+            document.getElementById('currentToken').textContent = token || '无';
+            return token;
+        }
+        
+        // 初始化
+        window.addEventListener('load', () => {
+            getCurrentToken();
+            document.getElementById('createPayload').value = JSON.stringify({
+                tenantName: "测试租户",
+                tenantCode: "TEST_" + Date.now(),
+                contactName: "管理员",
+                contactPhone: "13800138000",
+                contactEmail: "admin@test.com",
+                status: 1,
+                expireTime: "2025-12-31",
+                accountLimit: 100
+            }, null, 2);
+        });
+        
+        // 保存Token
+        function saveToken() {
+            const token = document.getElementById('tokenInput').value.trim();
+            if (token) {
+                localStorage.setItem('testToken', token);
+                getCurrentToken();
+                showResult('connectionResult', '✅ Token 已保存', true);
+            } else {
+                showResult('connectionResult', '❌ 请输入有效的 Token', false);
+            }
+        }
+        
+        // 清除Token
+        function clearToken() {
+            localStorage.removeItem('testToken');
+            document.getElementById('tokenInput').value = '';
+            getCurrentToken();
+            showResult('connectionResult', '✅ Token 已清除', true);
+        }
+        
+        // 显示结果
+        function showResult(elementId, message, success = true) {
+            const resultDiv = document.getElementById(elementId);
+            const resultBox = document.createElement('div');
+            resultBox.className = `result-box ${success ? 'success' : 'error'}`;
+            resultBox.textContent = message;
+            resultDiv.innerHTML = '';
+            resultDiv.appendChild(resultBox);
+        }
+        
+        // 检查后端连接
+        async function checkBackendConnection() {
+            try {
+                showResult('connectionResult', '⏳ 正在连接...', true);
+                const response = await fetch('http://localhost:8081/', {
+                    method: 'GET',
+                    timeout: 5000
+                });
+                showResult('connectionResult', `✅ 后端连接成功\n状态码: ${response.status}\n`);
+                console.log('Backend response:', response);
+            } catch (error) {
+                showResult('connectionResult', `❌ 后端连接失败\n${error.message}\n\n请确保:\n1. 后端服务运行在 http://localhost:8081\n2. 未被防火墙阻止\n3. 端口8081未被占用`, false);
+            }
+        }
+        
+        // 检查API端点
+        async function checkAPIEndpoint() {
+            try {
+                showResult('connectionResult', '⏳ 正在检查API...', true);
+                const token = getCurrentToken();
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch('http://localhost:8081/api/tenant/list', {
+                    method: 'GET',
+                    headers: headers
+                });
+                
+                const text = await response.text();
+                let message = `✅ API 响应成功\n状态码: ${response.status}\n\n响应内容:\n${text}`;
+                
+                showResult('connectionResult', message, response.ok);
+                console.log('API response:', response.status, text);
+            } catch (error) {
+                showResult('connectionResult', `❌ API 调用失败\n${error.message}`, false);
+            }
+        }
+        
+        // 获取租户列表（带参数）
+        async function callTenantListAPI() {
+            try {
+                showResult('listResult', '⏳ 正在加载...', true);
+                const token = getCurrentToken();
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch('http://localhost:8081/api/tenant/list?page=1&pageSize=10', {
+                    method: 'GET',
+                    headers: headers
+                });
+                
+                const data = await response.json();
+                showResult('listResult', `状态码: ${response.status}\n\n${JSON.stringify(data, null, 2)}`, response.ok);
+            } catch (error) {
+                showResult('listResult', `❌ 调用失败: ${error.message}`, false);
+            }
+        }
+        
+        // 获取租户列表（无参数）
+        async function callTenantListAPINoParams() {
+            try {
+                showResult('listResult', '⏳ 正在加载...', true);
+                const token = getCurrentToken();
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch('http://localhost:8081/api/tenant/list', {
+                    method: 'GET',
+                    headers: headers
+                });
+                
+                const data = await response.json();
+                showResult('listResult', `状态码: ${response.status}\n\n${JSON.stringify(data, null, 2)}`, response.ok);
+            } catch (error) {
+                showResult('listResult', `❌ 调用失败: ${error.message}`, false);
+            }
+        }
+        
+        // 复制API URL
+        function copyAPIUrl(type) {
+            let url = 'http://localhost:8081/api/tenant/list';
+            if (type === 'detail') {
+                url = 'http://localhost:8081/api/tenant/{id}';
+            }
+            navigator.clipboard.writeText(url).then(() => {
+                alert('✅ URL 已复制到剪贴板:\n' + url);
+            });
+        }
+        
+        // 获取租户详情
+        async function callTenantDetailAPI() {
+            const tenantId = document.getElementById('tenantIdInput').value;
+            if (!tenantId) {
+                showResult('detailResult', '❌ 请输入租户ID', false);
+                return;
+            }
+            
+            try {
+                showResult('detailResult', '⏳ 正在加载...', true);
+                const token = getCurrentToken();
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch(`http://localhost:8081/api/tenant/${tenantId}`, {
+                    method: 'GET',
+                    headers: headers
+                });
+                
+                const data = await response.json();
+                showResult('detailResult', `状态码: ${response.status}\n\n${JSON.stringify(data, null, 2)}`, response.ok);
+            } catch (error) {
+                showResult('detailResult', `❌ 调用失败: ${error.message}`, false);
+            }
+        }
+        
+        // 加载示例创建载荷
+        function loadSampleCreatePayload() {
+            document.getElementById('createPayload').value = JSON.stringify({
+                tenantName: "测试租户_" + new Date().getTime(),
+                tenantCode: "TEST_" + new Date().getTime(),
+                contactName: "管理员",
+                contactPhone: "13800138000",
+                contactEmail: "admin@test.com",
+                status: 1,
+                expireTime: "2025-12-31",
+                accountLimit: 100
+            }, null, 2);
+        }
+        
+        // 创建租户
+        async function callCreateTenantAPI() {
+            const payload = document.getElementById('createPayload').value;
+            
+            try {
+                const data = JSON.parse(payload);
+                showResult('createResult', '⏳ 正在创建...', true);
+                
+                const token = getCurrentToken();
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch('http://localhost:8081/api/tenant/create', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                showResult('createResult', `状态码: ${response.status}\n\n${JSON.stringify(result, null, 2)}`, response.ok);
+            } catch (error) {
+                showResult('createResult', `❌ ${error.message}`, false);
+            }
+        }
+        
+        // 检查数据库租户
+        function checkDatabaseTenants() {
+            showResult('databaseResult', `请执行以下 SQL 命令:\n\nSELECT COUNT(*) as total FROM conference_auth.sys_tenant;\nSELECT id, tenant_code, tenant_name, status FROM conference_auth.sys_tenant;\n\n或使用命令行:\nmysql -h 127.0.0.1 -P 3308 -u root -pHnhx@123 conference_auth -e "SELECT * FROM sys_tenant;"`, true);
+        }
+    </script>
+</body>
+</html>

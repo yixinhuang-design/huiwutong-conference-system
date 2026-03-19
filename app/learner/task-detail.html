@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务详情 - 学员视角</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="task-list.html" class="btn btn-secondary" style="padding:8px 12px;">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                        <button class="btn btn-outline" style="padding:8px 12px;">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 签到任务详情 -->
+                <div class="card fade-in" id="checkin-task">
+                    <div class="card-header">
+                        <i class="fas fa-calendar-check" style="color:#22c55e;"></i>
+                        <div class="card-title">会议签到</div>
+                        <span class="status-chip status-warning">待完成</span>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">签到时间</div>
+                                <div class="assistant-item-desc">2025年1月11日 08:45</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">签到地点</div>
+                                <div class="assistant-item-desc">越秀会议中心101室</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">任务说明</div>
+                                <div class="assistant-item-desc">请提前10分钟到达，携带本人身份证件，在签到处完成签到手续</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-block" style="padding: 14px 16px; font-size: 15px; font-weight: 600; border-radius: 10px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 6px 16px rgba(59, 130, 246, 0.4); transform: translateY(-2px);'" onmouseout="this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.3); transform: translateY(0);'" onclick="completeTask('checkin')">
+                            <i class="fas fa-check-circle" style="margin-right: 6px;"></i> 完成签到
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 问卷任务详情 -->
+                <div class="card fade-in" id="feedback-task" style="display:none;">
+                    <div class="card-header">
+                        <i class="fas fa-clipboard-list" style="color:#8b5cf6;"></i>
+                        <div class="card-title">培训满意度调查</div>
+                        <span class="status-chip status-warning">待完成</span>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">截止时间</div>
+                                <div class="assistant-item-desc">2025年1月12日 18:00</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-poll"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">问卷题目</div>
+                                <div class="assistant-item-desc">共15题，预计耗时5分钟</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">任务说明</div>
+                                <div class="assistant-item-desc">请根据培训体验填写问卷，帮助我们持续改进培训质量</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-block" onclick="window.location.href='feedback.html'">
+                            <i class="fas fa-edit"></i> 开始填写
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 评价任务详情 -->
+                <div class="card fade-in" id="evaluation-task" style="display:none;">
+                    <div class="card-header">
+                        <i class="fas fa-star" style="color:#f59e0b;"></i>
+                        <div class="card-title">讲师评价</div>
+                        <span class="status-chip status-warning">待完成</span>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">评价对象</div>
+                                <div class="assistant-item-desc">张教授 - 党建工作实务</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">截止时间</div>
+                                <div class="assistant-item-desc">2025年1月11日 22:00</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">评价维度</div>
+                                <div class="assistant-item-desc">内容质量、授课效果、互动性、实用性</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-block" onclick="window.location.href='evaluation.html'">
+                            <i class="fas fa-star"></i> 开始评价
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 现场任务详情 -->
+                <div class="card fade-in" id="scene-task" style="display:none;">
+                    <div class="card-header">
+                        <i class="fas fa-map-marker-alt" style="color:#ef4444;"></i>
+                        <div class="card-title">现场合影</div>
+                        <span class="status-chip status-info">进行中</span>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">任务时间</div>
+                                <div class="assistant-item-desc">2025年1月11日 14:00-16:00</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">集合地点</div>
+                                <div class="assistant-item-desc">越秀会议中心大厅</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">参与人员</div>
+                                <div class="assistant-item-desc">第一组成员（8人）</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">任务要求</div>
+                                <div class="assistant-item-desc">在指定地点完成小组合影，并上传至系统</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-block" onclick="alert('请在指定时间内到达现场完成任务')">
+                            <i class="fas fa-map-marker-alt"></i> 导航前往
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 征集任务详情 -->
+                <div class="card fade-in" id="collection-task" style="display:none;">
+                    <div class="card-header">
+                        <i class="fas fa-lightbulb" style="color:#06b6d4;"></i>
+                        <div class="card-title">心得体会征集</div>
+                        <span class="status-chip status-secure">可选</span>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">截止时间</div>
+                                <div class="assistant-item-desc">2025年1月17日 18:00</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-pen-fancy"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">内容要求</div>
+                                <div class="assistant-item-desc">300-800字，分享培训心得与收获</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">奖励机制</div>
+                                <div class="assistant-item-desc">优秀作品将在公众号展示，并获得纪念品</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-outline btn-block" onclick="alert('请在截止日期前提交心得体会')">
+                            <i class="fas fa-edit"></i> 提交作品
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 就寝任务详情 -->
+                <div class="card fade-in" id="bedtime-task" style="display:none;">
+                    <div class="card-header">
+                        <i class="fas fa-bed" style="color:#6366f1;"></i>
+                        <div class="card-title">就寝打卡</div>
+                        <span class="status-chip status-secure">待完成</span>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">打卡时间</div>
+                                <div class="assistant-item-desc">2025年1月11日 23:00前</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-hotel"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">住宿地点</div>
+                                <div class="assistant-item-desc">维也纳酒店</div>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">任务说明</div>
+                                <div class="assistant-item-desc">请在23:00前完成就寝打卡，确保充足睡眠</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-block" onclick="completeTask('bedtime')">
+                            <i class="fas fa-bed"></i> 完成打卡
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='../common/home.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/assistant.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/navigation.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-compass"></i>
+                    </div>
+                    <div class="nav-text">导航</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="nav-text">任务</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item" onclick="window.location.href='../common/profile.html'">
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取URL参数
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // 显示对应任务详情
+        function showTaskDetail(type) {
+            // 隐藏所有任务
+            document.querySelectorAll('[id$="-task"]').forEach(el => {
+                el.style.display = 'none';
+            });
+
+            // 显示对应任务
+            const taskId = type + '-task';
+            const taskElement = document.getElementById(taskId);
+            if (taskElement) {
+                taskElement.style.display = 'block';
+            }
+        }
+
+        // 完成任务
+        function completeTask(type) {
+            alert('任务已完成！');
+            setTimeout(() => {
+                window.location.href = 'task-list.html';
+            }, 500);
+        }
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            const type = getQueryParam('type');
+            if (type) {
+                showTaskDetail(type);
+            }
+
+            // 淡入动画
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作人员 · 日程录入</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles/mobile.css">
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="status-left"><span>9:41</span></div>
+                <div class="status-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <a href="meeting-detail.html" class="btn btn-secondary" style="padding:8px 12px;"><i class="fas fa-chevron-left"></i></a>
+                        <div>
+                            <div class="card-title">2025党务干部培训班</div>
+                        </div>
+                        <button class="btn btn-outline" style="padding:8px 12px;">
+                            <i class="fas fa-file-import"></i> 导入Excel
+                        </button>
+                    </div>
+                    <div class="pill-group">
+                        <div class="pill-active">全部日程</div>
+                        <div class="pill">今日</div>
+                        <div class="pill">待确认</div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header" style="align-items:flex-start;">
+                        <div style="display:flex; gap:12px;">
+                            <i class="fas fa-sun" style="color:#f59e0b;"></i>
+                            <div class="card-title">上午日程</div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                            <span class="status-chip status-accent"><i class="fas fa-bullseye"></i> 已发布</span>
+                            <a class="link-inline" href="#"><i class="fas fa-plus"></i> 新增日程</a>
+                        </div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon"><i class="fas fa-clipboard-check"></i></div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">08:00 - 09:00 报到签到</div>
+                                <div class="assistant-item-desc">负责人：会务组 · 地点：报告厅门厅</div>
+                                <span class="status-chip status-positive"><i class="fas fa-check-circle"></i> 已发布</span>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);">
+                                <i class="fas fa-microphone-alt"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">09:00 - 10:30 开班仪式</div>
+                                <div class="assistant-item-desc">主持：张主任 · 地点：报告厅</div>
+                                <span class="status-chip status-info"><i class="fas fa-bell"></i> 含提醒</span>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#16a34a,#15803d);">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">10:30 - 12:00 第一堂课 - 党务工作创新</div>
+                                <div class="assistant-item-desc">讲师：李教授 · 教室：A202 · 最多 50 人</div>
+                                <span class="status-chip status-positive"><i class="fas fa-check-circle"></i> 已发布</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header" style="align-items:flex-start;">
+                        <div style="display:flex; gap:12px;">
+                            <i class="fas fa-utensils" style="color:#f97316;"></i>
+                            <div class="card-title">午间休息</div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                            <span class="status-chip status-accent"><i class="fas fa-bullseye"></i> 已发布</span>
+                            <a class="link-inline" href="#"><i class="fas fa-plus"></i> 新增日程</a>
+                        </div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#f97316,#ea580c);">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">12:00 - 13:00 午餐休息</div>
+                                <div class="assistant-item-desc">地点：餐厅 · 提供自助餐</div>
+                                <span class="status-chip status-positive"><i class="fas fa-check-circle"></i> 已发布</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header" style="align-items:flex-start;">
+                        <div style="display:flex; gap:12px;">
+                            <i class="fas fa-moon" style="color:#a78bfa;"></i>
+                            <div class="card-title">下午日程</div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                            <span class="status-chip status-neutral"><i class="fas fa-clock"></i> 待确认</span>
+                            <a class="link-inline" href="#"><i class="fas fa-plus"></i> 新增日程</a>
+                        </div>
+                    </div>
+                    <div class="assistant-list">
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">13:00 - 14:30 分组讨论 - 党风廉政建设</div>
+                                <div class="assistant-item-desc">讨论组 1-4 · 地点：各分会场</div>
+                                <span class="status-chip status-warning"><i class="fas fa-exclamation-circle"></i> 待确认</span>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#06b6d4,#0891b2);">
+                                <i class="fas fa-presentation"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">14:30 - 16:00 第二堂课 - 实践经验分享</div>
+                                <div class="assistant-item-desc">讲师：王教授 · 教室：A202 · 最多 50 人</div>
+                                <span class="status-chip status-info"><i class="fas fa-ellipsis-h"></i> 草稿</span>
+                            </div>
+                        </div>
+                        <div class="assistant-item">
+                            <div class="assistant-item-icon" style="background:linear-gradient(135deg,#ec4899,#db2777);">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            <div class="assistant-item-content">
+                                <div class="assistant-item-title">16:00 - 16:30 互动交流 & 合影留念</div>
+                                <div class="assistant-item-desc">地点：报告厅 · 准备拍照道具</div>
+                                <span class="status-chip status-neutral"><i class="fas fa-clock"></i> 待确认</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-home"></i></div>
+                    <div class="nav-text">首页</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                    <div class="nav-text">AI助理</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon"><i class="fas fa-comments"></i></div>
+                    <div class="nav-text">沟通</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-history"></i></div>
+                    <div class="nav-text">往期</div>
+                    <div class="nav-indicator"></div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"><i class="fas fa-user"></i></div>
+                    <div class="nav-text">我的</div>
+                    <div class="nav-indicator"></div>
+                </div>
+            </div>
+
+            <!-- 日程录入弹窗 -->
+            <div id="scheduleModal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-height:90vh; overflow-y:auto;">
+                    <div class="card-header" style="border-bottom:1px solid #e5e7eb; padding-bottom:12px; margin-bottom:16px;">
+                        <div class="card-title">新增日程</div>
+                        <button class="btn btn-secondary" style="padding:6px 10px;" onclick="closeScheduleModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="scheduleForm" class="form-container">
+                        <!-- 基本信息 -->
+                        <div class="form-group">
+                            <label class="form-label">日程标题 <span style="color:#ef4444;">*</span></label>
+                            <input type="text" class="form-input" id="scheduleTitle" placeholder="请输入日程标题" required>
+                        </div>
+                        
+                        <div class="form-row" style="display:flex; gap:12px;">
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">开始时间 <span style="color:#ef4444;">*</span></label>
+                                <input type="datetime-local" class="form-input" id="startTime" required>
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">结束时间 <span style="color:#ef4444;">*</span></label>
+                                <input type="datetime-local" class="form-input" id="endTime" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">日程地点 <span style="color:#ef4444;">*</span></label>
+                            <input type="text" class="form-input" id="scheduleLocation" placeholder="请输入日程地点">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">负责人/讲师</label>
+                            <input type="text" class="form-input" id="scheduleHost" placeholder="请输入负责人或讲师姓名">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">日程类型</label>
+                            <select class="form-input" id="scheduleType">
+                                <option value="lecture">课程讲座</option>
+                                <option value="checkin">报到签到</option>
+                                <option value="ceremony">开班/结业仪式</option>
+                                <option value="break">休息用餐</option>
+                                <option value="activity">分组活动</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 签到设置 -->
+                        <div class="section-title" style="margin-top:16px; font-size:14px;">
+                            <i class="fas fa-qrcode" style="color:#2563eb;"></i> 签到设置
+                        </div>
+                        <div class="form-group">
+                            <label class="switch-label" style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>启用签到</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="enableCheckin">
+                                    <span class="slider round"></span>
+                                </label>
+                            </label>
+                        </div>
+                        <div id="checkinSettings" style="display:none; padding:12px; background:#f8fafc; border-radius:8px; margin-bottom:12px;">
+                            <div class="form-row" style="display:flex; gap:12px;">
+                                <div class="form-group" style="flex:1; margin-bottom:0;">
+                                    <label class="form-label" style="font-size:12px;">签到开始</label>
+                                    <input type="time" class="form-input" id="checkinStart" value="08:30">
+                                </div>
+                                <div class="form-group" style="flex:1; margin-bottom:0;">
+                                    <label class="form-label" style="font-size:12px;">签到结束</label>
+                                    <input type="time" class="form-input" id="checkinEnd" value="09:00">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-top:12px; margin-bottom:0;">
+                                <label class="form-label" style="font-size:12px;">签到方式</label>
+                                <div class="pill-group" style="flex-wrap:wrap;">
+                                    <div class="pill-active" data-method="qr">扫码签到</div>
+                                    <div class="pill" data-method="face">人脸识别</div>
+                                    <div class="pill" data-method="manual">手动签到</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 提醒设置 -->
+                        <div class="section-title" style="font-size:14px;">
+                            <i class="fas fa-bell" style="color:#f59e0b;"></i> 提醒设置
+                        </div>
+                        <div class="form-group">
+                            <label class="switch-label" style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>启用提醒</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="enableReminder">
+                                    <span class="slider round"></span>
+                                </label>
+                            </label>
+                        </div>
+                        <div id="reminderSettings" style="display:none; padding:12px; background:#f8fafc; border-radius:8px; margin-bottom:12px;">
+                            <div class="form-group" style="margin-bottom:8px;">
+                                <label class="form-label" style="font-size:12px;">提醒时间</label>
+                                <select class="form-input" id="reminderTime">
+                                    <option value="5">开始前5分钟</option>
+                                    <option value="15" selected>开始前15分钟</option>
+                                    <option value="30">开始前30分钟</option>
+                                    <option value="60">开始前1小时</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="font-size:12px;">提醒方式</label>
+                                <div style="display:flex; gap:16px;">
+                                    <label style="display:flex; align-items:center; gap:6px; font-size:13px;">
+                                        <input type="checkbox" id="remindPush" checked> APP推送
+                                    </label>
+                                    <label style="display:flex; align-items:center; gap:6px; font-size:13px;">
+                                        <input type="checkbox" id="remindSms"> 短信
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">备注说明</label>
+                            <textarea class="form-input" id="scheduleRemark" rows="2" placeholder="可选填备注信息"></textarea>
+                        </div>
+                        
+                        <div class="cta-bar" style="margin-top:20px;">
+                            <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()">取消</button>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> 保存日程</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-content {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        /* 表单样式 */
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+        }
+        .form-input {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+        /* 开关样式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+        }
+        input:checked + .slider {
+            background-color: #2563eb;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .slider.round {
+            border-radius: 24px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+    </style>
+
+    <script>
+        // 弹窗控制
+        function openScheduleModal() {
+            document.getElementById('scheduleModal').style.display = 'flex';
+        }
+        function closeScheduleModal() {
+            document.getElementById('scheduleModal').style.display = 'none';
+        }
+        
+        // 签到设置切换
+        document.getElementById('enableCheckin').addEventListener('change', function() {
+            document.getElementById('checkinSettings').style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // 提醒设置切换
+        document.getElementById('enableReminder').addEventListener('change', function() {
+            document.getElementById('reminderSettings').style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // 签到方式选择
+        document.querySelectorAll('#checkinSettings .pill, #checkinSettings .pill-active').forEach(pill => {
+            pill.addEventListener('click', function() {
+                document.querySelectorAll('#checkinSettings .pill, #checkinSettings .pill-active').forEach(p => {
+                    p.className = 'pill';
+                });
+                this.className = 'pill-active';
+            });
+        });
+        
+        // 表单提交
+        document.getElementById('scheduleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                title: document.getElementById('scheduleTitle').value,
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                location: document.getElementById('scheduleLocation').value,
+                host: document.getElementById('scheduleHost').value,
+                type: document.getElementById('scheduleType').value,
+                enableCheckin: document.getElementById('enableCheckin').checked,
+                enableReminder: document.getElementById('enableReminder').checked
+            };
+            
+            // 模拟保存
+            console.log('保存日程:', formData);
+            alert('日程保存成功！');
+            closeScheduleModal();
+        });
+        
+        // 绑定新增日程按钮
+        document.querySelectorAll('a[href="#"]').forEach(link => {
+            if (link.textContent.includes('新增日程')) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openScheduleModal();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

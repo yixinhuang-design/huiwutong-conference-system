@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会务协同系统 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">会务协同系统</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card">
+            <div>
+                <h2>👥 会务协同系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    <span class="group-info">{{ groupStats.totalGroups }}个协同群组 · {{ groupStats.totalManagers }}名协管员</span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="createTask">
+                    <i class="fas fa-plus"></i>
+                    创建任务
+                </button>
+            </div>
+        </div>
+
+        <!-- 自动组群状态 -->
+        <div class="group-status glass-card">
+            <h3>👥 自动组群状态</h3>
+            <div class="group-cards">
+                <div class="group-card" 
+                     v-for="group in conferenceGroups" 
+                     :key="group.id"
+                     :data-group-type="group.type">
+                    <div class="group-header">
+                        <i :class="group.icon"></i>
+                        <span class="group-name">{{ group.name }}</span>
+                        <span class="member-count">{{ group.memberCount }}人</span>
+                    </div>
+                    <div class="group-activity">
+                        <span class="activity-indicator" :class="{ active: group.active }"></span>
+                        <span class="activity-text">{{ group.active ? '活跃中' : '静默' }}</span>
+                        <span class="message-count">今日消息: {{ group.todayMessages }}</span>
+                    </div>
+                    <div class="group-stats">
+                        <div class="stat">
+                            <span class="label">任务数:</span>
+                            <span class="value">{{ group.tasks }}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">在线:</span>
+                            <span class="value">{{ group.onlineCount }}</span>
+                        </div>
+                    </div>
+                    <div class="group-actions">
+                        <button class="btn-sm btn-primary" @click="manageGroup(group.id)">
+                            <i class="fas fa-cog"></i>
+                            管理群组
+                        </button>
+                        <button class="btn-sm btn-outline" @click="sendGroupMessage(group.id)">
+                            <i class="fas fa-comment"></i>
+                            发送消息
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 任务分派系统 -->
+        <div class="task-assignment glass-card">
+            <h3>📋 任务分派管理</h3>
+            
+            <!-- 任务创建表单（可展开/收起） -->
+            <div class="task-creation" v-show="showTaskForm">
+                <h4>创建新任务</h4>
+                <form class="task-form" @submit.prevent="submitTask">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>任务标题 *</label>
+                            <input type="text" 
+                                   v-model="newTask.title" 
+                                   placeholder="请输入任务标题" 
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label>任务类型</label>
+                            <select v-model="newTask.type">
+                                <option value="preparation">会务筹备</option>
+                                <option value="reception">接待服务</option>
+                                <option value="equipment">设备管理</option>
+                                <option value="document">资料整理</option>
+                                <option value="inspection">现场检查</option>
+                                <option value="coordination">协调沟通</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>任务描述</label>
+                        <textarea v-model="newTask.description" 
+                                  placeholder="详细描述任务内容、要求和标准..." 
+                                  rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>负责人</label>
+                            <select v-model="newTask.assignee">
+                                <option value="">选择负责人</option>
+                                <option v-for="manager in managers" 
+                                        :key="manager.id" 
+                                        :value="manager.id">
+                                    {{ manager.name }} ({{ manager.role }})
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>截止时间</label>
+                            <input type="datetime-local" v-model="newTask.deadline">
+                        </div>
+                        <div class="form-group">
+                            <label>优先级</label>
+                            <select v-model="newTask.priority">
+                                <option value="low">低</option>
+                                <option value="medium">中</option>
+                                <option value="high">高</option>
+                                <option value="urgent">紧急</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 二级管理员任务分配 -->
+                    <div class="secondary-admin-section">
+                        <h5>二级管理员任务分配</h5>
+                        <div class="admin-hierarchy">
+                            <div class="admin-level">
+                                <span class="level-label">培训管理员:</span>
+                                <select v-model="newTask.primaryAdmin">
+                                    <option value="admin_001">张总监</option>
+                                    <option value="admin_002">李经理</option>
+                                </select>
+                            </div>
+                            <div class="admin-level">
+                                <span class="level-label">二级管理员:</span>
+                                <select v-model="newTask.secondaryAdmin">
+                                    <option value="">不指定</option>
+                                    <option v-for="admin in secondaryAdmins" 
+                                            :key="admin.id" 
+                                            :value="admin.id">
+                                        {{ admin.name }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="approval-flow">
+                            <label>
+                                <input type="checkbox" v-model="newTask.requireApproval">
+                                需要上级审批
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">创建任务</button>
+                        <button type="button" class="btn-outline" @click="saveDraft">保存草稿</button>
+                        <button type="button" class="btn-outline" @click="cancelTaskCreation">取消</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 任务看板 -->
+            <div class="task-kanban">
+                <h4>任务看板</h4>
+                <div class="kanban-controls">
+                    <div class="view-switch">
+                        <button :class="{ active: viewMode === 'kanban' }" @click="viewMode = 'kanban'">
+                            <i class="fas fa-columns"></i>
+                            看板视图
+                        </button>
+                        <button :class="{ active: viewMode === 'list' }" @click="viewMode = 'list'">
+                            <i class="fas fa-list"></i>
+                            列表视图
+                        </button>
+                    </div>
+                    <div class="kanban-filters">
+                        <select v-model="taskFilter.assignee">
+                            <option value="">全部负责人</option>
+                            <option v-for="manager in managers" :key="manager.id" :value="manager.id">
+                                {{ manager.name }}
+                            </option>
+                        </select>
+                        <select v-model="taskFilter.priority">
+                            <option value="">全部优先级</option>
+                            <option value="urgent">紧急</option>
+                            <option value="high">高</option>
+                            <option value="medium">中</option>
+                            <option value="low">低</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="kanban-board" v-if="viewMode === 'kanban'">
+                    <div class="kanban-column" 
+                         v-for="column in kanbanColumns" 
+                         :key="column.status"
+                         :data-status="column.status">
+                        <div class="column-header">
+                            <h5>{{ column.name }}</h5>
+                            <span class="task-count">{{ getTaskCountByStatus(column.status) }}</span>
+                        </div>
+                        <div class="task-list" :ref="'taskList_' + column.status">
+                            <div class="task-card" 
+                                 v-for="task in getTasksByStatus(column.status)" 
+                                 :key="task.id"
+                                 :data-task-id="task.id"
+                                 @click="viewTaskDetails(task.id)">
+                                <div class="task-priority" :class="'priority-' + task.priority"></div>
+                                <div class="task-header">
+                                    <h6>{{ task.title }}</h6>
+                                    <span class="task-type">{{ getTaskTypeText(task.type) }}</span>
+                                </div>
+                                <div class="task-body">
+                                    <p>{{ task.description }}</p>
+                                    <div class="task-meta">
+                                        <div class="meta-item">
+                                            <i class="fas fa-user"></i>
+                                            <span>{{ getManagerName(task.assignee) || '未分配' }}</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="fas fa-clock"></i>
+                                            <span>{{ formatDeadline(task.deadline) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="task-footer">
+                                    <button class="btn-sm btn-outline" 
+                                            @click.stop="editTask(task.id)">
+                                        编辑
+                                    </button>
+                                    <button class="btn-sm btn-primary" 
+                                            v-if="task.status === 'todo'"
+                                            @click.stop="startTask(task.id)">
+                                        开始
+                                    </button>
+                                    <button class="btn-sm btn-success" 
+                                            v-if="task.status === 'inprogress'"
+                                            @click.stop="completeTask(task.id)">
+                                        完成
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-list-view" v-else>
+                    <table class="task-table">
+                        <thead>
+                            <tr>
+                                <th>任务标题</th>
+                                <th>类型</th>
+                                <th>负责人</th>
+                                <th>优先级</th>
+                                <th>状态</th>
+                                <th>截止时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="task in filteredTasks" :key="task.id">
+                                <td>{{ task.title }}</td>
+                                <td>{{ getTaskTypeText(task.type) }}</td>
+                                <td>{{ getManagerName(task.assignee) }}</td>
+                                <td>
+                                    <span class="priority-badge" :class="'priority-' + task.priority">
+                                        {{ getPriorityText(task.priority) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge" :class="'status-' + task.status">
+                                        {{ getStatusText(task.status) }}
+                                    </span>
+                                </td>
+                                <td>{{ formatDeadline(task.deadline) }}</td>
+                                <td>
+                                    <button class="btn-sm" @click="viewTaskDetails(task.id)">详情</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 考勤签到管理 -->
+        <div class="attendance-management glass-card" id="attendance">
+            <h3>✅ 考勤签到管理</h3>
+            
+            <div class="signin-methods">
+                <div class="method-card" 
+                     v-for="method in signinMethods" 
+                     :key="method.id"
+                     :class="{ active: method.enabled }">
+                    <div class="method-icon">
+                        <i :class="method.icon"></i>
+                    </div>
+                    <div class="method-info">
+                        <h5>{{ method.name }}</h5>
+                        <p>{{ method.description }}</p>
+                    </div>
+                    <div class="method-status">
+                        <span class="status" :class="{ active: method.enabled }">
+                            {{ method.enabled ? '已启用' : '未启用' }}
+                        </span>
+                    </div>
+                    <div class="method-actions">
+                        <button class="btn-sm" 
+                                :class="method.enabled ? 'btn-danger' : 'btn-primary'"
+                                @click="toggleSigninMethod(method.id)">
+                            {{ method.enabled ? '禁用' : '启用' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 考勤统计 -->
+            <div class="attendance-stats">
+                <h4>考勤统计</h4>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ attendanceStats.total }}</div>
+                        <div class="stat-label">应到人数</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-value">{{ attendanceStats.checkedIn }}</div>
+                        <div class="stat-label">已签到</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-value">{{ attendanceStats.notCheckedIn }}</div>
+                        <div class="stat-label">未签到</div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="stat-value">{{ attendanceStats.rate }}%</div>
+                        <div class="stat-label">签到率</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 考勤报表 -->
+            <div class="attendance-report">
+                <h4>考勤报表</h4>
+                <div class="report-actions">
+                    <button class="btn-outline" @click="generateReport">
+                        <i class="fas fa-file-alt"></i>
+                        生成报表
+                    </button>
+                    <button class="btn-outline" @click="exportAttendance">
+                        <i class="fas fa-download"></i>
+                        导出数据
+                    </button>
+                    <button class="btn-outline" @click="sendReminder">
+                        <i class="fas fa-bell"></i>
+                        催促签到
+                    </button>
+                </div>
+                
+                <div class="report-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>部门</th>
+                                <th>签到时间</th>
+                                <th>签到方式</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="record in attendanceRecords" :key="record.id">
+                                <td>{{ record.name }}</td>
+                                <td>{{ record.department }}</td>
+                                <td>{{ record.checkinTime || '-' }}</td>
+                                <td>{{ record.checkinMethod || '-' }}</td>
+                                <td>
+                                    <span class="status-badge" 
+                                          :class="record.checkedIn ? 'status-success' : 'status-warning'">
+                                        {{ record.checkedIn ? '已签到' : '未签到' }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        </div><!-- 关闭page-with-nav -->
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    groupStats: {
+                        totalGroups: 4,
+                        totalManagers: 12
+                    },
+                    conferenceGroups: [
+                        {
+                            id: 'managers',
+                            name: '协管员工作群',
+                            type: 'manager',
+                            icon: 'fas fa-tools',
+                            memberCount: 12,
+                            active: true,
+                            todayMessages: 87,
+                            tasks: 15,
+                            onlineCount: 10
+                        },
+                        {
+                            id: 'all_attendees',
+                            name: '学员全员群',
+                            type: 'attendee',
+                            icon: 'fas fa-user-graduate',
+                            memberCount: 356,
+                            active: true,
+                            todayMessages: 234,
+                            tasks: 0,
+                            onlineCount: 298
+                        },
+                        {
+                            id: 'group_1',
+                            name: '第一学习小组',
+                            type: 'attendee_group',
+                            icon: 'fas fa-users',
+                            memberCount: 25,
+                            active: true,
+                            todayMessages: 45,
+                            tasks: 3,
+                            onlineCount: 22
+                        },
+                        {
+                            id: 'group_2',
+                            name: '第二学习小组',
+                            type: 'attendee_group',
+                            icon: 'fas fa-users',
+                            memberCount: 25,
+                            active: false,
+                            todayMessages: 12,
+                            tasks: 2,
+                            onlineCount: 18
+                        }
+                    ],
+                    showTaskForm: false,
+                    newTask: {
+                        title: '',
+                        type: 'preparation',
+                        description: '',
+                        assignee: '',
+                        deadline: '',
+                        priority: 'medium',
+                        primaryAdmin: '',
+                        secondaryAdmin: '',
+                        requireApproval: false
+                    },
+                    managers: [
+                        { id: 'user_001', name: '张三', role: '会场管理' },
+                        { id: 'user_002', name: '李四', role: '接待服务' },
+                        { id: 'user_003', name: '王五', role: '技术支持' }
+                    ],
+                    secondaryAdmins: [
+                        { id: 'admin_003', name: '赵六' },
+                        { id: 'admin_004', name: '钱七' }
+                    ],
+                    tasks: [
+                        {
+                            id: 'task_001',
+                            title: '主会场布置检查',
+                            type: 'inspection',
+                            description: '检查主会场桌椅摆放、设备调试、环境布置情况',
+                            assignee: '',
+                            deadline: '2024-06-14 16:00',
+                            priority: 'high',
+                            status: 'todo'
+                        },
+                        {
+                            id: 'task_002',
+                            title: '接待流程演练',
+                            type: 'preparation',
+                            description: '组织接待人员进行接待流程演练',
+                            assignee: 'user_002',
+                            deadline: '2024-06-14 14:00',
+                            priority: 'medium',
+                            status: 'inprogress'
+                        }
+                    ],
+                    viewMode: 'kanban',
+                    taskFilter: {
+                        assignee: '',
+                        priority: ''
+                    },
+                    kanbanColumns: [
+                        { status: 'todo', name: '待处理' },
+                        { status: 'inprogress', name: '进行中' },
+                        { status: 'review', name: '待验收' },
+                        { status: 'completed', name: '已完成' }
+                    ],
+                    signinMethods: [
+                        {
+                            id: 'qrcode',
+                            name: '二维码签到',
+                            description: '扫描参会者二维码快速签到',
+                            icon: 'fas fa-qrcode',
+                            enabled: true
+                        },
+                        {
+                            id: 'face',
+                            name: '人脸识别',
+                            description: '生物特征识别签到',
+                            icon: 'fas fa-user-check',
+                            enabled: true
+                        },
+                        {
+                            id: 'nfc',
+                            name: 'NFC签到',
+                            description: '近场通信技术签到',
+                            icon: 'fas fa-wifi',
+                            enabled: false
+                        }
+                    ],
+                    attendanceStats: {
+                        total: 356,
+                        checkedIn: 328,
+                        notCheckedIn: 28,
+                        rate: 94.2
+                    },
+                    attendanceRecords: Array.from({ length: 10 }, (_, i) => ({
+                        id: `record_${i}`,
+                        name: `学员${i + 1}`,
+                        department: `部门${Math.floor(i / 3) + 1}`,
+                        checkinTime: i < 8 ? '2024-06-15 08:30' : null,
+                        checkinMethod: i < 8 ? '二维码' : null,
+                        checkedIn: i < 8
+                    }))
+                }
+            },
+            computed: {
+                filteredTasks() {
+                    let tasks = [...this.tasks];
+                    
+                    if (this.taskFilter.assignee) {
+                        tasks = tasks.filter(t => t.assignee === this.taskFilter.assignee);
+                    }
+                    
+                    if (this.taskFilter.priority) {
+                        tasks = tasks.filter(t => t.priority === this.taskFilter.priority);
+                    }
+                    
+                    return tasks;
+                }
+            },
+            async mounted() {
+                await this.initialize();
+                this.initializeDragDrop();
+            },
+            methods: {
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                    } else {
+                        // 如果没有会议ID，使用示例数据
+                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '示例会议'
+                        };
+                    }
+                },
+                
+                initializeDragDrop() {
+                    // 初始化看板拖拽功能
+                    this.$nextTick(() => {
+                        this.kanbanColumns.forEach(column => {
+                            const el = this.$refs['taskList_' + column.status];
+                            if (el && el[0]) {
+                                new Sortable(el[0], {
+                                    group: 'tasks',
+                                    animation: 150,
+                                    onEnd: (evt) => {
+                                        this.updateTaskStatus(evt);
+                                    }
+                                });
+                            }
+                        });
+                    });
+                },
+                
+                createTask() {
+                    this.showTaskForm = !this.showTaskForm;
+                },
+                
+                async submitTask() {
+                    if (!this.newTask.title || !this.newTask.title.trim()) {
+                        this.$showToast('请输入任务标题', 'warning');
+                        return;
+                    }
+                    
+                    try {
+                        if (this.$showLoading) {
+                            this.$showLoading('正在创建任务...');
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                        const task = {
+                            id: 'task_' + Date.now(),
+                            ...this.newTask,
+                            status: 'todo',
+                            createdAt: new Date().toISOString()
+                        };
+                        
+                        this.tasks.push(task);
+                        this.resetTaskForm();
+                        this.showTaskForm = false;
+                        
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        this.$showToast('任务创建成功！', 'success');
+                    } catch (error) {
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        if (this.$showToast) {
+                            this.$showToast('创建失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                resetTaskForm() {
+                    this.newTask = {
+                        title: '',
+                        type: 'preparation',
+                        description: '',
+                        assignee: '',
+                        deadline: '',
+                        priority: 'medium',
+                        primaryAdmin: '',
+                        secondaryAdmin: '',
+                        requireApproval: false
+                    };
+                },
+                
+                cancelTaskCreation() {
+                    this.resetTaskForm();
+                    this.showTaskForm = false;
+                },
+                
+                saveDraft() {
+                    this.$showToast('草稿已保存', 'success');
+                },
+                
+                getTasksByStatus(status) {
+                    return this.filteredTasks.filter(t => t.status === status);
+                },
+                
+                getTaskCountByStatus(status) {
+                    return this.getTasksByStatus(status).length;
+                },
+                
+                getTaskTypeText(type) {
+                    const types = {
+                        preparation: '会务筹备',
+                        reception: '接待服务',
+                        equipment: '设备管理',
+                        document: '资料整理',
+                        inspection: '现场检查',
+                        coordination: '协调沟通'
+                    };
+                    return types[type] || type;
+                },
+                
+                getManagerName(id) {
+                    const manager = this.managers.find(m => m.id === id);
+                    return manager ? manager.name : '未分配';
+                },
+                
+                formatDeadline(deadline) {
+                    if (!deadline) return '无截止时间';
+                    return new Date(deadline).toLocaleString('zh-CN');
+                },
+                
+                getPriorityText(priority) {
+                    const priorities = {
+                        low: '低',
+                        medium: '中',
+                        high: '高',
+                        urgent: '紧急'
+                    };
+                    return priorities[priority] || priority;
+                },
+                
+                getStatusText(status) {
+                    const statuses = {
+                        todo: '待处理',
+                        inprogress: '进行中',
+                        review: '待验收',
+                        completed: '已完成'
+                    };
+                    return statuses[status] || status;
+                },
+                
+                viewTaskDetails(taskId) {
+                    console.log('查看任务详情:', taskId);
+                },
+                
+                editTask(taskId) {
+                    console.log('编辑任务:', taskId);
+                },
+                
+                startTask(taskId) {
+                    const task = this.tasks.find(t => t.id === taskId);
+                    if (task) {
+                        task.status = 'inprogress';
+                    }
+                },
+                
+                completeTask(taskId) {
+                    const task = this.tasks.find(t => t.id === taskId);
+                    if (task) {
+                        task.status = 'completed';
+                    }
+                },
+                
+                updateTaskStatus(evt) {
+                    // 拖拽更新任务状态
+                    console.log('任务状态更新:', evt);
+                },
+                
+                manageGroup(groupId) {
+                    window.location.href = `group-management.html?conferenceId=${this.conference.id}&groupId=${groupId}`;
+                },
+                
+                sendGroupMessage(groupId) {
+                    this.$showToast(`发送消息到群组: ${groupId}`, 'info');
+                },
+                
+                toggleSigninMethod(methodId) {
+                    const method = this.signinMethods.find(m => m.id === methodId);
+                    if (method) {
+                        method.enabled = !method.enabled;
+                    }
+                },
+                
+                async generateReport() {
+                    try {
+                        if (this.$showLoading) {
+                            this.$showLoading('正在生成考勤报表...');
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        this.$showToast('考勤报表已生成', 'success');
+                    } catch (error) {
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        if (this.$showToast) {
+                            this.$showToast('生成失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                async exportAttendance() {
+                    try {
+                        if (this.$showLoading) {
+                            this.$showLoading('正在导出考勤数据...');
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        this.$showToast('考勤数据已导出', 'success');
+                    } catch (error) {
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        if (this.$showToast) {
+                            this.$showToast('导出失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                async sendReminder() {
+                    try {
+                        if (this.$showLoading) {
+                            this.$showLoading('正在发送签到提醒...');
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        this.$showToast('签到提醒已发送', 'success');
+                    } catch (error) {
+                        if (this.$hideLoading) {
+                            this.$hideLoading();
+                        }
+                        if (this.$showToast) {
+                            this.$showToast('发送失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                goBack() {
+                    window.history.back();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+</body>
+</html>

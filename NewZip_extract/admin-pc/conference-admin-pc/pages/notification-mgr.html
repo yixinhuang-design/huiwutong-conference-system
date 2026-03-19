@@ -1,0 +1,2607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>精准通知系统 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 全局会议上下文管理 -->
+        <div class="global-conference-context" v-if="conference && conference.id">
+            <div class="context-header">
+                <div class="conference-info">
+                    <h2>{{ conference.name }}</h2>
+                    <span class="conference-id">ID: {{ conference.id }}</span>
+                    <span class="conference-status" :class="'status-' + (conference.status || 'preparing')">
+                        {{ getStatusText(conference.status || 'preparing') }}
+                    </span>
+                </div>
+                <div class="context-actions">
+                    <button class="btn-outline" @click="switchConference">
+                        <i class="fas fa-exchange-alt"></i>
+                        切换会议
+                    </button>
+                    <button class="btn-primary" @click="createNewConference">
+                        <i class="fas fa-plus"></i>
+                        创建会议
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">精准通知系统</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card" style="grid-column: 1 / -1;">
+            <div>
+                <h2>📢 精准通知系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="viewHistory">
+                    <i class="fas fa-history"></i>
+                    历史记录
+                </button>
+            </div>
+        </div>
+
+        <!-- 第一行：通知类型和多渠道配置 -->
+        <div class="page-content-grid two-columns">
+            <!-- 通知类型选择 -->
+            <div class="notification-type-selector glass-card">
+                <h3>选择通知类型</h3>
+                <div class="type-cards-grid">
+                    <div v-for="type in notificationTypes" 
+                         :key="type.id"
+                         class="type-card"
+                         :class="{ active: selectedNotificationType === type.id }"
+                         @click="selectNotificationType(type.id)">
+                        <div class="type-icon">
+                            <i :class="type.icon"></i>
+                        </div>
+                        <div class="type-name">{{ type.name }}</div>
+                        <div class="type-desc">{{ type.description }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 多渠道通知配置 -->
+            <div class="channel-configuration glass-card">
+                <h3>📢 多渠道通知配置</h3>
+                <div class="channel-selection">
+                    <div class="channel-option" v-for="channel in notificationChannels" :key="channel.id">
+                        <input type="checkbox" 
+                               :id="channel.id" 
+                               v-model="selectedChannels" 
+                               :value="channel.id">
+                        <label :for="channel.id">
+                            <i :class="channel.icon"></i>
+                            {{ channel.name }}
+                        </label>
+                        <div class="channel-info">
+                            <span class="status" :class="{ online: channel.online }">
+                                {{ channel.online ? '在线' : '离线' }}
+                            </span>
+                            <span class="usage">已发送: {{ channel.sent }}条</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 智能提醒设置 -->
+        <div class="smart-reminder glass-card">
+            <h3>⏱️ 智能提醒设置</h3>
+            <div class="reminder-rules">
+                <div class="rule-item" v-for="rule in reminderRules" :key="rule.id">
+                    <input type="checkbox" 
+                           :id="rule.id" 
+                           v-model="rule.enabled">
+                    <label :for="rule.id">{{ rule.label }}</label>
+                    <input type="time" 
+                           v-model="rule.time" 
+                           :disabled="!rule.enabled"
+                           class="time-input">
+                    <span class="rule-desc">{{ rule.description }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 个性化推送系统 - 两列布局 -->
+        <div class="page-content-grid two-columns">
+            <!-- 受众筛选 -->
+            <div class="personalized-push glass-card">
+                <h3>🎯 受众筛选</h3>
+                <div class="audience-segment">
+                    <div class="segment-filters">
+                        <div class="filter-group">
+                            <label>参会状态:</label>
+                            <select multiple v-model="filters.status">
+                                <option value="registered">已报名</option>
+                                <option value="not_registered">未报名</option>
+                                <option value="checked_in">已签到</option>
+                                <option value="not_checked_in">未签到</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>部门筛选:</label>
+                            <select multiple v-model="filters.departments">
+                                <option value="tech">技术部</option>
+                                <option value="product">产品部</option>
+                                <option value="marketing">市场部</option>
+                                <option value="sales">销售部</option>
+                                <option value="hr">人力资源部</option>
+                                <option value="finance">财务部</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>职级筛选:</label>
+                            <select multiple v-model="filters.positions">
+                                <option value="senior">高级</option>
+                                <option value="middle">中级</option>
+                                <option value="junior">初级</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>分组筛选:</label>
+                            <select multiple v-model="filters.groups">
+                                <option v-for="group in conferenceGroups" :key="group.id" :value="group.id">
+                                    {{ group.name }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>车次筛选:</label>
+                            <select multiple v-model="filters.bus">
+                                <option value="bus1">1号车</option>
+                                <option value="bus2">2号车</option>
+                                <option value="bus3">3号车</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>住宿筛选:</label>
+                            <select multiple v-model="filters.accommodation">
+                                <option value="hotel1">酒店A</option>
+                                <option value="hotel2">酒店B</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>座位区域筛选:</label>
+                            <select multiple v-model="filters.seatArea">
+                                <option value="area_a">A区</option>
+                                <option value="area_b">B区</option>
+                                <option value="area_c">C区</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="segment-result">
+                        <span class="result-count">匹配人数: <strong>{{ matchedCount }}</strong>人</span>
+                        <button class="btn-outline" @click="previewAudience">
+                            <i class="fas fa-eye"></i>
+                            预览名单
+                        </button>
+                        <button class="btn-outline" @click="exportAudience">
+                            <i class="fas fa-download"></i>
+                            导出名单
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 个性化变量系统 -->
+            <div class="personalization-variables glass-card">
+                <h3>📝 个性化变量</h3>
+                <div class="variable-list">
+                    <div class="variable-item" 
+                         v-for="variable in personalVariables" 
+                         :key="variable.tag"
+                         @click="insertVariable(variable.tag)">
+                        <span class="variable-tag">{{ variable.tag }}</span>
+                        <span class="variable-desc">{{ variable.description }}</span>
+                        <span class="variable-example">示例: {{ variable.example }}</span>
+                        <button class="btn-sm btn-outline">
+                            <i class="fas fa-plus"></i>
+                            插入
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 通知内容编辑器 -->
+        <div class="notification-editor glass-card">
+            <h3>✍️ 通知内容编辑</h3>
+            
+            <div class="editor-toolbar">
+                <button class="tool-btn" @click="formatText('bold')" title="粗体">
+                    <i class="fas fa-bold"></i>
+                </button>
+                <button class="tool-btn" @click="formatText('italic')" title="斜体">
+                    <i class="fas fa-italic"></i>
+                </button>
+                <button class="tool-btn" @click="formatText('underline')" title="下划线">
+                    <i class="fas fa-underline"></i>
+                </button>
+                <div class="toolbar-divider"></div>
+                <button class="tool-btn" @click="insertLink" title="插入链接">
+                    <i class="fas fa-link"></i>
+                </button>
+                <button class="tool-btn" @click="insertImage" title="插入图片">
+                    <i class="fas fa-image"></i>
+                </button>
+                <div class="toolbar-divider"></div>
+                <button class="tool-btn" @click="showTemplateManager" title="选择模板">
+                    <i class="fas fa-file-alt"></i>
+                    模板
+                </button>
+                <button class="tool-btn" @click="showTemplateManager" title="管理模板">
+                    <i class="fas fa-cog"></i>
+                    管理
+                </button>
+                <button class="tool-btn" @click="saveAsDraft" title="保存草稿">
+                    <i class="fas fa-save"></i>
+                    草稿
+                </button>
+            </div>
+
+            <div class="editor-tabs">
+                <div class="tab" 
+                     :class="{ active: activeTab === 'edit' }"
+                     @click="activeTab = 'edit'">
+                    编辑
+                </div>
+                <div class="tab" 
+                     :class="{ active: activeTab === 'preview' }"
+                     @click="activeTab = 'preview'">
+                    预览
+                </div>
+            </div>
+
+            <div class="editor-content" v-show="activeTab === 'edit'">
+                <div class="content-section">
+                    <label>通知标题 *</label>
+                    <input type="text" 
+                           v-model="notification.title" 
+                           placeholder="请输入通知标题..."
+                           class="title-input">
+                </div>
+                
+                <div class="content-section">
+                    <label>通知内容 *</label>
+                    <textarea class="notification-content" 
+                              v-model="notification.content"
+                              placeholder="请输入通知内容，可使用个性化变量..."
+                              rows="12"></textarea>
+                </div>
+
+                <div class="content-section">
+                    <label>附件</label>
+                    <div class="attachment-area">
+                        <button class="btn-outline" @click="uploadAttachment">
+                            <i class="fas fa-paperclip"></i>
+                            添加附件
+                        </button>
+                        <div class="attachment-list">
+                            <div class="attachment-item" 
+                                 v-for="file in notification.attachments" 
+                                 :key="file.id">
+                                <i :class="getFileIcon(file.type)"></i>
+                                <span class="file-name">{{ file.name }}</span>
+                                <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                                <button class="btn-icon-sm" @click="removeAttachment(file.id)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="editor-preview" v-show="activeTab === 'preview'">
+                <h4>预览效果</h4>
+                <div class="preview-container">
+                    <div class="preview-card">
+                        <div class="preview-header">
+                            <h5>{{ notification.title || '通知标题' }}</h5>
+                            <span class="preview-time">{{ formatDate(new Date()) }}</span>
+                        </div>
+                        <div class="preview-content" v-html="renderPreview()"></div>
+                        <div class="preview-footer" v-if="notification.attachments.length > 0">
+                            <div class="attachment-count">
+                                <i class="fas fa-paperclip"></i>
+                                {{ notification.attachments.length }}个附件
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-samples">
+                        <h5>个性化示例</h5>
+                        <div class="sample-card">
+                            <p><strong>收件人:</strong> 张三</p>
+                            <p><strong>座位:</strong> A区3排12座</p>
+                            <p><strong>分组:</strong> 第三学习小组</p>
+                            <p><strong>乘车:</strong> 2号车15座</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 二维码查询渠道配置 -->
+        <div v-if="selectedChannels.includes('qrcode')" class="qrcode-channel-config glass-card">
+            <h3>二维码查询渠道配置</h3>
+            
+            <div class="qrcode-settings">
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" v-model="qrcodeConfig.enabled" checked>
+                        <span>启用二维码查询渠道</span>
+                    </label>
+                    <p class="form-hint">为每个通知对象生成唯一二维码，扫码后可查看个性化通知内容</p>
+                </div>
+                
+                <div v-if="qrcodeConfig.enabled" class="qrcode-options">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>二维码有效期</label>
+                            <select v-model="qrcodeConfig.expiryDays">
+                                <option value="1">1天</option>
+                                <option value="3">3天</option>
+                                <option value="7" selected>7天</option>
+                                <option value="30">30天</option>
+                                <option value="90">90天</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" v-model="qrcodeConfig.allowAnonymous">
+                                <span>允许匿名访问</span>
+                            </label>
+                            <p class="form-hint">非注册用户也可扫码查看</p>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" v-model="qrcodeConfig.trackScan">
+                                <span>跟踪扫码记录</span>
+                            </label>
+                            <p class="form-hint">记录扫码时间和位置信息</p>
+                        </div>
+                    </div>
+                    
+                    <div class="qrcode-preview-section">
+                        <h4>二维码预览</h4>
+                        <div class="qrcode-preview-area">
+                            <div v-if="qrcodeConfig.previewQRCode" class="qrcode-image">
+                                <img :src="qrcodeConfig.previewQRCode" alt="二维码预览">
+                                <p class="qrcode-hint">扫码查看示例通知</p>
+                            </div>
+                            <div v-else class="qrcode-placeholder">
+                                <i class="fas fa-qrcode"></i>
+                                <p>发送通知后将自动生成二维码</p>
+                            </div>
+                        </div>
+                        <div class="qrcode-actions">
+                            <button class="btn-outline" @click="generatePreviewQRCode">
+                                <i class="fas fa-qrcode"></i>
+                                生成预览二维码
+                            </button>
+                            <button class="btn-outline" @click="downloadQRCodeBatch">
+                                <i class="fas fa-download"></i>
+                                批量下载二维码
+                            </button>
+                            <button class="btn-outline" @click="manageQRCodes">
+                                <i class="fas fa-cog"></i>
+                                管理二维码
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 发送控制和统计 - 两列布局 -->
+        <div class="page-content-grid two-columns">
+            <!-- 发送控制 -->
+            <div class="send-controls glass-card">
+                <h3>📤 发送设置</h3>
+                
+                <div class="send-options">
+                    <div class="option-group">
+                        <label>
+                            <input type="checkbox" v-model="sendOptions.enableTracking">
+                            <span>启用送达跟踪</span>
+                        </label>
+                        <span class="option-desc">跟踪消息送达状态和阅读情况</span>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label>
+                            <input type="checkbox" v-model="sendOptions.enableRetry">
+                            <span>失败重试</span>
+                        </label>
+                        <span class="option-desc">发送失败时自动重试（最多3次）</span>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label>
+                            <input type="checkbox" v-model="sendOptions.requireConfirm">
+                            <span>需要阅读确认</span>
+                        </label>
+                        <span class="option-desc">接收者需要确认已读通知</span>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label>
+                            <input type="checkbox" v-model="sendOptions.sendTest">
+                            <span>先发送测试</span>
+                        </label>
+                        <span class="option-desc">正式发送前先发送测试通知</span>
+                    </div>
+                </div>
+
+                <div class="send-timing">
+                    <h4>发送时间设置</h4>
+                    <div class="timing-options-grid">
+                        <div class="timing-option-card" 
+                             :class="{ active: sendTiming === 'now' }"
+                             @click="sendTiming = 'now'">
+                            <input type="radio" 
+                                   id="sendNow" 
+                                   value="now" 
+                                   v-model="sendTiming"
+                                   @change="sendTiming = 'now'">
+                            <label for="sendNow">
+                                <div class="timing-icon">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div class="timing-label">立即发送</div>
+                                <div class="timing-desc">马上发送通知</div>
+                            </label>
+                        </div>
+                        
+                        <div class="timing-option-card" 
+                             :class="{ active: sendTiming === 'delayed' }"
+                             @click="sendTiming = 'delayed'">
+                            <input type="radio" 
+                                   id="sendDelayed" 
+                                   value="delayed" 
+                                   v-model="sendTiming"
+                                   @change="sendTiming = 'delayed'">
+                            <label for="sendDelayed">
+                                <div class="timing-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="timing-label">延迟发送</div>
+                                <div class="timing-desc">N分钟后发送</div>
+                            </label>
+                        </div>
+                        
+                        <div class="timing-option-card" 
+                             :class="{ active: sendTiming === 'scheduled' }"
+                             @click="sendTiming = 'scheduled'">
+                            <input type="radio" 
+                                   id="sendScheduled" 
+                                   value="scheduled" 
+                                   v-model="sendTiming"
+                                   @change="sendTiming = 'scheduled'">
+                            <label for="sendScheduled">
+                                <div class="timing-icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="timing-label">定时发送</div>
+                                <div class="timing-desc">指定日期时间发送</div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 延迟发送设置 -->
+                    <div v-if="sendTiming === 'delayed'" class="delayed-settings">
+                        <div class="delayed-input-group">
+                            <label>延迟时间：</label>
+                            <div class="delayed-input-wrapper">
+                                <input type="number" 
+                                       v-model.number="delayedMinutes" 
+                                       min="1" 
+                                       max="1440"
+                                       class="delayed-input">
+                                <select v-model="delayedUnit" class="delayed-unit">
+                                    <option value="minutes">分钟</option>
+                                    <option value="hours">小时</option>
+                                </select>
+                            </div>
+                            <div class="delayed-preview">
+                                <i class="fas fa-info-circle"></i>
+                                <span>预计发送时间：{{ getDelayedSendTime() }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 定时发送设置 -->
+                    <div v-if="sendTiming === 'scheduled'" class="scheduled-settings">
+                        <div class="scheduled-input-group">
+                            <label>发送时间：</label>
+                            <input type="datetime-local" 
+                                   v-model="scheduledTime" 
+                                   class="scheduled-input"
+                                   :min="getMinDateTime()">
+                            <div class="scheduled-preview" v-if="scheduledTime">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>将在 {{ formatScheduledTime(scheduledTime) }} 发送</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="send-actions">
+                    <button class="btn-primary btn-lg send-btn" 
+                            @click="sendNotification"
+                            :disabled="!canSend()">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>{{ getSendButtonText() }}</span>
+                        <span class="recipient-count">({{ matchedCount }}人)</span>
+                    </button>
+                    <div class="secondary-actions">
+                        <button class="btn-outline btn-lg" @click="saveAsDraft">
+                            <i class="fas fa-save"></i>
+                            保存草稿
+                        </button>
+                        <button class="btn-outline btn-lg" @click="previewBeforeSend">
+                            <i class="fas fa-eye"></i>
+                            发送预览
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 发送统计 -->
+            <div class="send-statistics glass-card">
+                <h3>📊 发送统计</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ statistics.totalSent }}</div>
+                            <div class="stat-label">总发送数</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ statistics.delivered }}</div>
+                            <div class="stat-label">已送达</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon info">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ statistics.read }}</div>
+                            <div class="stat-label">已阅读</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ statistics.failed }}</div>
+                            <div class="stat-label">发送失败</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div><!-- 关闭page-with-nav -->
+
+        <!-- 模板管理弹窗 -->
+        <div v-if="showTemplateModal" class="modal-overlay" @click.self="showTemplateModal = false">
+            <div class="modal-content glass-card" @click.stop>
+                <div class="modal-header">
+                    <h3>通知模板管理</h3>
+                    <button class="btn-icon" @click="showTemplateModal = false">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="template-manager">
+                        <div class="template-list">
+                            <div v-for="template in notificationTemplates" 
+                                 :key="template.id"
+                                 class="template-item"
+                                 @click="selectTemplate(template)">
+                                <div class="template-header">
+                                    <h5>{{ template.name }}</h5>
+                                    <span class="template-type">{{ getTypeName(template.type) }}</span>
+                                </div>
+                                <div class="template-preview">
+                                    {{ template.content.substring(0, 100) }}...
+                                </div>
+                            </div>
+                        </div>
+                        <div class="template-actions">
+                            <button class="btn-primary" @click="createNewTemplate">
+                                <i class="fas fa-plus"></i>
+                                创建新模板
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    selectedNotificationType: null,
+                    notificationTypes: [
+                        { id: 'conference', name: '会议通知', icon: 'fas fa-calendar-alt', description: '会议基本信息通知' },
+                        { id: 'registration', name: '报名提醒', icon: 'fas fa-user-plus', description: '报名相关提醒' },
+                        { id: 'checkin', name: '签到提醒', icon: 'fas fa-check-circle', description: '签到时间提醒' },
+                        { id: 'schedule', name: '日程提醒', icon: 'fas fa-clock', description: '会议日程提醒' },
+                        { id: 'seat', name: '座位安排通知', icon: 'fas fa-chair', description: '座位分配通知' },
+                        { id: 'bus', name: '车次安排通知', icon: 'fas fa-bus', description: '乘车安排通知' },
+                        { id: 'accommodation', name: '住宿安排通知', icon: 'fas fa-bed', description: '住宿安排通知' },
+                        { id: 'full', name: '完整安排通知', icon: 'fas fa-list-alt', description: '座位+车次+住宿' },
+                        { id: 'custom', name: '自定义通知', icon: 'fas fa-edit', description: '自定义内容通知' }
+                    ],
+                    notificationChannels: [
+                        { id: 'sms', name: '短信通知', icon: 'fas fa-sms', online: true, sent: 1247 },
+                        { id: 'email', name: '邮件通知', icon: 'fas fa-envelope', online: true, sent: 2341 },
+                        { id: 'wechat', name: '微信通知', icon: 'fas fa-comment', online: true, sent: 3567 },
+                        { id: 'enterprise', name: '企业微信', icon: 'fas fa-building', online: true, sent: 892 },
+                        { id: 'qrcode', name: '二维码查询', icon: 'fas fa-qrcode', online: true, sent: 0 }
+                    ],
+                    selectedChannels: ['sms', 'email', 'wechat'],
+                    reminderRules: [
+                        { 
+                            id: 'reminder1day', 
+                            label: '会前1天提醒', 
+                            enabled: true, 
+                            time: '09:00',
+                            description: '在会议开始前1天的指定时间发送提醒'
+                        },
+                        { 
+                            id: 'reminder2hours', 
+                            label: '会前2小时提醒', 
+                            enabled: true, 
+                            time: '07:00',
+                            description: '在会议开始前2小时发送提醒'
+                        },
+                        { 
+                            id: 'reminder30min', 
+                            label: '会前30分钟提醒', 
+                            enabled: false, 
+                            time: '08:30',
+                            description: '在会议开始前30分钟发送提醒'
+                        }
+                    ],
+                    filters: {
+                        status: ['registered'],
+                        departments: [],
+                        positions: [],
+                        groups: [],
+                        bus: [],
+                        accommodation: [],
+                        seatArea: []
+                    },
+                    showTemplateModal: false,
+                    notificationTemplates: [
+                        { id: 't1', name: '会议通知模板', type: 'conference', content: '尊敬的{name}，您好！\n\n欢迎参加{conference}！\n\n您的座位号: {seat}\n分组信息: {group}' },
+                        { id: 't2', name: '提醒模板', type: 'registration', content: '{name}您好，会议即将开始，请准时参加！' },
+                        { id: 't3', name: '感谢模板', type: 'custom', content: '感谢{name}参加本次会议，期待下次再见！' }
+                    ],
+                    conferenceGroups: [
+                        { id: 'group_1', name: '第一学习小组' },
+                        { id: 'group_2', name: '第二学习小组' },
+                        { id: 'group_3', name: '第三学习小组' }
+                    ],
+                    matchedCount: 356,
+                    personalVariables: [
+                        { tag: '{name}', description: '参会者姓名', example: '张三' },
+                        { tag: '{conference}', description: '会议名称', example: '2024年度技术峰会' },
+                        { tag: '{seat}', description: '座位号', example: 'A区3排12座' },
+                        { tag: '{group}', description: '分组号', example: '第三学习小组' },
+                        { tag: '{bus}', description: '乘车号', example: '2号车15座' },
+                        { tag: '{room}', description: '房间号', example: '101房间' },
+                        { tag: '{schedule}', description: '个人日程安排', example: '主会场开幕式...' },
+                        { tag: '{department}', description: '所属部门', example: '技术部' },
+                        { tag: '{position}', description: '职级', example: '高级工程师' },
+                        { tag: '{location}', description: '会议地点', example: '北京国际会议中心' }
+                    ],
+                    notification: {
+                        title: '',
+                        content: '',
+                        attachments: []
+                    },
+                    activeTab: 'edit',
+                    sendOptions: {
+                        enableTracking: true,
+                        enableRetry: true,
+                        requireConfirm: false,
+                        sendTest: false
+                    },
+                    sendTiming: 'now',
+                    scheduledTime: '',
+                    delayedMinutes: 30,
+                    delayedUnit: 'minutes',
+                    statistics: {
+                        totalSent: 4523,
+                        delivered: 4489,
+                        read: 3876,
+                        failed: 34
+                    },
+                    qrcodeConfig: {
+                        enabled: true,
+                        expiryDays: 7,
+                        allowAnonymous: true,
+                        trackScan: true,
+                        previewQRCode: null
+                    },
+                    shareLink: ''
+                }
+            },
+            async mounted() {
+                await this.initialize();
+            },
+            methods: {
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                    } else {
+                        // 如果没有会议ID，使用示例数据
+                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '示例会议'
+                        };
+                    }
+                },
+                
+                selectNotificationType(typeId) {
+                    this.selectedNotificationType = typeId;
+                    // 根据通知类型加载对应的模板
+                    this.loadTemplateForType(typeId);
+                },
+                
+                loadTemplateForType(typeId) {
+                    // 模拟根据类型加载模板
+                    const templates = {
+                        'conference': { title: '会议通知', content: '尊敬的{name}，您好！\n\n欢迎参加{conference}！\n\n会议时间：{schedule}\n会议地点：{location}' },
+                        'registration': { title: '报名提醒', content: '{name}您好，会议报名即将截止，请尽快完成报名！' },
+                        'checkin': { title: '签到提醒', content: '{name}您好，会议即将开始，请准时签到！' },
+                        'schedule': { title: '日程提醒', content: '{name}您好，您的会议日程：{schedule}' },
+                        'seat': { title: '座位安排通知', content: '{name}您好，您的座位号：{seat}' },
+                        'bus': { title: '车次安排通知', content: '{name}您好，您的乘车信息：{bus}' },
+                        'accommodation': { title: '住宿安排通知', content: '{name}您好，您的住宿信息：{room}' },
+                        'full': { title: '完整安排通知', content: '{name}您好，\n座位：{seat}\n车次：{bus}\n住宿：{room}' },
+                        'custom': { title: '自定义通知', content: '' }
+                    };
+                    
+                    if (templates[typeId]) {
+                        this.notification.title = templates[typeId].title;
+                        this.notification.content = templates[typeId].content;
+                    }
+                },
+                
+                insertVariable(tag) {
+                    const textarea = document.querySelector('.notification-content');
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = this.notification.content;
+                    
+                    this.notification.content = text.substring(0, start) + tag + text.substring(end);
+                    
+                    this.$nextTick(() => {
+                        textarea.focus();
+                        textarea.setSelectionRange(start + tag.length, start + tag.length);
+                    });
+                },
+                
+                formatText(format) {
+                    console.log('格式化文本:', format);
+                },
+                
+                insertLink() {
+                    const url = prompt('请输入链接地址:');
+                    if (url && url.trim()) {
+                        this.notification.content += `\n[链接](${url.trim()})`;
+                        this.$showToast('链接已插入', 'success');
+                    }
+                },
+                
+                insertImage() {
+                    const url = prompt('请输入图片地址:');
+                    if (url && url.trim()) {
+                        this.notification.content += `\n![图片](${url.trim()})`;
+                        this.$showToast('图片已插入', 'success');
+                    }
+                },
+                
+                showTemplateManager() {
+                    this.showTemplateModal = true;
+                },
+                
+                selectTemplate(template) {
+                    this.notification.title = template.title;
+                    this.notification.content = template.content;
+                    this.showTemplateModal = false;
+                },
+                
+                saveAsDraft() {
+                    const draft = {
+                        notification: this.notification,
+                        selectedChannels: this.selectedChannels,
+                        filters: this.filters,
+                        sendOptions: this.sendOptions,
+                        sendTiming: this.sendTiming,
+                        scheduledTime: this.scheduledTime,
+                        delayedMinutes: this.delayedMinutes,
+                        delayedUnit: this.delayedUnit,
+                        savedAt: new Date().toISOString()
+                    };
+                    localStorage.setItem('notificationDraft', JSON.stringify(draft));
+                    this.$showToast('草稿已保存', 'success');
+                },
+                
+                uploadAttachment() {
+                    // 模拟文件上传
+                    this.notification.attachments.push({
+                        id: Date.now(),
+                        name: '会议资料.pdf',
+                        type: 'pdf',
+                        size: 2048576
+                    });
+                },
+                
+                removeAttachment(id) {
+                    const index = this.notification.attachments.findIndex(f => f.id === id);
+                    if (index > -1) {
+                        this.notification.attachments.splice(index, 1);
+                    }
+                },
+                
+                getFileIcon(type) {
+                    const icons = {
+                        pdf: 'fas fa-file-pdf',
+                        doc: 'fas fa-file-word',
+                        xls: 'fas fa-file-excel',
+                        img: 'fas fa-file-image'
+                    };
+                    return icons[type] || 'fas fa-file';
+                },
+                
+                formatFileSize(bytes) {
+                    if (bytes < 1024) return bytes + ' B';
+                    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+                    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+                },
+                
+                renderPreview() {
+                    let content = this.notification.content || '通知内容预览...';
+                    
+                    // 替换个性化变量为示例值
+                    content = content
+                        .replace(/{name}/g, '张三')
+                        .replace(/{seat}/g, 'A区3排12座')
+                        .replace(/{group}/g, '第三学习小组')
+                        .replace(/{bus}/g, '2号车15座')
+                        .replace(/{schedule}/g, '主会场开幕式...')
+                        .replace(/{department}/g, '技术部')
+                        .replace(/{position}/g, '高级工程师');
+                    
+                    // 简单的Markdown渲染
+                    content = content.replace(/\n/g, '<br>');
+                    
+                    return content;
+                },
+                
+                formatDate(date) {
+                    return date.toLocaleString('zh-CN');
+                },
+                
+                previewAudience() {
+                    this.$showToast(`将显示${this.matchedCount}人的详细名单`, 'info');
+                },
+                
+                async exportAudience() {
+                    try {
+                        this.$showLoading('正在导出名单...');
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        this.$hideLoading();
+                        this.$showToast('名单已导出', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导出失败，请重试', 'error');
+                    }
+                },
+                
+                canSend() {
+                    return this.notification.title && 
+                           this.notification.content && 
+                           this.selectedChannels.length > 0 &&
+                           this.matchedCount > 0;
+                },
+                
+                async sendNotification() {
+                    if (!this.canSend()) {
+                        this.$showToast('请完善通知内容和选择发送渠道', 'warning');
+                        return;
+                    }
+                    
+                    if (this.sendOptions.sendTest) {
+                        const testConfirmed = await this.$showConfirm(
+                            '是否先发送测试通知到您的账号？',
+                            '发送测试',
+                            'info'
+                        );
+                        if (testConfirmed) {
+                            try {
+                                this.$showLoading('正在发送测试通知...');
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                                this.$hideLoading();
+                                this.$showToast('测试通知已发送到您的账号', 'success');
+                            } catch (error) {
+                                this.$hideLoading();
+                                this.$showToast('测试发送失败', 'error');
+                            }
+                            return;
+                        }
+                    }
+                    
+                    let message = '';
+                    if (this.sendTiming === 'now') {
+                        message = `确定立即发送通知给 ${this.matchedCount} 人吗？`;
+                    } else if (this.sendTiming === 'delayed') {
+                        const delayText = this.delayedUnit === 'minutes' 
+                            ? `${this.delayedMinutes}分钟` 
+                            : `${this.delayedMinutes}小时`;
+                        message = `确定在 ${delayText} 后发送通知给 ${this.matchedCount} 人吗？`;
+                    } else {
+                        message = `确定在 ${this.formatScheduledTime(this.scheduledTime)} 发送通知给 ${this.matchedCount} 人吗？`;
+                    }
+                    
+                    const confirmed = await this.$showConfirm(
+                        message,
+                        '发送通知',
+                        'info'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading(`正在发送通知给 ${this.matchedCount} 人...`);
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            this.statistics.totalSent += this.matchedCount;
+                            this.$hideLoading();
+                            this.$showToast(`通知已发送给 ${this.matchedCount} 人`, 'success');
+                            // 清除草稿
+                            localStorage.removeItem('notificationDraft');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('发送失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                previewBeforeSend() {
+                    this.activeTab = 'preview';
+                },
+                
+                goBack() {
+                    window.history.back();
+                },
+                
+                viewHistory() {
+                    this.$showToast('查看历史记录功能', 'info');
+                },
+                
+                getSendButtonText() {
+                    if (this.sendTiming === 'now') {
+                        return '立即发送';
+                    } else if (this.sendTiming === 'delayed') {
+                        const delayText = this.delayedUnit === 'minutes' 
+                            ? `${this.delayedMinutes}分钟` 
+                            : `${this.delayedMinutes}小时`;
+                        return `延迟${delayText}发送`;
+                    } else {
+                        return '定时发送';
+                    }
+                },
+                
+                getDelayedSendTime() {
+                    const now = new Date();
+                    const delayMs = this.delayedUnit === 'minutes' 
+                        ? this.delayedMinutes * 60 * 1000 
+                        : this.delayedMinutes * 60 * 60 * 1000;
+                    const sendTime = new Date(now.getTime() + delayMs);
+                    return this.formatDateTime(sendTime);
+                },
+                
+                formatScheduledTime(datetime) {
+                    if (!datetime) return '';
+                    const date = new Date(datetime);
+                    return this.formatDateTime(date);
+                },
+                
+                formatDateTime(date) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    return `${year}-${month}-${day} ${hours}:${minutes}`;
+                },
+                
+                getMinDateTime() {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    return `${year}-${month}-${day}T${hours}:${minutes}`;
+                },
+                
+                getStatusText(status) {
+                    const statusMap = {
+                        'preparing': '筹备中',
+                        'ongoing': '进行中',
+                        'ended': '已结束'
+                    };
+                    return statusMap[status] || '未知';
+                },
+                
+                switchConference() {
+                    // 跳转到会议列表页面
+                    window.location.href = '../index.html';
+                },
+                
+                createNewConference() {
+                    // 跳转到创建会议页面
+                    window.location.href = 'conference-create.html';
+                },
+                
+                generateQRCode() {
+                    if (!this.shareLink) {
+                        this.$showToast('请先生成分享链接', 'warning');
+                        return;
+                    }
+                    // 生成二维码（需要集成qrcode库）
+                    this.$showToast('二维码生成功能需要集成qrcode.js库', 'info');
+                },
+                
+                getTypeName(typeId) {
+                    const type = this.notificationTypes.find(t => t.id === typeId);
+                    return type ? type.name : typeId;
+                },
+                
+                createNewTemplate() {
+                    this.$showToast('创建新模板功能', 'info');
+                },
+                
+                async generatePreviewQRCode() {
+                    try {
+                        this.$showLoading('正在生成预览二维码...');
+                        await new Promise(resolve => setTimeout(resolve, 800));
+                        
+                        // 生成预览二维码
+                        const previewLink = `https://conference.example.com/notification/view/preview?token=${Date.now()}`;
+                        this.shareLink = previewLink;
+                        
+                        // 模拟生成二维码（实际需要集成qrcode.js库）
+                        // 这里使用在线API生成二维码
+                        const qrcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(previewLink)}`;
+                        this.qrcodeConfig.previewQRCode = qrcodeUrl;
+                        
+                        this.$hideLoading();
+                        this.$showToast('预览二维码已生成', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('生成失败，请重试', 'error');
+                    }
+                },
+                
+                async downloadQRCodeBatch() {
+                    if (!this.qrcodeConfig.enabled) {
+                        this.$showToast('请先启用二维码查询渠道', 'warning');
+                        return;
+                    }
+                    
+                    if (this.matchedCount === 0) {
+                        this.$showToast('当前没有通知对象', 'warning');
+                        return;
+                    }
+                    
+                    const confirmed = await this.$showConfirm(
+                        `确定要批量下载 ${this.matchedCount} 个二维码吗？将生成ZIP压缩包。`,
+                        '批量下载二维码',
+                        'info'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading(`正在生成 ${this.matchedCount} 个二维码...`);
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            this.$hideLoading();
+                            this.$showToast('二维码ZIP文件已开始下载', 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('下载失败，请重试', 'error');
+                        }
+                    }
+                },
+                
+                manageQRCodes() {
+                    this.$showToast('二维码管理功能：查看所有已生成的二维码、设置二维码有效期、查看扫码统计、批量操作', 'info', 5000);
+                },
+                
+                selectTemplate(template) {
+                    this.notification.title = template.name;
+                    this.notification.content = template.content;
+                    this.showTemplateModal = false;
+                }
+            },
+            watch: {
+                filters: {
+                    deep: true,
+                    handler() {
+                        // 模拟筛选结果
+                        let count = 356;
+                        if (this.filters.status.length > 0) count = Math.floor(count * 0.8);
+                        if (this.filters.departments.length > 0) count = Math.floor(count * 0.6);
+                        if (this.filters.positions.length > 0) count = Math.floor(count * 0.7);
+                        if (this.filters.groups.length > 0) count = Math.floor(count * 0.5);
+                        if (this.filters.bus.length > 0) count = Math.floor(count * 0.4);
+                        if (this.filters.accommodation.length > 0) count = Math.floor(count * 0.3);
+                        if (this.filters.seatArea.length > 0) count = Math.floor(count * 0.5);
+                        this.matchedCount = count;
+                    }
+                },
+                selectedNotificationType(newType) {
+                    if (newType) {
+                        this.loadTemplateForType(newType);
+                    }
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+
+    <style>
+        /* 页面布局优化 */
+        .page-with-nav {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-6);
+            max-width: 1920px;
+            margin: 0 auto;
+            padding: var(--space-6) var(--space-4);
+        }
+        
+        .page-content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-6);
+        }
+        
+        .page-content-grid.two-columns {
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-6);
+        }
+        
+        .page-content-grid.three-columns {
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-6);
+        }
+        
+        /* 响应式布局 */
+        @media (max-width: 1600px) {
+            .page-content-grid.two-columns {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-content-grid.three-columns {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .page-content-grid.three-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 卡片样式优化 */
+        .glass-card {
+            margin-bottom: 0;
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-backdrop);
+            -webkit-backdrop-filter: var(--glass-backdrop);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-glass);
+        }
+        
+        .glass-card h3 {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-5);
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        
+        /* 页面内容网格优化 */
+        .page-content-grid {
+            display: grid;
+            gap: var(--space-6);
+        }
+        
+        .page-content-grid.two-columns {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        @media (max-width: 1400px) {
+            .page-content-grid.two-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 通知类型选择器优化 */
+        .notification-type-selector {
+            min-height: auto;
+        }
+        
+        .type-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: var(--space-3);
+        }
+        
+        .type-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-align: center;
+        }
+        
+        .type-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--gray-300);
+            transform: translateY(-2px);
+        }
+        
+        .type-card.active {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .type-card .type-icon {
+            font-size: var(--font-size-3xl);
+            color: var(--primary-color);
+            margin-bottom: var(--space-2);
+        }
+        
+        .type-card .type-name {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-1);
+        }
+        
+        .type-card .type-desc {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+            line-height: 1.4;
+        }
+        
+        /* 智能提醒设置优化 */
+        .smart-reminder {
+            margin-top: var(--space-6);
+        }
+        
+        .smart-reminder h3 {
+            margin-bottom: var(--space-5);
+        }
+        
+        .reminder-rules {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: var(--space-4);
+        }
+        
+        .rule-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            transition: all var(--transition-fast);
+        }
+        
+        .rule-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary-color);
+        }
+        
+        .rule-item label {
+            flex: 1;
+            font-weight: 500;
+            color: var(--gray-700);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        
+        .rule-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .rule-item .time-input {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-800);
+            font-size: var(--font-size-sm);
+            min-width: 120px;
+        }
+        
+        .rule-item .rule-desc {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+            font-style: italic;
+        }
+        
+        /* 受众筛选优化 */
+        .personalized-push {
+            min-height: auto;
+        }
+        
+        .personalized-push h3 {
+            margin-bottom: var(--space-5);
+        }
+        
+        .segment-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+        
+        .personalized-push .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+        
+        .personalized-push .filter-group label {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .personalized-push .filter-group select {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-800);
+            font-size: var(--font-size-sm);
+            min-height: 120px;
+            transition: all var(--transition-fast);
+        }
+        
+        .personalized-push .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .segment-result {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-4);
+            padding: var(--space-5);
+            background: rgba(102, 126, 234, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: var(--radius-lg);
+            margin-top: var(--space-4);
+        }
+        
+        .result-count {
+            font-size: var(--font-size-base);
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+        
+        .result-count strong {
+            font-size: var(--font-size-2xl);
+            color: var(--primary-color);
+            margin: 0 var(--space-2);
+            font-weight: 700;
+        }
+        
+        .segment-result .btn-outline {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        
+        /* 个性化变量优化 */
+        .personalization-variables {
+            min-height: auto;
+        }
+        
+        .personalization-variables h3 {
+            margin-bottom: var(--space-5);
+        }
+        
+        .variable-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-3);
+        }
+        
+        .variable-item {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .variable-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .variable-tag {
+            font-family: 'Courier New', monospace;
+            font-size: var(--font-size-sm);
+            padding: var(--space-2) var(--space-3);
+            background: var(--primary-color);
+            color: var(--white);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            text-align: center;
+            display: inline-block;
+            align-self: flex-start;
+        }
+        
+        .variable-desc {
+            font-size: var(--font-size-sm);
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+        
+        .variable-example {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+            font-style: italic;
+            padding-top: var(--space-1);
+            border-top: 1px solid var(--glass-border);
+        }
+        
+        .variable-item .btn-sm {
+            align-self: flex-end;
+            margin-top: var(--space-2);
+        }
+        
+        /* 通知编辑器优化 */
+        .notification-editor {
+            margin-top: var(--space-6);
+        }
+        
+        .notification-editor h3 {
+            margin-bottom: var(--space-5);
+        }
+        
+        .editor-toolbar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-5);
+            flex-wrap: wrap;
+        }
+        
+        .tool-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            color: var(--gray-700);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+        }
+        
+        .tool-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+        
+        .toolbar-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--glass-border);
+            margin: 0 var(--space-1);
+        }
+        
+        .editor-tabs {
+            display: flex;
+            gap: var(--space-1);
+            margin-bottom: var(--space-5);
+            border-bottom: 2px solid var(--glass-border);
+        }
+        
+        .editor-tabs .tab {
+            padding: var(--space-3) var(--space-5);
+            cursor: pointer;
+            color: var(--gray-600);
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all var(--transition-fast);
+            font-size: var(--font-size-base);
+        }
+        
+        .editor-tabs .tab:hover {
+            color: var(--primary-color);
+        }
+        
+        .editor-tabs .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .content-section {
+            margin-bottom: var(--space-5);
+        }
+        
+        .content-section label {
+            display: block;
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: var(--space-3);
+        }
+        
+        .title-input,
+        .notification-content {
+            width: 100%;
+            padding: var(--space-3) var(--space-4);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-800);
+            font-size: var(--font-size-base);
+            font-family: inherit;
+            transition: all var(--transition-fast);
+        }
+        
+        .title-input:focus,
+        .notification-content:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .notification-content {
+            min-height: 320px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+        
+        /* 发送控制优化 */
+        .send-controls {
+            min-height: auto;
+        }
+        
+        .send-controls h3 {
+            margin-bottom: var(--space-5);
+        }
+        
+        .send-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+        
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            transition: all var(--transition-fast);
+        }
+        
+        .option-group:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary-color);
+        }
+        
+        .option-group label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-weight: 600;
+            color: var(--gray-700);
+            cursor: pointer;
+            font-size: var(--font-size-sm);
+        }
+        
+        .option-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .option-desc {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+            margin-left: var(--space-6);
+            line-height: 1.5;
+        }
+        
+        /* 发送统计优化 */
+        .send-statistics {
+            min-height: auto;
+        }
+        
+        .send-statistics h3 {
+            margin-bottom: var(--space-5);
+        }
+        
+        .send-statistics .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--space-4);
+        }
+        
+        .send-statistics .stat-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--space-5);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            transition: all var(--transition-fast);
+        }
+        
+        .send-statistics .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-color);
+        }
+        
+        .send-statistics .stat-icon {
+            font-size: var(--font-size-2xl);
+            color: var(--primary-color);
+            margin-bottom: var(--space-3);
+        }
+        
+        .send-statistics .stat-value {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: var(--space-2);
+            line-height: 1.2;
+        }
+        
+        .send-statistics .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+        
+        .qrcode-channel-config {
+            margin-bottom: 0;
+        }
+        
+        /* 多渠道通知配置 - 卡片布局 */
+        .channel-configuration {
+            padding: var(--space-6);
+        }
+        
+        .channel-configuration h3 {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-4);
+        }
+        
+        .channel-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+        }
+        
+        .channel-option {
+            display: flex;
+            flex-direction: column;
+            padding: var(--space-4) var(--space-5);
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            position: relative;
+        }
+        
+        .channel-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .channel-option input[type="checkbox"] {
+            position: absolute;
+            top: var(--space-3);
+            right: var(--space-3);
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            z-index: 1;
+        }
+        
+        .channel-option label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            cursor: pointer;
+            margin-bottom: var(--space-3);
+            padding-right: var(--space-8);
+        }
+        
+        .channel-option label i {
+            font-size: var(--font-size-2xl);
+            color: var(--primary-color);
+            width: 24px;
+            text-align: center;
+        }
+        
+        .channel-option label span,
+        .channel-option label {
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+        
+        .channel-info {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+            margin-top: var(--space-2);
+            padding-top: var(--space-2);
+            border-top: 1px solid var(--glass-border);
+        }
+        
+        .channel-info .status {
+            font-size: var(--font-size-sm);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            display: inline-block;
+            width: fit-content;
+            font-weight: 500;
+        }
+        
+        .channel-info .status.online {
+            background: var(--success-bg);
+            color: var(--success-color);
+        }
+        
+        .channel-info .status:not(.online) {
+            background: var(--error-bg);
+            color: var(--error-color);
+        }
+        
+        .channel-info .usage {
+            font-size: var(--font-size-sm);
+            color: var(--gray-500);
+        }
+        
+        .channel-option:has(input[type="checkbox"]:checked) {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: var(--primary-color);
+        }
+        
+        /* 通知类型选择器优化 */
+        .notification-type-selector {
+            min-height: 400px;
+        }
+        
+        .type-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: var(--space-3);
+        }
+        
+        .type-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-align: center;
+        }
+        
+        .type-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--gray-300);
+            transform: translateY(-2px);
+        }
+        
+        .type-card.active {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .type-card .type-icon {
+            font-size: var(--font-size-3xl);
+            color: var(--primary-color);
+            margin-bottom: var(--space-2);
+        }
+        
+        .type-card .type-name {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-1);
+        }
+        
+        .type-card .type-desc {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+            line-height: 1.4;
+        }
+        
+        /* 智能提醒设置优化 */
+        .smart-reminder {
+            margin-top: var(--space-6);
+        }
+        
+        .reminder-rules {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-4);
+        }
+        
+        .rule-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+        }
+        
+        .rule-item label {
+            flex: 1;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+        
+        .rule-item .time-input {
+            padding: var(--space-2);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .rule-item .rule-desc {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+        }
+        
+        /* 受众筛选优化 */
+        .personalized-push {
+            min-height: 500px;
+        }
+        
+        .segment-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+        
+        .segment-filters .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+        
+        .segment-filters .filter-group label {
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+        
+        .segment-filters .filter-group select {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-800);
+            font-size: var(--font-size-sm);
+            min-height: 100px;
+        }
+        
+        .segment-result {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            margin-top: var(--space-4);
+        }
+        
+        .result-count {
+            flex: 1;
+            font-size: var(--font-size-base);
+            color: var(--gray-700);
+        }
+        
+        .result-count strong {
+            font-size: var(--font-size-xl);
+            color: var(--primary-color);
+            margin: 0 var(--space-2);
+        }
+        
+        /* 个性化变量优化 */
+        .personalization-variables {
+            min-height: 500px;
+        }
+        
+        .variable-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+        
+        .variable-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .variable-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .variable-tag {
+            font-family: 'Courier New', monospace;
+            font-size: var(--font-size-sm);
+            padding: var(--space-1) var(--space-2);
+            background: var(--primary-color);
+            color: var(--white);
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .variable-desc {
+            flex: 1;
+            font-size: var(--font-size-sm);
+            color: var(--gray-700);
+        }
+        
+        .variable-example {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+            font-style: italic;
+        }
+        
+        /* 通知编辑器优化 */
+        .notification-editor {
+            margin-top: var(--space-6);
+        }
+        
+        .editor-toolbar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-4);
+            flex-wrap: wrap;
+        }
+        
+        .tool-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            color: var(--gray-700);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: var(--font-size-sm);
+        }
+        
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .toolbar-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--glass-border);
+            margin: 0 var(--space-2);
+        }
+        
+        .editor-tabs {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+            border-bottom: 2px solid var(--glass-border);
+        }
+        
+        .editor-tabs .tab {
+            padding: var(--space-2) var(--space-4);
+            cursor: pointer;
+            color: var(--gray-600);
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all var(--transition-fast);
+        }
+        
+        .editor-tabs .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+        
+        .content-section {
+            margin-bottom: var(--space-5);
+        }
+        
+        .content-section label {
+            display: block;
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: var(--space-2);
+        }
+        
+        .title-input,
+        .notification-content {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-800);
+            font-size: var(--font-size-base);
+            font-family: inherit;
+        }
+        
+        .notification-content {
+            min-height: 300px;
+            resize: vertical;
+        }
+        
+        /* 发送控制优化 */
+        .send-controls {
+            min-height: 400px;
+        }
+        
+        .send-options {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+        
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+        }
+        
+        .option-group label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-weight: 500;
+            color: var(--gray-700);
+            cursor: pointer;
+        }
+        
+        .option-desc {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+            margin-left: var(--space-6);
+        }
+        
+        /* 发送统计优化 */
+        .send-statistics {
+            min-height: auto;
+        }
+        
+        .send-statistics h3 {
+            margin-bottom: var(--space-5);
+        }
+        
+        .send-statistics .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--space-4);
+        }
+        
+        .send-statistics .stat-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--space-5);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            transition: all var(--transition-fast);
+        }
+        
+        .send-statistics .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-color);
+        }
+        
+        .send-statistics .stat-icon {
+            font-size: var(--font-size-2xl);
+            color: var(--primary-color);
+            margin-bottom: var(--space-3);
+        }
+        
+        .send-statistics .stat-value {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: var(--space-2);
+            line-height: 1.2;
+        }
+        
+        .send-statistics .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+        
+        .qrcode-settings {
+            margin-top: 1rem;
+        }
+        
+        .form-hint {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+        
+        .qrcode-options {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .form-group select {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .qrcode-preview-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .qrcode-preview-section h4 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .qrcode-preview-area {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .qrcode-image img {
+            max-width: 200px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .qrcode-hint {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .qrcode-placeholder {
+            padding: 2rem;
+        }
+        
+        .qrcode-placeholder i {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .qrcode-placeholder p {
+            color: #666;
+        }
+        
+        .qrcode-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .qrcode-actions {
+                flex-direction: column;
+            }
+        }
+        
+        /* 发送时间设置样式 */
+        .send-timing {
+            margin-bottom: var(--space-5);
+        }
+        
+        .send-timing h4 {
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-4);
+        }
+        
+        .timing-options-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+        
+        .timing-option-card {
+            position: relative;
+            padding: var(--space-4);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .timing-option-card:hover {
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .timing-option-card.active {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .timing-option-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .timing-option-card label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-2);
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .timing-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary-color);
+            font-size: var(--font-size-xl);
+            margin-bottom: var(--space-2);
+        }
+        
+        .timing-option-card.active .timing-icon {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+        
+        .timing-label {
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+        
+        .timing-desc {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+            text-align: center;
+        }
+        
+        /* 延迟发送设置 */
+        .delayed-settings {
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            margin-top: var(--space-4);
+        }
+        
+        .delayed-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+        
+        .delayed-input-group label {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .delayed-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        
+        .delayed-input {
+            flex: 1;
+            max-width: 120px;
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-800);
+            font-size: var(--font-size-base);
+        }
+        
+        .delayed-unit {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-800);
+            font-size: var(--font-size-base);
+            cursor: pointer;
+        }
+        
+        .delayed-preview {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: var(--radius-md);
+            color: var(--primary-color);
+            font-size: var(--font-size-sm);
+        }
+        
+        .delayed-preview i {
+            font-size: var(--font-size-base);
+        }
+        
+        /* 定时发送设置 */
+        .scheduled-settings {
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            margin-top: var(--space-4);
+        }
+        
+        .scheduled-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+        
+        .scheduled-input-group label {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .scheduled-input {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-800);
+            font-size: var(--font-size-base);
+        }
+        
+        .scheduled-preview {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: var(--radius-md);
+            color: var(--primary-color);
+            font-size: var(--font-size-sm);
+        }
+        
+        .scheduled-preview i {
+            font-size: var(--font-size-base);
+        }
+        
+        /* 发送操作按钮优化 */
+        .send-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+        
+        .send-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            padding: var(--space-4) var(--space-6);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+        }
+        
+        .send-btn .recipient-count {
+            opacity: 0.8;
+            font-weight: 500;
+        }
+        
+        .secondary-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-3);
+        }
+        
+        .secondary-actions .btn-outline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+        }
+    </style>
+</body>
+</html>
