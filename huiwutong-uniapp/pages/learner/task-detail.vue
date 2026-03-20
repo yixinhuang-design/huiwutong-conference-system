@@ -25,11 +25,11 @@
 
         <view class="task-meta">
           <view class="meta-item">
-            <text class="meta-icon">📅</text>
+            <text class="meta-icon"><text class="fa fa-calendar-alt"></text></text>
             <text class="meta-text">截止时间：{{ taskInfo.deadline }}</text>
           </view>
           <view class="meta-item">
-            <text class="meta-icon">👤</text>
+            <text class="meta-icon"><text class="fa fa-user"></text></text>
             <text class="meta-text">发布人：{{ taskInfo.publisher }}</text>
           </view>
           <view class="meta-item" v-if="taskInfo.priority">
@@ -110,7 +110,7 @@
           ✓ 标记完成
         </button>
         <button class="btn btn-primary btn-block" @click="submitTask">
-          📝 提交任务
+          <text class="fa fa-edit"></text> 提交任务
         </button>
       </view>
     </scroll-view>
@@ -182,11 +182,11 @@ export default {
   computed: {
     statusIcon() {
       const iconMap = {
-        pending: '📋',
-        submitted: '✅',
-        reviewed: '📝'
+        pending: '<text class="fa fa-clipboard"></text>',
+        submitted: '<text class="fa fa-check"></text>',
+        reviewed: '<text class="fa fa-edit"></text>'
       }
-      return iconMap[this.taskInfo.status] || '📋'
+      return iconMap[this.taskInfo.status] || '<text class="fa fa-clipboard"></text>'
     },
 
     statusTitle() {

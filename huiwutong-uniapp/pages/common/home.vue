@@ -38,11 +38,11 @@
             <view class="meeting-title">{{ meeting.title }}</view>
             <view class="meeting-meta">
               <text class="meta-item">
-                <text>📅</text>
+                <text><text class="fa fa-calendar-alt"></text></text>
                 {{ meeting.dateRange }} · 共{{ meeting.days }}天
               </text>
               <text class="meta-item">
-                <text>📍</text>
+                <text><text class="fa fa-map-marker-alt"></text></text>
                 {{ meeting.location }}
               </text>
             </view>
@@ -59,7 +59,7 @@
     </view>
 
     <view v-else class="empty-state">
-      <text class="empty-icon">📋</text>
+      <text class="empty-icon"><text class="fa fa-clipboard"></text></text>
       <text class="empty-text">暂无培训安排</text>
     </view>
 
@@ -95,37 +95,37 @@ export default {
       meetings: [],
       featureList: [
         {
-          icon: '📖',
+          icon: '<text class="fa fa-book"></text>',
           title: '参会须知',
           path: '/pages/learner/guide',
           gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
         },
         {
-          icon: '📅',
+          icon: '<text class="fa fa-calendar-alt"></text>',
           title: '日程安排',
           path: '/pages/learner/schedule',
           gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
         },
         {
-          icon: '📒',
+          icon: '<text class="fa fa-address-book"></text>',
           title: '通讯录',
           path: '/pages/learner/contact',
           gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
         },
         {
-          icon: '🪑',
+          icon: '<text class="fa fa-th-large"></text>',
           title: '座位图',
           path: '/pages/learner/seat',
           gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
         },
         {
-          icon: '✅',
+          icon: '<text class="fa fa-check"></text>',
           title: '报到签到',
           path: '/pages/learner/checkin',
           gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
         },
         {
-          icon: '📚',
+          icon: '<text class="fa fa-book-open"></text>',
           title: '学习资料',
           path: '/pages/learner/materials',
           gradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
@@ -256,19 +256,19 @@ export default {
             gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
           },
           {
-            icon: '✅',
+            icon: '<text class="fa fa-check"></text>',
             title: '任务管理',
             path: '/pages/staff/task-list',
             gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
           },
           {
-            icon: '👥',
+            icon: '<text class="fa fa-users"></text>',
             title: '报名管理',
             path: '/pages/staff/registration-manage',
             gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
           },
           {
-            icon: '🪑',
+            icon: '<text class="fa fa-th-large"></text>',
             title: '座位管理',
             path: '/pages/staff/seat-manage',
             gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'

@@ -25,7 +25,7 @@
         </view>
         <view class="date-range" @click="showDatePicker">
           <text class="date-text">{{ dateRangeText }}</text>
-          <text class="date-icon">📅</text>
+          <text class="date-icon"><text class="fa fa-calendar-alt"></text></text>
         </view>
       </view>
 
@@ -229,9 +229,9 @@ export default {
         { label: '本年', value: 'year' }
       ],
       coreMetrics: [
-        { icon: '👥', label: '总报名数', value: '1,234', trend: 15.6 },
-        { icon: '✅', label: '审核通过', value: '1,180', trend: 12.3 },
-        { icon: '📍', label: '签到人数', value: '1,156', trend: 8.9 },
+        { icon: '<text class="fa fa-users"></text>', label: '总报名数', value: '1,234', trend: 15.6 },
+        { icon: '<text class="fa fa-check"></text>', label: '审核通过', value: '1,180', trend: 12.3 },
+        { icon: '<text class="fa fa-map-marker-alt"></text>', label: '签到人数', value: '1,156', trend: 8.9 },
         { icon: '⭐', label: '满意度', value: '96.8%', trend: 2.1 }
       ],
       registrationTrend: [

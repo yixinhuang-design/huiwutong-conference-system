@@ -28,7 +28,7 @@
     <scroll-view class="guide-content" scroll-y :scroll-into-view="scrollSection">
       <view :id="'section-0'" class="guide-section card">
         <view class="section-header">
-          <text class="section-icon">✅</text>
+          <text class="section-icon"><text class="fa fa-check"></text></text>
           <text class="section-title-text">报到须知</text>
         </view>
         <view class="section-content">
@@ -48,7 +48,7 @@ export default {
     return {
       scrollSection: '',
       quickNav: [
-        { icon: '✅', title: '报到须知' },
+        { icon: '<text class="fa fa-check"></text>', title: '报到须知' },
         { icon: '⏰', title: '签到规则' }
       ]
     }

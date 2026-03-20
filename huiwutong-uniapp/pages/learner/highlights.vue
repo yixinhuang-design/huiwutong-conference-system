@@ -76,10 +76,10 @@ export default {
       hasMore: true,
       currentPage: 1,
       categories: [
-        { icon: '📸', label: '全部', value: 'all' },
+        { icon: '<text class="fa fa-camera"></text>', label: '全部', value: 'all' },
         { icon: '🎤', label: '授课', value: 'lecture' },
-        { icon: '💬', label: '讨论', value: 'discussion' },
-        { icon: '👥', label: '合影', value: 'group' },
+        { icon: '<text class="fa fa-comments"></text>', label: '讨论', value: 'discussion' },
+        { icon: '<text class="fa fa-users"></text>', label: '合影', value: 'group' },
         { icon: '🎉', label: '活动', value: 'activity' }
       ],
       photos: [

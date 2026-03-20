@@ -3,7 +3,7 @@
     <view class="login-card">
       <!-- Logo区域 -->
       <view class="login-logo">
-        <text class="logo-icon">🎯</text>
+        <text class="logo-icon"><text class="fa fa-bullseye"></text></text>
       </view>
       <view class="login-title">智能会议助手</view>
       <view class="login-subtitle">欢迎登录智能会议系统</view>
@@ -48,7 +48,7 @@
       <view v-if="loginMode === 'password'" class="login-form">
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon">👤</text>
+            <text class="input-icon"><text class="fa fa-user"></text></text>
             <input
               v-model="formData.username"
               placeholder="请输入用户名/手机号"
@@ -110,7 +110,7 @@
 
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon">💬</text>
+            <text class="input-icon"><text class="fa fa-comments"></text></text>
             <input
               v-model="formData.smsCode"
               placeholder="请输入验证码"

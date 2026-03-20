@@ -30,7 +30,7 @@
     <!-- 搜索和筛选 -->
     <view class="filter-bar card">
       <view class="search-input-wrapper">
-        <text class="search-icon">🔍</text>
+        <text class="search-icon"><text class="fa fa-search"></text></text>
         <input
           v-model="searchKeyword"
           class="search-input"
@@ -98,7 +98,7 @@
       </view>
 
       <view v-else class="empty-state">
-        <text class="empty-icon">📋</text>
+        <text class="empty-icon"><text class="fa fa-clipboard"></text></text>
         <text class="empty-text">暂无报名信息</text>
       </view>
     </view>

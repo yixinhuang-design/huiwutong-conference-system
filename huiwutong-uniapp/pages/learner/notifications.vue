@@ -49,7 +49,7 @@
       </view>
 
       <view v-else class="empty-state">
-        <text class="empty-icon">🔔</text>
+        <text class="empty-icon"><text class="fa fa-bell"></text></text>
         <text class="empty-text">暂无通知</text>
       </view>
     </view>
@@ -114,14 +114,14 @@ export default {
           pageSize: 50
         })
         const records = result.records || result || []
-        const iconMap = { conference: '📢', registration: '⏰', checkin: '✅', schedule: '📅', seat: '👺', bus: '🚌', accommodation: '🏠', custom: '✉️' }
+        const iconMap = { conference: '📢', registration: '⏰', checkin: '<text class="fa fa-check"></text>', schedule: '<text class="fa fa-calendar-alt"></text>', seat: '👺', bus: '🚌', accommodation: '🏠', custom: '✉️' }
         const colorMap = { conference: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', registration: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', checkin: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', custom: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }
         this.allNotifications = records.map(n => ({
           id: n.id,
           title: n.title,
           content: n.content,
           time: n.sentTime || n.createTime || '',
-          icon: iconMap[n.type] || '🔔',
+          icon: iconMap[n.type] || '<text class="fa fa-bell"></text>',
           color: colorMap[n.type] || 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
           type: n.type === 'conference' ? 'system' : (n.type === 'checkin' || n.type === 'schedule' ? 'course' : 'activity'),
           read: n.status === 'read'

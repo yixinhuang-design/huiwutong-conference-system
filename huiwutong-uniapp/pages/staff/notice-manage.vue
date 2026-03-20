@@ -70,7 +70,7 @@
 
         <view class="notice-footer">
           <view class="notice-target">
-            <text class="target-icon">👥</text>
+            <text class="target-icon"><text class="fa fa-users"></text></text>
             <text class="target-text">{{ notice.target }}</text>
           </view>
           <view class="notice-stats">

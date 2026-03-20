@@ -42,8 +42,8 @@
           </view>
 
           <view class="role-meta">
-            <text class="meta-item">👥 用户数：{{ role.userCount }}</text>
-            <text class="meta-item">📝 描述：{{ role.description }}</text>
+            <text class="meta-item"><text class="fa fa-users"></text> 用户数：{{ role.userCount }}</text>
+            <text class="meta-item"><text class="fa fa-edit"></text> 描述：{{ role.description }}</text>
           </view>
 
           <view class="role-permissions">

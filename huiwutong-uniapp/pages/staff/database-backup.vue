@@ -202,7 +202,7 @@
 
         <view class="modal-body">
           <view class="warning-box">
-            <text class="warning-icon">⚠️</text>
+            <text class="warning-icon"><text class="fa fa-exclamation-triangle"></text></text>
             <view class="warning-content">
               <text class="warning-title">危险操作</text>
               <text class="warning-text">恢复备份将覆盖当前数据，此操作不可撤销！请确保已做好当前数据备份。</text>

@@ -55,14 +55,14 @@
           </view>
         </view>
         <button class="btn btn-outline btn-block" @click="querySeat">
-          🔍 查询座位
+          <text class="fa fa-search"></text> 查询座位
         </button>
       </view>
 
       <!-- 查询结果 -->
       <view v-if="seatInfo" class="result-section card">
         <view class="result-header">
-          <text class="result-icon">🪑</text>
+          <text class="result-icon"><text class="fa fa-th-large"></text></text>
           <view class="seat-number">
             <text class="seat-area">{{ seatInfo.area }}</text>
             <text class="seat-code">{{ seatInfo.row }}排{{ seatInfo.seat }}座</text>
@@ -117,13 +117,13 @@
             class="btn btn-success btn-block"
             @click="viewMySeat"
           >
-            🪑 这是我的座位
+            <text class="fa fa-th-large"></text> 这是我的座位
           </button>
           <button
             class="btn btn-outline btn-block"
             @click="showNavigation"
           >
-            📍 导航到此座位
+            <text class="fa fa-map-marker-alt"></text> 导航到此座位
           </button>
         </view>
       </view>

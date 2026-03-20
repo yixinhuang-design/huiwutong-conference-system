@@ -14,8 +14,8 @@
       <view class="task-info card">
         <view class="task-title">{{ taskInfo.title }}</view>
         <view class="task-meta">
-          <text class="meta-item">📅 {{ taskInfo.deadline }}</text>
-          <text class="meta-item">👤 {{ taskInfo.assignee }}</text>
+          <text class="meta-item"><text class="fa fa-calendar-alt"></text> {{ taskInfo.deadline }}</text>
+          <text class="meta-item"><text class="fa fa-user"></text> {{ taskInfo.assignee }}</text>
         </view>
       </view>
 
@@ -167,9 +167,9 @@ export default {
         files: []
       },
       completionOptions: [
-        { icon: '✅', label: '已完成', value: 'completed' },
+        { icon: '<text class="fa fa-check"></text>', label: '已完成', value: 'completed' },
         { icon: '🔄', label: '进行中', value: 'inProgress' },
-        { icon: '⚠️', label: '有困难', value: 'difficult' },
+        { icon: '<text class="fa fa-exclamation-triangle"></text>', label: '有困难', value: 'difficult' },
         { icon: '❌', label: '未完成', value: 'incomplete' }
       ],
       historyList: []

@@ -44,7 +44,7 @@
         </view>
       </view>
       <view v-else class="empty-state">
-        <text class="empty-icon">👥</text>
+        <text class="empty-icon"><text class="fa fa-users"></text></text>
         <text class="empty-text">暂无群组</text>
       </view>
     </view>
@@ -74,7 +74,7 @@
         </view>
       </view>
       <view v-else class="empty-state">
-        <text class="empty-icon">💬</text>
+        <text class="empty-icon"><text class="fa fa-comments"></text></text>
         <text class="empty-text">暂无私聊</text>
       </view>
     </view>

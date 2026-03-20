@@ -91,7 +91,7 @@ export default {
       ],
       generalSettings: [
         {
-          icon: '🔔',
+          icon: '<text class="fa fa-bell"></text>',
           title: '消息通知',
           type: 'switch',
           checked: true,

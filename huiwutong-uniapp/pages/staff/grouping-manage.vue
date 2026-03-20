@@ -35,7 +35,7 @@
           <view class="group-header">
             <view class="group-info">
               <text class="group-name">{{ group.name }}</text>
-              <text class="group-meta">👥 {{ group.memberCount }}人</text>
+              <text class="group-meta"><text class="fa fa-users"></text> {{ group.memberCount }}人</text>
             </view>
             <text class="group-arrow">›</text>
           </view>
@@ -71,7 +71,7 @@
       </view>
 
       <view v-else class="empty-state">
-        <text class="empty-icon">👥</text>
+        <text class="empty-icon"><text class="fa fa-users"></text></text>
         <text class="empty-text">暂无分组</text>
         <button class="empty-btn btn btn-primary" @click="createGroup">
           创建第一个分组

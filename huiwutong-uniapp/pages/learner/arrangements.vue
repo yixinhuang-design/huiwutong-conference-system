@@ -42,10 +42,10 @@
 
         <view class="arrangement-actions">
           <button class="btn btn-outline btn-block btn-sm" @click="callHotel">
-            📞 联系酒店
+            <text class="fa fa-phone"></text> 联系酒店
           </button>
           <button class="btn btn-primary btn-block btn-sm" @click="showHotelMap">
-            📍 查看位置
+            <text class="fa fa-map-marker-alt"></text> 查看位置
           </button>
         </view>
       </view>
@@ -68,7 +68,7 @@
               <text class="meal-time">{{ meal.time }}</text>
             </view>
             <view class="meal-info">
-              <text class="meal-location">📍 {{ meal.location }}</text>
+              <text class="meal-location"><text class="fa fa-map-marker-alt"></text> {{ meal.location }}</text>
               <text class="meal-menu" v-if="meal.menu">菜单：{{ meal.menu }}</text>
             </view>
           </view>
@@ -113,7 +113,7 @@
           class="btn btn-outline btn-block btn-sm"
           @click="callDriver"
         >
-          📞 联系司机
+          <text class="fa fa-phone"></text> 联系司机
         </button>
       </view>
 
@@ -153,7 +153,7 @@
       <!-- 联系方式 -->
       <view class="contact-section card">
         <view class="section-header">
-          <text class="section-icon">📞</text>
+          <text class="section-icon"><text class="fa fa-phone"></text></text>
           <text class="section-title">联系方式</text>
         </view>
 

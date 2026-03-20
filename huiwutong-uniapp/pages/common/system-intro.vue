@@ -29,13 +29,13 @@
       <!-- 核心功能 -->
       <view class="feature-section">
         <view class="section-title">
-          <text class="title-icon">✨</text>
+          <text class="title-icon"><text class="fa fa-star"></text></text>
           <text class="title-text">核心功能</text>
         </view>
 
         <view class="feature-list">
           <view class="feature-item">
-            <view class="feature-icon">🎯</view>
+            <view class="feature-icon"><text class="fa fa-bullseye"></text></view>
             <view class="feature-info">
               <view class="feature-name">会议管理</view>
               <view class="feature-desc">查看会议详情、日程安排、参会人员等信息</view>
@@ -43,7 +43,7 @@
           </view>
 
           <view class="feature-item">
-            <view class="feature-icon">📝</view>
+            <view class="feature-icon"><text class="fa fa-edit"></text></view>
             <view class="feature-info">
               <view class="feature-name">在线报名</view>
               <view class="feature-desc">支持在线报名、信息填写、资料上传</view>
@@ -51,7 +51,7 @@
           </view>
 
           <view class="feature-item">
-            <view class="feature-icon">✅</view>
+            <view class="feature-icon"><text class="fa fa-check"></text></view>
             <view class="feature-info">
               <view class="feature-name">扫码签到</view>
               <view class="feature-desc">二维码签到，快速便捷，智能识别</view>
@@ -67,7 +67,7 @@
           </view>
 
           <view class="feature-item">
-            <view class="feature-icon">💬</view>
+            <view class="feature-icon"><text class="fa fa-comments"></text></view>
             <view class="feature-info">
               <view class="feature-name">即时沟通</view>
               <view class="feature-desc">支持群聊和私聊，方便参会者交流</view>
@@ -103,7 +103,7 @@
       <!-- 适用场景 -->
       <view class="scene-section">
         <view class="section-title">
-          <text class="title-icon">🏢</text>
+          <text class="title-icon"><text class="fa fa-building"></text></text>
           <text class="title-text">适用场景</text>
         </view>
 

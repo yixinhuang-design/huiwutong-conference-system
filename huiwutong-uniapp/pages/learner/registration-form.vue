@@ -21,16 +21,16 @@
       <!-- 步骤1：培训信息 -->
       <view v-if="currentStep === 0" class="step-content">
         <view class="info-card card">
-          <view class="training-icon">📚</view>
+          <view class="training-icon"><text class="fa fa-book-open"></text></view>
           <text class="training-title">{{ trainingInfo.title }}</text>
           <view class="training-meta">
-            <text class="meta-item">📅 {{ trainingInfo.date }}</text>
-            <text class="meta-item">📍 {{ trainingInfo.location }}</text>
+            <text class="meta-item"><text class="fa fa-calendar-alt"></text> {{ trainingInfo.date }}</text>
+            <text class="meta-item"><text class="fa fa-map-marker-alt"></text> {{ trainingInfo.location }}</text>
           </view>
         </view>
 
         <view class="notice-section card">
-          <view class="section-title">📋 报名须知</view>
+          <view class="section-title"><text class="fa fa-clipboard"></text> 报名须知</view>
           <view class="notice-list">
             <text class="notice-item">1. 请确保填写信息真实准确</text>
             <text class="notice-item">2. 报名后请等待审核</text>

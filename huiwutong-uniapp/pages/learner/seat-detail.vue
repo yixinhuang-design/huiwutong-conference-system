@@ -13,7 +13,7 @@
       <!-- 座位信息卡片 -->
       <view class="seat-card card">
         <view class="seat-header">
-          <view class="seat-icon">🪑</view>
+          <view class="seat-icon"><text class="fa fa-th-large"></text></view>
           <view class="seat-info">
             <text class="seat-area">{{ seatInfo.area }}</text>
             <text class="seat-number">{{ seatInfo.row }}排{{ seatInfo.seat }}座</text>
@@ -25,7 +25,7 @@
 
         <view class="seat-meta">
           <view class="meta-item">
-            <text class="meta-icon">📍</text>
+            <text class="meta-icon"><text class="fa fa-map-marker-alt"></text></text>
             <text class="meta-text">{{ seatInfo.location }}</text>
           </view>
           <view class="meta-item">
@@ -51,10 +51,10 @@
 
         <view class="occupant-actions" v-if="!seatInfo.isMySeat">
           <button class="btn btn-outline btn-block btn-sm" @click="viewProfile">
-            👤 查看资料
+            <text class="fa fa-user"></text> 查看资料
           </button>
           <button class="btn btn-primary btn-block btn-sm" @click="startChat">
-            💬 发消息
+            <text class="fa fa-comments"></text> 发消息
           </button>
         </view>
       </view>
@@ -126,7 +126,7 @@
           class="btn btn-primary btn-block"
           @click="showNavigation"
         >
-          📍 导航到此座位
+          <text class="fa fa-map-marker-alt"></text> 导航到此座位
         </button>
         <button
           class="btn btn-outline btn-block"
@@ -164,10 +164,10 @@ export default {
           { id: '4', name: '刘芳', department: '市财政局', position: '科员', relativePos: '后排' }
         ],
         facilities: [
-          { icon: '🪑', name: '桌椅', description: '培训桌椅', available: true },
+          { icon: '<text class="fa fa-th-large"></text>', name: '桌椅', description: '培训桌椅', available: true },
           { icon: '🔌', name: '电源插座', description: '220V电源', available: true },
           { icon: '🥤', name: '饮水杯', description: '一次性水杯', available: true },
-          { icon: '📝', name: '学习用品', description: '笔、本子', available: true }
+          { icon: '<text class="fa fa-edit"></text>', name: '学习用品', description: '笔、本子', available: true }
         ],
         photos: [
           'https://via.placeholder.com/300x200?text=座位正面',

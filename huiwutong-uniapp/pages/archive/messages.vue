@@ -5,7 +5,7 @@
       <view class="header-content">
         <text class="back-btn" @click="goBack">‹</text>
         <text class="header-title">留言赠言</text>
-        <text class="header-action" @click="writeMessage">✏️ 写留言</text>
+        <text class="header-action" @click="writeMessage"><text class="fa fa-pen"></text> 写留言</text>
       </view>
     </view>
 

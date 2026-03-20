@@ -109,7 +109,7 @@
           class="btn btn-outline btn-block"
           @click="viewDetails"
         >
-          📋 查看培训详情
+          <text class="fa fa-clipboard"></text> 查看培训详情
         </button>
         <button
           v-if="registrationInfo.status === 'pending'"
@@ -170,7 +170,7 @@ export default {
         },
         approved: {
           type: 'approved',
-          icon: '✅',
+          icon: '<text class="fa fa-check"></text>',
           title: '审核通过',
           desc: '恭喜您，报名审核已通过',
           time: '请按时参加培训'

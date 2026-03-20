@@ -41,7 +41,7 @@
           <view class="schedule-info">
             <view class="schedule-title">{{ item.title }}</view>
             <view class="schedule-location">
-              <text>📍</text> {{ item.location }}
+              <text><text class="fa fa-map-marker-alt"></text></text> {{ item.location }}
             </view>
           </view>
         </view>
@@ -154,21 +154,21 @@ export default {
       ],
       quickActions: [
         {
-          icon: '📅',
+          icon: '<text class="fa fa-calendar-alt"></text>',
           title: '查看日程',
           desc: '查看完整的培训日程',
           action: 'schedule',
           gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
         },
         {
-          icon: '🪑',
+          icon: '<text class="fa fa-th-large"></text>',
           title: '我的座位',
           desc: '查看座位信息和导航',
           action: 'seat',
           gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
         },
         {
-          icon: '📚',
+          icon: '<text class="fa fa-book-open"></text>',
           title: '学习资料',
           desc: '下载培训相关资料',
           action: 'materials',
@@ -182,14 +182,14 @@ export default {
           gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
         },
         {
-          icon: '📒',
+          icon: '<text class="fa fa-address-book"></text>',
           title: '通讯录',
           desc: '查看学员联系方式',
           action: 'contact',
           gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
         },
         {
-          icon: '💬',
+          icon: '<text class="fa fa-comments"></text>',
           title: '群组聊天',
           desc: '进入群组聊天',
           action: 'chat',

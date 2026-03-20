@@ -205,7 +205,7 @@ export default {
         { star: 1, count: 0, percent: 0 }
       ],
       categoryResults: [
-        { id: 'content', name: '培训内容', icon: '📚', avg: 4.72, fullCount: 48 },
+        { id: 'content', name: '培训内容', icon: '<text class="fa fa-book-open"></text>', avg: 4.72, fullCount: 48 },
         { id: 'teacher', name: '讲师水平', icon: '👨‍🏫', avg: 4.85, fullCount: 52 },
         { id: 'organization', name: '培训组织', icon: '🏛️', avg: 4.65, fullCount: 45 },
         { id: 'effect', name: '培训效果', icon: '📈', avg: 4.50, fullCount: 38 }

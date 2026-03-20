@@ -37,8 +37,8 @@
           </view>
 
           <view class="archive-meta">
-            <text class="meta-item">📅 {{ archive.duration }}</text>
-            <text class="meta-item">📍 {{ archive.location }}</text>
+            <text class="meta-item"><text class="fa fa-calendar-alt"></text> {{ archive.duration }}</text>
+            <text class="meta-item"><text class="fa fa-map-marker-alt"></text> {{ archive.location }}</text>
           </view>
 
           <view class="archive-stats">
@@ -58,7 +58,7 @@
 
           <view class="archive-actions">
             <button class="action-btn btn btn-outline btn-sm" @click.stop="viewMaterials(archive)">
-              📚 资料
+              <text class="fa fa-book-open"></text> 资料
             </button>
             <button class="action-btn btn btn-outline btn-sm" @click.stop="viewPhotos(archive)">
               📷 照片

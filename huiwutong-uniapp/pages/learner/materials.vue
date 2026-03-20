@@ -49,7 +49,7 @@
       </view>
 
       <view v-else class="empty-state">
-        <text class="empty-icon">📚</text>
+        <text class="empty-icon"><text class="fa fa-book-open"></text></text>
         <text class="empty-text">暂无学习资料</text>
       </view>
     </view>
@@ -99,7 +99,7 @@ export default {
         if (category.value !== 'all') params.category = category.value
         const data = await MaterialAPI.list(params)
         const materials = data.records || data || []
-        const typeIcons = { pdf: '📄', ppt: '📊', doc: '📝', xls: '📊', video: '🎬', image: '🖼️' }
+        const typeIcons = { pdf: '📄', ppt: '📊', doc: '<text class="fa fa-edit"></text>', xls: '📊', video: '🎬', image: '🖼️' }
         const typeColors = { pdf: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', ppt: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', doc: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', xls: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', video: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', image: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)' }
         this.materialList = materials.map(m => ({
           id: m.id,

@@ -293,7 +293,7 @@
 
         <view class="modal-body">
           <view class="result-status" :class="testResult.success ? 'success' : 'error'">
-            <text class="status-icon">{{ testResult.success ? '✅' : '❌' }}</text>
+            <text class="status-icon">{{ testResult.success ? '<text class="fa fa-check"></text>' : '❌' }}</text>
             <text class="status-text">{{ testResult.success ? '连接成功' : '连接失败' }}</text>
           </view>
 

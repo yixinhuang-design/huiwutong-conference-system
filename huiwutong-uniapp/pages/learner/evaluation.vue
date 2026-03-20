@@ -126,7 +126,7 @@ export default {
       evaluationCategories: [
         {
           id: 1,
-          icon: '📚',
+          icon: '<text class="fa fa-book-open"></text>',
           title: '培训内容',
           description: '对培训课程内容设置的评价',
           items: [

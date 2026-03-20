@@ -85,18 +85,18 @@ export default {
       },
       functionList: [
         {
-          icon: '👤',
+          icon: '<text class="fa fa-user"></text>',
           title: '个人信息',
           action: 'profile'
         },
         {
-          icon: '🔔',
+          icon: '<text class="fa fa-bell"></text>',
           title: '消息通知',
           action: 'notifications',
           badge: 3
         },
         {
-          icon: '📋',
+          icon: '<text class="fa fa-clipboard"></text>',
           title: '我的任务',
           action: 'tasks'
         },
@@ -106,7 +106,7 @@ export default {
           action: 'archives'
         },
         {
-          icon: '📝',
+          icon: '<text class="fa fa-edit"></text>',
           title: '我的反馈',
           action: 'feedback'
         },
@@ -121,7 +121,7 @@ export default {
           action: 'security'
         },
         {
-          icon: '⚙️',
+          icon: '<text class="fa fa-cog"></text>',
           title: '系统设置',
           action: 'settings'
         },

@@ -12,7 +12,7 @@
     <!-- 搜索栏 -->
     <view class="search-section">
       <view class="search-bar">
-        <text class="search-icon">🔍</text>
+        <text class="search-icon"><text class="fa fa-search"></text></text>
         <input
           v-model="searchKeyword"
           class="search-input"

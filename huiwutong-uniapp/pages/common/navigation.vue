@@ -11,12 +11,12 @@
     <!-- 当前位置 -->
     <view class="current-location card">
       <view class="location-header">
-        <text class="location-icon">📍</text>
+        <text class="location-icon"><text class="fa fa-map-marker-alt"></text></text>
         <text class="location-text">当前位置</text>
       </view>
       <view class="location-address">{{ currentAddress }}</view>
       <button class="refresh-btn btn btn-primary btn-block" @click="refreshLocation">
-        📍 刷新位置
+        <text class="fa fa-map-marker-alt"></text> 刷新位置
       </button>
     </view>
 

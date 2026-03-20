@@ -11,7 +11,7 @@
     <view class="realtime-cards">
       <view class="realtime-card card">
         <view class="card-top">
-          <text class="card-icon">👥</text>
+          <text class="card-icon"><text class="fa fa-users"></text></text>
           <text class="card-label">总人数</text>
         </view>
         <view class="card-value">{{ stats.totalPeople }}</view>
@@ -23,7 +23,7 @@
 
       <view class="realtime-card card">
         <view class="card-top">
-          <text class="card-icon">✅</text>
+          <text class="card-icon"><text class="fa fa-check"></text></text>
           <text class="card-label">已签到</text>
         </view>
         <view class="card-value">{{ stats.checkedIn }}</view>
@@ -70,7 +70,7 @@
           <view class="schedule-info">
             <view class="schedule-title">{{ item.title }}</view>
             <view class="schedule-location">
-              <text>📍</text> {{ item.location }}
+              <text><text class="fa fa-map-marker-alt"></text></text> {{ item.location }}
             </view>
           </view>
           <view class="schedule-status" :class="item.statusClass">
@@ -95,7 +95,7 @@
       <view class="section-title">快捷操作</view>
       <view class="action-grid grid-3">
         <view class="action-tile" @click="goToManage('registration')">
-          <view class="action-icon">👥</view>
+          <view class="action-icon"><text class="fa fa-users"></text></view>
           <view class="action-title">报名管理</view>
         </view>
         <view class="action-tile" @click="goToManage('grouping')">
@@ -103,7 +103,7 @@
           <view class="action-title">分组管理</view>
         </view>
         <view class="action-tile" @click="goToManage('seat')">
-          <view class="action-icon">🪑</view>
+          <view class="action-icon"><text class="fa fa-th-large"></text></view>
           <view class="action-title">座位管理</view>
         </view>
         <view class="action-tile" @click="goToManage('notice')">
@@ -111,7 +111,7 @@
           <view class="action-title">通知管理</view>
         </view>
         <view class="action-tile" @click="goToManage('task')">
-          <view class="action-icon">✅</view>
+          <view class="action-icon"><text class="fa fa-check"></text></view>
           <view class="action-title">任务管理</view>
         </view>
         <view class="action-tile" @click="goToManage('data')">
@@ -191,7 +191,7 @@ export default {
           title: '待审核报名',
           meta: '5人申请',
           count: 5,
-          icon: '👤',
+          icon: '<text class="fa fa-user"></text>',
           color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           action: 'registration'
         },
@@ -207,7 +207,7 @@ export default {
           title: '待处理预警',
           meta: '3条提醒',
           count: 3,
-          icon: '⚠️',
+          icon: '<text class="fa fa-exclamation-triangle"></text>',
           color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
           action: 'alert'
         }

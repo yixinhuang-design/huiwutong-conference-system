@@ -10,7 +10,7 @@
     <!-- 搜索框 -->
     <view class="search-bar card">
       <view class="search-input-wrapper">
-        <text class="search-icon">🔍</text>
+        <text class="search-icon"><text class="fa fa-search"></text></text>
         <input
           v-model="searchKeyword"
           class="search-input"
@@ -62,7 +62,7 @@
       <view class="section-title">联系我们</view>
       <view class="contact-list">
         <view class="contact-item">
-          <text class="contact-icon">📞</text>
+          <text class="contact-icon"><text class="fa fa-phone"></text></text>
           <view class="contact-info">
             <text class="contact-label">客服热线</text>
             <text class="contact-value">400-888-8888</text>
@@ -76,7 +76,7 @@
           </view>
         </view>
         <view class="contact-item">
-          <text class="contact-icon">💬</text>
+          <text class="contact-icon"><text class="fa fa-comments"></text></text>
           <view class="contact-info">
             <text class="contact-label">在线客服</text>
             <text class="contact-value">工作日 9:00-18:00</text>
@@ -123,9 +123,9 @@ export default {
         }
       ],
       quickLinks: [
-        { icon: '📖', title: '使用指南', action: 'guide' },
+        { icon: '<text class="fa fa-book"></text>', title: '使用指南', action: 'guide' },
         { icon: '🎬', title: '视频教程', action: 'video' },
-        { icon: '📝', title: '意见反馈', action: 'feedback' }
+        { icon: '<text class="fa fa-edit"></text>', title: '意见反馈', action: 'feedback' }
       ]
     }
   },

@@ -12,7 +12,7 @@
     <!-- 工具栏 -->
     <view class="toolbar card">
       <view class="tool-item" @click="toggleEditMode">
-        <text class="tool-icon">{{ editMode ? '✓' : '✏️' }}</text>
+        <text class="tool-icon">{{ editMode ? '✓' : '<text class="fa fa-pen"></text>' }}</text>
         <text class="tool-text">{{ editMode ? '完成' : '编辑' }}</text>
       </view>
       <view class="tool-item" @click="autoAssign">

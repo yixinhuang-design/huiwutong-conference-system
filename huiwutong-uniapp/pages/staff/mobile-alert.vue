@@ -209,19 +209,19 @@ export default {
         threshold: ''
       },
       quickActions: [
-        { icon: '📞', label: '电话通知', value: 'call' },
-        { icon: '💬', label: '发送消息', value: 'message' },
+        { icon: '<text class="fa fa-phone"></text>', label: '电话通知', value: 'call' },
+        { icon: '<text class="fa fa-comments"></text>', label: '发送消息', value: 'message' },
         { icon: '📧', label: '发送邮件', value: 'email' },
-        { icon: '📋', label: '查看详情', value: 'detail' }
+        { icon: '<text class="fa fa-clipboard"></text>', label: '查看详情', value: 'detail' }
       ],
       handleResults: ['已处理', '跟进中', '误报', '忽略'],
       relatedAlerts: [],
       handleHistory: [],
       actionList: [
-        { icon: '📞', label: '电话联系当事人', value: 'call' },
-        { icon: '💬', label: '发送消息提醒', value: 'message' },
+        { icon: '<text class="fa fa-phone"></text>', label: '电话联系当事人', value: 'call' },
+        { icon: '<text class="fa fa-comments"></text>', label: '发送消息提醒', value: 'message' },
         { icon: '📧', label: '发送邮件通知', value: 'email' },
-        { icon: '👥', label: '查看学员信息', value: 'userInfo' },
+        { icon: '<text class="fa fa-users"></text>', label: '查看学员信息', value: 'userInfo' },
         { icon: '📊', label: '查看详细数据', value: 'data' }
       ]
     }

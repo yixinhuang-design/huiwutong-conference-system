@@ -62,7 +62,7 @@
 
           <view class="config-status" v-if="config.triggered">
             <view class="status-badge triggered">
-              <text class="status-icon">⚠️</text>
+              <text class="status-icon"><text class="fa fa-exclamation-triangle"></text></text>
               <text class="status-text">已触发</text>
             </view>
             <text class="trigger-time">{{ config.triggerTime }}</text>
@@ -86,7 +86,7 @@
       </view>
 
       <view v-if="configList.length === 0" class="empty-state">
-        <text class="empty-icon">🔔</text>
+        <text class="empty-icon"><text class="fa fa-bell"></text></text>
         <text class="empty-text">暂无预警配置</text>
         <button class="btn btn-primary" @click="addConfig">
           + 添加预警配置

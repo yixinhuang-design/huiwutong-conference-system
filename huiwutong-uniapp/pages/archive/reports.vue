@@ -207,11 +207,11 @@ export default {
 
     getReportIcon(type) {
       const iconMap = {
-        summary: '📋',
+        summary: '<text class="fa fa-clipboard"></text>',
         grades: '📊',
-        attendance: '✅',
+        attendance: '<text class="fa fa-check"></text>',
         satisfaction: '⭐',
-        photos: '📸',
+        photos: '<text class="fa fa-camera"></text>',
         finance: '💰'
       }
       return iconMap[type] || '📄'

@@ -11,8 +11,8 @@
     <view class="meeting-info card">
       <view class="meeting-title">{{ meetingInfo.title }}</view>
       <view class="meeting-meta">
-        <text class="meta-item">📅 {{ meetingInfo.date }}</text>
-        <text class="meta-item">📍 {{ meetingInfo.location }}</text>
+        <text class="meta-item"><text class="fa fa-calendar-alt"></text> {{ meetingInfo.date }}</text>
+        <text class="meta-item"><text class="fa fa-map-marker-alt"></text> {{ meetingInfo.location }}</text>
       </view>
     </view>
 
@@ -36,7 +36,7 @@
     <view v-if="!checked && !loading" class="location-section card">
       <view class="section-title">定位签到</view>
       <view class="location-info">
-        <text class="location-icon">📍</text>
+        <text class="location-icon"><text class="fa fa-map-marker-alt"></text></text>
         <text class="location-text">{{ locationText }}</text>
       </view>
       <button
@@ -63,7 +63,7 @@
             <text class="record-type">{{ record.type }}</text>
             <text class="record-location">{{ record.location }}</text>
           </view>
-          <view class="record-status success">✅</view>
+          <view class="record-status success"><text class="fa fa-check"></text></view>
         </view>
       </view>
       <view v-else class="empty-state">
@@ -102,7 +102,7 @@ export default {
 
     statusIcon() {
       if (this.loading) return '⏳'
-      if (this.checked) return '✅'
+      if (this.checked) return '<text class="fa fa-check"></text>'
       return '⏰'
     },
 

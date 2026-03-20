@@ -5,7 +5,7 @@
       <view class="header-content">
         <text class="back-btn" @click="goBack">‹</text>
         <text class="header-title">留言赠言</text>
-        <text class="header-action" @click="writeMessage">✏️ 写留言</text>
+        <text class="header-action" @click="writeMessage"><text class="fa fa-pen"></text> 写留言</text>
       </view>
     </view>
 
@@ -59,7 +59,7 @@
                 <text class="action-text">{{ message.likeCount }}</text>
               </view>
               <view class="action-item" @click="showComments(message)">
-                <text class="action-icon">💬</text>
+                <text class="action-icon"><text class="fa fa-comments"></text></text>
                 <text class="action-text">{{ message.commentCount }}</text>
               </view>
               <view class="action-item" @click="shareMessage(message)">

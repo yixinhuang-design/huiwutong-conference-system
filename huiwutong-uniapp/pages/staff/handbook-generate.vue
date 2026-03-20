@@ -127,8 +127,8 @@ export default {
         { key: 'contact', label: '联系方式', desc: '显示学员联系电话', checked: false }
       ],
       sortOptions: [
-        { icon: '👥', label: '按分组', value: 'group' },
-        { icon: '🏢', label: '按单位', value: 'department' },
+        { icon: '<text class="fa fa-users"></text>', label: '按分组', value: 'group' },
+        { icon: '<text class="fa fa-building"></text>', label: '按单位', value: 'department' },
         { icon: '🔤', label: '按姓名', value: 'name' }
       ],
       stats: {

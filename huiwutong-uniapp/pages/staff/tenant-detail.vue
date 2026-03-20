@@ -169,7 +169,7 @@
           🔄 重置管理员密码
         </button>
         <button class="btn btn-outline btn-block" @click="renewTenant">
-          📅 续费租户
+          <text class="fa fa-calendar-alt"></text> 续费租户
         </button>
         <button
           class="btn btn-outline btn-block"
@@ -208,9 +208,9 @@ export default {
         learnerCount: 156,
         activeUsers: 45,
         modules: [
-          { id: 1, name: '培训管理', icon: '📚', description: '创建和管理培训活动', enabled: true },
-          { id: 2, name: '学员管理', icon: '👥', description: '管理学员信息和分组', enabled: true },
-          { id: 3, name: '签到管理', icon: '✅', description: '学员签到和考勤', enabled: true },
+          { id: 1, name: '培训管理', icon: '<text class="fa fa-book-open"></text>', description: '创建和管理培训活动', enabled: true },
+          { id: 2, name: '学员管理', icon: '<text class="fa fa-users"></text>', description: '管理学员信息和分组', enabled: true },
+          { id: 3, name: '签到管理', icon: '<text class="fa fa-check"></text>', description: '学员签到和考勤', enabled: true },
           { id: 4, name: '评价反馈', icon: '⭐', description: '收集学员反馈', enabled: true },
           { id: 5, name: '数据分析', icon: '📊', description: '培训数据统计分析', enabled: true },
           { id: 6, name: '档案管理', icon: '📁', description: '历史数据归档', enabled: false }

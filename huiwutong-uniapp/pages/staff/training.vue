@@ -23,7 +23,7 @@
         </view>
       </view>
       <view class="filter-search" @click="showSearch">
-        <text class="search-icon">🔍</text>
+        <text class="search-icon"><text class="fa fa-search"></text></text>
       </view>
     </view>
 
@@ -48,15 +48,15 @@
 
           <view class="training-info">
             <view class="info-item">
-              <text class="info-icon">📅</text>
+              <text class="info-icon"><text class="fa fa-calendar-alt"></text></text>
               <text class="info-text">{{ training.date }}</text>
             </view>
             <view class="info-item">
-              <text class="info-icon">📍</text>
+              <text class="info-icon"><text class="fa fa-map-marker-alt"></text></text>
               <text class="info-text">{{ training.location }}</text>
             </view>
             <view class="info-item">
-              <text class="info-icon">👥</text>
+              <text class="info-icon"><text class="fa fa-users"></text></text>
               <text class="info-text">{{ training.participants }}</text>
             </view>
           </view>

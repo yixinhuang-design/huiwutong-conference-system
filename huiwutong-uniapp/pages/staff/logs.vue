@@ -98,7 +98,7 @@
 
           <view class="log-meta">
             <view class="meta-item">
-              <text class="meta-icon">👤</text>
+              <text class="meta-icon"><text class="fa fa-user"></text></text>
               <text class="meta-text">{{ log.operator }}</text>
             </view>
             <view class="meta-item">
@@ -249,7 +249,7 @@ export default {
         {
           id: 1,
           module: '用户管理',
-          moduleIcon: '👥',
+          moduleIcon: '<text class="fa fa-users"></text>',
           type: '更新',
           typeClass: 'update',
           action: '更新用户信息',
@@ -269,7 +269,7 @@ export default {
         {
           id: 2,
           module: '培训管理',
-          moduleIcon: '📚',
+          moduleIcon: '<text class="fa fa-book-open"></text>',
           type: '创建',
           typeClass: 'create',
           action: '创建培训',
@@ -289,7 +289,7 @@ export default {
         {
           id: 3,
           module: '系统设置',
-          moduleIcon: '⚙️',
+          moduleIcon: '<text class="fa fa-cog"></text>',
           type: '更新',
           typeClass: 'update',
           action: '修改系统配置',
@@ -329,7 +329,7 @@ export default {
         {
           id: 5,
           module: '用户管理',
-          moduleIcon: '👥',
+          moduleIcon: '<text class="fa fa-users"></text>',
           type: '登录',
           typeClass: 'login',
           action: '用户登录',
