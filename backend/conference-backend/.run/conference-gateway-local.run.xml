@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="conference-gateway-local" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ACTIVE_PROFILES" value="local" />
+    <envs>
+      <env name="NACOS_ENABLED" value="false" />
+      <env name="NACOS_REGISTER_ENABLED" value="false" />
+      <env name="NACOS_CONFIG_ENABLED" value="false" />
+    </envs>
+    <module name="conference-gateway" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.conference.gateway.GatewayApplication" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

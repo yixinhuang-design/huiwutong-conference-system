@@ -90,7 +90,7 @@ spring:
 
         # AI服务
         - id: conference-ai
-          uri: http://localhost:8087
+          uri: http://localhost:8085
           predicates:
             - Path=/api/v1/ai/**
           filters:
@@ -98,7 +98,7 @@ spring:
 
         # 导航服务
         - id: conference-navigation
-          uri: http://localhost:8088
+          uri: http://localhost:8087
           predicates:
             - Path=/api/v1/navigation/**
           filters:
@@ -106,7 +106,7 @@ spring:
 
         # 数据服务
         - id: conference-data
-          uri: http://localhost:8085
+          uri: http://localhost:8088
           predicates:
             - Path=/api/v1/data/**
           filters:

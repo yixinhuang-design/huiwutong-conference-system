@@ -248,58 +248,48 @@ export default {
     },
 
     /**
-     * 处理问题
+     * 处理问题 - 调用后端AI服务
      */
-    handleQuestion() {
+    async handleQuestion() {
       if (!this.qaInput.trim()) {
-        uni.showToast({
-          title: '请输入问题',
-          icon: 'none'
-        })
+        uni.showToast({ title: '请输入问题', icon: 'none' })
         return
       }
 
-      // 添加用户问题
-      this.qaHistory.push({
-        role: 'user',
-        content: this.qaInput
-      })
-
-      const question = this.qaInput
+      const question = this.qaInput.trim()
+      this.qaHistory.push({ role: 'user', content: question })
       this.qaInput = ''
 
-      // 模拟AI回复
-      setTimeout(() => {
-        const answer = this.getAIAnswer(question)
-        this.qaHistory.push({
-          role: 'assistant',
-          content: answer
+      // 调用后端AI聊天接口
+      try {
+        const [err, res] = await uni.request({
+          url: 'http://localhost:8085/api/ai/chat',
+          method: 'POST',
+          header: { 'Content-Type': 'application/json', 'X-Tenant-Id': '2027317834622709762' },
+          data: { message: question }
         })
-      }, 1000)
+        if (res && res.data && res.data.code === 200 && res.data.data) {
+          const aiMsg = res.data.data.aiMessage
+          this.qaHistory.push({ role: 'assistant', content: aiMsg ? aiMsg.content : '已收到您的问题，正在处理中...' })
+        } else {
+          this.qaHistory.push({ role: 'assistant', content: this.getLocalAnswer(question) })
+        }
+      } catch (e) {
+        // API失败时降级为本地回答
+        this.qaHistory.push({ role: 'assistant', content: this.getLocalAnswer(question) })
+      }
     },
 
     /**
-     * 获取AI回复（模拟）
+     * 本地兜底回答（API不可用时使用）
      */
-    getAIAnswer(question) {
-      // 简单的关键词匹配
-      if (question.includes('日程') || question.includes('时间')) {
-        return '今天的日程安排是：09:00 专题讲座，14:00 分组讨论，18:00 晚餐。您可以在日程页面查看完整安排。'
-      }
-      if (question.includes('座位') || question.includes('位置')) {
-        return '您的座位在A区第3行第5列，座位号是A-15。点击上方"我的座位"可以查看详情和导航。'
-      }
-      if (question.includes('资料') || question.includes('课件')) {
-        return '培训资料已上传到学习资料模块，您可以在快捷操作中点击"学习资料"进行下载。'
-      }
-      if (question.includes('签到') || question.includes('签卡')) {
-        return '签到时间为课程开始前30分钟至结束后10分钟。您可以使用扫码签到或定位签到功能。'
-      }
-      if (question.includes('通知') || question.includes('消息')) {
-        return '您目前有3条未读通知，点击上方"通知消息"可以查看详情。'
-      }
-
-      return '抱歉，我暂时无法回答这个问题。您可以联系工作人员获取帮助。'
+    getLocalAnswer(question) {
+      if (question.includes('日程') || question.includes('时间')) return '今天的日程安排是：09:00 专题讲座，14:00 分组讨论，18:00 晚餐。您可以在日程页面查看完整安排。'
+      if (question.includes('座位') || question.includes('位置')) return '您可以在"我的座位"页面查看详细座位信息和导航。'
+      if (question.includes('资料') || question.includes('课件')) return '培训资料已上传到学习资料模块，您可以在快捷操作中点击"学习资料"进行下载。'
+      if (question.includes('签到')) return '签到时间为课程开始前30分钟至结束后10分钟。您可以使用扫码签到或定位签到功能。'
+      if (question.includes('联系') || question.includes('电话')) return '请联系会务组获取帮助，可在通知消息中查看联系方式。'
+      return '感谢您的问题，AI助手暂时离线。请稍后重试或联系工作人员获取帮助。'
     },
 
     /**

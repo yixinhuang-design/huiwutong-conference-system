@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="../css/conference-theme.css">
     <link rel="stylesheet" href="../css/components.css">
     <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
     <style>
@@ -435,6 +436,7 @@
     <script src="../js/interaction-utils.js"></script>
     <script>
         const { createApp } = Vue;
+        const DATA_API = 'http://localhost:8088/api/data';
 
         createApp({
             data() {
@@ -443,91 +445,136 @@
                         id: '',
                         name: '加载中...'
                     },
+                    conferenceId: null,
+                    loading: false,
                     // 报到率数据
                     reportData: {
-                        expected: 200,
-                        actual: 168,
-                        rate: 84
+                        expected: 0,
+                        actual: 0,
+                        rate: 0
                     },
                     // 签到率数据 - 按日程
-                    checkinData: [
-                        {
-                            id: 1,
-                            name: '开幕式',
-                            time: '2024-06-15 09:00',
-                            expected: 156,
-                            actual: 145,
-                            rate: 93
-                        },
-                        {
-                            id: 2,
-                            name: '主题报告',
-                            time: '2024-06-15 10:30',
-                            expected: 156,
-                            actual: 138,
-                            rate: 88
-                        },
-                        {
-                            id: 3,
-                            name: '分组讨论',
-                            time: '2024-06-15 14:00',
-                            expected: 156,
-                            actual: 128,
-                            rate: 82
-                        },
-                        {
-                            id: 4,
-                            name: '晚宴',
-                            time: '2024-06-15 18:00',
-                            expected: 120,
-                            actual: 98,
-                            rate: 82
-                        },
-                        {
-                            id: 5,
-                            name: '闭幕式',
-                            time: '2024-06-16 09:00',
-                            expected: 156,
-                            actual: 112,
-                            rate: 72
-                        }
-                    ],
+                    checkinData: [],
                     // 查寝率数据 - 按日期
-                    dormitoryData: [
-                        {
-                            date: '2024-06-14',
-                            expected: 120,
-                            actual: 115,
-                            rate: 96
-                        },
-                        {
-                            date: '2024-06-15',
-                            expected: 120,
-                            actual: 108,
-                            rate: 90
-                        },
-                        {
-                            date: '2024-06-16',
-                            expected: 80,
-                            actual: 68,
-                            rate: 85
-                        }
-                    ]
+                    dormitoryData: []
                 }
             },
             async mounted() {
                 await this.initialize();
+                await this.loadAllBusinessData();
             },
             methods: {
                 async initialize() {
-                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
-                    if (conferenceId) {
-                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                    const urlConferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (urlConferenceId) {
+                        this.conferenceId = urlConferenceId;
+                        try {
+                            this.conference = await window.conferenceContext.loadConference(urlConferenceId);
+                        } catch (e) {
+                            this.conference = { id: urlConferenceId, name: '会议 ' + urlConferenceId };
+                        }
                     } else {
-                        this.conference = {
-                            id: 'demo_conf_001',
-                            name: '示例会议'
-                        };
+                        // 尝试从API获取第一个会议
+                        try {
+                            const meetings = await this.apiGet('/business/meetings');
+                            if (meetings && meetings.length > 0) {
+                                this.conferenceId = meetings[0].id;
+                                this.conference = {
+                                    id: meetings[0].id,
+                                    name: meetings[0].meeting_name || '默认会议'
+                                };
+                            } else {
+                                this.conference = { id: '', name: '暂无会议' };
+                            }
+                        } catch (e) {
+                            this.conference = { id: '', name: '未连接服务' };
+                        }
+                    }
+                },
+
+                async apiGet(path) {
+                    try {
+                        const resp = await fetch(DATA_API + path, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Tenant-Id': '2027317834622709762',
+                                'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
+                            }
+                        });
+                        const json = await resp.json();
+                        if (json.code === 200) return json.data;
+                        console.warn('API返回非200:', path, json);
+                        return null;
+                    } catch (e) {
+                        console.warn('API请求失败:', path, e.message);
+                        return null;
+                    }
+                },
+
+                async loadAllBusinessData() {
+                    this.loading = true;
+                    try {
+                        await Promise.all([
+                            this.loadReportData(),
+                            this.loadCheckinData(),
+                            this.loadDormitoryData()
+                        ]);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async loadReportData() {
+                    const param = this.conferenceId ? '?conferenceId=' + this.conferenceId : '';
+                    const data = await this.apiGet('/business/report-rate' + param);
+                    if (data) {
+                        this.reportData.expected = data.expected || 0;
+                        this.reportData.actual = data.actual || 0;
+                        this.reportData.rate = data.rate || 0;
+                    }
+                },
+
+                async loadCheckinData() {
+                    const param = this.conferenceId ? '?conferenceId=' + this.conferenceId : '';
+                    const data = await this.apiGet('/business/checkin-rate' + param);
+                    if (data && data.length > 0) {
+                        this.checkinData = data.map(item => ({
+                            id: item.id,
+                            name: item.name || '未命名日程',
+                            time: item.time || '',
+                            expected: item.expected || 0,
+                            actual: item.actual || 0,
+                            rate: item.rate || 0
+                        }));
+                    } else {
+                        this.checkinData = [{
+                            id: 0,
+                            name: '暂无日程数据',
+                            time: '-',
+                            expected: 0,
+                            actual: 0,
+                            rate: 0
+                        }];
+                    }
+                },
+
+                async loadDormitoryData() {
+                    const param = this.conferenceId ? '?conferenceId=' + this.conferenceId : '';
+                    const data = await this.apiGet('/business/dormitory-rate' + param);
+                    if (data && data.length > 0) {
+                        this.dormitoryData = data.map(item => ({
+                            date: item.date || '',
+                            expected: item.expected || 0,
+                            actual: item.actual || 0,
+                            rate: item.rate || 0
+                        }));
+                    } else {
+                        this.dormitoryData = [{
+                            date: '暂无数据',
+                            expected: 0,
+                            actual: 0,
+                            rate: 0
+                        }];
                     }
                 },
 
@@ -538,13 +585,12 @@
                 },
 
                 goToUrge(type, id = null) {
-                    // 跳转到催报催收页面
                     let url = 'reminder-urge.html?type=' + type;
                     if (id) {
                         url += '&id=' + id;
                     }
-                    if (this.conference.id) {
-                        url += '&conferenceId=' + this.conference.id;
+                    if (this.conferenceId) {
+                        url += '&conferenceId=' + this.conferenceId;
                     }
                     window.location.href = url;
                 },
@@ -557,24 +603,71 @@
                             dormitory: '查寝数据'
                         };
                         this.$showLoading(`正在导出${typeMap[type]}...`);
-                        await new Promise(resolve => setTimeout(resolve, 1500));
+
+                        // 准备导出数据
+                        let exportContent = '';
+                        if (type === 'report') {
+                            exportContent = JSON.stringify({
+                                type: '报到率数据',
+                                conference: this.conference.name,
+                                data: this.reportData,
+                                exportTime: new Date().toISOString()
+                            }, null, 2);
+                        } else if (type === 'checkin') {
+                            exportContent = JSON.stringify({
+                                type: '签到率数据',
+                                conference: this.conference.name,
+                                data: this.checkinData,
+                                exportTime: new Date().toISOString()
+                            }, null, 2);
+                        } else {
+                            exportContent = JSON.stringify({
+                                type: '查寝率数据',
+                                conference: this.conference.name,
+                                data: this.dormitoryData,
+                                exportTime: new Date().toISOString()
+                            }, null, 2);
+                        }
+
+                        const blob = new Blob([exportContent], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${typeMap[type]}_${this.conference.name}_${new Date().toISOString().slice(0, 10)}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+
                         this.$hideLoading();
                         this.$showToast(`${typeMap[type]}导出成功`, 'success');
                     } catch (error) {
                         this.$hideLoading();
-                        this.$showToast('导出失败，请重试', 'error');
+                        this.$showToast('导出失败: ' + error.message, 'error');
                     }
                 },
 
                 async exportAllData() {
                     try {
                         this.$showLoading('正在导出全部业务数据...');
-                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        const allData = {
+                            conference: this.conference.name,
+                            conferenceId: this.conferenceId,
+                            exportTime: new Date().toISOString(),
+                            reportData: this.reportData,
+                            checkinData: this.checkinData,
+                            dormitoryData: this.dormitoryData
+                        };
+                        const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `全部业务数据_${this.conference.name}_${new Date().toISOString().slice(0, 10)}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
                         this.$hideLoading();
                         this.$showToast('全部业务数据导出成功', 'success');
                     } catch (error) {
                         this.$hideLoading();
-                        this.$showToast('导出失败，请重试', 'error');
+                        this.$showToast('导出失败: ' + error.message, 'error');
                     }
                 },
 

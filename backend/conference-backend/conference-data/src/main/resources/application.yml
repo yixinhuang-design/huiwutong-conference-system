@@ -9,32 +9,44 @@ spring:
   
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://localhost:3308/conference_db?useUnicode=true&characterEncoding=utf8mb4
+    url: jdbc:mysql://localhost:3308/conference_db?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
     username: root
     password: Hnhx@123
     driver-class-name: com.mysql.cj.jdbc.Driver
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
   
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    locations: classpath:db/migration
-    out-of-order: false
+    enabled: false
   
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848
-        namespace: dev
+        server-addr: ${NACOS_SERVER:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:dev}
+        enabled: ${NACOS_ENABLED:false}
+        register-enabled: false
       config:
-        server-addr: localhost:8848
-        namespace: dev
-        file-extension: yml
+        server-addr: ${NACOS_SERVER:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:dev}
+        enabled: false
+        import-check:
+          enabled: false
 
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
   global-config:
     db-config:
       id-type: ASSIGN_ID
+      table-prefix: data_
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 logging:
   level:

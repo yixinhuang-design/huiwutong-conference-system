@@ -30,7 +30,7 @@ set services[1]=conference-auth:8081
 set services[2]=conference-notification:8083
 set services[3]=conference-collaboration:8084
 set services[4]=conference-seating:8085
-set services[5]=conference-ai:8086
+set services[5]=conference-ai:8085
 set services[6]=conference-navigation:8087
 set services[7]=conference-data:8088
 
@@ -63,7 +63,7 @@ start "conference-seating" cmd /k "java -jar conference-seating\target\conferenc
 timeout /t 2 /nobreak
 
 REM 启动AI服务
-echo 📦 启动 AI助教服务 (端口 8086)...
+echo 📦 启动 AI助教服务 (端口 8085)...
 start "conference-ai" cmd /k "java -jar conference-ai\target\conference-ai-1.0.0.jar"
 timeout /t 2 /nobreak
 
@@ -89,7 +89,7 @@ echo   • 认证服务:      http://localhost:8081
 echo   • 通知服务:      http://localhost:8083
 echo   • 协同服务:      http://localhost:8084
 echo   • 排座服务:      http://localhost:8085
-echo   • AI服务:        http://localhost:8086
+echo   • AI服务:        http://localhost:8085
 echo   • 导航服务:      http://localhost:8087
 echo   • 数据服务:      http://localhost:8088
 echo.

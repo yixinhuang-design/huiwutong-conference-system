@@ -7,6 +7,7 @@ import com.conference.common.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
@@ -24,6 +25,7 @@ public class AiController {
     private final AiKnowledgeService knowledgeService;
     private final AiFaqService faqService;
     private final AiFeedbackService feedbackService;
+    private final DocumentParseService documentParseService;
 
     // ===== 聊天对话 API =====
 
@@ -177,6 +179,25 @@ public class AiController {
     @GetMapping("/knowledge/stats")
     public Result<Map<String, Object>> getKnowledgeStats(@RequestParam(required = false) Long conferenceId) {
         return Result.ok(knowledgeService.getKnowledgeStats(conferenceId));
+    }
+
+    /**
+     * 上传文档到知识库 - 自动解析PDF/Word/Excel/TXT文档内容并存入知识库
+     * POST /api/ai/knowledge/upload
+     */
+    @PostMapping("/knowledge/upload")
+    public Result<Map<String, Object>> uploadDocument(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "conferenceId", required = false) Long conferenceId,
+            @RequestParam(value = "tags", required = false) String tags) {
+        if (file.isEmpty()) {
+            return Result.fail("请选择要上传的文件");
+        }
+        log.info("收到文档上传请求: {}, 大小: {}KB", file.getOriginalFilename(), file.getSize() / 1024);
+        Map<String, Object> result = documentParseService.uploadAndParse(file, category, conferenceId, tags);
+        boolean success = (boolean) result.getOrDefault("success", false);
+        return success ? Result.ok("文档解析成功", result) : Result.fail((String) result.get("message"));
     }
 
     // ===== FAQ管理 API =====

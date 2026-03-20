@@ -293,6 +293,7 @@ class ConferenceContextManager {
         this.dataSources.set('seating', `${baseUrl}/${conferenceId}/seating`);
         this.dataSources.set('notifications', `${baseUrl}/${conferenceId}/notifications`);
         this.dataSources.set('attendance', `${baseUrl}/${conferenceId}/attendance`);
+        this.dataSources.set('data', `http://localhost:8088/api/data`);
     }
     
     /**

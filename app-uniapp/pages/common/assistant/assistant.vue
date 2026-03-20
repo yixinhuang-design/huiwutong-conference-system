@@ -60,8 +60,9 @@ const ask = async (text) => {
 
   try {
     const res = await uni.request({
-      url: 'http://localhost:8081/api/assistant/chat',
+      url: 'http://localhost:8085/api/ai/assistant/chat',
       method: 'POST',
+      header: { 'Content-Type': 'application/json', 'X-Tenant-Id': '2027317834622709762' },
       data: { message: q }
     })
     const ans = res?.data?.data?.reply

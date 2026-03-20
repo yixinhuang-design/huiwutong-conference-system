@@ -24,7 +24,7 @@
         <module>conference-seating</module>
         <module>conference-ai</module>
         <!-- <module>conference-navigation</module> -->
-        <!-- <module>conference-data</module> -->
+        <module>conference-data</module>
     </modules>
 
     <properties>

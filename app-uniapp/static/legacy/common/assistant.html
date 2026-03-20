@@ -512,10 +512,24 @@
             input.value = '';
             input.style.height = 'auto';
 
-            // 模拟AI响应延迟
-            setTimeout(() => {
-                addMessage('感谢您的问题！这是AI的自动回复。您的问题已记录，客服将在2分钟内为您解答。', 'ai');
-            }, 1000);
+            // 调用后端AI服务
+            fetch('http://localhost:8085/api/ai/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Tenant-Id': '2027317834622709762' },
+                body: JSON.stringify({ message: message })
+            })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data.code === 200 && data.data && data.data.aiMessage) {
+                    addMessage(data.data.aiMessage.content, 'ai');
+                } else {
+                    addMessage('抱歉，AI服务暂时无法响应，请稍后重试。', 'ai');
+                }
+            })
+            .catch(err => {
+                console.error('AI请求失败:', err);
+                addMessage('网络连接失败，请检查AI服务是否运行（端口8085）。', 'ai');
+            });
         }
 
         function sendMessage(text) {

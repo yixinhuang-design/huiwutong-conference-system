@@ -7,6 +7,7 @@ import com.conference.ai.mapper.*;
 import com.conference.ai.service.AiChatService;
 import com.conference.ai.service.AiFaqService;
 import com.conference.ai.service.AiKnowledgeService;
+import com.conference.ai.service.BusinessDataService;
 import com.conference.common.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * AI聊天服务实现 - 智能问答引擎
@@ -38,6 +38,7 @@ public class AiChatServiceImpl extends ServiceImpl<AiConversationMapper, AiConve
     private final AiUsageStatsMapper usageStatsMapper;
     private final AiFaqService faqService;
     private final AiKnowledgeService knowledgeService;
+    private final BusinessDataService businessDataService;
 
     private Long getTenantId() {
         try {
@@ -160,8 +161,8 @@ public class AiChatServiceImpl extends ServiceImpl<AiConversationMapper, AiConve
         // Step 4: 获取对话上下文 (最近5条消息)
         List<AiMessage> recentMessages = getRecentMessages(conversationId, 5);
 
-        // Step 5: 生成智能回答
-        return buildAnswer(question, intent, knowledgeContext.toString(), recentMessages);
+        // Step 5: 生成智能回答（传入conferenceId以支持实时业务查询）
+        return buildAnswer(question, intent, knowledgeContext.toString(), recentMessages, conferenceId);
     }
 
     /**
@@ -170,17 +171,38 @@ public class AiChatServiceImpl extends ServiceImpl<AiConversationMapper, AiConve
     private String analyzeIntent(String question) {
         String q = question.toLowerCase();
 
-        if (containsAny(q, "日程", "安排", "议程", "时间表", "schedule", "agenda")) return "schedule_query";
-        if (containsAny(q, "座位", "位置", "坐哪", "座位号", "seat")) return "seat_query";
-        if (containsAny(q, "签到", "报到", "check-in", "checkin")) return "checkin_query";
-        if (containsAny(q, "地点", "地址", "怎么去", "交通", "路线", "导航", "location")) return "location_query";
-        if (containsAny(q, "住宿", "酒店", "宾馆", "hotel")) return "hotel_query";
-        if (containsAny(q, "讲师", "嘉宾", "主讲", "老师", "speaker")) return "speaker_query";
-        if (containsAny(q, "报名", "注册", "registration")) return "registration_query";
-        if (containsAny(q, "资料", "下载", "文件", "文档", "material")) return "material_query";
-        if (containsAny(q, "联系", "电话", "客服", "会务", "contact")) return "contact_query";
-        if (containsAny(q, "餐饮", "用餐", "午餐", "晚餐", "meal")) return "meal_query";
-        if (containsAny(q, "考试", "测验", "结业", "exam")) return "exam_query";
+        // 日程相关 - 扩展口语化表达
+        if (containsAny(q, "日程", "安排", "议程", "时间表", "schedule", "agenda",
+                "几点", "什么时候", "接下来", "下一个", "正在进行", "当前", "今天",
+                "上午", "下午", "明天", "开始", "结束", "课程", "培训")) return "schedule_query";
+        // 座位相关
+        if (containsAny(q, "座位", "位置", "坐哪", "座位号", "seat", "排座", "几排", "几号")) return "seat_query";
+        // 签到相关
+        if (containsAny(q, "签到", "报到", "check-in", "checkin", "打卡")) return "checkin_query";
+        // 地点交通
+        if (containsAny(q, "地点", "地址", "怎么去", "交通", "路线", "导航", "location",
+                "在哪", "会场", "班车", "停车")) return "location_query";
+        // 住宿
+        if (containsAny(q, "住宿", "酒店", "宾馆", "hotel", "房间", "入住", "退房")) return "hotel_query";
+        // 讲师
+        if (containsAny(q, "讲师", "嘉宾", "主讲", "老师", "speaker", "专家", "谁来讲")) return "speaker_query";
+        // 报名
+        if (containsAny(q, "报名", "注册", "registration", "多少人", "参会", "名单")) return "registration_query";
+        // 资料
+        if (containsAny(q, "资料", "下载", "文件", "文档", "material", "课件", "PPT", "ppt")) return "material_query";
+        // 联系
+        if (containsAny(q, "联系", "电话", "客服", "会务", "contact", "咨询")) return "contact_query";
+        // 餐饮
+        if (containsAny(q, "餐饮", "用餐", "午餐", "晚餐", "meal", "吃饭", "早餐", "餐厅", "吃什么")) return "meal_query";
+        // 考试
+        if (containsAny(q, "考试", "测验", "结业", "exam", "测评")) return "exam_query";
+        // 会议概况 - 整体信息
+        if (containsAny(q, "会议", "活动", "培训班", "概况", "详情", "介绍")) return "location_query";
+        // 任务相关
+        if (containsAny(q, "任务", "工作", "待办", "task")) return "general_query";
+        // 分组相关
+        if (containsAny(q, "分组", "小组", "组员", "组长")) return "general_query";
+
         if (containsAny(q, "翻译", "translate")) return "translate";
         if (containsAny(q, "总结", "摘要", "summary")) return "summary";
 
@@ -196,15 +218,22 @@ public class AiChatServiceImpl extends ServiceImpl<AiConversationMapper, AiConve
 
     /**
      * 根据意图和上下文构建智能回答
+     * 优先级：FAQ → 知识库 → 真实业务数据查询 → 通用兜底回答
      */
-    private String buildAnswer(String question, String intent, String knowledgeContext, List<AiMessage> history) {
+    private String buildAnswer(String question, String intent, String knowledgeContext, List<AiMessage> history, Long conferenceId) {
         // 如果知识库有匹配内容，基于知识生成回答
         if (StringUtils.hasText(knowledgeContext)) {
             return buildKnowledgeBasedAnswer(question, intent, knowledgeContext);
         }
 
-        // 否则基于意图生成通用回答
-        return buildIntentBasedAnswer(question, intent);
+        // 优先从真实业务系统查询数据
+        String liveAnswer = queryLiveBusinessData(question, intent, conferenceId);
+        if (liveAnswer != null) {
+            return liveAnswer;
+        }
+
+        // 兜底：通用引导回答
+        return buildFallbackAnswer(question, intent);
     }
 
     private String buildKnowledgeBasedAnswer(String question, String intent, String knowledgeContext) {
@@ -234,28 +263,171 @@ public class AiChatServiceImpl extends ServiceImpl<AiConversationMapper, AiConve
         return answer.toString();
     }
 
-    private String buildIntentBasedAnswer(String question, String intent) {
+    /**
+     * 查询真实业务数据 - 根据意图调用对应的微服务API
+     */
+    private String queryLiveBusinessData(String question, String intent, Long conferenceId) {
+        try {
+            switch (intent) {
+                case "schedule_query": {
+                    // 判断是问当前、下一个、还是全部日程
+                    String q = question.toLowerCase();
+                    if (containsAny(q, "现在", "当前", "正在")) {
+                        String result = businessDataService.queryCurrentSchedule(conferenceId);
+                        if (result != null) return result;
+                        result = businessDataService.queryOngoingSchedules(conferenceId);
+                        if (result != null) return result;
+                    }
+                    if (containsAny(q, "下一个", "接下来", "马上", "即将")) {
+                        String result = businessDataService.queryNextSchedule(conferenceId);
+                        if (result != null) return result;
+                        result = businessDataService.queryUpcomingSchedules(conferenceId);
+                        if (result != null) return result;
+                    }
+                    // 默认查全部日程
+                    String result = businessDataService.queryAllSchedules(conferenceId);
+                    if (result != null) return result;
+                    break;
+                }
+
+                case "seat_query": {
+                    String result = businessDataService.querySeatInfo(conferenceId);
+                    if (result != null) return result;
+                    break;
+                }
+
+                case "registration_query": {
+                    String result = businessDataService.queryRegistrationStats(conferenceId);
+                    if (result != null) return result;
+                    break;
+                }
+
+                case "location_query": {
+                    // 查询会议详情中的地点信息
+                    String result = businessDataService.queryMeetingDetail(conferenceId);
+                    if (result != null) return result;
+                    break;
+                }
+
+                case "hotel_query": {
+                    String result = businessDataService.queryAccommodation(conferenceId);
+                    if (result != null) return result;
+                    break;
+                }
+
+                case "meal_query": {
+                    String result = businessDataService.queryDining(conferenceId);
+                    if (result != null) return result;
+                    break;
+                }
+
+                case "speaker_query": {
+                    // 从日程中获取讲师信息
+                    String result = businessDataService.queryAllSchedules(conferenceId);
+                    if (result != null) return result;
+                    break;
+                }
+
+                case "material_query": {
+                    // 从问题中提取关键词搜索资料
+                    String keyword = extractKeyword(question, "资料", "下载", "文件", "文档");
+                    String result = businessDataService.queryMaterials(keyword, conferenceId);
+                    if (result != null) return result;
+                    break;
+                }
+
+                case "checkin_query": {
+                    // 查询需要签到的日程
+                    Long meetingId = conferenceId != null ? conferenceId : businessDataService.getLatestMeetingId();
+                    if (meetingId != null) {
+                        String result = businessDataService.queryAllSchedules(meetingId);
+                        if (result != null) {
+                            return "✅ **签到信息**\n\n以下日程需要签到，请按时参加：\n\n" + result;
+                        }
+                    }
+                    break;
+                }
+
+                case "exam_query":
+                case "contact_query": {
+                    // 这些从会议详情获取
+                    String result = businessDataService.queryMeetingDetail(conferenceId);
+                    if (result != null) return result;
+                    break;
+                }
+
+                case "general_query": {
+                    // 通用查询：尝试多维度获取
+                    String q = question.toLowerCase();
+                    if (containsAny(q, "会议", "培训", "活动")) {
+                        String result = businessDataService.queryMeetingList();
+                        if (result != null) return result;
+                    }
+                    if (containsAny(q, "任务", "工作", "安排")) {
+                        String result = businessDataService.queryTasks(conferenceId);
+                        if (result != null) return result;
+                    }
+                    if (containsAny(q, "统计", "数据", "概览", "总览")) {
+                        String result = businessDataService.queryMeetingStats();
+                        if (result != null) return result;
+                    }
+                    if (containsAny(q, "分组", "小组")) {
+                        String result = businessDataService.queryGrouping(conferenceId);
+                        if (result != null) return result;
+                    }
+                    if (containsAny(q, "交通", "车辆", "班车", "接送")) {
+                        String result = businessDataService.queryTransport(conferenceId);
+                        if (result != null) return result;
+                    }
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("查询业务数据异常: intent={}, error={}", intent, e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 从问题中提取搜索关键词
+     */
+    private String extractKeyword(String question, String... excludeWords) {
+        String q = question;
+        for (String word : excludeWords) {
+            q = q.replace(word, "");
+        }
+        q = q.replaceAll("[？?！!。，,\\s]+", " ").trim();
+        // 取最长的连续词
+        String[] parts = q.split("\\s+");
+        String longest = question; // fallback
+        for (String p : parts) {
+            if (p.length() > 1 && p.length() > longest.length()) longest = p;
+        }
+        return longest.length() > 20 ? longest.substring(0, 20) : longest;
+    }
+
+    /**
+     * 兜底回答 - 当业务服务不可用或无数据时返回引导性回答
+     */
+    private String buildFallbackAnswer(String question, String intent) {
         switch (intent) {
             case "schedule_query":
-                return "📅 **会议日程**\n\n" +
-                        "当前会议日程安排如下：\n" +
-                        "- **08:30-09:00** 签到入场\n" +
-                        "- **09:00-10:30** 主会场报告\n" +
-                        "- **10:30-10:50** 茶歇\n" +
-                        "- **10:50-12:00** 分组讨论\n" +
-                        "- **12:00-13:30** 午餐\n" +
-                        "- **13:30-15:00** 专题讲座\n" +
-                        "- **15:00-15:20** 茶歇\n" +
-                        "- **15:20-17:00** 互动研讨\n\n" +
-                        "您可以在\"日程管理\"页面查看完整日程详情。如需了解特定时段的安排，请告诉我具体时间。";
+                return "📅 **日程查询**\n\n" +
+                        "暂时无法获取实时日程数据（日程服务可能未启动）。\n\n" +
+                        "您可以：\n" +
+                        "1. 在管理后台的 **\"日程管理\"** 页面查看完整日程\n" +
+                        "2. 确认会议服务(8084)是否已启动\n" +
+                        "3. 稍后再试，我会自动查询最新日程";
 
             case "seat_query":
                 return "🪑 **座位查询**\n\n" +
-                        "您可以通过以下方式查看座位信息：\n" +
-                        "1. 进入 **\"智能排座\"** 页面查看座位图\n" +
-                        "2. 在报到时，工作人员会告知您的座位号\n" +
-                        "3. 查看签到确认短信中的座位信息\n\n" +
-                        "如需调换座位，请联系会务组。";
+                        "暂时无法获取实时座位数据（排座服务可能未启动）。\n\n" +
+                        "您可以在 **\"智能排座\"** 页面查看座位图。";
+
+            case "registration_query":
+                return "📝 **报名查询**\n\n" +
+                        "暂时无法获取实时报名数据（报名服务可能未启动）。\n\n" +
+                        "请在 **\"报名管理\"** 页面查看报名状态。";
 
             case "checkin_query":
                 return "✅ **签到方式**\n\n" +
@@ -266,69 +438,53 @@ public class AiChatServiceImpl extends ServiceImpl<AiConversationMapper, AiConve
                         "请在会议开始前30分钟完成签到。";
 
             case "location_query":
-                return "📍 **会场信息**\n\n" +
-                        "请查看会议详情页面获取准确的会场地址和交通指南。通常包含：\n" +
-                        "- 会场详细地址\n" +
-                        "- 公共交通路线\n" +
-                        "- 自驾导航信息\n" +
-                        "- 停车场位置\n\n" +
-                        "如需更多帮助，请联系会务组。";
+                return "📍 **地点查询**\n\n" +
+                        "暂时无法获取实时会议地点数据。\n\n" +
+                        "请查看会议详情页面获取会场地址和交通指南。";
 
             case "hotel_query":
-                return "🏨 **住宿信息**\n\n" +
-                        "住宿相关信息请查看会议通知中的住宿安排，或联系会务组获取推荐酒店列表和预订方式。";
+                return "🏨 **住宿查询**\n\n" +
+                        "暂时无法获取实时住宿数据（排座服务可能未启动）。\n\n" +
+                        "请查看会议通知中的住宿安排。";
 
             case "speaker_query":
-                return "👨‍🏫 **讲师介绍**\n\n" +
-                        "本次会议邀请了多位行业专家。详细的讲师信息和课程安排，请在日程管理页面查看各环节的讲师介绍。";
-
-            case "registration_query":
-                return "📝 **报名信息**\n\n" +
-                        "报名相关事项：\n" +
-                        "1. 请在\"报名管理\"页面查看报名状态\n" +
-                        "2. 如需修改报名信息，请联系管理员\n" +
-                        "3. 报名截止后无法自行修改\n\n" +
-                        "如有报名问题，请联系会务组。";
+                return "👨‍🏫 **讲师查询**\n\n" +
+                        "暂时无法获取实时讲师数据。\n\n" +
+                        "请在日程管理页面查看各环节的讲师介绍。";
 
             case "material_query":
-                return "📁 **会议资料**\n\n" +
-                        "会议资料可通过以下方式获取：\n" +
-                        "1. 在APP端\"资料下载\"页面查看\n" +
-                        "2. 关注会议通知中的资料链接\n" +
-                        "3. 部分资料在签到时以纸质形式发放\n\n" +
-                        "如需特定资料，请告诉我资料名称。";
+                return "📁 **资料查询**\n\n" +
+                        "暂时无法获取实时资料数据（协同服务可能未启动）。\n\n" +
+                        "请在 **\"资料管理\"** 页面查看和下载。";
+
+            case "meal_query":
+                return "🍽️ **餐饮查询**\n\n" +
+                        "暂时无法获取实时用餐数据。\n\n" +
+                        "请查看会议日程中的用餐时间安排。";
 
             case "contact_query":
                 return "📞 **联系方式**\n\n" +
-                        "如需帮助，可通过以下方式联系会务组：\n" +
+                        "如需帮助，请通过以下方式联系：\n" +
                         "- 查看会议详情页面的联系信息\n" +
                         "- 现场服务台咨询\n" +
-                        "- 通过APP内\"沟通\"功能联系工作人员\n\n" +
-                        "工作人员将尽快为您解答。";
-
-            case "meal_query":
-                return "🍽️ **餐饮安排**\n\n" +
-                        "餐饮信息请查看会议日程中的用餐时间安排，通常包含：\n" +
-                        "- 午餐时间及地点\n" +
-                        "- 茶歇安排\n" +
-                        "- 特殊饮食需求请提前告知会务组";
+                        "- 通过APP内\"沟通\"功能联系工作人员";
 
             case "exam_query":
                 return "📝 **考试信息**\n\n" +
-                        "结业考试相关事项请关注会议通知。考试一般安排在培训结束后，具体时间和要求会提前通知。";
+                        "结业考试相关事项请关注会议通知。考试安排会提前通知。";
 
             default:
                 return "您好！感谢您的提问。\n\n" +
                         "关于您的问题：**" + question + "**\n\n" +
-                        "我是AI智能助教，可以帮您解答以下方面的问题：\n" +
-                        "- 📅 会议日程安排\n" +
-                        "- 🪑 座位查询\n" +
-                        "- ✅ 签到方式\n" +
-                        "- 📍 地点交通\n" +
-                        "- 👨‍🏫 讲师信息\n" +
-                        "- 📁 资料下载\n" +
-                        "- 📞 联系方式\n\n" +
-                        "请尝试用更具体的问题描述，以便我更准确地为您解答。";
+                        "我是AI智能助教，可以为您实时查询以下信息：\n" +
+                        "- 📅 会议日程安排（实时查询日程服务）\n" +
+                        "- 🪑 座位信息（实时查询排座服务）\n" +
+                        "- 📝 报名统计（实时查询报名服务）\n" +
+                        "- 🏨 住宿/餐饮/交通安排\n" +
+                        "- 📋 任务进度\n" +
+                        "- 👥 分组信息\n" +
+                        "- 📁 资料搜索\n\n" +
+                        "请尝试提问，例如：\"今天的日程安排是什么？\" \"我的座位在哪？\" \"报名了多少人？\"";
         }
     }
 

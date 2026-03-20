@@ -1,28 +1,68 @@
 server:
-  port: 8086
+  port: 8085
   servlet:
     context-path: /
+  compression:
+    enabled: true
+    min-response-size: 1024
 
 spring:
   application:
     name: conference-ai
   
-  datasource:
-    type: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://localhost:3308/conference_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: Hnhx@123
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  
-  flyway:
-    enabled: false
+  config:
+    import: 
+      - optional:nacos:conference-ai.yml
   
   cloud:
     nacos:
       discovery:
-        enabled: false
+        server-addr: ${NACOS_SERVER:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:dev}
+        group: CONFERENCE_GROUP
+        enabled: ${NACOS_ENABLED:false}
+        register-enabled: ${NACOS_REGISTER_ENABLED:${NACOS_ENABLED:false}}
       config:
-        enabled: false
+        server-addr: ${NACOS_SERVER:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:dev}
+        group: CONFERENCE_GROUP
+        file-extension: yml
+        enabled: ${NACOS_CONFIG_ENABLED:${NACOS_ENABLED:false}}
+        import-check:
+          enabled: false
+  
+  # 数据源配置
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3308}/conference_db?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&serverCharacterEncoding=utf8mb4
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:Hnhx@123}
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+  
+  flyway:
+    enabled: false
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+# 文档上传存储目录
+ai:
+  upload:
+    dir: ${AI_UPLOAD_DIR:./ai-uploads}
 
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
