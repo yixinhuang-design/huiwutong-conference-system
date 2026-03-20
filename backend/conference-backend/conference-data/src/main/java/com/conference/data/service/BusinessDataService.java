@@ -179,6 +179,74 @@ public class BusinessDataService {
         }
     }
 
+    /**
+     * 获取指定日程的未签到人员列表
+     * @param conferenceId 会议ID
+     * @param scheduleId 日程ID
+     */
+    public Map<String, Object> getUncheckedUsers(Long conferenceId, Long scheduleId) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        try {
+            List<Map<String, Object>> users = businessDataMapper.getUncheckedUsers(conferenceId, scheduleId);
+            String scheduleName = businessDataMapper.getScheduleTitle(scheduleId);
+            result.put("title", scheduleName != null ? scheduleName : "未知日程");
+            result.put("users", users != null ? users : Collections.emptyList());
+            result.put("count", users != null ? users.size() : 0);
+        } catch (Exception e) {
+            log.error("获取未签到人员异常: {}", e.getMessage(), e);
+            result.put("title", "");
+            result.put("users", Collections.emptyList());
+            result.put("count", 0);
+            result.put("error", e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * 获取指定日期的未就寝人员列表
+     * @param conferenceId 会议ID
+     * @param date 日期字符串 (yyyy-MM-dd)
+     */
+    public Map<String, Object> getUndormitoryUsers(Long conferenceId, String date) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        try {
+            List<Map<String, Object>> users = businessDataMapper.getUndormitoryUsers(conferenceId, date);
+            result.put("title", date + " 查寝");
+            result.put("users", users != null ? users : Collections.emptyList());
+            result.put("count", users != null ? users.size() : 0);
+        } catch (Exception e) {
+            log.error("获取未就寝人员异常: {}", e.getMessage(), e);
+            result.put("title", "");
+            result.put("users", Collections.emptyList());
+            result.put("count", 0);
+            result.put("error", e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * 获取未报到人员列表
+     * @param conferenceId 会议ID
+     */
+    public Map<String, Object> getUnreportedUsers(Long conferenceId) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        try {
+            Map<String, Object> meetingInfo = businessDataMapper.getMeetingInfo(conferenceId);
+            String meetingName = meetingInfo != null ? String.valueOf(meetingInfo.getOrDefault("meeting_name", "")) : "";
+            List<Map<String, Object>> users = businessDataMapper.getUnreportedUsers(conferenceId);
+            result.put("title", meetingName + " 报到");
+            result.put("users", users != null ? users : Collections.emptyList());
+            result.put("count", users != null ? users.size() : 0);
+        } catch (Exception e) {
+            log.error("获取未报到人员异常: {}", e.getMessage(), e);
+            result.put("title", "");
+            result.put("users", Collections.emptyList());
+            result.put("count", 0);
+            result.put("error", e.getMessage());
+        }
+        return result;
+    }
+
     private long toLong(Object val) {
         if (val == null) return 0;
         if (val instanceof Long) return (Long) val;

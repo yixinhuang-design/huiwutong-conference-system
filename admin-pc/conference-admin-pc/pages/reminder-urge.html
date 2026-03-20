@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务催报催收 - 智能会议系统</title>
+    <title>催办提醒 - 智能会议系统</title>
     <link rel="stylesheet" href="../css/glassmorphism.css">
     <link rel="stylesheet" href="../css/conference-theme.css">
     <link rel="stylesheet" href="../css/components.css">
@@ -395,11 +395,11 @@
         <!-- 页面导航栏 -->
         <nav class="page-navigation">
             <div class="nav-content">
-                <a :href="'task-management.html?conferenceId=' + conference.id" class="nav-back">
+                <a :href="mode === 'business' ? 'business-data.html?conferenceId=' + conference.id : 'task-management.html?conferenceId=' + conference.id" class="nav-back">
                     <i class="fas fa-arrow-left"></i>
-                    <span>返回任务管理</span>
+                    <span>{{ mode === 'business' ? '返回业务数据' : '返回任务管理' }}</span>
                 </a>
-                <h1 class="nav-title">任务催报催收</h1>
+                <h1 class="nav-title">{{ mode === 'business' ? taskTitle : '任务催报催收' }}</h1>
                 <div class="nav-actions"></div>
             </div>
         </nav>
@@ -409,11 +409,11 @@
             <!-- 页面头部 -->
             <div class="page-header glass-card">
                 <div>
-                    <h2>🔔 任务催报催收系统</h2>
+                    <h2>🔔 {{ mode === 'business' ? taskTitle + '系统' : '任务催报催收系统' }}</h2>
                     <div class="conference-context">
                         <span class="context-label">当前会议:</span>
                         <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
-                        <span class="context-label">任务:</span>
+                        <span class="context-label">{{ mode === 'business' ? '类型:' : '任务:' }}</span>
                         <span class="context-value">{{ taskTitle }}</span>
                     </div>
                 </div>
@@ -427,7 +427,7 @@
                     </div>
                     <div class="stat-content">
                         <div class="stat-value">{{ urgeStats.totalAssignees }}</div>
-                        <div class="stat-label">任务执行人</div>
+                        <div class="stat-label">{{ mode === 'business' ? '应完成人数' : '任务执行人' }}</div>
                     </div>
                 </div>
                 <div class="stat-card success">
@@ -445,7 +445,7 @@
                     </div>
                     <div class="stat-content">
                         <div class="stat-value">{{ urgeStats.incompleteCount }}</div>
-                        <div class="stat-label">未完成</div>
+                        <div class="stat-label">{{ mode === 'business' ? '待催办人数' : '未完成' }}</div>
                     </div>
                 </div>
                 <div class="stat-card danger">
@@ -846,6 +846,8 @@
     <script src="../js/api/collaboration-api.js"></script>
     <script>
         const { createApp } = Vue;
+        const DATA_API = 'http://localhost:8088/api/data';
+        const NOTIFICATION_API = 'http://localhost:8083/api/notification';
 
         createApp({
             data() {
@@ -854,6 +856,12 @@
                         id: '',
                         name: '加载中...'
                     },
+                    // 模式：'task'=任务催办（原有）, 'business'=业务数据催办（新增）
+                    mode: 'task',
+                    // 业务催办类型：checkin/dormitory/report
+                    urgeType: '',
+                    // 业务催办关联ID（日程ID或日期）
+                    urgeId: '',
                     // 任务相关
                     taskId: null,
                     taskTitle: '',
@@ -943,6 +951,16 @@
                     this.taskId = params.get('taskId');
                     this.taskTitle = params.get('taskTitle') || '未命名任务';
 
+                    // 检测业务催办模式（从business-data.html跳转）
+                    const type = params.get('type');
+                    if (type && ['checkin', 'dormitory', 'report'].includes(type)) {
+                        this.mode = 'business';
+                        this.urgeType = type;
+                        this.urgeId = params.get('id') || '';
+                        const typeNames = { checkin: '催签到', dormitory: '催就寝', report: '催报到' };
+                        this.taskTitle = typeNames[type] || '催办';
+                    }
+
                     if (conferenceId) {
                         this.conference = await window.conferenceContext.loadConference(conferenceId);
                     } else {
@@ -952,8 +970,12 @@
                         };
                     }
 
-                    // 加载任务数据
-                    await this.loadTaskData();
+                    // 根据模式加载数据
+                    if (this.mode === 'business') {
+                        await this.loadBusinessData();
+                    } else {
+                        await this.loadTaskData();
+                    }
                 },
 
                 async loadTaskData() {
@@ -1019,6 +1041,107 @@
                     }
                 },
 
+                /** 业务数据催办模式 - 从conference-data服务加载未完成人员 */
+                async loadBusinessData() {
+                    try {
+                        let apiUrl = '';
+                        if (this.urgeType === 'checkin' && this.urgeId) {
+                            apiUrl = `${DATA_API}/business/unchecked-users?conferenceId=${this.conference.id}&scheduleId=${this.urgeId}`;
+                        } else if (this.urgeType === 'dormitory' && this.urgeId) {
+                            apiUrl = `${DATA_API}/business/undormitory-users?conferenceId=${this.conference.id}&date=${this.urgeId}`;
+                        } else {
+                            // report模式 或 checkin/dormitory无具体ID时，统一催所有未报到人员
+                            apiUrl = `${DATA_API}/business/unreported-users?conferenceId=${this.conference.id}`;
+                        }
+
+                        const resp = await fetch(apiUrl, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Tenant-Id': '2027317834622709762',
+                                'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
+                            }
+                        });
+                        const json = await resp.json();
+                        if (json.code === 200 && json.data) {
+                            const data = json.data;
+                            this.taskTitle = data.title || this.taskTitle;
+                            const userList = data.users || [];
+
+                            this.users = userList.map(u => ({
+                                id: u.id || u.user_id,
+                                name: u.name || '未知',
+                                unit: u.organization || '',
+                                phone: u.phone || '',
+                                status: 'pending',
+                                progress: 0,
+                                isOverdue: false
+                            }));
+
+                            // 获取对应的统计数据来填充已完成数
+                            let rateUrl = '';
+                            if (this.urgeType === 'checkin') {
+                                rateUrl = `${DATA_API}/business/checkin-rate?conferenceId=${this.conference.id}`;
+                            } else if (this.urgeType === 'dormitory') {
+                                rateUrl = `${DATA_API}/business/dormitory-rate?conferenceId=${this.conference.id}`;
+                            } else {
+                                rateUrl = `${DATA_API}/business/report-rate?conferenceId=${this.conference.id}`;
+                            }
+                            try {
+                                const rateResp = await fetch(rateUrl, {
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-Tenant-Id': '2027317834622709762',
+                                        'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
+                                    }
+                                });
+                                const rateJson = await rateResp.json();
+                                if (rateJson.code === 200 && rateJson.data) {
+                                    const rateData = rateJson.data;
+                                    if (this.urgeType === 'report') {
+                                        this.urgeStats = {
+                                            totalAssignees: rateData.expected || 0,
+                                            completedCount: rateData.actual || 0,
+                                            incompleteCount: this.users.length,
+                                            overdueCount: 0
+                                        };
+                                    } else if (Array.isArray(rateData)) {
+                                        // checkin/dormitory返回数组，找到匹配项
+                                        let matched = null;
+                                        if (this.urgeType === 'checkin' && this.urgeId) {
+                                            matched = rateData.find(r => String(r.id) === String(this.urgeId));
+                                        } else if (this.urgeType === 'dormitory' && this.urgeId) {
+                                            matched = rateData.find(r => r.date === this.urgeId);
+                                        }
+                                        if (matched) {
+                                            this.urgeStats = {
+                                                totalAssignees: matched.expected || 0,
+                                                completedCount: matched.actual || 0,
+                                                incompleteCount: this.users.length,
+                                                overdueCount: 0
+                                            };
+                                        } else {
+                                            this.urgeStats.incompleteCount = this.users.length;
+                                        }
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn('获取统计数据失败:', e);
+                                this.urgeStats.incompleteCount = this.users.length;
+                            }
+
+                            if (this.users.length === 0) {
+                                const typeNames = { checkin: '签到', dormitory: '就寝', report: '报到' };
+                                this.$showToast(`所有人员均已完成${typeNames[this.urgeType]}，无需催办`, 'info');
+                            }
+                        } else {
+                            this.$showToast('加载人员数据失败', 'error');
+                        }
+                    } catch (e) {
+                        console.error('加载业务催办数据失败:', e);
+                        this.$showToast('加载数据失败: ' + e.message, 'error');
+                    }
+                },
+
                 goToStep(step) {
                     this.currentStep = step;
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1071,7 +1194,37 @@
                 },
 
                 updateTemplateContent() {
-                    const templates = {
+                    const typeNames = { checkin: '签到', dormitory: '就寝', report: '报到' };
+                    const actionName = this.mode === 'business' ? (typeNames[this.urgeType] || '完成') : '完成';
+                    const taskName = this.taskTitle;
+
+                    const templates = this.mode === 'business' ? {
+                        normal: `【${actionName}提醒】您好！
+
+您有待完成的${actionName}事项"${taskName}"。
+
+请尽快登录系统完成${actionName}。
+
+如有任何问题，请及时联系会务组。
+
+谢谢您的配合！`,
+
+                        urgent: `【紧急催办】您好！
+
+"${taskName}"${actionName}即将截止，请立即完成！
+
+请务必按时${actionName}！
+
+如有问题请立即联系会务组！`,
+
+                        overdue: `【超时警告】您好！
+
+"${taskName}"${actionName}已超时！
+
+请立即完成${actionName}！
+
+这是最后警告，请务必重视！`
+                    } : {
                         normal: `【任务提醒】您好！
 
 您有一个任务"{{taskTitle}}"待完成。
@@ -1116,23 +1269,54 @@
                 async sendReminder() {
                     try {
                         this.isSending = true;
-                        this.$showLoading('正在发送催报通知...');
+                        this.$showLoading('正在发送催办通知...');
 
                         const currentUserId = localStorage.getItem('userId') || '8';
                         const currentUserName = localStorage.getItem('userName') || '管理员';
                         let successCount = 0;
                         let failCount = 0;
 
-                        // 调用后端催办接口
-                        try {
-                            await TaskAPI.urgeTask(this.taskId, {
-                                operatorId: currentUserId,
-                                operatorName: currentUserName
-                            });
-                            successCount = this.totalSelected;
-                        } catch(e) {
-                            failCount = this.totalSelected;
-                            throw e;
+                        if (this.mode === 'business') {
+                            // 业务催办模式：调用通知服务
+                            try {
+                                const resp = await fetch(`${NOTIFICATION_API}/urge`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-Tenant-Id': '2027317834622709762',
+                                        'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
+                                    },
+                                    body: JSON.stringify({
+                                        conferenceId: this.conference.id,
+                                        type: this.urgeType,
+                                        targetUsers: this.selectedUsers,
+                                        message: this.templateContent,
+                                        operatorId: currentUserId,
+                                        operatorName: currentUserName
+                                    })
+                                });
+                                const json = await resp.json();
+                                if (json.code === 200) {
+                                    successCount = this.totalSelected;
+                                } else {
+                                    throw new Error(json.message || '发送失败');
+                                }
+                            } catch(e) {
+                                failCount = this.totalSelected;
+                                throw e;
+                            }
+                        } else {
+                            // 任务催办模式：调用协同服务TaskAPI（原有逻辑）
+                            try {
+                                await TaskAPI.urgeTask(this.taskId, {
+                                    operatorId: currentUserId,
+                                    operatorName: currentUserName
+                                });
+                                successCount = this.totalSelected;
+                            } catch(e) {
+                                failCount = this.totalSelected;
+                                throw e;
+                            }
                         }
 
                         // 发送结果
@@ -1178,9 +1362,11 @@
                     this.$showToast('催办流程已完成', 'success');
                     setTimeout(() => {
                         // 优先尝试关闭标签页（仅对 window.open 打开的页面有效）
-                        // 如果关闭失败，跳转回任务管理页
+                        // 如果关闭失败，根据模式跳回不同页面
                         if (window.opener) {
                             window.close();
+                        } else if (this.mode === 'business') {
+                            window.location.href = 'business-data.html?conferenceId=' + this.conference.id;
                         } else {
                             window.location.href = 'task-management.html?conferenceId=' + this.conference.id;
                         }

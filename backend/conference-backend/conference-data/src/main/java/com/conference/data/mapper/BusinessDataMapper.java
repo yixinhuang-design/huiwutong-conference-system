@@ -94,4 +94,55 @@ public interface BusinessDataMapper {
             "FROM conference_registration.conf_meeting " +
             "WHERE id = #{conferenceId} AND deleted = 0")
     Map<String, Object> getMeetingInfo(@Param("conferenceId") Long conferenceId);
+
+    /**
+     * 获取指定日程的未签到人员列表
+     * 从已通过审核的报名人员中，排除已签到的人员
+     */
+    @Select("SELECT r.id, r.user_id, r.name, r.phone, r.organization, r.email " +
+            "FROM conference_registration.conf_registration r " +
+            "WHERE r.meeting_id = #{conferenceId} AND r.status IN (1, 4) AND r.deleted = 0 " +
+            "  AND r.id NOT IN (" +
+            "    SELECT sc.participant_id FROM conference_registration.conf_schedule_checkin sc " +
+            "    WHERE sc.schedule_id = #{scheduleId} AND sc.deleted = 0" +
+            "  ) " +
+            "ORDER BY r.organization, r.name")
+    List<Map<String, Object>> getUncheckedUsers(@Param("conferenceId") Long conferenceId,
+                                                 @Param("scheduleId") Long scheduleId);
+
+    /**
+     * 获取指定日期未签到（未就寝）人员列表
+     * 从已通过审核的报名人员中，排除当日已有签到记录的人员
+     */
+    @Select("SELECT r.id, r.user_id, r.name, r.phone, r.organization, r.email " +
+            "FROM conference_registration.conf_registration r " +
+            "WHERE r.meeting_id = #{conferenceId} AND r.status IN (1, 4) AND r.deleted = 0 " +
+            "  AND r.id NOT IN (" +
+            "    SELECT DISTINCT sc.participant_id " +
+            "    FROM conference_registration.conf_schedule_checkin sc " +
+            "    INNER JOIN conference_registration.conf_schedule s ON sc.schedule_id = s.id " +
+            "    WHERE s.meeting_id = #{conferenceId} AND sc.deleted = 0 " +
+            "      AND DATE(sc.checkin_time) = #{date}" +
+            "  ) " +
+            "ORDER BY r.organization, r.name")
+    List<Map<String, Object>> getUndormitoryUsers(@Param("conferenceId") Long conferenceId,
+                                                   @Param("date") String date);
+
+    /**
+     * 获取指定会议的未报到人员列表
+     * 已通过审核但未签到的报名人员
+     */
+    @Select("SELECT r.id, r.user_id, r.name, r.phone, r.organization, r.email " +
+            "FROM conference_registration.conf_registration r " +
+            "WHERE r.meeting_id = #{conferenceId} AND r.status IN (1) AND r.deleted = 0 " +
+            "  AND r.sign_in_time IS NULL " +
+            "ORDER BY r.organization, r.name")
+    List<Map<String, Object>> getUnreportedUsers(@Param("conferenceId") Long conferenceId);
+
+    /**
+     * 获取日程名称
+     */
+    @Select("SELECT title FROM conference_registration.conf_schedule " +
+            "WHERE id = #{scheduleId} AND deleted = 0")
+    String getScheduleTitle(@Param("scheduleId") Long scheduleId);
 }

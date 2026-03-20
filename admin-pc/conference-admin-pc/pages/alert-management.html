@@ -470,13 +470,8 @@
 
             <div class="rule-form">
                 <div class="form-group">
-                    <label>选择会议</label>
-                    <select class="form-control" v-model="newRule.conferenceId">
-                        <option value="">请选择会议</option>
-                        <option v-for="conf in conferences" :key="conf.id" :value="conf.id">
-                            {{ conf.name }}
-                        </option>
-                    </select>
+                    <label>当前会议</label>
+                    <input type="text" class="form-control" :value="conference.name" disabled style="opacity: 0.7;">
                 </div>
 
                 <div class="form-group">
@@ -517,10 +512,13 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="justify-content: flex-end;">
-                    <button class="btn-primary" @click="addRule">
-                        <i class="fas fa-plus"></i>
-                        添加规则
+                <div class="form-group" style="justify-content: flex-end; display: flex; gap: 0.5rem; align-items: flex-end;">
+                    <button v-if="editingRuleId" class="btn-outline" @click="cancelEditRule">
+                        取消
+                    </button>
+                    <button class="btn-primary" @click="saveOrUpdateRule">
+                        <i :class="editingRuleId ? 'fas fa-save' : 'fas fa-plus'"></i>
+                        {{ editingRuleId ? '更新规则' : '添加规则' }}
                     </button>
                 </div>
             </div>
@@ -552,7 +550,7 @@
                     </div>
                     <div class="rule-status">
                         <label class="status-switch">
-                            <input type="checkbox" v-model="rule.enabled">
+                            <input type="checkbox" :checked="rule.enabled" @change="toggleRule(rule.id)">
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -625,9 +623,9 @@
                         <p><strong>当前值:</strong> {{ alert.actualValue }} | <strong>阈值:</strong> {{ alert.threshold }}</p>
                     </div>
                     <div class="alert-actions">
-                        <button class="btn-sm btn-primary" @click="handleAlert(alert.id)">
-                            <i class="fas fa-check"></i>
-                            处理
+                        <button class="btn-sm btn-primary" @click="urgeAlert(alert)">
+                            <i class="fas fa-paper-plane"></i>
+                            催办
                         </button>
                         <button class="btn-sm btn-outline" @click="viewDetail(alert.id)">
                             <i class="fas fa-eye"></i>
@@ -651,10 +649,10 @@
                     全部 ({{ alertNotifications.length }})
                 </button>
                 <button class="btn-outline" @click="filterStatus = 'pending'">
-                    待处理 ({{ getAlertCount('pending') }})
+                    待催办 ({{ getAlertCount('pending') }})
                 </button>
                 <button class="btn-outline" @click="filterStatus = 'processing'">
-                    处理中 ({{ getAlertCount('processing') }})
+                    已催办 ({{ getAlertCount('processing') }})
                 </button>
                 <button class="btn-outline" @click="filterStatus = 'resolved'">
                     已处理 ({{ getAlertCount('resolved') }})
@@ -676,14 +674,16 @@
                         <p><strong>实际值:</strong> {{ alert.actualValue }} | <strong>阈值:</strong> {{ alert.threshold }}</p>
                     </div>
                     <div class="alert-actions">
-                        <button v-if="alert.status === 'pending'" class="btn-sm btn-primary" @click="startProcessing(alert.id)">
-                            <i class="fas fa-play"></i>
-                            开始处理
+                        <button v-if="alert.status === 'pending'" class="btn-sm btn-primary" @click="urgeAlert(alert)">
+                            <i class="fas fa-paper-plane"></i>
+                            催办
                         </button>
-                        <button v-if="alert.status === 'processing'" class="btn-sm btn-success" @click="resolveAlert(alert.id)">
-                            <i class="fas fa-check"></i>
-                            标记已解决
-                        </button>
+                        <span v-if="alert.status === 'processing'" class="severity-badge" style="background: rgba(34,197,94,0.1); color: var(--success-color);">
+                            <i class="fas fa-check-circle"></i> 已催办
+                        </span>
+                        <span v-if="alert.status === 'resolved'" class="severity-badge" style="background: rgba(156,163,175,0.1); color: var(--gray-600);">
+                            <i class="fas fa-check-double"></i> 已处理
+                        </span>
                         <button class="btn-sm btn-outline" @click="viewDetail(alert.id)">
                             <i class="fas fa-eye"></i>
                             详情
@@ -761,6 +761,7 @@
                         notifySystem: true
                     },
                     API_BASE: 'http://localhost:8083',
+                    editingRuleId: null,
                     alertRules: [],
                     // 当前指标
                     currentMetrics: {
@@ -803,10 +804,11 @@
                         this.loadRules(),
                         this.loadMetrics(),
                         this.loadAlertEvents(),
-                        this.loadAlertStats()
+                        this.loadAlertStats(),
+                        this.loadAlertHistory()
                     ]);
-                    // 启动实时监控
-                    setInterval(() => { this.updateMetrics(); }, 10000);
+                    // 启动实时监控（30秒自动刷新指标+检测预警）
+                    setInterval(() => { this.updateMetrics(); }, 30000);
                 },
 
                 async loadRules() {
@@ -886,13 +888,34 @@
                     const ctx = document.getElementById('alertTrendChart');
                     if (!ctx) return;
 
+                    // 使用后端返回的真实趋势数据
+                    const trend = (this.alertStatsData && this.alertStatsData.dailyTrend) || [];
+                    let labels, data;
+                    if (trend.length > 0) {
+                        labels = trend.map(t => {
+                            const d = new Date(t.alert_date || t.alertDate);
+                            return (d.getMonth() + 1) + '/' + d.getDate();
+                        });
+                        data = trend.map(t => t.count || 0);
+                    } else {
+                        // 无数据时显示最近7天空数据
+                        labels = [];
+                        data = [];
+                        for (let i = 6; i >= 0; i--) {
+                            const d = new Date();
+                            d.setDate(d.getDate() - i);
+                            labels.push((d.getMonth() + 1) + '/' + d.getDate());
+                            data.push(0);
+                        }
+                    }
+
                     new Chart(ctx, {
                         type: 'line',
                         data: {
-                            labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                            labels: labels,
                             datasets: [{
                                 label: '预警数量',
-                                data: [5, 3, 7, 4, 6, 2, 3],
+                                data: data,
                                 borderColor: '#667eea',
                                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                                 tension: 0.4,
@@ -994,8 +1017,8 @@
 
                 getStatusText(status) {
                     const map = {
-                        pending: '待处理',
-                        processing: '处理中',
+                        pending: '待催办',
+                        processing: '已催办',
                         resolved: '已处理',
                         ignored: '已忽略'
                     };
@@ -1049,9 +1072,10 @@
                     return this.alertNotifications.filter(alert => alert.status === status).length;
                 },
 
-                async addRule() {
+                // ==================== 规则 CRUD ====================
+                async saveOrUpdateRule() {
                     if (!this.newRule.metric || !this.newRule.threshold) {
-                        this.$showToast('请填写完整的预警规则信息', 'warning');
+                        this.$showToast('请填写预警指标和阈值', 'warning');
                         return;
                     }
                     try {
@@ -1059,36 +1083,65 @@
                             conferenceId: this.conference.id,
                             name: `${this.getMetricText(this.newRule.metric)}预警`,
                             metric: this.newRule.metric,
-                            operator: this.newRule.operator,
+                            operator: this.newRule.operator || '<',
                             threshold: parseFloat(this.newRule.threshold),
                             severity: this.newRule.severity,
-                            notifySms: this.newRule.notifySMS ? 1 : 0,
-                            notifySystem: this.newRule.notifySystem ? 1 : 0
+                            notifySms: this.newRule.notifySMS ? true : false,
+                            notifySystem: this.newRule.notifySystem ? true : false
                         };
-                        const resp = await fetch(`${this.API_BASE}/api/alert/rule/save`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(body)
-                        });
+
+                        let resp;
+                        if (this.editingRuleId) {
+                            // 更新已有规则
+                            resp = await fetch(`${this.API_BASE}/api/alert/rule/${this.editingRuleId}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(body)
+                            });
+                        } else {
+                            // 新增规则
+                            resp = await fetch(`${this.API_BASE}/api/alert/rule/save`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(body)
+                            });
+                        }
                         const result = await resp.json();
                         if (result.code === 200) {
-                            this.$showToast('预警规则添加成功', 'success');
+                            this.$showToast(this.editingRuleId ? '规则已更新' : '规则已添加', 'success');
+                            this.resetRuleForm();
                             await this.loadRules();
-                            this.newRule = { conferenceId: '', metric: '', threshold: '', severity: 'medium', operator: '<', notifySMS: false, notifySystem: true };
                         } else {
-                            this.$showToast(result.message || '添加失败', 'error');
+                            this.$showToast(result.message || '操作失败', 'error');
                         }
                     } catch (e) {
-                        this.$showToast('添加规则失败', 'error');
+                        console.error('保存规则失败', e);
+                        this.$showToast('保存规则失败', 'error');
                     }
                 },
 
                 editRule(id) {
                     const rule = this.alertRules.find(r => r.id === id);
                     if (rule) {
-                        this.newRule = { ...rule };
-                        this.$showToast('已加载规则到编辑表单，修改后点击添加规则保存', 'info');
+                        this.editingRuleId = rule.id;
+                        this.newRule = {
+                            metric: rule.metric,
+                            threshold: rule.threshold,
+                            severity: rule.severity,
+                            operator: rule.operator || '<',
+                            notifySMS: rule.notifySMS,
+                            notifySystem: rule.notifySystem
+                        };
                     }
+                },
+
+                cancelEditRule() {
+                    this.resetRuleForm();
+                },
+
+                resetRuleForm() {
+                    this.editingRuleId = null;
+                    this.newRule = { metric: '', threshold: '', severity: 'medium', operator: '<', notifySMS: false, notifySystem: true };
                 },
 
                 async deleteRule(id) {
@@ -1102,7 +1155,7 @@
                             const resp = await fetch(`${this.API_BASE}/api/alert/rule/${id}`, { method: 'DELETE' });
                             const result = await resp.json();
                             if (result.code === 200) {
-                                this.$showToast('预警规则已删除', 'success');
+                                this.$showToast('规则已删除', 'success');
                                 await this.loadRules();
                             } else {
                                 this.$showToast(result.message || '删除失败', 'error');
@@ -1113,8 +1166,39 @@
                     }
                 },
 
-                async handleAlert(id) {
-                    await this.startProcessing(id);
+                async toggleRule(id) {
+                    try {
+                        const resp = await fetch(`${this.API_BASE}/api/alert/rule/${id}/toggle`, { method: 'PUT' });
+                        const result = await resp.json();
+                        if (result.code === 200) {
+                            this.$showToast(result.data.enabled === 1 ? '规则已启用' : '规则已禁用', 'success');
+                            await this.loadRules();
+                        }
+                    } catch (e) {
+                        this.$showToast('切换状态失败', 'error');
+                        await this.loadRules();
+                    }
+                },
+
+                // ==================== 预警催办处理 ====================
+                urgeAlert(alert) {
+                    // 根据预警指标类型，跳转到对应催办页面
+                    const metricToType = {
+                        'registrationRate': 'report',
+                        'checkinRate': 'checkin',
+                        'taskCompletionRate': 'report'
+                    };
+                    const urgeType = metricToType[alert.metric] || 'report';
+                    // 先标记预警为处理中（已催办）
+                    this.markAsUrged(alert.id);
+                    // 跳转到催办页面
+                    window.location.href = `reminder-urge.html?type=${urgeType}&conferenceId=${this.conference.id}`;
+                },
+
+                async markAsUrged(id) {
+                    try {
+                        await fetch(`${this.API_BASE}/api/alert/${id}/process`, { method: 'PUT' });
+                    } catch (e) { /* 静默处理 */ }
                 },
 
                 viewDetail(id) {
@@ -1124,34 +1208,34 @@
                     }
                 },
 
-                async startProcessing(id) {
+                // ==================== 统计 - 加载处理历史 ====================
+                async loadAlertHistory() {
                     try {
-                        const resp = await fetch(`${this.API_BASE}/api/alert/${id}/process`, { method: 'PUT' });
+                        const resp = await fetch(`${this.API_BASE}/api/alert/list?conferenceId=${this.conference.id}&status=processing`);
                         const result = await resp.json();
-                        if (result.code === 200) {
-                            this.$showToast('开始处理预警', 'success');
-                            await this.loadAlertEvents();
-                        } else {
-                            this.$showToast(result.message || '操作失败', 'error');
-                        }
-                    } catch (e) {
-                        this.$showToast('处理预警失败', 'error');
-                    }
-                },
+                        const processingList = (result.code === 200 && result.data) ? result.data : [];
 
-                async resolveAlert(id) {
-                    try {
-                        const resp = await fetch(`${this.API_BASE}/api/alert/${id}/resolve`, { method: 'PUT' });
-                        const result = await resp.json();
-                        if (result.code === 200) {
-                            this.$showToast('预警已标记为已解决', 'success');
-                            await this.loadAlertEvents();
-                        } else {
-                            this.$showToast(result.message || '操作失败', 'error');
-                        }
-                    } catch (e) {
-                        this.$showToast('解决预警失败', 'error');
-                    }
+                        const resp2 = await fetch(`${this.API_BASE}/api/alert/list?conferenceId=${this.conference.id}&status=resolved`);
+                        const result2 = await resp2.json();
+                        const resolvedList = (result2.code === 200 && result2.data) ? result2.data : [];
+
+                        const all = [...processingList, ...resolvedList].sort((a, b) =>
+                            new Date(b.handleTime || b.createTime) - new Date(a.handleTime || a.createTime)
+                        );
+
+                        this.alertHistory = all.map(e => ({
+                            id: e.id,
+                            title: this.getMetricText(e.metric) + '预警',
+                            severity: e.severity,
+                            handler: e.handlerName || '系统',
+                            processTime: e.handleTime && e.resolveTime
+                                ? Math.round((new Date(e.resolveTime) - new Date(e.handleTime)) / 60000)
+                                : '-',
+                            processMethod: e.status === 'processing' ? '催办通知' : '已处理',
+                            processResult: e.remark || (e.status === 'resolved' ? '已解决' : '催办中'),
+                            timestamp: new Date(e.handleTime || e.createTime)
+                        }));
+                    } catch (e) { console.error('加载处理历史失败', e); }
                 },
 
                 async exportReport() {

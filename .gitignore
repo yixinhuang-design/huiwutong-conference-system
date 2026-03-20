@@ -61,4 +61,3 @@ Pods/
  # Local data
 .m2repo/
 redis/
-sql/*.sql

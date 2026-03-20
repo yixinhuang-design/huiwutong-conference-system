@@ -128,33 +128,59 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
     public Map<String, Object> getMetrics(Long conferenceId) {
         Long tenantId = getTenantId();
         Map<String, Object> metrics = new LinkedHashMap<>();
+        Map<String, Double> metricValues = new LinkedHashMap<>();
 
-        // TODO: 实际项目中需跨服务调用获取真实指标
-        // 当前返回基于已有数据的模拟指标
-        metrics.put("registrationRate", new LinkedHashMap<String, Object>() {{
-            put("value", 85.5);
-            put("label", "报名率");
-            put("unit", "%");
-            put("trend", "up");
-        }});
-        metrics.put("checkinRate", new LinkedHashMap<String, Object>() {{
-            put("value", 72.3);
-            put("label", "签到率");
-            put("unit", "%");
-            put("trend", "stable");
-        }});
-        metrics.put("taskCompletionRate", new LinkedHashMap<String, Object>() {{
-            put("value", 68.0);
-            put("label", "任务完成率");
-            put("unit", "%");
-            put("trend", "up");
-        }});
-        metrics.put("apiResponseTime", new LinkedHashMap<String, Object>() {{
-            put("value", 245);
-            put("label", "API响应时间");
-            put("unit", "ms");
-            put("trend", "stable");
-        }});
+        try {
+            // 报到率 - 从 conference_registration 真实数据获取
+            double reportRate = 0;
+            if (conferenceId != null) {
+                Map<String, Object> regData = eventMapper.getRegistrationMetrics(conferenceId, tenantId);
+                if (regData != null) {
+                    long approved = toLong(regData.get("approved"));
+                    long reported = toLong(regData.get("reported"));
+                    reportRate = approved > 0 ? Math.round(reported * 1000.0 / approved) / 10.0 : 0;
+                }
+            }
+            metricValues.put("registrationRate", reportRate);
+            metrics.put("registrationRate", buildMetric(reportRate, "报到率", "%",
+                    reportRate >= 80 ? "up" : reportRate >= 50 ? "stable" : "down"));
+
+            // 签到率 - 从 conference_registration 真实数据获取
+            double checkinRate = 0;
+            if (conferenceId != null) {
+                Map<String, Object> checkinData = eventMapper.getCheckinMetrics(conferenceId, tenantId);
+                if (checkinData != null) {
+                    long expected = toLong(checkinData.get("expected"));
+                    long actual = toLong(checkinData.get("actual"));
+                    checkinRate = expected > 0 ? Math.round(actual * 1000.0 / expected) / 10.0 : 0;
+                }
+            }
+            metricValues.put("checkinRate", checkinRate);
+            metrics.put("checkinRate", buildMetric(checkinRate, "签到率", "%",
+                    checkinRate >= 80 ? "up" : checkinRate >= 50 ? "stable" : "down"));
+
+            // 任务完成率/API响应时间暂不可跨服务获取
+            metricValues.put("taskCompletionRate", 0.0);
+            metricValues.put("apiResponseTime", 0.0);
+            metrics.put("taskCompletionRate", buildMetric(0, "任务完成率", "%", "stable"));
+            metrics.put("apiResponseTime", buildMetric(0, "API响应时间", "ms", "stable"));
+
+        } catch (Exception e) {
+            log.error("获取实时指标异常: {}", e.getMessage(), e);
+            metrics.put("registrationRate", buildMetric(0, "报到率", "%", "stable"));
+            metrics.put("checkinRate", buildMetric(0, "签到率", "%", "stable"));
+            metrics.put("taskCompletionRate", buildMetric(0, "任务完成率", "%", "stable"));
+            metrics.put("apiResponseTime", buildMetric(0, "API响应时间", "ms", "stable"));
+        }
+
+        // 自动预警检测：对比当前指标与启用的规则阈值，自动生成预警事件
+        if (conferenceId != null && !metricValues.isEmpty()) {
+            try {
+                checkRulesAndCreateAlerts(conferenceId, tenantId, metricValues);
+            } catch (Exception e) {
+                log.warn("预警自动检测异常: {}", e.getMessage());
+            }
+        }
 
         // 当前触发的预警数量
         LambdaQueryWrapper<AlertEvent> wrapper = new LambdaQueryWrapper<>();
@@ -168,6 +194,79 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
         metrics.put("activeAlertCount", activeAlerts);
 
         return metrics;
+    }
+
+    /**
+     * 自动预警检测：比较实时指标与启用规则，触发阈值时自动创建预警事件
+     * 同一会议+规则只在无未处理事件时创建新事件，避免重复
+     */
+    private void checkRulesAndCreateAlerts(Long conferenceId, Long tenantId, Map<String, Double> metricValues) {
+        LambdaQueryWrapper<AlertRule> ruleWrapper = new LambdaQueryWrapper<>();
+        ruleWrapper.eq(AlertRule::getTenantId, tenantId)
+                .eq(AlertRule::getConferenceId, conferenceId)
+                .eq(AlertRule::getEnabled, 1)
+                .eq(AlertRule::getDeleted, 0);
+        List<AlertRule> rules = ruleMapper.selectList(ruleWrapper);
+
+        for (AlertRule rule : rules) {
+            Double currentValue = metricValues.get(rule.getMetric());
+            if (currentValue == null || currentValue == 0) continue;
+
+            boolean breached = isThresholdBreached(currentValue, rule.getOperator(), rule.getThreshold().doubleValue());
+            if (breached) {
+                // 检查是否已有该规则的未处理预警事件
+                LambdaQueryWrapper<AlertEvent> existCheck = new LambdaQueryWrapper<>();
+                existCheck.eq(AlertEvent::getTenantId, tenantId)
+                        .eq(AlertEvent::getConferenceId, conferenceId)
+                        .eq(AlertEvent::getRuleId, rule.getId())
+                        .in(AlertEvent::getStatus, "pending", "processing")
+                        .eq(AlertEvent::getDeleted, 0);
+                long existCount = eventMapper.selectCount(existCheck);
+                if (existCount == 0) {
+                    AlertEvent event = new AlertEvent();
+                    event.setTenantId(tenantId);
+                    event.setConferenceId(conferenceId);
+                    event.setRuleId(rule.getId());
+                    event.setMetric(rule.getMetric());
+                    event.setMetricValue(java.math.BigDecimal.valueOf(currentValue));
+                    event.setThreshold(rule.getThreshold());
+                    event.setSeverity(rule.getSeverity());
+                    event.setStatus("pending");
+                    event.setCreateTime(LocalDateTime.now());
+                    event.setUpdateTime(LocalDateTime.now());
+                    event.setDeleted(0);
+                    eventMapper.insert(event);
+                    log.info("[预警触发] 规则={}, 指标={}, 当前值={}, 阈值={}", rule.getName(), rule.getMetric(), currentValue, rule.getThreshold());
+                }
+            }
+        }
+    }
+
+    private boolean isThresholdBreached(double currentValue, String operator, double threshold) {
+        if (operator == null) operator = "<";
+        switch (operator) {
+            case "<": return currentValue < threshold;
+            case "<=": return currentValue <= threshold;
+            case ">": return currentValue > threshold;
+            case ">=": return currentValue >= threshold;
+            case "==": return Math.abs(currentValue - threshold) < 0.01;
+            default: return currentValue < threshold;
+        }
+    }
+
+    private Map<String, Object> buildMetric(double value, String label, String unit, String trend) {
+        Map<String, Object> metric = new LinkedHashMap<>();
+        metric.put("value", value);
+        metric.put("label", label);
+        metric.put("unit", unit);
+        metric.put("trend", trend);
+        return metric;
+    }
+
+    private long toLong(Object obj) {
+        if (obj == null) return 0;
+        if (obj instanceof Number) return ((Number) obj).longValue();
+        try { return Long.parseLong(obj.toString()); } catch (Exception e) { return 0; }
     }
 
     // === 预警事件 ===
@@ -274,6 +373,15 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
             resolvedWrapper.eq(AlertEvent::getConferenceId, conferenceId);
         }
         stats.put("resolvedCount", eventMapper.selectCount(resolvedWrapper));
+
+        // 最近7天预警趋势
+        try {
+            List<Map<String, Object>> trend = eventMapper.getAlertDailyTrend(tenantId);
+            stats.put("dailyTrend", trend != null ? trend : Collections.emptyList());
+        } catch (Exception e) {
+            log.warn("获取预警趋势数据异常: {}", e.getMessage());
+            stats.put("dailyTrend", Collections.emptyList());
+        }
 
         return stats;
     }

@@ -193,6 +193,41 @@ public class DataController {
     }
 
     /**
+     * 获取未签到人员列表（按日程维度）
+     * 用于催签到功能
+     */
+    @GetMapping("/business/unchecked-users")
+    public Result<Map<String, Object>> getUncheckedUsers(
+            @RequestParam Long conferenceId,
+            @RequestParam Long scheduleId) {
+        log.debug("获取未签到人员, conferenceId={}, scheduleId={}", conferenceId, scheduleId);
+        return Result.ok(businessDataService.getUncheckedUsers(conferenceId, scheduleId));
+    }
+
+    /**
+     * 获取未就寝人员列表（按日期维度）
+     * 用于催就寝功能
+     */
+    @GetMapping("/business/undormitory-users")
+    public Result<Map<String, Object>> getUndormitoryUsers(
+            @RequestParam Long conferenceId,
+            @RequestParam String date) {
+        log.debug("获取未就寝人员, conferenceId={}, date={}", conferenceId, date);
+        return Result.ok(businessDataService.getUndormitoryUsers(conferenceId, date));
+    }
+
+    /**
+     * 获取未报到人员列表
+     * 用于催报到功能
+     */
+    @GetMapping("/business/unreported-users")
+    public Result<Map<String, Object>> getUnreportedUsers(
+            @RequestParam Long conferenceId) {
+        log.debug("获取未报到人员, conferenceId={}", conferenceId);
+        return Result.ok(businessDataService.getUnreportedUsers(conferenceId));
+    }
+
+    /**
      * 获取数据大屏数据（综合汇总）
      */
     @GetMapping("/dashboard")
