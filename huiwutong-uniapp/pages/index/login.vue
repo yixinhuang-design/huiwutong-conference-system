@@ -52,7 +52,7 @@
             <input
               v-model="formData.username"
               placeholder="请输入用户名/手机号"
-              class="input-field input-with-icon"
+              class="login-input input-with-icon"
               @focus="onFocus"
               @blur="onBlur"
             />
@@ -66,7 +66,7 @@
               v-model="formData.password"
               :password="!showPassword"
               placeholder="请输入密码"
-              class="input-field input-with-icon"
+              class="login-input input-with-icon"
               @focus="onFocus"
               @blur="onBlur"
             />
@@ -101,7 +101,7 @@
               placeholder="请输入手机号"
               type="number"
               maxlength="11"
-              class="input-field input-with-icon"
+              class="login-input input-with-icon"
               @focus="onFocus"
               @blur="onBlur"
             />
@@ -116,7 +116,7 @@
               placeholder="请输入验证码"
               type="number"
               maxlength="6"
-              class="input-field input-with-icon"
+              class="login-input input-with-icon"
               @focus="onFocus"
               @blur="onBlur"
             />
@@ -523,7 +523,7 @@ export default {
 }
 /* #endif */
 
-.login-page .input-field {
+.login-page .login-input {
   width: 100%;
   padding: $spacing-md;
   padding-left: 88rpx;
@@ -580,7 +580,7 @@ export default {
 }
 /* #endif */
 
-.login-page .input-field:focus {
+.login-page .login-input:focus {
   border-color: $primary-color;
   box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
   /* #ifdef H5 */
