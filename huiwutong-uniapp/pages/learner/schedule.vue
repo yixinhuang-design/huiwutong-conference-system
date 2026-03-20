@@ -49,11 +49,11 @@
           <view class="schedule-content">
             <view class="schedule-title">{{ item.title }}</view>
             <view class="schedule-location">
-              <text class="location-icon">📍</text>
+              <text class="fa fa-map-marker-alt location-icon"></text>
               {{ item.location }}
             </view>
             <view class="schedule-speaker" v-if="item.speaker">
-              <text class="speaker-icon">👤</text>
+              <text class="fa fa-user speaker-icon"></text>
               {{ item.speaker }}
             </view>
           </view>
@@ -61,20 +61,20 @@
           <view class="schedule-status">
             <view
               v-if="item.checked"
-              class="status-badge checked"
+              class="status-badge status-success"
             >
-              <text>✅</text>
+              <text class="fa fa-check"></text>
               已签到
             </view>
             <view
               v-else-if="item.canCheckin"
-              class="status-badge checkin"
+              class="status-badge status-accent"
               @click="handleCheckin(item)"
             >
-              <text>📱</text>
+              <text class="fa fa-qrcode"></text>
               签到
             </view>
-            <view v-else class="status-badge wait">
+            <view v-else class="status-badge status-tertiary">
               未开始
             </view>
           </view>
@@ -82,7 +82,7 @@
       </view>
 
       <view v-else class="empty-state">
-        <text class="empty-icon">📅</text>
+        <text class="fa fa-calendar empty-icon"></text>
         <text class="empty-text">暂无日程安排</text>
       </view>
     </view>
@@ -392,7 +392,13 @@ export default {
   margin-bottom: 6rpx;
   display: flex;
   align-items: center;
-  gap: 6rpx;
+  gap: 8rpx;
+}
+
+.location-icon,
+.speaker-icon {
+  color: $primary-color;
+  font-size: $font-size-md;
 }
 
 .schedule-status {
@@ -412,19 +418,38 @@ export default {
   font-weight: 500;
 }
 
-.status-badge.checked {
+.status-success {
   background: $success-color;
   color: $text-white;
 }
 
-.status-badge.checkin {
-  background: $primary-color;
+.status-accent {
+  background: $accent-color;
   color: $text-white;
   cursor: pointer;
 }
 
-.status-badge.wait {
+.status-tertiary {
   background: $bg-tertiary;
   color: $text-secondary;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xxl;
+  color: $text-tertiary;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: $spacing-md;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: $font-size-md;
 }
 </style>
