@@ -96,7 +96,7 @@
           <view v-if="question.type === 'text'" class="question-text">
             <textarea
               :value="answers[question.id] || ''"
-              class="input-field"
+              class="form-input"
               :placeholder="question.placeholder || '请输入您的回答'"
               :maxlength="question.maxLength || 500"
               @input="onTextInput(question.id, $event)"

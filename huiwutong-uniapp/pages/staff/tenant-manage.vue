@@ -133,7 +133,7 @@
               <text class="form-label">租户名称</text>
               <input
                 v-model="tenantForm.name"
-                class="input-field"
+                class="form-input"
                 placeholder="请输入租户名称"
               />
             </view>
@@ -142,7 +142,7 @@
               <text class="form-label">租户代码</text>
               <input
                 v-model="tenantForm.code"
-                class="input-field"
+                class="form-input"
                 placeholder="请输入租户代码"
                 :disabled="isEdit"
               />
@@ -152,7 +152,7 @@
               <text class="form-label">联系人</text>
               <input
                 v-model="tenantForm.contact"
-                class="input-field"
+                class="form-input"
                 placeholder="请输入联系人姓名"
               />
             </view>
@@ -161,7 +161,7 @@
               <text class="form-label">联系电话</text>
               <input
                 v-model="tenantForm.phone"
-                class="input-field"
+                class="form-input"
                 placeholder="请输入联系电话"
                 type="number"
               />
@@ -171,7 +171,7 @@
               <text class="form-label">联系邮箱</text>
               <input
                 v-model="tenantForm.email"
-                class="input-field"
+                class="form-input"
                 placeholder="请输入联系邮箱"
                 type="email"
               />
@@ -190,7 +190,7 @@
               <text class="form-label">最大用户数</text>
               <input
                 v-model="tenantForm.maxUsers"
-                class="input-field"
+                class="form-input"
                 placeholder="请输入最大用户数"
                 type="number"
               />
@@ -200,7 +200,7 @@
               <text class="form-label">存储空间（GB）</text>
               <input
                 v-model="tenantForm.totalStorage"
-                class="input-field"
+                class="form-input"
                 placeholder="请输入存储空间"
                 type="number"
               />

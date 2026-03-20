@@ -34,7 +34,7 @@
           <text class="form-label">通知标题</text>
           <input
             v-model="formData.title"
-            class="input-field"
+            class="form-input"
             placeholder="请输入通知标题"
             :maxlength="100"
           />
@@ -80,7 +80,7 @@
           <text class="form-label">附加链接（可选）</text>
           <input
             v-model="formData.link"
-            class="input-field"
+            class="form-input"
             placeholder="输入跳转链接"
           />
         </view>

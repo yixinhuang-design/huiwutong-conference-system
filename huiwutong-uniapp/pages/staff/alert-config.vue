@@ -104,7 +104,7 @@
         <scroll-view scroll-y class="modal-body">
           <view class="form-group">
             <text class="form-label">规则名称</text>
-            <input class="input-field" v-model="ruleForm.name" placeholder="请输入规则名称" />
+            <input class="form-input" v-model="ruleForm.name" placeholder="请输入规则名称" />
           </view>
           <view class="form-group">
             <text class="form-label">预警指标</text>
@@ -129,7 +129,7 @@
           </view>
           <view class="form-group">
             <text class="form-label">阈值</text>
-            <input class="input-field" type="digit" v-model="ruleForm.threshold" placeholder="请输入阈值" />
+            <input class="form-input" type="digit" v-model="ruleForm.threshold" placeholder="请输入阈值" />
           </view>
           <view class="form-group">
             <text class="form-label">预警级别</text>

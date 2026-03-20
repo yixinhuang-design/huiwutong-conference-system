@@ -43,7 +43,7 @@
           <text class="form-label">报名码</text>
           <input
             v-model="registerCode"
-            class="input-field"
+            class="form-input"
             type="text"
             placeholder="请输入6位报名码"
             maxlength="6"

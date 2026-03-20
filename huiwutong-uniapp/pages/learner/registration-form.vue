@@ -49,7 +49,7 @@
             <text class="form-label">姓名</text>
             <input
               v-model="formData.name"
-              class="input-field"
+              class="form-input"
               placeholder="请输入真实姓名"
             />
           </view>
@@ -72,7 +72,7 @@
             <text class="form-label">身份证号</text>
             <input
               v-model="formData.idCard"
-              class="input-field"
+              class="form-input"
               type="idcard"
               placeholder="请输入身份证号"
               maxlength="18"
@@ -83,7 +83,7 @@
             <text class="form-label">联系电话</text>
             <input
               v-model="formData.phone"
-              class="input-field"
+              class="form-input"
               type="number"
               placeholder="请输入手机号"
               maxlength="11"
@@ -94,7 +94,7 @@
             <text class="form-label">电子邮箱</text>
             <input
               v-model="formData.email"
-              class="input-field"
+              class="form-input"
               placeholder="请输入邮箱（选填）"
             />
           </view>
@@ -110,7 +110,7 @@
             <text class="form-label">工作单位</text>
             <input
               v-model="formData.department"
-              class="input-field"
+              class="form-input"
               placeholder="请输入工作单位全称"
             />
           </view>
@@ -128,7 +128,7 @@
             <text class="form-label">职务</text>
             <input
               v-model="formData.position"
-              class="input-field"
+              class="form-input"
               placeholder="请输入现任职务"
             />
           </view>

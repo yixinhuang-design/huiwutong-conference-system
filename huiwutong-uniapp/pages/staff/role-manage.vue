@@ -90,7 +90,7 @@
               <text class="form-label">角色名称</text>
               <input
                 v-model="roleForm.name"
-                class="input-field"
+                class="form-input"
                 placeholder="请输入角色名称"
               />
             </view>
@@ -99,7 +99,7 @@
               <text class="form-label">角色编码</text>
               <input
                 v-model="roleForm.code"
-                class="input-field"
+                class="form-input"
                 placeholder="请输入角色编码"
                 :disabled="isEdit"
               />
@@ -133,7 +133,7 @@
               <text class="form-label">排序号</text>
               <input
                 v-model="roleForm.sortOrder"
-                class="input-field"
+                class="form-input"
                 placeholder="请输入排序号"
                 type="number"
               />

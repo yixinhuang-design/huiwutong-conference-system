@@ -18,7 +18,7 @@
           <text class="form-label">通知标题</text>
           <input
             v-model="formData.title"
-            class="input-field"
+            class="form-input"
             placeholder="请输入通知标题"
             :maxlength="100"
           />
