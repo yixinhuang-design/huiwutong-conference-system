@@ -19,6 +19,9 @@ export default {
 <style lang="scss">
 @import './styles/common.scss';
 
+/* Font Awesome 图标库 - 与app高保真原型保持一致 */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
 /* 全局样式 */
 page {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

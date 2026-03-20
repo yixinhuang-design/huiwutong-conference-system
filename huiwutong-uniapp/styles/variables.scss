@@ -1,4 +1,5 @@
 /* 智能会议助手 - 样式变量定义 */
+/* 与 app 高保真原型保持完全一致 */
 
 /* ==================== 主色调 ==================== */
 $primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -37,7 +38,7 @@ $shadow-sm: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
 $shadow-md: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
 $shadow-lg: 0 40rpx 120rpx rgba(0, 0, 0, 0.3);
 
-/* ==================== 间距 ==================== */
+/* ==================== 间距（8px网格系统） ==================== */
 $spacing-xs: 8rpx;
 $spacing-sm: 16rpx;
 $spacing-md: 24rpx;
@@ -78,3 +79,6 @@ $info-color: #3b82f6;
 $transition-base: all 0.3s ease;
 $transition-fast: all 0.15s ease;
 $transition-slow: all 0.5s ease;
+
+/* ==================== Font Awesome ==================== */
+$fa-font-path: '@/static/fontawesome/webfonts';

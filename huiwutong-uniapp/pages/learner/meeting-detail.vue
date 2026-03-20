@@ -11,9 +11,18 @@
     <view class="info-card card">
       <view class="meeting-title">{{ meetingInfo.title }}</view>
       <view class="meeting-meta">
-        <text class="meta-item">📅 {{ meetingInfo.dateRange }}</text>
-        <text class="meta-item">📍 {{ meetingInfo.location }}</text>
-        <text class="meta-item">🏢 主办：{{ meetingInfo.organizer }}</text>
+        <text class="meta-item">
+          <text class="fa fa-calendar-alt"></text>
+          {{ meetingInfo.dateRange }}
+        </text>
+        <text class="meta-item">
+          <text class="fa fa-map-marker-alt"></text>
+          {{ meetingInfo.location }}
+        </text>
+        <text class="meta-item">
+          <text class="fa fa-building"></text>
+          主办：{{ meetingInfo.organizer }}
+        </text>
       </view>
       <view class="meeting-status">
         <view class="status-chip status-accent">
@@ -50,29 +59,41 @@
     <view class="actions-section card">
       <view class="section-title">快捷操作</view>
       <view class="actions-grid grid-3">
-        <view class="action-tile" @click="goToSchedule">
-          <view class="action-icon-lg">📅</view>
-          <view class="action-title">日程</view>
+        <view class="action-tile feature-tile" @click="goToSchedule">
+          <view class="action-icon-lg feature-icon-lg">
+            <text class="fa fa-calendar-alt"></text>
+          </view>
+          <view class="action-title feature-title">日程</view>
         </view>
-        <view class="action-tile" @click="goToSeat">
-          <view class="action-icon-lg">🪑</view>
-          <view class="action-title">座位</view>
+        <view class="action-tile feature-tile" @click="goToSeat">
+          <view class="action-icon-lg feature-icon-lg">
+            <text class="fa fa-th-large"></text>
+          </view>
+          <view class="action-title feature-title">座位</view>
         </view>
-        <view class="action-tile" @click="goToCheckin">
-          <view class="action-icon-lg">✅</view>
-          <view class="action-title">签到</view>
+        <view class="action-tile feature-tile" @click="goToCheckin">
+          <view class="action-icon-lg feature-icon-lg">
+            <text class="fa fa-qrcode"></text>
+          </view>
+          <view class="action-title feature-title">签到</view>
         </view>
-        <view class="action-tile" @click="goToMaterials">
-          <view class="action-icon-lg">📚</view>
-          <view class="action-title">资料</view>
+        <view class="action-tile feature-tile" @click="goToMaterials">
+          <view class="action-icon-lg feature-icon-lg">
+            <text class="fa fa-book-open"></text>
+          </view>
+          <view class="action-title feature-title">资料</view>
         </view>
-        <view class="action-tile" @click="goToGroups">
-          <view class="action-icon-lg">👥</view>
-          <view class="action-title">群组</view>
+        <view class="action-tile feature-tile" @click="goToGroups">
+          <view class="action-icon-lg feature-icon-lg">
+            <text class="fa fa-users"></text>
+          </view>
+          <view class="action-title feature-title">群组</view>
         </view>
-        <view class="action-tile" @click="goToContact">
-          <view class="action-icon-lg">📒</view>
-          <view class="action-title">通讯录</view>
+        <view class="action-tile feature-tile" @click="goToContact">
+          <view class="action-icon-lg feature-icon-lg">
+            <text class="fa fa-address-book"></text>
+          </view>
+          <view class="action-title feature-title">通讯录</view>
         </view>
       </view>
     </view>
@@ -80,7 +101,7 @@
     <!-- 培训简介 -->
     <view class="intro-section card">
       <view class="section-title">培训简介</view>
-      <view class="intro-content">
+      <view class="intro-content card-content">
         {{ meetingInfo.description }}
       </view>
     </view>
@@ -112,7 +133,8 @@
         <text class="contact-value">{{ meetingInfo.phone }}</text>
       </view>
       <button class="contact-btn btn btn-primary btn-block">
-        📞 联系班主任
+        <text class="fa fa-phone"></text>
+        联系班主任
       </button>
     </view>
   </view>
@@ -226,6 +248,9 @@ export default {
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
 
+/* Font Awesome 图标支持 */
+@import url('@/static/fontawesome/css/all.css');
+
 .meeting-detail-container {
   min-height: 100vh;
   background: $bg-secondary;
@@ -264,6 +289,7 @@ export default {
 .notice-section,
 .contact-section {
   margin: $spacing-md;
+  @extend .card;
 }
 
 .meeting-title {
@@ -285,7 +311,14 @@ export default {
   color: $text-secondary;
   display: flex;
   align-items: center;
-  gap: 6rpx;
+  gap: 8rpx;
+
+  .fa {
+    color: $primary-color;
+    font-size: $font-size-md;
+    width: 32rpx;
+    text-align: center;
+  }
 }
 
 .meeting-status {
@@ -353,32 +386,26 @@ export default {
 }
 
 .action-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: $spacing-sm;
+  @extend .feature-tile;
 }
 
 .action-icon-lg {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: $border-radius-lg;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48rpx;
+  @extend .feature-icon-lg;
+
+  .fa {
+    font-size: 48rpx;
+    color: $text-white;
+  }
 }
 
 .action-title {
-  font-size: $font-size-sm;
-  color: $text-primary;
+  @extend .feature-title;
 }
 
 .intro-content {
   font-size: $font-size-md;
   color: $text-primary;
-  line-height: 1.8;
+  line-height: $line-height-lg;
 }
 
 .notice-list {
@@ -392,12 +419,17 @@ export default {
   gap: $spacing-sm;
   font-size: $font-size-sm;
   color: $text-primary;
-  line-height: 1.6;
+  line-height: $line-height-md;
 }
 
 .notice-bullet {
   flex-shrink: 0;
   color: $primary-color;
+  font-size: $font-size-lg;
+}
+
+.notice-text {
+  flex: 1;
 }
 
 .contact-item {
@@ -419,5 +451,13 @@ export default {
 
 .contact-btn {
   margin-top: $spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+
+  .fa {
+    font-size: $font-size-md;
+  }
 }
 </style>
