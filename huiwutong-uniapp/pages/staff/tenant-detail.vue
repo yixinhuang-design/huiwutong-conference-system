@@ -27,7 +27,7 @@
         <view class="info-row">
           <text class="info-label">租户状态</text>
           <view
-            class="status-badge"
+            class="status-badge status-chip"
             :class="tenantInfo.status"
           >
             <text class="status-text">{{ getStatusLabel(tenantInfo.status) }}</text>

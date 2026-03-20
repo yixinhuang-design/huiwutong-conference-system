@@ -93,7 +93,7 @@
         <view class="info-row">
           <text class="info-label">账号状态</text>
           <view
-            class="status-badge"
+            class="status-badge status-chip"
             :class="userInfo.status"
           >
             <text class="status-text">{{ getStatusLabel(userInfo.status) }}</text>

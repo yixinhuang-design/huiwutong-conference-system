@@ -136,7 +136,7 @@
                 </view>
               </view>
               <view class="backup-status">
-                <text class="status-badge" :class="backup.status">
+                <text class="status-badge status-chip" :class="backup.status">
                   {{ getStatusLabel(backup.status) }}
                 </text>
               </view>

@@ -23,7 +23,7 @@
       <view class="alert-detail card">
         <view class="detail-header">
           <text class="detail-title">{{ currentAlert.title }}</text>
-          <view class="status-badge" :class="'status-' + currentAlert.status">
+          <view class="status-badge status-chip" :class="'status-' + currentAlert.status">
             {{ getStatusLabel(currentAlert.status) }}
           </view>
         </view>
