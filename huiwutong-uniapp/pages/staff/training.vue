@@ -381,7 +381,7 @@ export default {
 
 .training-status.status-upcoming {
   background: rgba(148, 163, 184, 0.1);
-  color: #94a3b8;
+  color: $text-tertiary;
 }
 
 .training-period {

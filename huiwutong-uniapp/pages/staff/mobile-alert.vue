@@ -879,7 +879,7 @@ export default {
 }
 
 .result-value.result-误报 {
-  color: #94a3b8;
+  color: $text-tertiary;
 }
 
 .history-note {

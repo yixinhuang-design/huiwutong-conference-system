@@ -359,7 +359,7 @@ export default {
 
 .seat-badge.badge-reserved {
   background: rgba(148, 163, 184, 0.1);
-  color: #94a3b8;
+  color: $text-tertiary;
 }
 
 .seat-meta {
@@ -537,7 +537,7 @@ export default {
 
 .facility-status.unavailable {
   background: rgba(148, 163, 184, 0.1);
-  color: #94a3b8;
+  color: $text-tertiary;
 }
 
 .photos-scroll {

@@ -94,29 +94,29 @@
     <view class="quick-actions card">
       <view class="section-title">快捷操作</view>
       <view class="action-grid grid-3">
-        <view class="action-tile" @click="goToManage('registration')">
+        <view class="action-tile feature-tile" @click="goToManage('registration')">
           <view class="action-icon"><text class="fa fa-users"></text></view>
-          <view class="action-title">报名管理</view>
+          <view class="action-title feature-title">报名管理</view>
         </view>
-        <view class="action-tile" @click="goToManage('grouping')">
+        <view class="action-tile feature-tile" @click="goToManage('grouping')">
           <view class="action-icon">🔖</view>
-          <view class="action-title">分组管理</view>
+          <view class="action-title feature-title">分组管理</view>
         </view>
-        <view class="action-tile" @click="goToManage('seat')">
+        <view class="action-tile feature-tile" @click="goToManage('seat')">
           <view class="action-icon"><text class="fa fa-th-large"></text></view>
-          <view class="action-title">座位管理</view>
+          <view class="action-title feature-title">座位管理</view>
         </view>
-        <view class="action-tile" @click="goToManage('notice')">
+        <view class="action-tile feature-tile" @click="goToManage('notice')">
           <view class="action-icon">📢</view>
-          <view class="action-title">通知管理</view>
+          <view class="action-title feature-title">通知管理</view>
         </view>
-        <view class="action-tile" @click="goToManage('task')">
+        <view class="action-tile feature-tile" @click="goToManage('task')">
           <view class="action-icon"><text class="fa fa-check"></text></view>
-          <view class="action-title">任务管理</view>
+          <view class="action-title feature-title">任务管理</view>
         </view>
-        <view class="action-tile" @click="goToManage('data')">
+        <view class="action-tile feature-tile" @click="goToManage('data')">
           <view class="action-icon">📊</view>
-          <view class="action-title">数据分析</view>
+          <view class="action-title feature-title">数据分析</view>
         </view>
       </view>
     </view>

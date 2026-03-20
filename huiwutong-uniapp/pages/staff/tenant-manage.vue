@@ -23,7 +23,7 @@
     </view>
 
     <!-- 统计卡片 -->
-    <view class="stats-section">
+    <view class="stats-section card">
       <view class="stat-card">
         <text class="stat-value">{{ tenantStats.total }}</text>
         <text class="stat-label">总租户数</text>

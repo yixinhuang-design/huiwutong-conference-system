@@ -23,7 +23,7 @@
     </view>
 
     <!-- 统计信息 -->
-    <view class="stats-section">
+    <view class="stats-section card">
       <view class="stat-item">
         <text class="stat-icon">📄</text>
         <text class="stat-num">{{ stats.total }}</text>

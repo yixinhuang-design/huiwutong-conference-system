@@ -9,7 +9,7 @@
     </view>
 
     <!-- 统计卡片 -->
-    <view class="stats-section">
+    <view class="stats-section card">
       <view class="stat-card">
         <text class="stat-num">{{ stats.total }}</text>
         <text class="stat-label">全部通知</text>
@@ -447,7 +447,7 @@ export default {
 
 .notice-status.status-draft {
   background: rgba(148, 163, 184, 0.1);
-  color: #94a3b8;
+  color: $text-tertiary;
 }
 
 .notice-status.status-scheduled {

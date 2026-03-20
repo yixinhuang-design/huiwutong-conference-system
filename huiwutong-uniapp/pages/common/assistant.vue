@@ -65,7 +65,7 @@
             <text>{{ action.icon }}</text>
           </view>
           <view class="action-info">
-            <view class="action-title">{{ action.title }}</view>
+            <view class="action-title feature-title">{{ action.title }}</view>
             <view class="action-desc">{{ action.desc }}</view>
           </view>
           <text class="action-arrow">›</text>

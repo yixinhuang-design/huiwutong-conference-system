@@ -14,7 +14,7 @@
     <!-- 内容区域 -->
     <scroll-view class="content-scroll" scroll-y>
       <!-- 系统简介 -->
-      <view class="intro-section">
+      <view class="intro-section card">
         <view class="section-title">
           <text class="title-icon">📱</text>
           <text class="title-text">智能会议助手</text>

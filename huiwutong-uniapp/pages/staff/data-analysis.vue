@@ -719,7 +719,7 @@ export default {
 }
 
 .ranking-index.rank-2 {
-  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  background: linear-gradient(135deg, $text-tertiary 0%, $text-secondary 100%);
   color: $text-white;
 }
 

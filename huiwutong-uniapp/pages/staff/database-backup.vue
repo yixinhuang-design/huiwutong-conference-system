@@ -10,7 +10,7 @@
     </view>
 
     <!-- 备份统计 -->
-    <view class="stats-section">
+    <view class="stats-section card">
       <view class="stat-box">
         <text class="stat-value">{{ stats.totalBackups }}</text>
         <text class="stat-label">总备份数</text>

@@ -499,7 +499,7 @@ export default {
 }
 
 .seat-status.status-reserved .status-text {
-  color: #94a3b8;
+  color: $text-tertiary;
 }
 
 .status-text {
