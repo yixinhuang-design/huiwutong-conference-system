@@ -140,7 +140,7 @@
               <text class="form-label">用户名</text>
               <input
                 v-model="userForm.username"
-                class="form-input"
+                class="input-field"
                 placeholder="请输入用户名"
                 :disabled="isEdit"
               />
@@ -150,7 +150,7 @@
               <text class="form-label">密码</text>
               <input
                 v-model="userForm.password"
-                class="form-input"
+                class="input-field"
                 placeholder="请输入密码"
                 type="password"
               />
@@ -160,7 +160,7 @@
               <text class="form-label">姓名</text>
               <input
                 v-model="userForm.name"
-                class="form-input"
+                class="input-field"
                 placeholder="请输入姓名"
               />
             </view>
@@ -187,7 +187,7 @@
               <text class="form-label">部门</text>
               <input
                 v-model="userForm.department"
-                class="form-input"
+                class="input-field"
                 placeholder="请输入部门"
               />
             </view>
@@ -196,7 +196,7 @@
               <text class="form-label">手机号</text>
               <input
                 v-model="userForm.phone"
-                class="form-input"
+                class="input-field"
                 placeholder="请输入手机号"
                 type="number"
               />
@@ -206,7 +206,7 @@
               <text class="form-label">邮箱</text>
               <input
                 v-model="userForm.email"
-                class="form-input"
+                class="input-field"
                 placeholder="请输入邮箱"
                 type="email"
               />

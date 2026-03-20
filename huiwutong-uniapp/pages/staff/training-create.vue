@@ -17,7 +17,7 @@
           <text class="form-label required">培训名称</text>
           <input
             v-model="formData.title"
-            class="form-input"
+            class="input-field"
             placeholder="请输入培训名称"
             :maxlength="100"
           />
@@ -26,7 +26,7 @@
           <text class="form-label required">培训期次</text>
           <input
             v-model="formData.period"
-            class="form-input"
+            class="input-field"
             placeholder="例如：2025年度第一期"
           />
         </view>
@@ -48,7 +48,7 @@
           <text class="form-label required">培训地点</text>
           <input
             v-model="formData.location"
-            class="form-input"
+            class="input-field"
             placeholder="请输入培训地点"
           />
         </view>
@@ -70,7 +70,7 @@
           <text class="form-label required">计划人数</text>
           <input
             v-model="formData.plannedCount"
-            class="form-input"
+            class="input-field"
             type="number"
             placeholder="请输入计划人数"
           />
@@ -79,7 +79,7 @@
           <text class="form-label">最大人数</text>
           <input
             v-model="formData.maxCount"
-            class="form-input"
+            class="input-field"
             type="number"
             placeholder="请输入最大人数（选填）"
           />
@@ -88,7 +88,7 @@
           <text class="form-label">分组数量</text>
           <input
             v-model="formData.groupCount"
-            class="form-input"
+            class="input-field"
             type="number"
             placeholder="请输入分组数量（选填）"
           />
@@ -112,7 +112,7 @@
           <text class="form-label">审核人</text>
           <input
             v-model="formData.approver"
-            class="form-input"
+            class="input-field"
             placeholder="请输入审核人"
           />
         </view>

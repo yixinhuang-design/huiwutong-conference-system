@@ -102,7 +102,7 @@
               <text class="form-label">部门名称</text>
               <input
                 v-model="deptForm.name"
-                class="form-input"
+                class="input-field"
                 placeholder="请输入部门名称"
               />
             </view>
@@ -120,7 +120,7 @@
               <text class="form-label">部门负责人</text>
               <input
                 v-model="deptForm.leader"
-                class="form-input"
+                class="input-field"
                 placeholder="请输入部门负责人"
               />
             </view>
@@ -129,7 +129,7 @@
               <text class="form-label">联系电话</text>
               <input
                 v-model="deptForm.phone"
-                class="form-input"
+                class="input-field"
                 placeholder="请输入联系电话"
                 type="number"
               />
@@ -139,7 +139,7 @@
               <text class="form-label">排序号</text>
               <input
                 v-model="deptForm.sortOrder"
-                class="form-input"
+                class="input-field"
                 placeholder="请输入排序号"
                 type="number"
               />
