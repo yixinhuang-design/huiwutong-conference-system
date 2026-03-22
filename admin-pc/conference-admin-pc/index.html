@@ -14,9 +14,14 @@
     <link rel="stylesheet" href="css/conference-theme.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/browser-compatibility.css">
+    <link rel="stylesheet" href="css/interaction-enhancements.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Vue 3 - 使用多个备用CDN -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        .btn-danger-icon { color: #e74c3c !important; }
+        .btn-danger-icon:hover { color: #c0392b !important; background: rgba(231, 76, 60, 0.1) !important; }
+    </style>
+    <!-- Vue 3 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
     <!-- 认证服务 -->
     <script src="js/auth-service.js"></script>
     <!-- 应用初始化脚本 -->
@@ -334,6 +339,10 @@
                                 进入管理
                             </button>
                             <div class="quick-actions">
+                                <button class="btn-icon" @click.stop="editConference(conference.id)" 
+                                        title="编辑会议">
+                                    <i class="fas fa-edit"></i>
+                                </button>
                                 <button class="btn-icon" @click.stop="sendConferenceNotification(conference.id)" 
                                         title="发送通知">
                                     <i class="fas fa-bell"></i>
@@ -345,6 +354,10 @@
                                 <button class="btn-icon" @click.stop="manageConferenceGroups(conference.id)" 
                                         title="管理群组">
                                     <i class="fas fa-users"></i>
+                                </button>
+                                <button class="btn-icon btn-danger-icon" @click.stop="deleteConference(conference.id, conference.name)" 
+                                        title="删除会议">
+                                    <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
                         </div>
@@ -387,10 +400,11 @@
     <script src="js/data-visualization.js"></script>
     <script src="js/realtime-updater.js"></script>
     <script src="js/security-manager.js"></script>
+    <script src="js/interaction-utils.js"></script>
     <script>
         const { createApp } = Vue;
         
-        createApp({
+        const appOptions = {
             data() {
                 return {
                     currentPage: 'conference-list',
@@ -691,6 +705,71 @@
                     window.location.href = 'pages/conference-create.html';
                 },
                 
+                editConference(conferenceId) {
+                    const conferenceIdStr = String(conferenceId);
+                    window.location.href = `pages/conference-create.html?conferenceId=${encodeURIComponent(conferenceIdStr)}&mode=edit`;
+                },
+                
+                async deleteConference(conferenceId, conferenceName) {
+                    const conferenceIdStr = String(conferenceId);
+                    const displayName = conferenceName || '该会议';
+                    
+                    // 第一次确认
+                    const firstConfirm = await this.$showConfirm(
+                        `确定要删除会议「${displayName}」吗？`,
+                        '删除会议',
+                        'warning'
+                    );
+                    if (!firstConfirm) return;
+                    
+                    // 第二次确认（二次弹窗，防止误操作）
+                    const secondConfirm = await this.$showConfirm(
+                        `会议「${displayName}」删除后不可恢复！\n关联的报名、通知等数据也将一并删除。\n\n是否确认删除？`,
+                        '⚠️ 最终确认',
+                        'danger'
+                    );
+                    if (!secondConfirm) return;
+                    
+                    try {
+                        const token = localStorage.getItem('authToken') || localStorage.getItem('token') || '';
+                        const tenantId = localStorage.getItem('tenantId') || '2027317834622709762';
+                        
+                        if (!token) {
+                            this.showNotification('请先登录系统', 'error');
+                            return;
+                        }
+                        
+                        const response = await fetch(`http://localhost:8084/api/meeting/${conferenceIdStr}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json',
+                                'X-Tenant-Id': tenantId
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            if (result.code === 200 || result.code === 0) {
+                                this.showNotification('会议删除成功', 'success');
+                                // 从列表中移除已删除的会议
+                                this.conferences = this.conferences.filter(c => String(c.id) !== conferenceIdStr);
+                                this.filteredConferences = this.filteredConferences.filter(c => String(c.id) !== conferenceIdStr);
+                            } else {
+                                this.showNotification(result.message || '删除失败', 'error');
+                            }
+                        } else if (response.status === 401) {
+                            this.showNotification('登录已过期，请重新登录', 'error');
+                        } else {
+                            const errData = await response.json().catch(() => ({}));
+                            this.showNotification(errData.message || `删除失败(${response.status})`, 'error');
+                        }
+                    } catch (error) {
+                        console.error('删除会议异常:', error);
+                        this.showNotification('删除会议失败，请重试', 'error');
+                    }
+                },
+                
                 sendConferenceNotification(conferenceId) {
                     window.location.href = `pages/notification-mgr.html?conferenceId=${conferenceId}`;
                 },
@@ -804,7 +883,12 @@
                     }
                 }
             }
-        }).mount('#app');
+        };
+        const app = createApp(appOptions);
+        if (window.InteractionMixin) {
+            app.mixin(window.InteractionMixin);
+        }
+        app.mount('#app');
     </script>
 </body>
 </html>

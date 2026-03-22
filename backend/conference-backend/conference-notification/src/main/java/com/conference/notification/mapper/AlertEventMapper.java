@@ -65,4 +65,19 @@ public interface AlertEventMapper extends BaseMapper<AlertEvent> {
             "GROUP BY DATE(create_time) " +
             "ORDER BY alert_date ASC")
     List<Map<String, Object>> getAlertDailyTrend(@Param("tenantId") Long tenantId);
+
+    /**
+     * 获取任务(日程)完成率指标（跨库查询 conference_registration）
+     * 计算方式：有签到记录的日程数 / 总日程数 × 100
+     */
+    @Select("SELECT " +
+            "(SELECT COUNT(*) FROM conference_registration.conf_schedule " +
+            " WHERE meeting_id = #{conferenceId} AND tenant_id = #{tenantId} AND deleted = 0) as total, " +
+            "(SELECT COUNT(DISTINCT sc.schedule_id) FROM conference_registration.conf_schedule_checkin sc " +
+            " INNER JOIN conference_registration.conf_schedule s ON sc.schedule_id = s.id " +
+            " WHERE s.meeting_id = #{conferenceId} AND sc.tenant_id = #{tenantId} AND sc.deleted = 0) as completed")
+    Map<String, Object> getTaskCompletionMetrics(
+            @Param("conferenceId") Long conferenceId,
+            @Param("tenantId") Long tenantId
+    );
 }

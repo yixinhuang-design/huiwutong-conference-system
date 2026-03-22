@@ -35,6 +35,10 @@ spring:
         group: CONFERENCE_GROUP
         file-extension: yml
 
+  web:
+    resources:
+      add-mappings: false
+
   flyway:
     enabled: false
 

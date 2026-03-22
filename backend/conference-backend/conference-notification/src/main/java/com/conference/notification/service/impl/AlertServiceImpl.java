@@ -13,7 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -101,11 +105,19 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
 
     @Override
     public void deleteRule(Long id) {
-        AlertRule rule = ruleMapper.selectById(id);
-        if (rule != null) {
-            rule.setDeleted(1);
-            rule.setUpdateTime(LocalDateTime.now());
-            ruleMapper.updateById(rule);
+        // 1. 逻辑删除规则本身
+        ruleMapper.deleteById(id);
+
+        // 2. 同步逻辑删除该规则产生的所有预警事件（实时监控/预警通知/统计分析同步清理）
+        LambdaQueryWrapper<AlertEvent> eventWrapper = new LambdaQueryWrapper<>();
+        eventWrapper.eq(AlertEvent::getRuleId, id)
+                .eq(AlertEvent::getDeleted, 0);
+        List<AlertEvent> events = eventMapper.selectList(eventWrapper);
+        for (AlertEvent event : events) {
+            eventMapper.deleteById(event.getId());
+        }
+        if (!events.isEmpty()) {
+            log.info("规则{}删除，同步清理{}条关联预警事件", id, events.size());
         }
     }
 
@@ -159,11 +171,25 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
             metrics.put("checkinRate", buildMetric(checkinRate, "签到率", "%",
                     checkinRate >= 80 ? "up" : checkinRate >= 50 ? "stable" : "down"));
 
-            // 任务完成率/API响应时间暂不可跨服务获取
-            metricValues.put("taskCompletionRate", 0.0);
-            metricValues.put("apiResponseTime", 0.0);
-            metrics.put("taskCompletionRate", buildMetric(0, "任务完成率", "%", "stable"));
-            metrics.put("apiResponseTime", buildMetric(0, "API响应时间", "ms", "stable"));
+            // 任务完成率 - 从 conference_registration 日程签到真实数据获取
+            double taskRate = 0;
+            if (conferenceId != null) {
+                Map<String, Object> taskData = eventMapper.getTaskCompletionMetrics(conferenceId, tenantId);
+                if (taskData != null) {
+                    long totalSchedules = toLong(taskData.get("total"));
+                    long completedSchedules = toLong(taskData.get("completed"));
+                    taskRate = totalSchedules > 0 ? Math.round(completedSchedules * 1000.0 / totalSchedules) / 10.0 : 0;
+                }
+            }
+            metricValues.put("taskCompletionRate", taskRate);
+            metrics.put("taskCompletionRate", buildMetric(taskRate, "任务完成率", "%",
+                    taskRate >= 80 ? "up" : taskRate >= 50 ? "stable" : "down"));
+
+            // API响应时间 - 实际测量网关服务响应延迟
+            double responseTime = measureGatewayResponseTime();
+            metricValues.put("apiResponseTime", responseTime);
+            metrics.put("apiResponseTime", buildMetric(responseTime, "API响应时间", "ms",
+                    responseTime <= 500 ? "up" : responseTime <= 1000 ? "stable" : "down"));
 
         } catch (Exception e) {
             log.error("获取实时指标异常: {}", e.getMessage(), e);
@@ -210,7 +236,7 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
 
         for (AlertRule rule : rules) {
             Double currentValue = metricValues.get(rule.getMetric());
-            if (currentValue == null || currentValue == 0) continue;
+            if (currentValue == null) continue; // null 表示无数据，跳过；0 是有效值，不跳过
 
             boolean breached = isThresholdBreached(currentValue, rule.getOperator(), rule.getThreshold().doubleValue());
             if (breached) {
@@ -251,6 +277,30 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
             case ">=": return currentValue >= threshold;
             case "==": return Math.abs(currentValue - threshold) < 0.01;
             default: return currentValue < threshold;
+        }
+    }
+
+    /**
+     * 实际测量网关服务的响应时间（ms）
+     * 向 localhost:8080 发送健康检查请求并计时
+     */
+    private double measureGatewayResponseTime() {
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(3))
+                    .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8080/api/meeting/list?page=1&size=1"))
+                    .timeout(Duration.ofSeconds(5))
+                    .GET()
+                    .build();
+            long start = System.currentTimeMillis();
+            client.send(request, HttpResponse.BodyHandlers.discarding());
+            long elapsed = System.currentTimeMillis() - start;
+            return elapsed;
+        } catch (Exception e) {
+            log.warn("网关响应时间测量失败: {}", e.getMessage());
+            return 9999; // 超时或不可达
         }
     }
 

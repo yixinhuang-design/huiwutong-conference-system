@@ -1,12 +1,12 @@
 package com.conference.meeting.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -17,63 +17,78 @@ public class MeetingUpdateRequest {
 
     private Long id;
 
-    @JsonProperty("meeting_code")
+    @JsonProperty("meetingCode")
+    @JsonAlias({"meeting_code"})
     private String meetingCode;
 
-    @JsonProperty("meeting_name")
+    @JsonProperty("meetingName")
+    @JsonAlias({"meeting_name"})
     private String meetingName;
 
-    @JsonProperty("meeting_type")
-    private Integer meetingType;
+    // 与 Meeting 实体一致，类型为 String（如 "training", "conference" 等）
+    @JsonProperty("meetingType")
+    @JsonAlias({"meeting_type"})
+    private String meetingType;
 
-    @JsonProperty("start_time")
+    @JsonProperty("startTime")
+    @JsonAlias({"start_time"})
     private LocalDateTime startTime;
 
-    @JsonProperty("end_time")
+    @JsonProperty("endTime")
+    @JsonAlias({"end_time"})
     private LocalDateTime endTime;
 
-    @JsonProperty("registration_start")
+    @JsonProperty("registrationStart")
+    @JsonAlias({"registration_start"})
     private LocalDateTime registrationStart;
 
-    @JsonProperty("registration_end")
+    @JsonProperty("registrationEnd")
+    @JsonAlias({"registration_end"})
     private LocalDateTime registrationEnd;
 
-    @JsonProperty("venue_name")
+    @JsonProperty("venueName")
+    @JsonAlias({"venue_name"})
     private String venueName;
 
-    @JsonProperty("venue_address")
+    @JsonProperty("venueAddress")
+    @JsonAlias({"venue_address"})
     private String venueAddress;
 
-    @JsonProperty("location_latitude")
-    private BigDecimal locationLatitude;
+    // 与 Meeting 实体一致，类型为 Double
+    @JsonProperty("locationLatitude")
+    @JsonAlias({"location_latitude"})
+    private Double locationLatitude;
 
-    @JsonProperty("location_longitude")
-    private BigDecimal locationLongitude;
+    // 与 Meeting 实体一致，类型为 Double
+    @JsonProperty("locationLongitude")
+    @JsonAlias({"location_longitude"})
+    private Double locationLongitude;
 
-    @JsonProperty("max_participants")
+    @JsonProperty("maxParticipants")
+    @JsonAlias({"max_participants"})
     private Integer maxParticipants;
 
-    @JsonProperty("theme")
     private String theme;
 
-    @JsonProperty("cover_image_url")
+    @JsonProperty("coverImageUrl")
+    @JsonAlias({"cover_image_url"})
     private String coverImageUrl;
 
-    @JsonProperty("registration_config")
+    @JsonProperty("registrationConfig")
+    @JsonAlias({"registration_config"})
     private String registrationConfig;
 
-    @JsonProperty("checkin_config")
+    @JsonProperty("checkinConfig")
+    @JsonAlias({"checkin_config"})
     private String checkinConfig;
 
-    @JsonProperty("notification_config")
+    @JsonProperty("notificationConfig")
+    @JsonAlias({"notification_config"})
     private String notificationConfig;
 
-    @JsonProperty("description")
     private String description;
 
-    @JsonProperty("remarks")
     private String remarks;
 
-    @JsonProperty("status")
     private Integer status;
 }

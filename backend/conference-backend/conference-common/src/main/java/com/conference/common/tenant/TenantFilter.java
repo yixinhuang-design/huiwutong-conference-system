@@ -31,11 +31,19 @@ public class TenantFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         
         try {
-            log.info("[TenantFilter] 处理请求: {} {}", request.getMethod(), request.getRequestURI());
+            String uri = request.getRequestURI();
+            log.info("[TenantFilter] 处理请求: {} {}", request.getMethod(), uri);
             
             // OPTIONS 预检请求直接放行，不做租户解析
             if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
                 log.info("[TenantFilter] OPTIONS预检请求，直接放行");
+                filterChain.doFilter(servletRequest, servletResponse);
+                return;
+            }
+            
+            // 非API路径直接放行（根路径、favicon、actuator等）
+            if (!uri.startsWith("/api/")) {
+                log.debug("[TenantFilter] 非API路径，跳过租户解析: {}", uri);
                 filterChain.doFilter(servletRequest, servletResponse);
                 return;
             }

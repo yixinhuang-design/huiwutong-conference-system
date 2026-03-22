@@ -176,10 +176,10 @@ public class SystemMonitorService {
                 service.setResponseTime(1L);
                 service.setLastCheckTime(LocalDateTime.now());
             } else {
-                String healthUrl = service.getServiceUrl() + "/actuator/health";
+                // 直接连接服务根路径检查是否存活（不依赖actuator）
                 long start = System.currentTimeMillis();
 
-                HttpURLConnection conn = (HttpURLConnection) new URL(healthUrl).openConnection();
+                HttpURLConnection conn = (HttpURLConnection) new URL(service.getServiceUrl()).openConnection();
                 conn.setConnectTimeout(3000);
                 conn.setReadTimeout(3000);
                 conn.setRequestMethod("GET");
@@ -191,13 +191,9 @@ public class SystemMonitorService {
                 service.setResponseTime(elapsed);
                 service.setLastCheckTime(LocalDateTime.now());
 
-                if (code == 200) {
-                    service.setStatus("healthy");
-                    service.setErrorMessage(null);
-                } else {
-                    service.setStatus("warning");
-                    service.setErrorMessage("HTTP " + code);
-                }
+                // 任何HTTP响应都说明服务在运行（包括404/401/500）
+                service.setStatus("healthy");
+                service.setErrorMessage(null);
             }
         } catch (java.net.ConnectException e) {
             service.setStatus("offline");
@@ -205,7 +201,7 @@ public class SystemMonitorService {
             service.setLastCheckTime(LocalDateTime.now());
             service.setErrorMessage("连接被拒绝 - 服务未启动");
         } catch (Exception e) {
-            // 连接超时或其他异常，尝试直接连接端口
+            // 连接超时或其他异常，尝试用Socket直连端口
             try {
                 String baseUrl = service.getServiceUrl();
                 long start = System.currentTimeMillis();

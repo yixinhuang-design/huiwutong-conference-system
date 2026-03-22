@@ -12,6 +12,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
 
@@ -94,6 +96,26 @@ public class GlobalExceptionHandler {
                 "请求方法不支持，请使用正确的HTTP方法");
     }
     
+    /**
+     * 404 - 路径不存在（NoHandlerFoundException）
+     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result<?> handleNoHandlerFoundException(NoHandlerFoundException e, HttpServletRequest request) {
+        log.debug("路径不存在: {} {}", request.getMethod(), request.getRequestURI());
+        return Result.error(HttpStatus.NOT_FOUND.value(), "接口不存在: " + request.getRequestURI());
+    }
+
+    /**
+     * 404 - 静态资源不存在（NoResourceFoundException）
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result<?> handleNoResourceFoundException(NoResourceFoundException e, HttpServletRequest request) {
+        log.debug("资源不存在: {} {}", request.getMethod(), request.getRequestURI());
+        return Result.error(HttpStatus.NOT_FOUND.value(), "资源不存在: " + request.getRequestURI());
+    }
+
     /**
      * 运行时异常处理
      */

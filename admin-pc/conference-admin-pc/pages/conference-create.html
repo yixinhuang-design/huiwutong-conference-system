@@ -60,7 +60,7 @@
                     <i class="fas fa-arrow-left"></i>
                     <span>返回会议列表</span>
                 </a>
-                <h1 class="nav-title">创建新会议</h1>
+                <h1 class="nav-title">{{ isEditMode ? '编辑会议' : '创建新会议' }}</h1>
                 <div class="nav-actions">
                     <button class="btn-outline" @click="saveDraft">
                         <i class="fas fa-save"></i>
@@ -74,8 +74,8 @@
         <div class="page-with-nav">
             <!-- 页面头部 -->
             <div class="page-header glass-card">
-                <h2>创建新会议</h2>
-                <p>分步骤向导式创建会议，自动初始化所有关联系统</p>
+                <h2>{{ isEditMode ? '编辑会议' : '创建新会议' }}</h2>
+                <p>{{ isEditMode ? '修改会议信息，保存后立即生效' : '分步骤向导式创建会议，自动初始化所有关联系统' }}</p>
             </div>
 
             <!-- 步骤导航 -->
@@ -969,7 +969,7 @@
                     </button>
                     <button class="btn-primary btn-lg" @click="createConference" :disabled="!canCreate">
                         <i class="fas fa-check"></i>
-                        创建会议
+                        {{ isEditMode ? '保存修改' : '创建会议' }}
                     </button>
                 </div>
             </div>
@@ -1091,6 +1091,8 @@
         const app = createApp({
             data() {
                 return {
+                    isEditMode: false,
+                    editConferenceId: null,
                     currentStep: 1,
                     form: {
                         name: '',
@@ -1913,16 +1915,128 @@
                     const randomStr = Math.random().toString(36).substring(2, 15);
                     return `${timestamp}_${randomStr}`;
                 },
+                
+                // 编辑模式：从后端加载会议数据
+                async loadConferenceForEdit(conferenceId) {
+                    try {
+                        const token = localStorage.getItem('authToken') || localStorage.getItem('token') || '';
+                        const tenantId = localStorage.getItem('tenantId') || '2027317834622709762';
+                        
+                        if (!token) {
+                            alert('请先登录系统');
+                            window.location.href = 'login.html';
+                            return;
+                        }
+                        
+                        const response = await fetch(`http://localhost:8084/api/meeting/${conferenceId}`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json',
+                                'X-Tenant-Id': tenantId
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            if (response.status === 401) {
+                                alert('登录已过期，请重新登录');
+                                window.location.href = 'login.html';
+                                return;
+                            }
+                            throw new Error(`获取会议详情失败: ${response.status}`);
+                        }
+                        
+                        const result = await response.json();
+                        const meeting = (result.code === 200 || result.code === 0) ? result.data : null;
+                        
+                        if (!meeting) {
+                            throw new Error(result.message || '会议数据为空');
+                        }
+                        
+                        console.log('加载编辑会议数据:', meeting);
+                        
+                        // 提取日期部分（yyyy-MM-dd）
+                        const extractDate = (dateTimeStr) => {
+                            if (!dateTimeStr) return '';
+                            return dateTimeStr.substring(0, 10);
+                        };
+                        
+                        // 解析 JSON 配置字段
+                        let regConfig = {};
+                        let checkinConfig = {};
+                        let notifConfig = {};
+                        try { regConfig = meeting.registrationConfig ? JSON.parse(meeting.registrationConfig) : {}; } catch(e) { console.warn('解析registrationConfig失败', e); }
+                        try { checkinConfig = meeting.checkinConfig ? JSON.parse(meeting.checkinConfig) : {}; } catch(e) { console.warn('解析checkinConfig失败', e); }
+                        try { notifConfig = meeting.notificationConfig ? JSON.parse(meeting.notificationConfig) : {}; } catch(e) { console.warn('解析notificationConfig失败', e); }
+                        
+                        // 填充表单数据
+                        this.form.code = meeting.meetingCode || '';
+                        this.form.name = meeting.meetingName || '';
+                        this.form.type = meeting.meetingType || 'training';
+                        this.form.theme = meeting.theme || '';
+                        this.form.description = meeting.description || '';
+                        this.form.startDate = extractDate(meeting.startTime);
+                        this.form.endDate = extractDate(meeting.endTime);
+                        this.form.coverImage = meeting.coverImageUrl || null;
+                        
+                        // 地点信息
+                        this.form.location.venue = meeting.venueName || '';
+                        this.form.location.fullAddress = meeting.venueAddress || '';
+                        this.form.location.address = meeting.venueAddress || '';
+                        this.form.location.latitude = meeting.locationLatitude || '';
+                        this.form.location.longitude = meeting.locationLongitude || '';
+                        
+                        // 报名配置
+                        if (regConfig.mode) this.form.registration.mode = regConfig.mode;
+                        if (regConfig.auditMode) this.form.registration.auditMode = regConfig.auditMode;
+                        if (regConfig.formFields && regConfig.formFields.length > 0) {
+                            this.form.registration.formFields = regConfig.formFields;
+                        }
+                        this.form.registration.startTime = meeting.registrationStart || '';
+                        this.form.registration.endTime = meeting.registrationEnd || '';
+                        if (regConfig.limitTotal !== undefined && this.form.registration.open) {
+                            this.form.registration.open.limitTotal = regConfig.limitTotal;
+                        }
+                        if (meeting.maxParticipants && this.form.registration.open) {
+                            this.form.registration.open.maxCount = meeting.maxParticipants;
+                        }
+                        
+                        // 签到配置
+                        if (checkinConfig.mode) this.form.checkin.mode = checkinConfig.mode;
+                        if (checkinConfig.startTime) this.form.checkin.startTime = checkinConfig.startTime;
+                        if (checkinConfig.endTime) this.form.checkin.endTime = checkinConfig.endTime;
+                        if (checkinConfig.location) {
+                            Object.assign(this.form.checkin.location, checkinConfig.location);
+                        }
+                        
+                        // 通知配置
+                        if (notifConfig.channels) this.form.notification.channels = notifConfig.channels;
+                        if (notifConfig.templates) this.form.notification.templates = { ...this.form.notification.templates, ...notifConfig.templates };
+                        
+                        // 编辑模式默认跳到第1步让用户确认
+                        this.currentStep = 1;
+                        
+                        console.log('会议数据加载完成，编辑模式就绪');
+                    } catch (error) {
+                        console.error('加载会议数据失败:', error);
+                        alert('加载会议数据失败: ' + error.message);
+                    }
+                },
+                
                 async createConference() {
                     // 最终验证
                     if (!await this.validateCurrentStep()) {
                         return;
                     }
                     
-                    // 确认创建
+                    // 确认操作
+                    const confirmMsg = this.isEditMode 
+                        ? '确定要保存修改吗？'
+                        : '确定要创建会议吗？创建后将自动初始化所有关联系统。';
+                    const confirmTitle = this.isEditMode ? '保存修改' : '创建会议';
                     const confirmed = await this.$showConfirm(
-                        '确定要创建会议吗？创建后将自动初始化所有关联系统。',
-                        '创建会议',
+                        confirmMsg,
+                        confirmTitle,
                         'info'
                     );
                     
@@ -1931,7 +2045,7 @@
                     }
                     
                     try {
-                        this.$showLoading('正在创建会议，请稍候...');
+                        this.$showLoading(this.isEditMode ? '正在保存修改，请稍候...' : '正在创建会议，请稍候...');
                         
                         // 模拟API调用
                         await new Promise(resolve => setTimeout(resolve, 1500));
@@ -2038,7 +2152,7 @@
                             })
                         };
 
-                        console.log('创建会议请求:', meetingRequest);
+                        console.log(this.isEditMode ? '更新会议请求:' : '创建会议请求:', meetingRequest);
                         
                         // 获取租户ID和Token（从AuthService统一存储位置）
                         const token = localStorage.getItem('authToken') || localStorage.getItem('token') || '';
@@ -2053,10 +2167,14 @@
                             return;
                         }
                         
-                        // 调用后端 API 创建会议
-                        const apiUrl = 'http://localhost:8084/api/meeting/create';
+                        // 根据模式选择 API：编辑模式用 PUT，新建模式用 POST
+                        const apiUrl = this.isEditMode 
+                            ? `http://localhost:8084/api/meeting/${this.editConferenceId}`
+                            : 'http://localhost:8084/api/meeting/create';
+                        const httpMethod = this.isEditMode ? 'PUT' : 'POST';
+                        
                         const response = await fetch(apiUrl, {
-                            method: 'POST',
+                            method: httpMethod,
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${token}`,
@@ -2079,7 +2197,21 @@
                         const result = await response.json();
                         
                         const isApiSuccess = result && (result.code === 200 || result.code === 0);
-                        if (isApiSuccess && result.data) {
+                        
+                        if (this.isEditMode) {
+                            // 编辑模式：PUT 返回 Boolean
+                            if (isApiSuccess) {
+                                console.log('会议更新成功');
+                                localStorage.removeItem('conferenceDraft');
+                                this.$hideLoading();
+                                this.$showToast('会议修改成功！正在跳转...', 'success', 2000);
+                                setTimeout(() => {
+                                    window.location.href = `conference-detail.html?conferenceId=${this.editConferenceId}`;
+                                }, 2000);
+                            } else {
+                                throw new Error((result && result.message) || '更新会议失败');
+                            }
+                        } else if (isApiSuccess && result.data) {
                             const createdMeeting = result.data;
                             console.log('会议创建成功:', createdMeeting);
                             
@@ -2123,8 +2255,8 @@
                         }
                     } catch (error) {
                         this.$hideLoading();
-                        console.error('创建会议失败:', error);
-                        this.$showToast('创建会议失败，请重试', 'error');
+                        console.error(this.isEditMode ? '更新会议失败:' : '创建会议失败:', error);
+                        this.$showToast(this.isEditMode ? '保存修改失败，请重试' : '创建会议失败，请重试', 'error');
                     }
                 },
                 convertToDateTime(dateStr, timeStr = '09:00') {
@@ -2494,7 +2626,20 @@
                 }
             },
             mounted() {
-                // 优先加载草稿
+                // 检查URL参数，判断是否为编辑模式
+                const urlParams = new URLSearchParams(window.location.search);
+                const conferenceId = urlParams.get('conferenceId');
+                const mode = urlParams.get('mode');
+                
+                if (conferenceId && mode === 'edit') {
+                    // 编辑模式：从后端加载会议数据
+                    this.isEditMode = true;
+                    this.editConferenceId = conferenceId;
+                    this.loadConferenceForEdit(conferenceId);
+                    return;
+                }
+                
+                // 新建模式：优先加载草稿
                 const draft = localStorage.getItem('conferenceDraft');
                 if (draft) {
                     try {

@@ -13,7 +13,7 @@ spring:
   
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://localhost:3308/conference_seating?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3308/conference_seating?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
     password: Hnhx@123
     driver-class-name: com.mysql.cj.jdbc.Driver

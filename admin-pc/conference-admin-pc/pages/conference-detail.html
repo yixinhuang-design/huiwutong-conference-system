@@ -18,6 +18,22 @@
 
     <!-- 图标库 -->
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        .btn-danger {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        .btn-danger:hover { background: #c0392b; }
+    </style>
 
     <!-- Vue.js框架 - 主CDN + 备用 -->
     <script>
@@ -38,7 +54,7 @@
             }
             // 备用CDN地址列表
             const backupCdns = [
-                'https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js',
+                'https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js',
                 'https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js'
             ];
             
@@ -90,6 +106,10 @@
                     <button class="btn-primary" @click="duplicateConference">
                         <i class="fas fa-copy"></i>
                         复制会议
+                    </button>
+                    <button class="btn-danger" @click="deleteConference">
+                        <i class="fas fa-trash-alt"></i>
+                        删除会议
                     </button>
                 </div>
             </div>
@@ -926,41 +946,42 @@
         appConfig = {
                 data() {
                     return {
+                        // 会议基本信息（由 conference-context.js 从后端API加载真实数据）
                         conference: {
-                            id: 'conf_20240615_001',
-                            name: '2024年度技术峰会',
-                            type: 'conference',
-                            theme: '技术创新与数字化转型',
+                            id: '',
+                            name: '',
+                            type: '',
+                            theme: '',
                         status: 'preparing',
                         timeRange: {
-                            start: '2024-06-15 09:00:00',
-                            end: '2024-06-16 18:00:00'
+                            start: '',
+                            end: ''
                         },
                         location: {
-                            venue: '北京国际会议中心',
-                            address: '北京市朝阳区北辰东路8号'
+                            venue: '',
+                            address: ''
                         },
                         capacity: {
-                            total: 500,
-                            registered: 356,
-                            available: 144
+                            total: 0,
+                            registered: 0,
+                            available: 0
                         },
-                        description: '本次技术峰会聚焦人工智能、云计算、大数据等前沿技术，邀请业界专家分享最新技术趋势和实践经验。',
-                        createdAt: '2024-05-15 10:30:00',
-                        createdBy: 'admin_001',
+                        description: '',
+                        createdAt: '',
+                        createdBy: '',
                         registration: {
-                            mode: 'open', // open | limited | import
+                            mode: 'open',
                             open: {
-                                qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-                                qrCodeUrl: 'http://localhost/registration/open?conferenceId=conf_20240615_001&token=abc123',
-                                registeredCount: 156,
-                                pendingCount: 32,
-                                approvedCount: 124
+                                qrCode: null,
+                                qrCodeUrl: '',
+                                registeredCount: 0,
+                                pendingCount: 0,
+                                approvedCount: 0
                             },
                             limited: {
                                 qrCode: null,
                                 qrCodeUrl: null,
-                                unitList: [{ id: 1, name: '技术部' }, { id: 2, name: '市场部' }],
+                                unitList: [],
                                 registeredCount: 0,
                                 pendingCount: 0,
                                 approvedCount: 0
@@ -973,22 +994,25 @@
                             }
                         }
                     },
+                    // 任务统计（从协作服务 8089 加载）
                     taskStats: {
-                        total: 58,
-                        completed: 42,
-                        inProgress: 12,
-                        pending: 4
+                        total: 0,
+                        completed: 0,
+                        inProgress: 0,
+                        pending: 0
                     },
+                    // 群组统计（从协作服务 8089 加载）
                     groupStats: {
-                        total: 15,
-                        active: 12,
-                        activeRate: 80
+                        total: 0,
+                        active: 0,
+                        activeRate: 0
                     },
+                    // 考勤统计（从报名服务 8082 加载）
                     attendanceStats: {
-                        total: 356,
-                        checkedIn: 328,
-                        notCheckedIn: 28,
-                        rate: 92
+                        total: 0,
+                        checkedIn: 0,
+                        notCheckedIn: 0,
+                        rate: 0
                     },
                     expandedPhase: {
                         phase1: true,
@@ -999,26 +1023,26 @@
                         phase6: false
                     },
                     checklistItems: {
-                        // 第一阶段：会议创建与基础配置
+                        // 第一阶段：会议创建与基础配置（由 updateChecklistFromData 动态更新状态）
                         phase1: [
-                            { id: 'basic-info', title: '会议基本信息配置', type: 'required', status: 'completed', details: ['会议名称：2024年度技术峰会', '时间：2024-06-15 至 2024-06-16', '地点：北京国际会议中心'], action: 'basic-info', actionText: '编辑基本信息' },
-                            { id: 'registration-type', title: '报名方式配置', type: 'required', status: 'completed', details: ['报名方式：开放式报名', '审核方式：需审核'], action: 'registration-type', actionText: '编辑报名方式' },
-                            { id: 'checkin-type', title: '报到方式配置', type: 'required', status: 'completed', details: ['报到方式：二维码扫码+位置信息', '报到时间已设置'], action: 'checkin-type', actionText: '编辑报到方式' },
-                            { id: 'venue', title: '会场信息配置', type: 'optional', status: 'completed', details: ['已配置：北京国际会议中心主会场', '座位数：500'], action: 'venue', actionText: '编辑会场信息' },
-                            { id: 'staff', title: '工作人员添加', type: 'required', status: 'completed', details: ['已添加：8位工作人员', '权限配置完成'], action: 'staff', actionText: '管理工作人员' },
-                            { id: 'staff-group-auto', title: '工作人员群自动创建', type: 'auto', status: 'completed', details: ['工作人员群已自动创建', '群成员：8人'] },
-                            { id: 'prep-tasks', title: '筹备任务分派', type: 'optional', status: 'in-progress', progress: '3/8', details: ['场地布置：进行中', '物料准备：待分配'], action: 'task-management', actionText: '分派筹备任务' }
+                            { id: 'basic-info', title: '会议基本信息配置', type: 'required', status: 'not-started', details: [], action: 'basic-info', actionText: '编辑基本信息' },
+                            { id: 'registration-type', title: '报名方式配置', type: 'required', status: 'not-started', details: [], action: 'registration-type', actionText: '编辑报名方式' },
+                            { id: 'checkin-type', title: '报到方式配置', type: 'required', status: 'not-started', details: [], action: 'checkin-type', actionText: '编辑报到方式' },
+                            { id: 'venue', title: '会场信息配置', type: 'optional', status: 'not-started', details: [], action: 'venue', actionText: '编辑会场信息' },
+                            { id: 'staff', title: '工作人员添加', type: 'required', status: 'not-started', details: [], action: 'staff', actionText: '管理工作人员' },
+                            { id: 'staff-group-auto', title: '工作人员群自动创建', type: 'auto', status: 'not-started', details: [] },
+                            { id: 'prep-tasks', title: '筹备任务分派', type: 'optional', status: 'not-started', details: [], action: 'task-management', actionText: '分派筹备任务' }
                         ],
-                        // 第二阶段：报名与审核管理
+                        // 第二阶段：报名与审核管理（由 updateChecklistFromData 动态更新状态）
                         phase2: [
-                            { id: 'registration-summary', title: '报名信息汇总', type: 'required', status: 'in-progress', progress: '356/400', details: ['已报名：356人', '待审核：32人'], action: 'registration', actionText: '查看报名信息' },
-                            { id: 'ai-review', title: '智能资格审核', type: 'optional', status: 'in-progress', progress: '324/356', details: ['AI自动审核：324人', '人工待审：32人'], action: 'ai-review', actionText: '进入审核管理' },
-                            { id: 'roster', title: '参会名册生成', type: 'required', status: 'completed', details: ['已生成名册', '包含324人'], action: 'roster', actionText: '查看参会名册' }
+                            { id: 'registration-summary', title: '报名信息汇总', type: 'required', status: 'not-started', details: [], action: 'registration', actionText: '查看报名信息' },
+                            { id: 'ai-review', title: '智能资格审核', type: 'optional', status: 'not-started', details: [], action: 'ai-review', actionText: '进入审核管理' },
+                            { id: 'roster', title: '参会名册生成', type: 'required', status: 'not-started', details: [], action: 'roster', actionText: '查看参会名册' }
                         ],
                         // 第三阶段：会前准备与规划
                         phase3: [
-                            { id: 'schedule', title: '日程配置', type: 'optional', status: 'in-progress', progress: '3/5', details: ['已创建3个日程'], action: 'schedule', actionText: '编辑日程' },
-                            { id: 'grouping', title: '分组设置', type: 'optional', status: 'completed', details: ['已设置6个分组'], action: 'grouping', actionText: '管理分组' },
+                            { id: 'schedule', title: '日程配置', type: 'optional', status: 'not-started', details: [], action: 'schedule', actionText: '编辑日程' },
+                            { id: 'grouping', title: '分组设置', type: 'optional', status: 'not-started', details: [], action: 'grouping', actionText: '管理分组' },
                             { id: 'sorting', title: '排序规则设置', type: 'optional', status: 'not-started', details: [], action: 'sorting', actionText: '设置排序规则' },
                             { id: 'seating', title: '智能排座', type: 'optional', status: 'not-started', details: [], action: 'seating', actionText: '进入排座管理' },
                             { id: 'auxiliary', title: '辅助功能配置', type: 'optional', status: 'not-started', details: ['位置导航', '语音识别', '资料上传'], action: 'auxiliary', actionText: '配置辅助功能' },
@@ -1046,45 +1070,13 @@
                             { id: 'archive', title: '会议归档', type: 'required', status: 'not-started', details: [], action: 'archive', actionText: '进入会议归档' }
                         ]
                     },
-                    operationLogs: [
-                        {
-                            id: 'log_001',
-                            type: 'create',
-                            action: '创建会议',
-                            description: '管理员创建了新的会议',
-                            user: 'admin_001',
-                            timestamp: '2024-05-15 10:30:00'
-                        },
-                        {
-                            id: 'log_002',
-                            type: 'update',
-                            action: '更新会议信息',
-                            description: '修改了会议时间和地点',
-                            user: 'admin_001',
-                            timestamp: '2024-05-16 14:20:00'
-                        },
-                        {
-                            id: 'log_003',
-                            type: 'system',
-                            action: '启动报名系统',
-                            description: '启用了会议报名功能',
-                            user: 'admin_001',
-                            timestamp: '2024-05-20 09:00:00'
-                        },
-                        {
-                            id: 'log_004',
-                            type: 'user',
-                            action: '批量导入用户',
-                            description: '导入了200个参会人员',
-                            user: 'admin_002',
-                            timestamp: '2024-05-25 16:45:00'
-                        }
-                    ],
-                    // 报名信息统计
+                    // 操作日志（从数据服务 8088 加载）
+                    operationLogs: [],
+                    // 报名信息统计（从报名服务 8082 加载）
                     registrationStats: {
-                        registered: 156,
-                        pending: 32,
-                        approved: 124
+                        registered: 0,
+                        pending: 0,
+                        approved: 0
                     },
                     showRegistrationModal: false,
                     modalType: 'registered',
@@ -1131,14 +1123,18 @@
                 },
                 
                 formatDateTime(datetime) {
-                    return new Date(datetime).toLocaleString();
+                    if (!datetime) return '-';
+                    const d = new Date(datetime);
+                    return isNaN(d.getTime()) ? '-' : d.toLocaleString();
                 },
                 
                 getRegistrationProgress() {
+                    if (!this.conference.capacity.total) return 0;
                     return Math.round((this.conference.capacity.registered / this.conference.capacity.total) * 100);
                 },
                 
                 getTaskProgress() {
+                    if (!this.taskStats.total) return 0;
                     return Math.round((this.taskStats.completed / this.taskStats.total) * 100);
                 },
 
@@ -1160,19 +1156,153 @@
                 
                 async duplicateConference() {
                     // 使用原生 confirm 替代 $showConfirm
-                    const confirmed = confirm('确定要复制这个会议吗？');
+                    const confirmed = confirm('确定要复制这个会议吗？将基于当前会议创建一个副本。');
                     if (confirmed) {
                         try {
-                            // 使用 console.log 替代 $showLoading
-                            console.log('正在复制会议...');
-                            await new Promise(resolve => setTimeout(resolve, 1500));
-                            console.log('复制会议:', this.conference.id);
-                            // 使用 alert 替代 $showToast
-                            alert('会议复制成功！');
+                            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || '';
+                            const tenantId = localStorage.getItem('tenantId') || '2027317834622709762';
+                            
+                            if (!token) {
+                                alert('请先登录系统');
+                                return;
+                            }
+                            
+                            console.log('正在获取会议详情以复制...');
+                            const conferenceId = this.conference.id || new URLSearchParams(window.location.search).get('conferenceId');
+                            
+                            // 先获取当前会议的完整数据
+                            const detailResp = await fetch(`http://localhost:8084/api/meeting/${conferenceId}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json',
+                                    'X-Tenant-Id': tenantId
+                                }
+                            });
+                            
+                            if (!detailResp.ok) throw new Error('获取会议详情失败');
+                            
+                            const detailResult = await detailResp.json();
+                            const meeting = detailResult.data;
+                            if (!meeting) throw new Error('会议数据为空');
+                            
+                            // 构建新会议数据（去掉 id，修改名称和编码）
+                            const now = new Date();
+                            const timestamp = now.getFullYear().toString() + 
+                                String(now.getMonth() + 1).padStart(2, '0') + 
+                                String(now.getDate()).padStart(2, '0') + 
+                                String(now.getHours()).padStart(2, '0') + 
+                                String(now.getMinutes()).padStart(2, '0');
+                            
+                            const newMeeting = {
+                                meetingCode: `COPY_${timestamp}`,
+                                meetingName: `${meeting.meetingName}（副本）`,
+                                meetingType: meeting.meetingType,
+                                theme: meeting.theme,
+                                description: meeting.description,
+                                startTime: meeting.startTime,
+                                endTime: meeting.endTime,
+                                registrationStart: meeting.registrationStart,
+                                registrationEnd: meeting.registrationEnd,
+                                venueName: meeting.venueName,
+                                venueAddress: meeting.venueAddress,
+                                locationLatitude: meeting.locationLatitude,
+                                locationLongitude: meeting.locationLongitude,
+                                coverImageUrl: meeting.coverImageUrl,
+                                maxParticipants: meeting.maxParticipants,
+                                registrationConfig: meeting.registrationConfig,
+                                checkinConfig: meeting.checkinConfig,
+                                notificationConfig: meeting.notificationConfig
+                            };
+                            
+                            // 调用创建 API
+                            const createResp = await fetch('http://localhost:8084/api/meeting/create', {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json',
+                                    'X-Tenant-Id': tenantId
+                                },
+                                body: JSON.stringify(newMeeting)
+                            });
+                            
+                            if (!createResp.ok) throw new Error('创建副本失败');
+                            
+                            const createResult = await createResp.json();
+                            if ((createResult.code === 200 || createResult.code === 0) && createResult.data) {
+                                alert('会议复制成功！即将跳转到新会议。');
+                                window.location.href = `conference-detail.html?conferenceId=${createResult.data.id}`;
+                            } else {
+                                throw new Error(createResult.message || '创建副本失败');
+                            }
                         } catch (error) {
                             console.error('复制失败:', error);
-                            alert('复制失败，请重试');
+                            alert('复制失败: ' + error.message);
                         }
+                    }
+                },
+                
+                async deleteConference() {
+                    const conferenceName = this.conference.name || this.conference.meetingName || '该会议';
+                    
+                    // 第一次确认
+                    const firstConfirm = await this.$showConfirm(
+                        `确定要删除会议「${conferenceName}」吗？`,
+                        '删除会议',
+                        'warning'
+                    );
+                    if (!firstConfirm) return;
+                    
+                    // 第二次确认（二次弹窗，防止误操作）
+                    const secondConfirm = await this.$showConfirm(
+                        `会议「${conferenceName}」删除后不可恢复！\n关联的报名、通知等数据也将一并删除。\n\n是否确认删除？`,
+                        '⚠️ 最终确认',
+                        'danger'
+                    );
+                    if (!secondConfirm) return;
+                    
+                    try {
+                        const token = localStorage.getItem('authToken') || localStorage.getItem('token') || '';
+                        const tenantId = localStorage.getItem('tenantId') || '2027317834622709762';
+                        
+                        if (!token) {
+                            this.$showToast('请先登录系统', 'error');
+                            window.location.href = 'login.html';
+                            return;
+                        }
+                        
+                        const conferenceId = this.conference.id || new URLSearchParams(window.location.search).get('conferenceId');
+                        
+                        const response = await fetch(`http://localhost:8084/api/meeting/${conferenceId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json',
+                                'X-Tenant-Id': tenantId
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            if (result.code === 200 || result.code === 0) {
+                                this.$showToast('会议删除成功！正在返回列表...', 'success', 2000);
+                                // 返回会议列表
+                                setTimeout(() => {
+                                    window.location.href = '../index.html';
+                                }, 2000);
+                            } else {
+                                this.$showToast(result.message || '删除失败', 'error');
+                            }
+                        } else if (response.status === 401) {
+                            this.$showToast('登录已过期，请重新登录', 'error');
+                            setTimeout(() => { window.location.href = 'login.html'; }, 2000);
+                        } else {
+                            const errData = await response.json().catch(() => ({}));
+                            this.$showToast(errData.message || `删除失败(${response.status})`, 'error');
+                        }
+                    } catch (error) {
+                        console.error('删除会议异常:', error);
+                        this.$showToast('删除会议失败，请重试', 'error');
                     }
                 },
 
@@ -1536,6 +1666,297 @@
                     }
                 },
 
+                // ==================== 真实数据加载方法 ====================
+
+                // 通用API请求工具方法
+                async apiRequest(url) {
+                    const token = localStorage.getItem('authToken');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    const resp = await fetch(url, { method: 'GET', headers });
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    const result = await resp.json();
+                    if (result.code !== 200) throw new Error(result.message || '请求失败');
+                    return result.data;
+                },
+
+                // 主入口：加载所有真实数据
+                async loadAllRealData(conferenceId) {
+                    if (!conferenceId) return;
+                    console.log('开始加载真实数据, conferenceId:', conferenceId);
+
+                    // 并行加载各模块统计数据
+                    await Promise.allSettled([
+                        this.loadTaskStats(conferenceId),
+                        this.loadGroupStats(conferenceId),
+                        this.loadScheduleData(conferenceId),
+                        this.loadNotificationStats(conferenceId),
+                        this.loadAlertStats(conferenceId),
+                        this.loadOperationLogs()
+                    ]);
+
+                    // 根据加载的数据动态更新检查清单状态
+                    this.updateChecklistFromData();
+                    console.log('真实数据加载完成');
+                },
+
+                // 从协作服务加载任务统计
+                async loadTaskStats(conferenceId) {
+                    try {
+                        const data = await this.apiRequest(`http://localhost:8089/api/task/stats?conferenceId=${conferenceId}`);
+                        if (data) {
+                            this.taskStats = {
+                                total: data.total || 0,
+                                completed: data.completed || 0,
+                                inProgress: data.inProgress || 0,
+                                pending: data.pending || 0
+                            };
+                        }
+                    } catch (e) {
+                        console.warn('加载任务统计失败:', e.message);
+                    }
+                },
+
+                // 从协作服务加载群组统计
+                async loadGroupStats(conferenceId) {
+                    try {
+                        const data = await this.apiRequest(`http://localhost:8089/api/group/stats?conferenceId=${conferenceId}`);
+                        if (data) {
+                            const total = data.totalGroups || 0;
+                            const active = data.activeGroups || 0;
+                            this.groupStats = {
+                                total: total,
+                                active: active,
+                                activeRate: total > 0 ? Math.round((active / total) * 100) : 0
+                            };
+                        }
+                    } catch (e) {
+                        console.warn('加载群组统计失败:', e.message);
+                    }
+                },
+
+                // 从会议服务加载日程数据
+                async loadScheduleData(conferenceId) {
+                    try {
+                        const data = await this.apiRequest(`http://localhost:8084/api/schedule/all?meetingId=${conferenceId}`);
+                        this._scheduleData = Array.isArray(data) ? data : [];
+                    } catch (e) {
+                        console.warn('加载日程数据失败:', e.message);
+                        this._scheduleData = [];
+                    }
+                },
+
+                // 从通知服务加载通知统计
+                async loadNotificationStats(conferenceId) {
+                    try {
+                        const data = await this.apiRequest(`http://localhost:8083/api/notification/stats?conferenceId=${conferenceId}`);
+                        this._notificationStats = data || {};
+                    } catch (e) {
+                        console.warn('加载通知统计失败:', e.message);
+                        this._notificationStats = {};
+                    }
+                },
+
+                // 从通知服务加载预警统计
+                async loadAlertStats(conferenceId) {
+                    try {
+                        const data = await this.apiRequest(`http://localhost:8083/api/alert/stats?conferenceId=${conferenceId}`);
+                        this._alertStats = data || {};
+                    } catch (e) {
+                        console.warn('加载预警统计失败:', e.message);
+                        this._alertStats = {};
+                    }
+                },
+
+                // 从数据服务加载操作日志
+                async loadOperationLogs() {
+                    try {
+                        const data = await this.apiRequest('http://localhost:8088/api/data/system/events?limit=10');
+                        if (Array.isArray(data) && data.length > 0) {
+                            this.operationLogs = data.map(event => ({
+                                id: event.id || '',
+                                type: this.mapEventType(event.eventType),
+                                action: event.message || event.eventType || '系统事件',
+                                description: event.details || '',
+                                user: event.eventSource || 'system',
+                                timestamp: event.createdTime || ''
+                            }));
+                        }
+                    } catch (e) {
+                        console.warn('加载操作日志失败:', e.message);
+                    }
+                },
+
+                // 将系统事件类型映射为日志图标类型
+                mapEventType(eventType) {
+                    const typeMap = {
+                        'info': 'system',
+                        'error': 'delete',
+                        'warning': 'update',
+                        'success': 'create'
+                    };
+                    return typeMap[eventType] || 'system';
+                },
+
+                // 根据加载的真实数据动态更新检查清单状态
+                updateChecklistFromData() {
+                    const conf = this.conference;
+                    if (!conf || !conf.id) return;
+
+                    const mode = conf.registration ? conf.registration.mode : 'open';
+                    const regStats = conf.registration ? conf.registration[mode] : null;
+                    const schedules = this._scheduleData || [];
+                    const notifStats = this._notificationStats || {};
+                    const alertStats = this._alertStats || {};
+
+                    // ---- 第一阶段：会议创建与基础配置 ----
+                    const p1 = this.checklistItems.phase1;
+
+                    // 基本信息：会议已有名称和时间即为已完成
+                    const basicInfo = p1.find(i => i.id === 'basic-info');
+                    if (basicInfo && conf.name && conf.timeRange && conf.timeRange.start) {
+                        basicInfo.status = 'completed';
+                        basicInfo.details = [
+                            `会议名称：${conf.name}`,
+                            `时间：${conf.timeRange.start} 至 ${conf.timeRange.end}`,
+                            `地点：${conf.location.venue || '待定'}`
+                        ];
+                    }
+
+                    // 报名方式：已配置报名模式即为已完成
+                    const regType = p1.find(i => i.id === 'registration-type');
+                    if (regType && conf.registration && conf.registration.mode) {
+                        const modeText = { 'open': '开放式报名', 'limited': '限定式报名', 'import': '导入式报名' };
+                        regType.status = 'completed';
+                        regType.details = [`报名方式：${modeText[conf.registration.mode] || conf.registration.mode}`];
+                    }
+
+                    // 报到方式：如果有日程且日程配置了签到
+                    const checkinType = p1.find(i => i.id === 'checkin-type');
+                    if (checkinType && schedules.length > 0) {
+                        const hasCheckin = schedules.some(s => s.settings && (s.settings.needCheckin || s.settings.needReport));
+                        if (hasCheckin) {
+                            checkinType.status = 'completed';
+                            checkinType.details = ['已在日程中配置报到/签到'];
+                        }
+                    }
+
+                    // 会场信息：有地点即为已完成
+                    const venue = p1.find(i => i.id === 'venue');
+                    if (venue && conf.location && conf.location.venue && conf.location.venue !== '待定' && conf.location.venue !== '') {
+                        venue.status = 'completed';
+                        venue.details = [`已配置：${conf.location.venue}`, `容量：${conf.capacity.total || '未设置'}人`];
+                    }
+
+                    // 筹备任务：根据任务统计更新
+                    const prepTasks = p1.find(i => i.id === 'prep-tasks');
+                    if (prepTasks && this.taskStats.total > 0) {
+                        prepTasks.progress = `${this.taskStats.completed}/${this.taskStats.total}`;
+                        prepTasks.status = this.taskStats.completed >= this.taskStats.total ? 'completed' :
+                            (this.taskStats.inProgress > 0 || this.taskStats.completed > 0 ? 'in-progress' : 'not-started');
+                        prepTasks.details = [`已完成：${this.taskStats.completed}项`, `进行中：${this.taskStats.inProgress}项`];
+                    }
+
+                    // ---- 第二阶段：报名与审核管理 ----
+                    const p2 = this.checklistItems.phase2;
+
+                    const regSummary = p2.find(i => i.id === 'registration-summary');
+                    if (regSummary && regStats) {
+                        const registered = regStats.registeredCount || 0;
+                        const total = conf.capacity.total || 0;
+                        regSummary.progress = `${registered}/${total}`;
+                        regSummary.status = registered > 0 ? (registered >= total ? 'completed' : 'in-progress') : 'not-started';
+                        regSummary.details = [`已报名：${registered}人`, `待审核：${regStats.pendingCount || 0}人`];
+                    }
+
+                    const aiReview = p2.find(i => i.id === 'ai-review');
+                    if (aiReview && regStats) {
+                        const approved = regStats.approvedCount || 0;
+                        const registered = regStats.registeredCount || 0;
+                        const pending = regStats.pendingCount || 0;
+                        aiReview.progress = `${approved}/${registered}`;
+                        aiReview.status = registered > 0 ? (pending > 0 ? 'in-progress' : 'completed') : 'not-started';
+                        aiReview.details = [`已通过：${approved}人`, `待审核：${pending}人`];
+                    }
+
+                    const roster = p2.find(i => i.id === 'roster');
+                    if (roster && regStats) {
+                        const approved = regStats.approvedCount || 0;
+                        roster.status = approved > 0 ? 'completed' : 'not-started';
+                        roster.details = approved > 0 ? [`包含${approved}人`] : [];
+                    }
+
+                    // ---- 第三阶段：会前准备与规划 ----
+                    const p3 = this.checklistItems.phase3;
+
+                    const schedule = p3.find(i => i.id === 'schedule');
+                    if (schedule) {
+                        const count = schedules.length;
+                        const published = schedules.filter(s => s.status >= 1).length;
+                        schedule.progress = count > 0 ? `${published}/${count}` : '';
+                        schedule.status = count > 0 ? (published >= count ? 'completed' : 'in-progress') : 'not-started';
+                        schedule.details = count > 0 ? [`已创建${count}个日程`, `已发布${published}个`] : [];
+                    }
+
+                    const grouping = p3.find(i => i.id === 'grouping');
+                    if (grouping && this.groupStats.total > 0) {
+                        grouping.status = 'completed';
+                        grouping.details = [`已创建${this.groupStats.total}个群组`];
+                    }
+
+                    const alertRules = p3.find(i => i.id === 'alert-rules');
+                    if (alertRules && alertStats.total > 0) {
+                        alertRules.status = 'completed';
+                        alertRules.details = [`已配置预警规则`];
+                    }
+
+                    // ---- 第四阶段：通知发送 ----
+                    const p4 = this.checklistItems.phase4;
+                    const notification = p4.find(i => i.id === 'notification');
+                    if (notification) {
+                        const totalSent = notifStats.totalSent || 0;
+                        if (totalSent > 0) {
+                            notification.status = 'completed';
+                            notification.details = [`已发送${totalSent}条通知`, `送达${notifStats.delivered || 0}条`];
+                        }
+                    }
+
+                    // ---- 第五阶段：会议进行中 ----
+                    const p5 = this.checklistItems.phase5;
+                    const alertHandle = p5.find(i => i.id === 'alert-handle');
+                    if (alertHandle) {
+                        const pendingAlerts = alertStats.pendingCount || 0;
+                        const resolvedAlerts = alertStats.resolvedCount || 0;
+                        if (pendingAlerts > 0 || resolvedAlerts > 0) {
+                            alertHandle.status = pendingAlerts > 0 ? 'in-progress' : 'completed';
+                            alertHandle.details = [`待处理：${pendingAlerts}`, `已解决：${resolvedAlerts}`];
+                        }
+                    }
+
+                    // 更新考勤统计（从报名数据推导）
+                    if (regStats) {
+                        this.attendanceStats = {
+                            total: regStats.registeredCount || 0,
+                            checkedIn: regStats.approvedCount || 0,
+                            notCheckedIn: (regStats.registeredCount || 0) - (regStats.approvedCount || 0),
+                            rate: regStats.registeredCount > 0 ? Math.round((regStats.approvedCount / regStats.registeredCount) * 100) : 0
+                        };
+                    }
+
+                    // 更新报名统计
+                    if (regStats) {
+                        this.registrationStats = {
+                            registered: regStats.registeredCount || 0,
+                            pending: regStats.pendingCount || 0,
+                            approved: regStats.approvedCount || 0
+                        };
+                    }
+
+                    console.log('检查清单已根据真实数据更新');
+                },
+
+                // ==================== 真实数据加载方法结束 ====================
+
                 async loadRegistrationListData(conferenceId) {
                     if (!conferenceId) return;
                     
@@ -1748,8 +2169,10 @@
                 
                 if (conferenceId) {
                     this.conference.id = conferenceId;
-                    // 根据会议ID加载会议数据
-                    this.loadConferenceData(conferenceId);
+                    // 先加载会议基础数据，再加载各模块真实数据
+                    this.loadConferenceData(conferenceId).then(() => {
+                        this.loadAllRealData(conferenceId);
+                    });
                 }
             }
         };

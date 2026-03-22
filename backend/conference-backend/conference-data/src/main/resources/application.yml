@@ -43,7 +43,6 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: ASSIGN_ID
-      table-prefix: data_
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
@@ -52,3 +51,8 @@ logging:
   level:
     root: info
     com.conference: debug
+
+# data 服务自身不需要上报访问日志给自己（它直接本地记录）
+monitor:
+  access-log:
+    enabled: false

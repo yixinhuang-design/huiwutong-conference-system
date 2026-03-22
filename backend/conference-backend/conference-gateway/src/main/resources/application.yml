@@ -68,9 +68,9 @@ spring:
 
         # 协同服务
         - id: conference-collaboration
-          uri: http://localhost:8084
+          uri: http://localhost:8089
           predicates:
-            - Path=/api/v1/group/**,/api/v1/task/**
+            - Path=/api/v1/group/**,/api/v1/task/**,/api/v1/chat/**
           filters:
             - RewritePath=/api/v1/(?<segment>.*), /api/${segment}
 
@@ -114,7 +114,7 @@ spring:
 
         # 会议服务（日程等）- 支持/api/schedule和/api/v1/schedule两种路径
         - id: conference-meeting-v1
-          uri: http://localhost:8085
+          uri: http://localhost:8084
           predicates:
             - Path=/api/v1/schedule/**,/api/v1/meeting/**
           filters:
@@ -122,7 +122,7 @@ spring:
 
         # 会议服务（日程等）- 无版本前缀的路由
         - id: conference-meeting
-          uri: http://localhost:8085
+          uri: http://localhost:8084
           predicates:
             - Path=/api/schedule/**,/api/meeting/**
   
@@ -149,7 +149,6 @@ gateway:
     - /api/v1/auth/register
     - /api/v1/auth/captcha
     - /api/v1/auth/sms-code
-    - /api/v1/tenant/**
     - /actuator/**
     - /doc.html
     - /swagger-resources/**

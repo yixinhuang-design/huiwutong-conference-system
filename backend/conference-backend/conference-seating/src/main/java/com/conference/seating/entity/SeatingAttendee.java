@@ -1,5 +1,6 @@
 package com.conference.seating.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,8 +11,7 @@ import java.time.LocalDateTime;
 
 /**
  * 参会人员实体类
- * @author AI Assistant
- * @date 2026-03-12
+ * 对应数据库表: conf_seating_attendee
  */
 @Data
 @NoArgsConstructor
@@ -26,27 +26,35 @@ public class SeatingAttendee {
     
     private Long tenantId;
     
-    private String attendeeName;
+    private Long userId;
     
-    private String attendeePhone;
+    @TableField("name")
+    private String attendeeName;
     
     private String department;
     
     private String position;
     
-    private String gender;
+    @TableField("phone")
+    private String attendeePhone;
+    
+    private String email;
     
     private Boolean isVip;
     
-    private String specialNeeds;
+    private Boolean isReserved;
     
-    private Boolean hasRegistered;
+    private Long assignedSeatId;
     
-    private Long createdBy;
+    private LocalDateTime assignedAt;
+    
+    private Boolean confirmed;
+    
+    private String attendanceStatus;
+    
+    private String extraData;
     
     private LocalDateTime createdAt;
-    
-    private Long updatedBy;
     
     private LocalDateTime updatedAt;
 }

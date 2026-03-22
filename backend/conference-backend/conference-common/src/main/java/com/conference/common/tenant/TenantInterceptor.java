@@ -18,10 +18,11 @@ import java.lang.reflect.Field;
 @Slf4j
 public class TenantInterceptor implements InnerInterceptor {
     
-    // 不需要租户隔离的表白名单（含无tenant_id列的关联子表）
+    // 不需要租户隔离的表白名单（含无tenant_id列的关联子表和监控表）
     private static final String[] WHITELIST_TABLES = {
         "sys_tenant", "sys_user", "sys_role", "sys_permission", "audit_log",
-        "chat_group_member", "task_assignee", "task_log"
+        "chat_group_member", "task_assignee", "task_log",
+        "data_service_health", "data_system_metrics"
     };
     
     /**
@@ -110,7 +111,25 @@ public class TenantInterceptor implements InnerInterceptor {
                 return sql.trim() + " AND " + tenantColumn + " = " + tenantId;
             }
         } else {
-            return sql.trim() + " WHERE " + tenantColumn + " = " + tenantId;
+            // 无 WHERE 子句时，需要将 WHERE 插入到 GROUP BY / ORDER BY / LIMIT 之前
+            if (upperSql.contains("GROUP BY")) {
+                int groupByIndex = upperSql.indexOf("GROUP BY");
+                String beforeGroupBy = sql.substring(0, groupByIndex).trim();
+                String groupByPart = sql.substring(groupByIndex);
+                return beforeGroupBy + " WHERE " + tenantColumn + " = " + tenantId + " " + groupByPart;
+            } else if (upperSql.contains("ORDER BY")) {
+                int orderByIndex = upperSql.indexOf("ORDER BY");
+                String beforeOrderBy = sql.substring(0, orderByIndex).trim();
+                String orderByPart = sql.substring(orderByIndex);
+                return beforeOrderBy + " WHERE " + tenantColumn + " = " + tenantId + " " + orderByPart;
+            } else if (upperSql.contains("LIMIT")) {
+                int limitIndex = upperSql.indexOf("LIMIT");
+                String beforeLimit = sql.substring(0, limitIndex).trim();
+                String limitPart = sql.substring(limitIndex);
+                return beforeLimit + " WHERE " + tenantColumn + " = " + tenantId + " " + limitPart;
+            } else {
+                return sql.trim() + " WHERE " + tenantColumn + " = " + tenantId;
+            }
         }
     }
 

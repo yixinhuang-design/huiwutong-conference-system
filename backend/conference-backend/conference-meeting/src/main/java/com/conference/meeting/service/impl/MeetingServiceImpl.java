@@ -170,13 +170,8 @@ public class MeetingServiceImpl extends ServiceImpl<MeetingMapper, Meeting> impl
             throw new BusinessException("无权删除该会议");
         }
 
-        // 软删除：更新 deleted 标志
-        Meeting updateMeeting = new Meeting();
-        updateMeeting.setId(id);
-        updateMeeting.setDeleted(1);
-        updateMeeting.setUpdateTime(LocalDateTime.now());
-
-        return this.updateById(updateMeeting);
+        // 使用 MyBatis-Plus 逻辑删除（自动 UPDATE SET deleted=1 WHERE id=? AND deleted=0）
+        return this.removeById(id);
     }
 
     @Override
