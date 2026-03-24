@@ -4294,6 +4294,7 @@
                                     >
                                         {{ attendee.name }} - {{ attendee.department }}
                                         <template v-if="attendee.isVip"> ★VIP</template>
+                                        <template v-if="isAttendeeSeated(attendee)"> [已排座]</template>
                                     </option>
                                 </optgroup>
                             </select>
@@ -4457,9 +4458,14 @@
                                 👥 参会人员
                             </h3>
                             <div class="attendee-stats">
-                                已导入 <strong>{{ attendees.length }}</strong> 人
-                                <span v-if="vipCount > 0">（VIP <strong>{{ vipCount }}</strong> 人）</span>
-                                <span v-if="getUnassignedAttendees().length > 0" style="color: #d97706;">（未排座 <strong>{{ getUnassignedAttendees().length }}</strong>）</span>
+                                <template v-if="attendees.length > 0">
+                                    已导入 <strong>{{ attendees.length }}</strong> 人
+                                    <span v-if="vipCount > 0">（VIP <strong>{{ vipCount }}</strong> 人）</span>
+                                    <span v-if="getUnassignedAttendees().length > 0" style="color: #d97706;">（未排座 <strong>{{ getUnassignedAttendees().length }}</strong>）</span>
+                                </template>
+                                <template v-else>
+                                    <span style="color: #ef4444;">⚠ 尚未导入人员，请点击"刷新"或"添加人员"</span>
+                                </template>
                             </div>
                         </div>
                         <div class="attendee-actions">
@@ -4470,6 +4476,10 @@
                             <button class="btn-sm btn-outline" @click="$refs.excelFileInput.click()" title="从Excel导入人员列表">
                                 <i class="fas fa-file-excel"></i>
                                 <span>Excel导入</span>
+                            </button>
+                            <button class="btn-sm btn-outline" @click="reloadAttendeesFromRegistration" title="从报名系统重新获取已审核通过的参会人员">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>刷新</span>
                             </button>
                             <input
                                 type="file"
@@ -5509,14 +5519,28 @@
                                             if (dbArea.seats && dbArea.seats.length > 0 && restoredArea.rows && Array.isArray(restoredArea.rows)) {
                                                 for (const dbSeat of dbArea.seats) {
                                                     if (dbSeat.status === 'occupied' || dbSeat.occupantName) {
+                                                        // 🔧 修复：使用通用查找逻辑（兼容U型/圆桌等非矩阵布局）
+                                                        let targetSeat = null;
                                                         const rowIdx = (dbSeat.row || 1) - 1;
                                                         const colIdx = (dbSeat.col || 1) - 1;
+                                                        // 尝试直接索引（标准矩阵布局）
                                                         if (restoredArea.rows[rowIdx] && restoredArea.rows[rowIdx].seats && restoredArea.rows[rowIdx].seats[colIdx]) {
-                                                            const localSeat = restoredArea.rows[rowIdx].seats[colIdx];
-                                                            if (dbSeat.status) localSeat.status = dbSeat.status;
+                                                            targetSeat = restoredArea.rows[rowIdx].seats[colIdx];
+                                                        }
+                                                        // 索引未命中时，遍历所有行和座位按row+col属性匹配
+                                                        if (!targetSeat) {
+                                                            for (const row of restoredArea.rows) {
+                                                                if (row && row.seats) {
+                                                                    const found = row.seats.find(s => s.row === dbSeat.row && s.col === dbSeat.col);
+                                                                    if (found) { targetSeat = found; break; }
+                                                                }
+                                                            }
+                                                        }
+                                                        if (targetSeat) {
+                                                            if (dbSeat.status) targetSeat.status = dbSeat.status;
                                                             if (dbSeat.occupantName) {
-                                                                localSeat.occupant = { name: dbSeat.occupantName };
-                                                                localSeat.occupantName = dbSeat.occupantName;
+                                                                targetSeat.occupant = { name: dbSeat.occupantName };
+                                                                targetSeat.occupantName = dbSeat.occupantName;
                                                             }
                                                         }
                                                     }
@@ -5638,6 +5662,28 @@
                         loadSeatingDataFromLocalStorage();
                     }
                     
+                    // 🔧 修复：将从DB加载的仅含name的occupant链接到完整的attendee对象
+                    if (attendees.value.length > 0 && seatingAreas.value.length > 0) {
+                        seatingAreas.value.forEach(area => {
+                            if (area && area.rows) {
+                                area.rows.forEach(row => {
+                                    if (row && row.seats) {
+                                        row.seats.forEach(seat => {
+                                            if (seat.occupant && !seat.occupant.id && seat.occupant.name) {
+                                                // 找到匹配的完整attendee对象
+                                                const fullAttendee = attendees.value.find(a => a.name === seat.occupant.name);
+                                                if (fullAttendee) {
+                                                    seat.occupant = { ...fullAttendee };
+                                                    console.log(`[loadSeatingData] 已关联占座人员: ${fullAttendee.name} (id: ${fullAttendee.id})`);
+                                                }
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+
                     // 加载完成后更新统计信息
                     updateStatistics();
                 };
@@ -5700,6 +5746,50 @@
                 const initializeDefaultAttendees = () => {
                     console.log('[initializeDefaultAttendees] 参会人员为空，请通过报名服务获取');
                     // 不再注入假数据，保持为空或由后续API调用填充
+                };
+
+                // 🔧 独立重新加载参会人员（用于切换布局/会场类型时补充加载）
+                const reloadAttendeesFromRegistration = async () => {
+                    if (!conference.value || !conference.value.id) return;
+                    try {
+                        const regHeaders = { 'Content-Type': 'application/json' };
+                        const regToken = localStorage.getItem('authToken');
+                        if (regToken) regHeaders['Authorization'] = `Bearer ${regToken}`;
+
+                        const regResponse = await fetch(
+                            `/api/registration/list?conferenceId=${conference.value.id}&page=1&pageSize=1000`,
+                            { method: 'GET', headers: regHeaders }
+                        );
+                        if (regResponse.ok) {
+                            const regResult = await regResponse.json();
+                            const regPage = regResult.data || {};
+                            const records = regPage.records || [];
+                            const approvedList = records.filter(r => r.status === 1 || r.status === '1');
+                            if (approvedList.length > 0) {
+                                attendees.value = approvedList.map((r, idx) => ({
+                                    id: `att_${r.id || idx + 1}`,
+                                    name: r.name || r.realName || r.userName || `参会者${idx + 1}`,
+                                    department: r.department || r.organization || '',
+                                    position: r.position || r.title || '',
+                                    isVip: false,
+                                    company: r.company || r.organization || r.unit || '',
+                                    phone: r.phone || '',
+                                    registrationId: r.id
+                                }));
+                                console.log(`[reloadAttendees] 重新加载了 ${attendees.value.length} 位参会人员`);
+                                if (window.InteractionUtils) {
+                                    window.InteractionUtils.showToast(`已加载 ${attendees.value.length} 位参会人员`, 'success');
+                                }
+                            } else {
+                                console.log('[reloadAttendees] 报名服务无已通过人员');
+                                if (window.InteractionUtils) {
+                                    window.InteractionUtils.showToast('暂无已审核通过的参会人员，可手动添加或从Excel导入', 'info');
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.warn('[reloadAttendees] 重新加载参会人员失败:', err);
+                    }
                 };
 
                 // 创建座位区域
@@ -6851,19 +6941,31 @@
 
                 const getUnassignedAttendees = () => {
                     const assignedIds = new Set();
+                    const assignedNames = new Set();
                     seatingAreas.value.forEach(area => {
-                        area.rows.forEach(row => {
-                            if (row.seats) {
-                                row.seats.forEach(seat => {
-                                    if (seat.occupant) {
-                                        assignedIds.add(seat.occupant.id);
-                                    }
-                                });
-                            }
-                        });
+                        if (area && area.rows) {
+                            area.rows.forEach(row => {
+                                if (row && row.seats) {
+                                    row.seats.forEach(seat => {
+                                        if (seat.occupant) {
+                                            if (seat.occupant.id) assignedIds.add(String(seat.occupant.id));
+                                            if (seat.occupant.name) assignedNames.add(seat.occupant.name);
+                                        }
+                                    });
+                                }
+                            });
+                        }
                     });
                     
-                    return attendees.value.filter(att => !assignedIds.has(att.id));
+                    return attendees.value.filter(att => {
+                        // 按ID匹配
+                        if (att.id && assignedIds.has(String(att.id))) return false;
+                        // ID未匹配时按姓名匹配（兼容从数据库加载的数据）
+                        if (!att.id || !assignedIds.has(String(att.id))) {
+                            if (att.name && assignedNames.has(att.name)) return false;
+                        }
+                        return true;
+                    });
                 };
 
                 const saveSeatDetails = () => {
@@ -7073,8 +7175,14 @@
                             for (const row of area.rows) {
                                 if (row && row.seats) {
                                     for (const seat of row.seats) {
-                                        if (seat.occupant && String(seat.occupant.id) === String(att.id)) {
-                                            return true;
+                                        if (seat.occupant) {
+                                            // 优先按ID匹配，ID不存在时按姓名+部门匹配（兼容从数据库加载的数据）
+                                            if (seat.occupant.id && att.id && String(seat.occupant.id) === String(att.id)) {
+                                                return true;
+                                            }
+                                            if (!seat.occupant.id && seat.occupant.name && seat.occupant.name === att.name) {
+                                                return true;
+                                            }
                                         }
                                     }
                                 }
@@ -7841,6 +7949,11 @@
 
                         // 提示用户
                         console.log(`已创建${layoutTypes.find(l => l.id === layoutType)?.name || ''}布局`);
+
+                        // 🔧 修复：如果参会人员为空，尝试从报名服务重新加载
+                        if (attendees.value.length === 0 && conference.value && conference.value.id) {
+                            reloadAttendeesFromRegistration();
+                        }
                     }
                 };
 
@@ -9233,11 +9346,19 @@
 
                 // ===== 自动排座 =====
                 const executeAutoArrange = async () => {
+                    // 🔧 修复：如果参会人员为空，先尝试从报名系统加载
                     if (attendees.value.length === 0) {
                         if (window.InteractionUtils) {
-                            window.InteractionUtils.showToast('请先导入参会人员', 'warning');
+                            window.InteractionUtils.showToast('正在从报名系统加载参会人员...', 'info');
+                        }
+                        await reloadAttendeesFromRegistration();
+                    }
+
+                    if (attendees.value.length === 0) {
+                        if (window.InteractionUtils) {
+                            window.InteractionUtils.showToast('暂无参会人员，请先添加人员或从Excel导入', 'warning');
                         } else {
-                            alert('请先导入参会人员');
+                            alert('暂无参会人员，请先添加人员或从Excel导入');
                         }
                         return;
                     }
@@ -11727,6 +11848,7 @@
                     attendeeFilterType,
                     filteredAttendeeList,
                     isAttendeeSeated,
+                    reloadAttendeesFromRegistration,
 
                     // 右键菜单
                     contextMenu,
