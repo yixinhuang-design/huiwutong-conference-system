@@ -67,7 +67,7 @@
             <view class="message-actions">
               <view class="action-item" @click="likeMessage(message)">
                 <text class="action-icon" :class="{ liked: message.isLiked }">
-                  {{ message.isLiked ? '❤️' : '🤍' }}
+                  {{ message.isLiked ? '<text class="fa fa-heart"></text>' : '🤍' }}
                 </text>
                 <text class="action-text">{{ message.likeCount }}</text>
               </view>
@@ -329,6 +329,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .messages-container {
   min-height: 100vh;

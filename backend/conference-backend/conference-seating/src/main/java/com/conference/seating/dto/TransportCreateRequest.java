@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 /**
  * 车辆运输创建请求 DTO
  * @author AI Assistant
@@ -24,6 +26,9 @@ public class TransportCreateRequest {
     @NotNull(message = "会议ID不能为空")
     @Schema(description = "会议ID", example = "1")
     private Long conferenceId;
+    
+    @Schema(description = "车辆名称", example = "1号大巴")
+    private String vehicleName;
     
     @NotBlank(message = "车牌号不能为空")
     @Schema(description = "车牌号", example = "浙A·12345")
@@ -44,8 +49,8 @@ public class TransportCreateRequest {
     @Schema(description = "目的地", example = "酒店")
     private String destination;
     
-    @Schema(description = "出发时间", example = "08:00")
-    private String departureTime;
+    @Schema(description = "出发时间", example = "2026-03-12T08:00:00")
+    private LocalDateTime departureTime;
     
     @Schema(description = "驾驶员名字", example = "张三")
     private String driver;

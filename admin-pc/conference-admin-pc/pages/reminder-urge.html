@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -683,17 +683,29 @@
                             <span>短信</span>
                         </div>
                         <div class="channel-option"
+                             :class="{ selected: channels.app }"
+                             @click="channels.app = !channels.app">
+                            <i class="fas fa-bell"></i>
+                            <span>系统消息(UniPush)</span>
+                        </div>
+                        <!-- 微信通知 - 暂未配置 -->
+                        <!--
+                        <div class="channel-option"
                              :class="{ selected: channels.wechat }"
                              @click="channels.wechat = !channels.wechat">
                             <i class="fab fa-weixin"></i>
                             <span>微信</span>
                         </div>
+                        -->
+                        <!-- 邮件通知 - 暂未配置 -->
+                        <!--
                         <div class="channel-option"
                              :class="{ selected: channels.email }"
                              @click="channels.email = !channels.email">
                             <i class="fas fa-envelope"></i>
                             <span>邮件</span>
                         </div>
+                        -->
                     </div>
                 </div>
 
@@ -846,8 +858,8 @@
     <script src="../js/api/collaboration-api.js"></script>
     <script>
         const { createApp } = Vue;
-        const DATA_API = 'http://localhost:8088/api/data';
-        const NOTIFICATION_API = 'http://localhost:8083/api/notification';
+        const DATA_API = '/api/data';
+        const NOTIFICATION_API = '/api/notification';
 
         createApp({
             data() {
@@ -1057,7 +1069,7 @@
                         const resp = await fetch(apiUrl, {
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-Tenant-Id': '2027317834622709762',
+                                'X-Tenant-Id': localStorage.getItem('tenantId') || '',
                                 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
                             }
                         });
@@ -1090,7 +1102,7 @@
                                 const rateResp = await fetch(rateUrl, {
                                     headers: {
                                         'Content-Type': 'application/json',
-                                        'X-Tenant-Id': '2027317834622709762',
+                                        'X-Tenant-Id': localStorage.getItem('tenantId') || '',
                                         'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
                                     }
                                 });
@@ -1283,7 +1295,7 @@
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
-                                        'X-Tenant-Id': '2027317834622709762',
+                                        'X-Tenant-Id': localStorage.getItem('tenantId') || '',
                                         'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
                                     },
                                     body: JSON.stringify({

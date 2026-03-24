@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -23,9 +23,9 @@
     <!-- Vue 3 -->
     <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
     <!-- 认证服务 -->
-    <script src="js/auth-service.js"></script>
+    <script src="js/auth-service.js?v=20260323b"></script>
     <!-- 应用初始化脚本 -->
-    <script src="js/app-init.js"></script>
+    <script src="js/app-init.js?v=20260323b"></script>
     <!-- 国产浏览器兼容性支持 -->
     <script>
         // 检测浏览器类型
@@ -207,15 +207,26 @@
                     </li>
                     </ul>
                 </div>
-                <div class="nav-user">
-                    <div class="user-info">
+                <div class="nav-user" style="position:relative;">
+                    <div class="user-info" @click="showUserMenu" style="cursor:pointer;">
                         <img :src="userInfo.avatar" alt="用户头像">
                         <span>{{ userInfo.name }}</span>
+                        <i class="fas fa-chevron-down" style="font-size:12px;color:#999;transition:transform 0.2s;" :style="{transform: userMenuOpen ? 'rotate(180deg)' : ''}"></i>
                     </div>
-                    <div class="user-menu">
-                        <button class="btn-icon" @click="showUserMenu">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
+                    <!-- 用户下拉菜单 -->
+                    <div v-if="userMenuOpen" class="user-dropdown-menu" @click.stop>
+                        <div class="user-dropdown-header">
+                            <img :src="userInfo.avatar" alt="头像">
+                            <div>
+                                <div style="font-weight:600;font-size:14px;">{{ userInfo.name }}</div>
+                                <div style="font-size:12px;color:#999;">管理员</div>
+                            </div>
+                        </div>
+                        <div class="user-dropdown-divider"></div>
+                        <a class="user-dropdown-item" @click="logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>退出登录</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -391,16 +402,16 @@
     </div>
 
     <!-- JavaScript -->
-    <script src="js/conference-context.js"></script>
-    <script src="js/conference-manager.js"></script>
-    <script src="js/group-system.js"></script>
-    <script src="js/collaboration-engine.js"></script>
-    <script src="js/ai-integration.js"></script>
-    <script src="js/navigation-engine.js"></script>
-    <script src="js/data-visualization.js"></script>
-    <script src="js/realtime-updater.js"></script>
-    <script src="js/security-manager.js"></script>
-    <script src="js/interaction-utils.js"></script>
+    <script src="js/conference-context.js?v=20260323e"></script>
+    <script src="js/conference-manager.js?v=20260323b"></script>
+    <script src="js/group-system.js?v=20260323b"></script>
+    <script src="js/collaboration-engine.js?v=20260323b"></script>
+    <script src="js/ai-integration.js?v=20260323b"></script>
+    <script src="js/navigation-engine.js?v=20260323b"></script>
+    <script src="js/data-visualization.js?v=20260323b"></script>
+    <script src="js/realtime-updater.js?v=20260323b"></script>
+    <script src="js/security-manager.js?v=20260323b"></script>
+    <script src="js/interaction-utils.js?v=20260323b"></script>
     <script>
         const { createApp } = Vue;
         
@@ -434,22 +445,23 @@
                         // 初始化会议上下文
                         await this.loadConferences();
                         
-                            // 设置默认会议ID（确保报名管理页面能正确查询数据）
-                            const defaultConferenceId = '2030309010523144200';
-                            if (!localStorage.getItem('currentConferenceId')) {
-                                localStorage.setItem('currentConferenceId', defaultConferenceId);
-                                console.log('已设置默认会议ID:', defaultConferenceId);
-                            }
-                        
-                            // 如果没有加载到真实会议，设置当前会议为默认值
-                            if (this.conferences.length === 0 || this.conferences[0].id.startsWith('conf_')) {
-                                this.currentConference = {
-                                    id: defaultConferenceId,
-                                    name: '当前会议',
-                                    status: 'preparing'
-                                };
-                                // 同时更新window全局上下文
+                            // 从实际会议列表中获取默认会议ID
+                            if (this.conferences.length > 0 && !this.conferences[0].id.startsWith('conf_')) {
+                                // 有真实会议数据，使用第一个会议作为默认
+                                const firstConferenceId = this.conferences[0].id;
+                                if (!localStorage.getItem('currentConferenceId')) {
+                                    localStorage.setItem('currentConferenceId', firstConferenceId);
+                                    console.log('已设置默认会议ID:', firstConferenceId);
+                                }
+                                // 设置当前会议
+                                const savedId = localStorage.getItem('currentConferenceId');
+                                this.currentConference = this.conferences.find(c => c.id === savedId) || this.conferences[0];
                                 window.conferenceContext = { currentConference: this.currentConference };
+                            } else {
+                                // 没有真实会议数据，清理可能残留的无效ID
+                                localStorage.removeItem('currentConferenceId');
+                                this.currentConference = null;
+                                console.log('暂无会议数据，请先创建会议');
                             }
                         
                         this.setupRealtimeUpdates();
@@ -463,13 +475,13 @@
                     try {
                         // 从后端获取会议列表
                         const token = localStorage.getItem('authToken');
-                        const backendUrl = 'http://localhost:8084/api/meeting/list';
+                        const backendUrl = '/api/meeting/list';
                         const response = await fetch(backendUrl, {
                             method: 'GET',
                             headers: {
                                 'Authorization': `Bearer ${token}`,
                                 'Content-Type': 'application/json',
-                                'X-Tenant-Id': '2027317834622709762'
+                                'X-Tenant-Id': localStorage.getItem('tenantId') || ''
                             }
                         });
                         
@@ -523,132 +535,22 @@
                             this.filteredConferences = [...this.conferences];
                         } else if (response.status === 401) {
                             // Token过期或无效
-                            console.warn('认证失败，切换到mock数据');
-                            this.loadConferencesMock();
+                            console.warn('认证失败，请重新登录');
+                            this.conferences = [];
+                            this.filteredConferences = [];
+                            this.showNotification('登录已过期，请重新登录', 'warning');
                         } else {
-                            console.warn('获取会议列表失败，切换到mock数据');
-                            this.loadConferencesMock();
+                            console.warn('获取会议列表失败，状态码:', response.status);
+                            this.conferences = [];
+                            this.filteredConferences = [];
+                            this.showNotification('加载会议列表失败，请刷新重试', 'error');
                         }
                     } catch (error) {
                         console.error('加载会议列表异常:', error);
-                        // 加载失败时使用mock数据
-                        this.loadConferencesMock();
+                        this.conferences = [];
+                        this.filteredConferences = [];
+                        this.showNotification('网络异常，请检查网络连接后刷新', 'error');
                     }
-                },
-                
-                loadConferencesMock() {
-                    // mock数据作为备用 - 使用真实数据库中的会议ID
-                    this.conferences = [
-                        {
-                            id: '2030309010523144194',
-                            name: '测试会议',
-                            status: 'preparing',
-                            timeRange: {
-                                start: '2024-06-15 09:00:00',
-                                end: '2024-06-16 18:00:00'
-                            },
-                            location: {
-                                venue: '北京国际会议中心',
-                                address: '北京市朝阳区北辰东路8号'
-                            },
-                            capacity: {
-                                total: 500,
-                                registered: 356,
-                                available: 144
-                            },
-                            taskStats: {
-                                total: 58,
-                                completed: 42,
-                                pending: 16
-                            },
-                            groups: {
-                                attendeeGroups: [
-                                    { id: 'group_1', name: '第一学习小组', members: 25 },
-                                    { id: 'group_2', name: '第二学习小组', members: 25 },
-                                    { id: 'group_3', name: '第三学习小组', members: 25 }
-                                ],
-                                active: true
-                            },
-                            systems: {
-                                registration: true,
-                                notification: true,
-                                collaboration: true,
-                                ai: true
-                            }
-                        },
-                        {
-                            id: 'conf_20240701_002',
-                            name: '2024年度产品发布会',
-                            status: 'ongoing',
-                            timeRange: {
-                                start: '2024-07-01 10:00:00',
-                                end: '2024-07-01 17:00:00'
-                            },
-                            location: {
-                                venue: '上海国际会议中心',
-                                address: '上海市浦东新区滨江大道2727号'
-                            },
-                            capacity: {
-                                total: 300,
-                                registered: 298,
-                                available: 2
-                            },
-                            taskStats: {
-                                total: 45,
-                                completed: 45,
-                                pending: 0
-                            },
-                            groups: {
-                                attendeeGroups: [
-                                    { id: 'group_1', name: '媒体组', members: 50 },
-                                    { id: 'group_2', name: '客户组', members: 100 }
-                                ],
-                                active: true
-                            },
-                            systems: {
-                                registration: true,
-                                notification: true,
-                                collaboration: true,
-                                ai: false
-                            }
-                        },
-                        {
-                            id: 'conf_20240520_003',
-                            name: '2024年度培训会议',
-                            status: 'ended',
-                            timeRange: {
-                                start: '2024-05-20 09:00:00',
-                                end: '2024-05-22 18:00:00'
-                            },
-                            location: {
-                                venue: '深圳会展中心',
-                                address: '深圳市福田区福华三路'
-                            },
-                            capacity: {
-                                total: 200,
-                                registered: 198,
-                                available: 2
-                            },
-                            taskStats: {
-                                total: 35,
-                                completed: 35,
-                                pending: 0
-                            },
-                            groups: {
-                                attendeeGroups: [
-                                    { id: 'group_1', name: '培训一组', members: 50 }
-                                ],
-                                active: false
-                            },
-                            systems: {
-                                registration: true,
-                                notification: true,
-                                collaboration: false,
-                                ai: true
-                            }
-                        }
-                    ];
-                    this.filteredConferences = [...this.conferences];
                 },
                 
                 filterConferences() {
@@ -732,14 +634,14 @@
                     
                     try {
                         const token = localStorage.getItem('authToken') || localStorage.getItem('token') || '';
-                        const tenantId = localStorage.getItem('tenantId') || '2027317834622709762';
+                        const tenantId = localStorage.getItem('tenantId') || '';
                         
                         if (!token) {
                             this.showNotification('请先登录系统', 'error');
                             return;
                         }
                         
-                        const response = await fetch(`http://localhost:8084/api/meeting/${conferenceIdStr}`, {
+                        const response = await fetch(`/api/meeting/${conferenceIdStr}`, {
                             method: 'DELETE',
                             headers: {
                                 'Authorization': `Bearer ${token}`,
@@ -872,6 +774,18 @@
                 
                 showUserMenu() {
                     this.userMenuOpen = !this.userMenuOpen;
+                    if (this.userMenuOpen) {
+                        // 点击页面其他地方关闭菜单
+                        setTimeout(() => {
+                            const closeMenu = (e) => {
+                                if (!e.target.closest('.nav-user')) {
+                                    this.userMenuOpen = false;
+                                    document.removeEventListener('click', closeMenu);
+                                }
+                            };
+                            document.addEventListener('click', closeMenu);
+                        }, 0);
+                    }
                 },
                 
                 logout() {

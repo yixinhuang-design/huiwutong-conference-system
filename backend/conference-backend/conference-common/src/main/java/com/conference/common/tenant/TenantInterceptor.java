@@ -3,13 +3,14 @@ package com.conference.common.tenant;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.Executor;
+import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 
 import java.lang.reflect.Field;
+import java.sql.Connection;
 
 /**
  * MyBatis 多租户拦截器
@@ -52,6 +53,38 @@ public class TenantInterceptor implements InnerInterceptor {
                         log.debug("租户隔离 - 租户ID: {}, SQL: {}", tenantId, modifiedSql);
                     } catch (Exception e) {
                         log.error("添加租户隔离条件失败", e);
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * 写操作前处理：为 UPDATE/DELETE 语句添加 tenant_id 条件
+     * 防止跨租户数据修改/删除
+     */
+    @Override
+    public void beforePrepare(StatementHandler sh, Connection connection, Integer transactionTimeout) {
+        Long tenantId = TenantContextHolder.getTenantId();
+        
+        if (tenantId != null) {
+            BoundSql boundSql = sh.getBoundSql();
+            String sql = boundSql.getSql();
+            String upperSql = sql.toUpperCase().trim();
+            
+            // 仅处理 UPDATE 和 DELETE（SELECT 已在 beforeQuery 中处理）
+            if (upperSql.startsWith("UPDATE") || upperSql.startsWith("DELETE")) {
+                if (!shouldSkip(sql)) {
+                    try {
+                        String modifiedSql = injectTenantCondition(sql, tenantId);
+                        
+                        Field sqlField = BoundSql.class.getDeclaredField("sql");
+                        sqlField.setAccessible(true);
+                        sqlField.set(boundSql, modifiedSql);
+                        
+                        log.debug("租户隔离(写) - 租户ID: {}, SQL: {}", tenantId, modifiedSql);
+                    } catch (Exception e) {
+                        log.error("添加租户隔离条件失败(写操作)", e);
                     }
                 }
             }

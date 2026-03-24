@@ -61,7 +61,7 @@
 
     <!-- 创建群组按钮 -->
     <view class="fab-btn" @click="createGroup">
-      <text class="fab-icon">➕</text>
+      <text class="fab-icon"><text class="fa fa-plus"></text></text>
     </view>
   </view>
 </template>
@@ -152,6 +152,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .groups-container {
   min-height: 100vh;

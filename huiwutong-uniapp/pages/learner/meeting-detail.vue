@@ -247,6 +247,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 /* Font Awesome 图标支持 */
 @import url('@/static/fontawesome/css/all.css');

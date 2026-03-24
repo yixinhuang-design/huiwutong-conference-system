@@ -210,7 +210,7 @@ export default {
         summary: '<text class="fa fa-clipboard"></text>',
         grades: '📊',
         attendance: '<text class="fa fa-check"></text>',
-        satisfaction: '⭐',
+        satisfaction: '<text class="fa fa-star"></text>',
         photos: '<text class="fa fa-camera"></text>',
         finance: '💰'
       }
@@ -295,6 +295,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .reports-container {
   min-height: 100vh;

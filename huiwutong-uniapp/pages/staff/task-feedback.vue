@@ -31,7 +31,7 @@
               :class="{ selected: feedback.completion === option.value }"
               @click="selectCompletion(option.value)"
             >
-              <text class="option-icon">{{ option.icon }}</text>
+              <text class="option-icon"><text :class="option.icon"></text></text>
               <text class="option-label">{{ option.label }}</text>
             </view>
           </view>
@@ -100,9 +100,9 @@
               :key="index"
               class="upload-item"
             >
-              <text class="file-icon">📎</text>
+              <text class="file-icon"><text class="fa fa-paperclip"></text></text>
               <text class="file-name">{{ file.name }}</text>
-              <text class="file-remove" @click="removeFile(index)">✕</text>
+              <text class="file-remove" @click="removeFile(index)"><text class="fa fa-times"></text></text>
             </view>
             <view class="upload-btn" @click="chooseFile">
               <text class="upload-icon">+</text>
@@ -136,7 +136,7 @@
       <!-- 提交按钮 -->
       <view class="submit-section">
         <button class="btn btn-outline btn-block" @click="saveDraft">
-          💾 保存草稿
+          <text class="fa fa-save"></text> 保存草稿
         </button>
         <button class="btn btn-primary btn-block" @click="submitFeedback">
           ✓ 提交反馈
@@ -167,10 +167,10 @@ export default {
         files: []
       },
       completionOptions: [
-        { icon: '<text class="fa fa-check"></text>', label: '已完成', value: 'completed' },
-        { icon: '🔄', label: '进行中', value: 'inProgress' },
-        { icon: '<text class="fa fa-exclamation-triangle"></text>', label: '有困难', value: 'difficult' },
-        { icon: '❌', label: '未完成', value: 'incomplete' }
+        { icon: 'fa-check', label: '已完成', value: 'completed' },
+        { icon: 'fa-sync', label: '进行中', value: 'inProgress' },
+        { icon: 'fa-exclamation-triangle', label: '有困难', value: 'difficult' },
+        { icon: 'fa-times', label: '未完成', value: 'incomplete' }
       ],
       historyList: []
     }
@@ -291,6 +291,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .task-feedback-container {
   min-height: 100vh;

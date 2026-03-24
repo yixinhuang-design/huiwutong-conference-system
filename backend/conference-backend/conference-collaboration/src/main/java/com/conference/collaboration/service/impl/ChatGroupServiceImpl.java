@@ -48,7 +48,7 @@ public class ChatGroupServiceImpl extends ServiceImpl<ChatGroupMapper, ChatGroup
         group.setMuteAll(0);
         group.setAllowInvite(group.getAllowInvite() != null ? group.getAllowInvite() : 1);
         group.setAutoCreated(group.getAutoCreated() != null ? group.getAutoCreated() : 0);
-        group.setStatus(1);
+        group.setStatus("1");
         group.setDeleted(0);
         group.setCreateTime(LocalDateTime.now());
         group.setUpdateTime(LocalDateTime.now());
@@ -283,7 +283,7 @@ public class ChatGroupServiceImpl extends ServiceImpl<ChatGroupMapper, ChatGroup
 
         List<ChatGroup> groups = groupMapper.selectList(wrapper);
         long total = groups.size();
-        long active = groups.stream().filter(g -> g.getStatus() == 1).count();
+        long active = groups.stream().filter(g -> "1".equals(g.getStatus())).count();
         long totalMembers = groups.stream().mapToInt(g -> g.getMemberCount() != null ? g.getMemberCount() : 0).sum();
 
         Map<String, Long> byType = groups.stream()

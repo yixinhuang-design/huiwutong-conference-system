@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -878,7 +878,7 @@
     <script src="../js/interaction-utils.js"></script>
     <script>
         const { createApp } = Vue;
-        const API_BASE = 'http://localhost:8084';
+        const API_BASE = '';
 
         createApp({
             data() {
@@ -919,7 +919,7 @@
                 // ===== API 通用方法 =====
                 getAuthHeaders() {
                     const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
-                    const headers = { 'Content-Type': 'application/json', 'X-Tenant-Id': '2027317834622709762' };
+                    const headers = { 'Content-Type': 'application/json', 'X-Tenant-Id': localStorage.getItem('tenantId') || '' };
                     if (token) headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
                     return headers;
                 },

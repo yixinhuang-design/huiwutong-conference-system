@@ -2,6 +2,7 @@ package com.conference.common.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
@@ -28,6 +29,8 @@ public class BaseEntity implements Serializable {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private String updateBy;
     
-    @TableField(exist = false)
-    private Integer delFlag = 0; // 0-正常 1-删除
+    /** 逻辑删除标识: 0-正常 1-已删除, DB列: deleted */
+    @TableLogic
+    @TableField("deleted")
+    private Integer delFlag = 0;
 }

@@ -64,7 +64,7 @@
             class="quick-action-btn"
             @click="handleQuickAction(action)"
           >
-            <text class="action-icon">{{ action.icon }}</text>
+            <text class="action-icon"><text :class="action.icon"></text></text>
             <text class="action-label">{{ action.label }}</text>
           </view>
         </view>
@@ -100,10 +100,10 @@
               class="upload-item"
             >
               <image class="upload-image" :src="img" mode="aspectFill"></image>
-              <text class="upload-remove" @click="removeImage(index)">✕</text>
+              <text class="upload-remove" @click="removeImage(index)"><text class="fa fa-times"></text></text>
             </view>
             <view class="upload-btn" @click="chooseImage" v-if="uploadedImages.length < 3">
-              <text class="upload-icon">📷</text>
+              <text class="upload-icon"><text class="fa fa-camera"></text></text>
               <text class="upload-text">添加图片</text>
             </view>
           </view>
@@ -177,7 +177,7 @@
             class="action-list-item"
             @click="executeAction(action)"
           >
-            <text class="action-list-icon">{{ action.icon }}</text>
+            <text class="action-list-icon"><text :class="action.icon"></text></text>
             <text class="action-list-label">{{ action.label }}</text>
           </view>
         </view>
@@ -209,20 +209,20 @@ export default {
         threshold: ''
       },
       quickActions: [
-        { icon: '<text class="fa fa-phone"></text>', label: '电话通知', value: 'call' },
-        { icon: '<text class="fa fa-comments"></text>', label: '发送消息', value: 'message' },
-        { icon: '📧', label: '发送邮件', value: 'email' },
-        { icon: '<text class="fa fa-clipboard"></text>', label: '查看详情', value: 'detail' }
+        { icon: 'fa-phone', label: '电话通知', value: 'call' },
+        { icon: 'fa-comments', label: '发送消息', value: 'message' },
+        { icon: 'fa-envelope', label: '发送邮件', value: 'email' },
+        { icon: 'fa-clipboard', label: '查看详情', value: 'detail' }
       ],
       handleResults: ['已处理', '跟进中', '误报', '忽略'],
       relatedAlerts: [],
       handleHistory: [],
       actionList: [
-        { icon: '<text class="fa fa-phone"></text>', label: '电话联系当事人', value: 'call' },
-        { icon: '<text class="fa fa-comments"></text>', label: '发送消息提醒', value: 'message' },
-        { icon: '📧', label: '发送邮件通知', value: 'email' },
-        { icon: '<text class="fa fa-users"></text>', label: '查看学员信息', value: 'userInfo' },
-        { icon: '📊', label: '查看详细数据', value: 'data' }
+        { icon: 'fa-phone', label: '电话联系当事人', value: 'call' },
+        { icon: 'fa-comments', label: '发送消息提醒', value: 'message' },
+        { icon: 'fa-envelope', label: '发送邮件通知', value: 'email' },
+        { icon: 'fa-users', label: '查看学员信息', value: 'userInfo' },
+        { icon: 'fa-chart-bar', label: '查看详细数据', value: 'data' }
       ]
     }
   },
@@ -453,6 +453,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .mobile-alert-container {
   min-height: 100vh;

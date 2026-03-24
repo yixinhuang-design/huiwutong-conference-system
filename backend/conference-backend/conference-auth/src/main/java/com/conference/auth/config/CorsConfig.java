@@ -11,9 +11,10 @@ import org.springframework.web.filter.CorsFilter;
  * 注意：当通过网关访问时，应该禁用此配置，由网关统一处理CORS
  * 只有直接访问服务时才需要此配置
  *
- * 当前已启用，支持前端直连服务调试
+ * 当前已禁用（通过Gateway网关访问时）
+ * 如需直连服务调试，请取消下面的注释
  */
-@Configuration
+// @Configuration  // 已禁用：使用Gateway的统一CORS配置
 public class CorsConfig {
 
     @Bean

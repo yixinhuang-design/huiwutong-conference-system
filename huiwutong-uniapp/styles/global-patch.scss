@@ -1,0 +1,506 @@
+/* ==================== 全局样式补丁 - 匹配app原型 ==================== */
+/* 此文件强制统一所有页面样式，确保与app高保真原型完全一致 */
+
+/* ==================== 强制统一卡片圆角 ==================== */
+.card,
+.meeting-card,
+.schedule-item,
+.material-item,
+.task-card,
+.notification-item,
+.assistant-item,
+.record-item,
+.group-item,
+.feedback-item,
+.seat-item,
+.checkin-item,
+.qrcode-section,
+.location-section,
+.seat-map-card,
+.my-seat-card,
+.handbook-card,
+.eval-card,
+.contact-card,
+.msg-card,
+.highlight-card {
+  border-radius: 24rpx !important; /* 匹配app原型的12px */
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* 登录页特殊圆角 */
+.login-page .login-card {
+  border-radius: 40rpx !important; /* 匹配app原型的20px */
+}
+
+/* ==================== 强制统一图标容器圆角 ==================== */
+.feature-icon-lg,
+.user-icon,
+.avatar,
+.material-icon,
+.status-icon,
+.category-icon,
+.tab-icon,
+.nav-icon,
+.header-icon {
+  border-radius: 24rpx !important;
+}
+
+/* ==================== 强制统一按钮圆角 ==================== */
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-outline,
+.login-button,
+.nav-btn,
+.action-btn,
+.submit-btn,
+.cancel-btn,
+.confirm-btn {
+  border-radius: 24rpx !important;
+}
+
+/* ==================== 强制统一输入框圆角 ==================== */
+.input-field,
+.login-input,
+.form-input,
+.search-input,
+.textarea-field {
+  border-radius: 24rpx !important;
+}
+
+/* ==================== 强制统一状态标签圆角和渐变背景 ==================== */
+.status-chip,
+.status-badge,
+.tag,
+.badge {
+  border-radius: 20rpx !important; /* 匹配app原型的10px */
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 8rpx 20rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+/* 进行中状态 - 蓝色渐变 */
+.status-accent {
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%) !important;
+  color: #3b82f6 !important;
+}
+
+/* 已完成状态 - 绿色渐变 */
+.status-positive,
+.status-success {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+  color: #10b981 !important;
+}
+
+/* 待处理状态 - 橙色渐变 */
+.status-warn,
+.status-warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  color: #f97316 !important;
+}
+
+/* 中性状态 - 灰色渐变 */
+.status-neutral,
+.status-tertiary,
+.status-default {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+  color: #64748b !important;
+}
+
+/* 危险状态 - 红色渐变 */
+.status-danger,
+.status-error {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+  color: #ef4444 !important;
+}
+
+/* ==================== 统一info-banner横幅样式 ==================== */
+.info-banner,
+.warning-banner,
+.tip-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  border-radius: 24rpx !important;
+  padding: 24rpx;
+  margin: 16rpx;
+  border-left: 6rpx solid #f59e0b;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  font-size: 28rpx;
+  color: #92400e;
+
+  strong {
+    font-weight: 600;
+    color: #78350f;
+  }
+}
+
+/* ==================== 统一网格布局间距 ==================== */
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24rpx;
+  padding: 0 16rpx;
+}
+
+/* ==================== 统一分区标题样式 ==================== */
+.section-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1e293b;
+  padding: 32rpx 24rpx 16rpx;
+}
+
+/* ==================== 统一空状态样式 ==================== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 128rpx 64rpx;
+  color: #94a3b8;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 32rpx;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 32rpx;
+}
+
+/* ==================== 全局fade-in动画 ==================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* ==================== 统一列表项样式 ==================== */
+.list-item,
+.record-item,
+.msg-item,
+.notification-item {
+  background: #ffffff;
+  padding: 24rpx;
+  border-bottom: 1rpx solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  transition: all 0.3s;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.list-item:last-child,
+.record-item:last-child,
+.msg-item:last-child,
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.list-item:active,
+.record-item:active,
+.msg-item:active {
+  background: #f8fafc;
+}
+
+/* ==================== 统一功能瓦片样式 ==================== */
+.feature-tile {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  transition: all 0.3s;
+  text-decoration: none;
+  cursor: pointer;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.feature-tile:active {
+  transform: scale(0.98);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+}
+
+/* ==================== 统一表单元素样式 ==================== */
+.form-group {
+  margin-bottom: 24rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 16rpx;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 32rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 36rpx;
+  pointer-events: none;
+}
+
+/* ==================== 统一会议卡片样式 ==================== */
+.meeting-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  margin: 16rpx 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  border: 2rpx solid #e2e8f0;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.meeting-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+}
+
+.meeting-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 16rpx;
+}
+
+.meeting-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  font-size: 28rpx;
+  color: #64748b;
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+  }
+}
+
+/* ==================== 统一header样式 ==================== */
+.custom-header,
+.page-header {
+  background: #ffffff;
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1rpx solid #e2e8f0;
+}
+
+.header-content {
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24rpx;
+}
+
+.header-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* ==================== 统一按钮样式 ==================== */
+.btn {
+  padding: 24rpx 32rpx;
+  border-radius: 24rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2rpx solid #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-block {
+  width: 100%;
+  display: flex;
+}
+
+/* ==================== 统一弹窗样式 ==================== */
+.modal,
+.modal-content,
+.dialog-content {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 40rpx 120rpx rgba(0, 0, 0, 0.3);
+}
+
+.modal-header,
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.modal-title,
+.dialog-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.modal-close,
+.dialog-close {
+  font-size: 48rpx;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 8rpx;
+}
+
+/* ==================== 统一头像样式 ==================== */
+.avatar,
+.user-avatar,
+.staff-avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 40rpx;
+  font-weight: 600;
+  box-shadow: 0 8rpx 16rpx rgba(59, 130, 246, 0.3);
+}
+
+/* ==================== 统一标签和徽章 ==================== */
+.tag,
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.tag-blue {
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+  color: #3b82f6;
+}
+
+.tag-green {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #10b981;
+}
+
+.tag-orange {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #f97316;
+}
+
+/* ==================== 统一评分星星样式 ==================== */
+.rating-stars,
+.star-rating {
+  display: inline-flex;
+  gap: 8rpx;
+  font-size: 48rpx;
+}
+
+.star-filled {
+  color: #fbbf24;
+}
+
+.star-empty {
+  color: #e2e8f0;
+}
+
+/* ==================== 统一分隔线样式 ==================== */
+.divider,
+.separator {
+  height: 1rpx;
+  background: #e2e8f0;
+  margin: 24rpx 0;
+}
+
+/* ==================== 统一加载和空状态 ==================== */
+.loading-spinner {
+  width: 64rpx;
+  height: 64rpx;
+  border: 4rpx solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== 统一滚动条样式（H5） ==================== */
+/* #ifdef H5 */
+::-webkit-scrollbar {
+  width: 8rpx;
+  height: 8rpx;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4rpx;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+/* #endif */

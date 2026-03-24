@@ -190,7 +190,7 @@ class XFYunASRService {
         
         socket.onmessage = (event) => {
             const result = JSON.parse(event.data);
-            if (result.code === 0) {
+            if (result.code === 200 || result.code === 0) {
                 onResult(result.data.result);
             }
         };

@@ -114,7 +114,7 @@ export default {
           pageSize: 50
         })
         const records = result.records || result || []
-        const iconMap = { conference: '📢', registration: '⏰', checkin: '<text class="fa fa-check"></text>', schedule: '<text class="fa fa-calendar-alt"></text>', seat: '👺', bus: '🚌', accommodation: '🏠', custom: '✉️' }
+        const iconMap = { conference: '📢', registration: '<text class="fa fa-clock"></text>', checkin: '<text class="fa fa-check"></text>', schedule: '<text class="fa fa-calendar-alt"></text>', seat: '👺', bus: '🚌', accommodation: '🏠', custom: '✉️' }
         const colorMap = { conference: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', registration: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', checkin: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', custom: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }
         this.allNotifications = records.map(n => ({
           id: n.id,
@@ -181,6 +181,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .notifications-container {
   min-height: 100vh;

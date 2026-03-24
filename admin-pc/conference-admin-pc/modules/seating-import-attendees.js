@@ -72,8 +72,8 @@ export const SeatingImportAttendeesModule = {
         // ===== 生成模拟参会人员数据 =====
         const generateMockAttendees = async () => {
             const confirmed = await window.InteractionUtils?.showConfirm?.(
-                '确定要生成30条模拟参会人员数据吗？这将添加到现有数据中。',
-                '生成模拟数据',
+                '确定要生成30条模拟参会人员数据吗？这将添加到现有数据中。\n（注：此功能仅供开发调试使用）',
+                '生成模拟数据（开发调试）',
                 'info'
             ) || confirm('确定要生成30条模拟参会人员数据吗？');
 

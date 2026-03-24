@@ -5,7 +5,7 @@
 import { getToken } from '@/utils/auth'
 
 // API基础地址
-const BASE_URL = 'http://localhost:8080/api/v1'
+const BASE_URL = 'http://localhost:8080/api'
 
 /**
  * 请求拦截器

@@ -16,6 +16,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -52,10 +54,21 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ResultCode.ACCOUNT_DISABLED);
         }
         // 密码验证：支持MD5格式密码和BCrypt格式密码
-        // 将前端明文密码转换为MD5格式
-        String md5Password = DigestUtils.md5DigestAsHex(request.getPassword().getBytes());
-        if (!md5Password.equals(user.getPassword()) && !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        String md5Password = DigestUtils.md5DigestAsHex(request.getPassword().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        boolean isMd5Match = md5Password.equals(user.getPassword());
+        boolean isBCryptMatch = !isMd5Match && user.getPassword() != null
+                && user.getPassword().startsWith("$2") && passwordEncoder.matches(request.getPassword(), user.getPassword());
+
+        if (!isMd5Match && !isBCryptMatch) {
             throw new BusinessException(ResultCode.LOGIN_FAILED);
+        }
+
+        // MD5密码自动升级为BCrypt（渐进式迁移）
+        if (isMd5Match) {
+            String bcryptPassword = passwordEncoder.encode(request.getPassword());
+            user.setPassword(bcryptPassword);
+            userMapper.updateById(user);
+            log.info("用户[{}]密码已从MD5自动升级为BCrypt", user.getUsername());
         }
 
         List<String> roles = roleMapper.selectRoleCodesByUserId(user.getId());

@@ -42,7 +42,12 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public Result<Void> logout() {
+    public Result<Void> logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        // 清除服务端租户上下文
+        // 注：当前JWT为无状态Token，服务端无Token黑名单机制
+        // 客户端应在收到成功响应后清除本地存储的Token
+        // 后续可接入Redis实现Token黑名单以支持真正的服务端Token失效
+        com.conference.common.tenant.TenantContextHolder.clear();
         return Result.success();
     }
 

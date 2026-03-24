@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -98,15 +98,6 @@
                         <div class="stat-label">限定报名人数</div>
                     </div>
                 </div>
-                <div class="stat-card danger" v-if="registrationStats.unregisteredUnits > 0">
-                    <div class="stat-icon">
-                        <i class="fas fa-building"></i>
-                    </div>
-                    <div class="stat-content">
-                        <div class="stat-value">{{ registrationStats.unregisteredUnits }}</div>
-                        <div class="stat-label">未报名单位</div>
-                    </div>
-                </div>
             </div>
             
             <!-- 报名趋势图 -->
@@ -129,10 +120,6 @@
             
             <!-- 快速操作 -->
             <div class="quick-actions">
-                <a href="reminder-urge.html" class="btn-warning btn-lg">
-                    <i class="fas fa-bell"></i>
-                    催报催收系统
-                </a>
                 <button class="btn-outline" @click="exportStatsReport">
                     <i class="fas fa-file-download"></i>
                     导出统计报告
@@ -281,49 +268,7 @@
             </div>
         </div>
 
-        <!-- 一键催报功能 -->
-        <div class="reminder-system glass-card">
-            <h3>⏰ 一键催报系统</h3>
-            <div class="reminder-stats">
-                <div class="stat-card">
-                    <span class="stat-number">{{ reminderStats.unregisteredUnits }}</span>
-                    <span class="stat-label">未报名单位</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number">{{ reminderStats.involvedPersons }}</span>
-                    <span class="stat-label">涉及人数</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number">{{ reminderStats.sentReminders }}</span>
-                    <span class="stat-label">已发催报</span>
-                </div>
-            </div>
-            <div class="reminder-actions">
-                <button class="btn-warning" @click="sendReminderToAll">
-                    <i class="fas fa-bell"></i>
-                    全部催报
-                </button>
-                <button class="btn-outline" @click="selectiveReminder">
-                    <i class="fas fa-user-check"></i>
-                    选择催报
-                </button>
-                <div class="reminder-templates">
-                    <label>催报模板:</label>
-                    <select v-model="reminderTemplate">
-                        <option value="gentle">温和提醒模板</option>
-                        <option value="urgent">紧急催报模板</option>
-                        <option value="final">最后机会模板</option>
-                        <option value="custom">自定义模板</option>
-                    </select>
-                </div>
-            </div>
-            <div class="reminder-preview" v-if="reminderTemplate">
-                <h4>模板预览</h4>
-                <div class="template-content">
-                    {{ getReminderTemplateContent() }}
-                </div>
-            </div>
-        </div>
+
 
         <!-- 报名数据表格 -->
         <div class="registration-data glass-card">
@@ -407,139 +352,7 @@
         </div>
         </div><!-- 关闭page-with-nav -->
 
-        <!-- 一键催报弹窗 -->
-        <div v-if="showReminderModal" class="modal-overlay" @click.self="showReminderModal = false">
-            <div class="modal-content glass-card reminder-modal" @click.stop>
-                <div class="modal-header">
-                    <h3>⏰ 一键催报</h3>
-                    <button class="btn-icon" @click="showReminderModal = false">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <!-- 步骤1: 选择单位 -->
-                    <div class="reminder-step" v-if="reminderStep === 1">
-                        <h4>步骤1: 选择要催报的单位</h4>
-                        <div class="unit-selection">
-                            <div class="selection-actions">
-                                <button class="btn-sm btn-outline" @click="selectAllUnits">
-                                    {{ allUnitsSelected ? '取消全选' : '全选' }}
-                                </button>
-                                <span class="selected-count">已选择 {{ selectedUnits.length }} 个单位</span>
-                            </div>
-                            <div class="unit-list">
-                                <div v-for="unit in unregisteredUnits" :key="unit.id" 
-                                     class="unit-item" 
-                                     :class="{ selected: selectedUnits.includes(unit.id) }"
-                                     @click="toggleUnit(unit.id)">
-                                    <input type="checkbox" 
-                                           :checked="selectedUnits.includes(unit.id)"
-                                           @change.stop="toggleUnit(unit.id)">
-                                    <div class="unit-info">
-                                        <div class="unit-name">{{ unit.name }}</div>
-                                        <div class="unit-meta">预计人数: {{ unit.expectedCount }}人</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="step-actions">
-                            <button class="btn-outline" @click="showReminderModal = false">取消</button>
-                            <button class="btn-primary" @click="reminderStep = 2" :disabled="selectedUnits.length === 0">
-                                下一步：选择渠道
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- 步骤2: 选择渠道 -->
-                    <div class="reminder-step" v-if="reminderStep === 2">
-                        <h4>步骤2: 选择催报渠道</h4>
-                        <div class="channel-selection">
-                            <label class="channel-option" 
-                                   v-for="channel in availableChannels" 
-                                   :key="channel.value"
-                                   :class="{ selected: reminderChannels.includes(channel.value) }">
-                                <input type="checkbox" 
-                                       :value="channel.value"
-                                       v-model="reminderChannels">
-                                <div class="channel-content">
-                                    <i :class="channel.icon"></i>
-                                    <div>
-                                        <div class="channel-name">{{ channel.name }}</div>
-                                        <div class="channel-desc">{{ channel.desc }}</div>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                        <div class="step-actions">
-                            <button class="btn-outline" @click="reminderStep = 1">上一步</button>
-                            <button class="btn-primary" @click="reminderStep = 3" :disabled="reminderChannels.length === 0">
-                                下一步：选择模板
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 步骤3: 选择模板 -->
-                    <div class="reminder-step" v-if="reminderStep === 3">
-                        <h4>步骤3: 选择催报模板</h4>
-                        <div class="template-selection">
-                            <select v-model="reminderTemplate" class="template-select">
-                                <option value="gentle">温和提醒模板</option>
-                                <option value="urgent">紧急催报模板</option>
-                                <option value="final">最后机会模板</option>
-                                <option value="custom">自定义模板</option>
-                            </select>
-                            <div class="template-preview">
-                                <h5>模板预览：</h5>
-                                <div class="preview-content">
-                                    {{ getReminderTemplateContent() }}
-                                </div>
-                                <div v-if="reminderTemplate === 'custom'" class="custom-template-editor">
-                                    <textarea v-model="customTemplateContent" 
-                                              placeholder="请输入自定义催报内容..."
-                                              rows="6"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="step-actions">
-                            <button class="btn-outline" @click="reminderStep = 2">上一步</button>
-                            <button class="btn-primary" @click="reminderStep = 4">
-                                下一步：确认发送
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 步骤4: 确认发送 -->
-                    <div class="reminder-step" v-if="reminderStep === 4">
-                        <h4>步骤4: 确认发送</h4>
-                        <div class="send-summary">
-                            <div class="summary-item">
-                                <span class="label">选择单位:</span>
-                                <span class="value">{{ selectedUnits.length }} 个单位</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">催报渠道:</span>
-                                <span class="value">{{ getChannelNames() }}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">催报模板:</span>
-                                <span class="value">{{ getTemplateName() }}</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="label">预计发送:</span>
-                                <span class="value">{{ getEstimatedCount() }} 条消息</span>
-                            </div>
-                        </div>
-                        <div class="step-actions">
-                            <button class="btn-outline" @click="reminderStep = 3">上一步</button>
-                            <button class="btn-primary" @click="sendReminder">
-                                <i class="fas fa-paper-plane"></i>
-                                确认发送
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- 智能分组 - 组详情弹窗 -->
         <div v-if="showGroupDetailModal" class="modal-overlay" @click.self="showGroupDetailModal = false">
@@ -749,8 +562,7 @@
                         approved: 328,
                         pending: 23,
                         rejected: 5,
-                        limitCount: 500,
-                        unregisteredUnits: 7
+                        limitCount: 500
                     },
                     trendTimeRange: 'month',
                     trendChartData: [],
@@ -761,15 +573,7 @@
                         { type: 'mobile', name: '移动端报名', icon: 'fas fa-mobile-alt', count: 58, trend: -3 }
                     ],
                     selectedChannel: null,
-                    showReminderModal: false,
-                    reminderStep: 1, // 催报步骤：1-选择单位, 2-选择渠道, 3-选择模板, 4-确认发送
-                    availableChannels: [
-                        { value: 'sms', name: '短信', icon: 'fas fa-sms', desc: '支持非注册用户，字数限制160字' },
-                        { value: 'wechat', name: '微信', icon: 'fab fa-weixin', desc: '需注册用户，模板消息' },
-                        { value: 'app', name: 'APP推送', icon: 'fas fa-mobile-alt', desc: '需注册用户，订阅消息' },
-                        { value: 'qr', name: '二维码查询', icon: 'fas fa-qrcode', desc: '非注册用户，生成唯一二维码' }
-                    ],
-                    customTemplateContent: '',
+
                     ocrApiOnline: true,
                     ocrResult: null,
                     groupingCriteria: 'department',
@@ -791,32 +595,10 @@
                     draggedFromGroup: null, // 成员来源组
                     numberGroupSize: 25, // 序号分组每组人数
                     availableStaff: [], // 可选的工作人员列表
-                    reminderStats: {
-                        unregisteredUnits: 0,
-                        involvedPersons: 0,
-                        sentReminders: 0
-                    },
-                    reminderTemplate: 'gentle',
-                    reminderChannels: ['sms'],
-                    selectedUnits: [],
-                    unregisteredUnits: [
-                        { id: 'unit_1', name: '示例单位A', expectedCount: 5 },
-                        { id: 'unit_2', name: '示例单位B', expectedCount: 3 },
-                        { id: 'unit_3', name: '示例单位C', expectedCount: 8 }
-                    ],
                     searchQuery: '',
                     statusFilter: '',
                     channelFilter: '',
-                    registrations: [
-                        { id: 1, name: '张三', unit: '市委组织部', department: '干部科', position: '处长', phone: '13800138001', email: 'zhangsan@example.com', status: 'approved', submitTime: new Date('2024-01-10 09:30'), auditTime: new Date('2024-01-10 10:15'), reviewer: '审核员A' },
-                        { id: 2, name: '李四', unit: '市委宣传部', department: '宣传处', position: '副处长', phone: '13800138002', email: 'lisi@example.com', status: 'approved', submitTime: new Date('2024-01-10 10:00'), auditTime: new Date('2024-01-10 11:30'), reviewer: '审核员B' },
-                        { id: 3, name: '王五', unit: '市教育局', department: '人事科', position: '科长', phone: '13800138003', email: 'wangwu@example.com', status: 'pending', submitTime: new Date('2024-01-10 14:20'), auditTime: null, reviewer: null },
-                        { id: 4, name: '赵六', unit: '市财政局', department: '预算科', position: '副科长', phone: '13800138004', email: 'zhaoliu@example.com', status: 'pending', submitTime: new Date('2024-01-11 08:45'), auditTime: null, reviewer: null },
-                        { id: 5, name: '孙七', unit: '市卫健委', department: '疾控科', position: '科员', phone: '13800138005', email: 'sunqi@example.com', status: 'rejected', submitTime: new Date('2024-01-09 16:00'), auditTime: new Date('2024-01-09 17:00'), reviewer: '审核员C', rejectReason: '报名信息不完整' },
-                        { id: 6, name: '周八', unit: '市公安局', department: '治安科', position: '民警', phone: '13800138006', email: 'zhouba@example.com', status: 'approved', submitTime: new Date('2024-01-11 09:15'), auditTime: new Date('2024-01-11 10:00'), reviewer: '审核员A' },
-                        { id: 7, name: '吴九', unit: '市人社局', department: '就业科', position: '副科长', phone: '13800138007', email: 'wujiu@example.com', status: 'pending', submitTime: new Date('2024-01-11 11:30'), auditTime: null, reviewer: null },
-                        { id: 8, name: '郑十', unit: '市发改委', department: '规划科', position: '科员', phone: '13800138008', email: 'zhengshi@example.com', status: 'approved', submitTime: new Date('2024-01-12 08:00'), auditTime: new Date('2024-01-12 09:30'), reviewer: '审核员B' }
-                    ],
+                    registrations: [],
                     filteredRegistrations: [],
                     selectedRegistrations: [],
                     selectAll: false,
@@ -834,10 +616,7 @@
                     const pages = Math.ceil(this.filteredRegistrations.length / this.pageSize);
                     return pages > 0 ? pages : 1;
                 },
-                allUnitsSelected() {
-                    return this.unregisteredUnits.length > 0 && 
-                           this.selectedUnits.length === this.unregisteredUnits.length;
-                }
+
             },
             watch: {
                 paginatedRegistrations: {
@@ -899,6 +678,16 @@
                     return this.conference.id || new URLSearchParams(window.location.search).get('conferenceId') || '';
                 },
                 
+                // 获取带认证信息的请求头
+                getAuthHeaders() {
+                    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                    const tenantId = localStorage.getItem('tenantId') || '100';
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = 'Bearer ' + token;
+                    if (tenantId) headers['X-Tenant-Id'] = tenantId;
+                    return headers;
+                },
+                
                 async initialize() {
                     const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
                     if (conferenceId) {
@@ -914,27 +703,18 @@
                                 }
                             } catch (error) {
                                 console.error('加载会议数据失败:', error);
-                                // 使用示例数据作为fallback
-                                this.conference = {
-                                    id: conferenceId,
-                                    name: '示例会议'
-                                };
+                                // 尝试直接从API加载
+                                await this.loadConferenceFromApi(conferenceId);
                             }
                         } else {
-                            // conferenceContext未初始化，使用示例数据
-                            this.conference = {
-                                id: conferenceId,
-                                name: '示例会议'
-                            };
+                            // conferenceContext未初始化，直接从API加载
+                            await this.loadConferenceFromApi(conferenceId);
                         }
                     } else {
-                        // 如果没有会议ID，使用示例数据
-                        this.conference = {
-                            id: 'demo_conf_001',
-                            name: '示例会议'
-                        };
+                        console.warn('[Registration] URL中无conferenceId参数');
+                        this.conference = { id: '', name: '未选择会议' };
                     }
-                    // 无论是否有会议ID，都加载示例数据
+                    // 加载真实报名数据
                     await this.loadRegistrations();
                     // 确保数据加载完成后再更新统计和预览
                     await this.loadRegistrationStats();
@@ -949,6 +729,33 @@
                     });
                 },
                 
+                // 直接从API加载会议信息
+                async loadConferenceFromApi(conferenceId) {
+                    try {
+                        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                        const tenantId = localStorage.getItem('tenantId') || '100';
+                        const headers = { 'Content-Type': 'application/json' };
+                        if (token) headers['Authorization'] = 'Bearer ' + token;
+                        if (tenantId) headers['X-Tenant-Id'] = tenantId;
+                        
+                        const resp = await fetch(`/api/meeting/${conferenceId}`, { headers });
+                        const result = await resp.json();
+                        if (result.code === 200 && result.data) {
+                            this.conference = {
+                                id: conferenceId,
+                                name: result.data.name || result.data.title || '会议',
+                                maxParticipants: result.data.maxParticipants || 0,
+                                ...result.data
+                            };
+                        } else {
+                            this.conference = { id: conferenceId, name: '会议(ID:' + conferenceId + ')' };
+                        }
+                    } catch (e) {
+                        console.warn('直接加载会议信息失败:', e);
+                        this.conference = { id: conferenceId, name: '会议(ID:' + conferenceId + ')' };
+                    }
+                },
+                
                 async loadRegistrationStats() {
                     // 根据实际报名数据计算统计数据
                     const total = this.registrations.length;
@@ -957,67 +764,44 @@
                     const rejected = this.registrations.filter(r => r.status === 'rejected').length;
                     
                     // 计算各渠道的报名数量
-                    const channelCounts = {
-                        web: this.registrations.filter(r => r.channel === 'web').length,
-                        miniprogram: this.registrations.filter(r => r.channel === 'miniprogram').length,
-                        mobile: this.registrations.filter(r => r.channel === 'mobile').length
-                    };
+                    const h5Count = this.registrations.filter(r => r.channel === 'h5' || r.channel === 'mobile').length;
+                    const webCount = this.registrations.filter(r => r.channel === 'web' || r.channel === 'pc').length;
+                    const otherCount = total - h5Count - webCount;
                     
                     // 更新渠道数据
                     this.channels = [
                         { 
+                            type: 'h5', 
+                            name: 'H5扫码报名', 
+                            icon: 'fas fa-qrcode', 
+                            count: h5Count || total,
+                            trend: total > 0 ? Math.floor(((h5Count || total) / total) * 100) : 0
+                        },
+                        { 
                             type: 'web', 
-                            name: '网页报名', 
+                            name: '后台录入', 
                             icon: 'fas fa-globe', 
-                            count: channelCounts.web,
-                            trend: channelCounts.web > 0 ? Math.floor((channelCounts.web / total) * 100) : 0
+                            count: webCount,
+                            trend: total > 0 ? Math.floor((webCount / total) * 100) : 0
                         },
                         { 
-                            type: 'miniprogram', 
-                            name: '小程序报名', 
-                            icon: 'fas fa-comment', 
-                            count: channelCounts.miniprogram,
-                            trend: channelCounts.miniprogram > 0 ? Math.floor((channelCounts.miniprogram / total) * 100) : 0
-                        },
-                        { 
-                            type: 'mobile', 
-                            name: '移动端报名', 
-                            icon: 'fas fa-mobile-alt', 
-                            count: channelCounts.mobile,
-                            trend: channelCounts.mobile > 0 ? Math.floor((channelCounts.mobile / total) * 100) : 0
+                            type: 'other', 
+                            name: '其他渠道', 
+                            icon: 'fas fa-ellipsis-h', 
+                            count: otherCount,
+                            trend: total > 0 ? Math.floor((otherCount / total) * 100) : 0
                         }
                     ];
                     
-                    // 更新统计数据
+                    // 更新统计数据（基于真实数据）
                     this.registrationStats = {
                         total: total,
                         approved: approved,
                         pending: pending,
                         rejected: rejected,
-                        limitCount: 500,
-                        unregisteredUnits: Math.max(0, 23 - Math.floor(total / 10)) // 根据报名数估算未报名单位
+                        limitCount: this.conference.maxParticipants || 0
                     };
-                    
-                    // 更新催报统计数据
-                    this.reminderStats = {
-                        unregisteredUnits: this.registrationStats.unregisteredUnits,
-                        involvedPersons: this.registrationStats.unregisteredUnits * 7, // 估算涉及人数
-                        sentReminders: Math.floor(this.registrationStats.unregisteredUnits * 0.5) // 估算已发送催报数
-                    };
-                    
-                    // 初始化未报名单位列表（实际应用中应该从API获取）
-                    if (this.registrationStats.unregisteredUnits > 0) {
-                        // 生成示例未报名单位
-                        const units = [];
-                        for (let i = 1; i <= Math.min(this.registrationStats.unregisteredUnits, 20); i++) {
-                            units.push({
-                                id: `unit_${i}`,
-                                name: `示例单位${String.fromCharCode(64 + i)}`,
-                                expectedCount: Math.floor(Math.random() * 10) + 3
-                            });
-                        }
-                        this.unregisteredUnits = units;
-                    }
+
                 },
                 
                 initTrendChart() {
@@ -1038,7 +822,7 @@
                 },
                 
                 updateTrendChart() {
-                    // 模拟生成趋势数据
+                    // TODO: 应从后端统计API获取真实趋势数据
                     const days = this.trendTimeRange === 'today' ? 24 : 
                                 this.trendTimeRange === 'week' ? 7 : 
                                 this.trendTimeRange === 'month' ? 30 : 7;
@@ -1047,7 +831,7 @@
                     for (let i = 0; i < days; i++) {
                         data.push({
                             date: new Date(Date.now() - (days - i - 1) * 86400000).toLocaleDateString(),
-                            count: Math.floor(Math.random() * 50) + 10
+                            count: 0 // 待后端API返回真实统计数据
                         });
                     }
                     
@@ -1092,64 +876,7 @@
                     }
                 },
                 
-                goToReminderFlow() {
-                    // 打开催报弹窗，开始催报流程
-                    this.reminderStep = 1;
-                    this.selectedUnits = [];
-                    this.reminderChannels = ['sms'];
-                    this.reminderTemplate = 'gentle';
-                    this.customTemplateContent = '';
-                    this.showReminderModal = true;
-                },
-                
-                toggleUnit(unitId) {
-                    const index = this.selectedUnits.indexOf(unitId);
-                    if (index > -1) {
-                        this.selectedUnits.splice(index, 1);
-                    } else {
-                        this.selectedUnits.push(unitId);
-                    }
-                },
-                
-                selectAllUnits() {
-                    if (this.allUnitsSelected) {
-                        this.selectedUnits = [];
-                    } else {
-                        this.selectedUnits = this.unregisteredUnits.map(u => u.id);
-                    }
-                },
-                
-                getChannelNames() {
-                    return this.reminderChannels.map(ch => {
-                        const channel = this.availableChannels.find(c => c.value === ch);
-                        return channel ? channel.name : ch;
-                    }).join('、');
-                },
-                
-                getTemplateName() {
-                    const names = {
-                        gentle: '温和提醒模板',
-                        urgent: '紧急催报模板',
-                        final: '最后机会模板',
-                        custom: '自定义模板'
-                    };
-                    return names[this.reminderTemplate] || '未知模板';
-                },
-                
-                getEstimatedCount() {
-                    let count = 0;
-                    this.selectedUnits.forEach(unitId => {
-                        const unit = this.unregisteredUnits.find(u => u.id === unitId);
-                        if (unit) {
-                            count += unit.expectedCount * this.reminderChannels.length;
-                        }
-                    });
-                    return count;
-                },
-                
-                openReminderModal() {
-                    this.showReminderModal = true;
-                },
+
                 
                 async exportStatsReport() {
                     try {
@@ -1219,11 +946,77 @@
                 },
                 
                 async loadRegistrations() {
-                    // 使用data中已定义的默认报名数据
-                    // 如果registrations数组为空，则使用默认数据
-                    if (this.registrations.length === 0) {
-                        // 保持data中定义的默认数据，不覆盖
-                        console.log('使用默认报名数据');
+                    const conferenceId = this.getConferenceId();
+                    if (!conferenceId) {
+                        console.warn('[Registration] 无会议ID，无法加载报名数据');
+                        this.registrations = [];
+                        this.filterData();
+                        return;
+                    }
+                    try {
+                        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                        const tenantId = localStorage.getItem('tenantId') || '100';
+                        const headers = {
+                            'Content-Type': 'application/json'
+                        };
+                        if (token) headers['Authorization'] = 'Bearer ' + token;
+                        if (tenantId) headers['X-Tenant-Id'] = tenantId;
+                        
+                        const response = await fetch(`/api/registration/list?conferenceId=${conferenceId}&page=1&pageSize=500`, {
+                            method: 'GET',
+                            headers: headers
+                        });
+                        const result = await response.json();
+                        
+                        if (result.code === 200 && result.data) {
+                            const records = result.data.records || result.data || [];
+                            // 将后端数据映射为前端显示格式
+                            const statusMap = { 0: 'pending', 1: 'approved', 2: 'rejected', 3: 'cancelled', 4: 'checkedin' };
+                            this.registrations = records.map(item => {
+                                // 解析 registrationData JSON
+                                let extraData = {};
+                                let ocrResult = null;
+                                try {
+                                    if (item.registrationData) {
+                                        extraData = JSON.parse(item.registrationData);
+                                    }
+                                    // 检查OCR结果
+                                    if (extraData.ocrValidation || extraData.ocr) {
+                                        ocrResult = extraData.ocrValidation || extraData.ocr;
+                                    }
+                                } catch(e) { /* ignore parse error */ }
+                                
+                                return {
+                                    id: String(item.id),
+                                    name: item.realName || item.name || '',
+                                    unit: extraData.company || extraData.unit || extraData.organization || item.department || '',
+                                    department: item.department || extraData.department || '',
+                                    position: item.position || extraData.position || '',
+                                    phone: item.phone || '',
+                                    email: item.email || '',
+                                    idCard: item.idCard || '',
+                                    status: statusMap[item.status] || 'pending',
+                                    statusCode: item.status,
+                                    channel: extraData.channel || 'h5',
+                                    registeredAt: item.registrationTime || item.createdTime || item.createTime || '',
+                                    submitTime: item.registrationTime || item.createdTime || item.createTime || '',
+                                    auditTime: item.auditTime || item.reviewTime || null,
+                                    reviewer: item.auditorId ? ('审核人ID:' + item.auditorId) : null,
+                                    rejectReason: item.auditRemark || item.reviewRemark || '',
+                                    ocrResult: ocrResult,
+                                    idCardPhotoUrl: item.idCardPhotoUrl || (extraData.files && extraData.files.idCardPhotoUrl) || '',
+                                    extraData: extraData,
+                                    rawData: item
+                                };
+                            });
+                            console.log('[Registration] 从API加载了', this.registrations.length, '条报名记录');
+                        } else {
+                            console.warn('[Registration] API返回异常:', result.message || result);
+                            this.registrations = [];
+                        }
+                    } catch (error) {
+                        console.error('[Registration] 加载报名数据失败:', error);
+                        this.registrations = [];
                     }
                     this.filterData();
                 },
@@ -1236,7 +1029,18 @@
                         return;
                     }
                     try {
-                        const response = await fetch(`http://localhost:8082/api/grouping/list?meetingId=${conferenceId}`);
+                        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                        const tenantId = localStorage.getItem('tenantId') || '100';
+                        const headers = {
+                            'Content-Type': 'application/json'
+                        };
+                        if (token) headers['Authorization'] = 'Bearer ' + token;
+                        if (tenantId) headers['X-Tenant-Id'] = tenantId;
+                        
+                        const response = await fetch(`/api/grouping/list?meetingId=${conferenceId}`, {
+                            method: 'GET',
+                            headers: headers
+                        });
                         const result = await response.json();
                         if (result.code === 200 && result.data && result.data.groups && result.data.groups.length > 0) {
                             const groups = result.data.groups;
@@ -1407,8 +1211,9 @@
                     const group = this.groupingPreview.find(g => g.id === groupId);
                     if (group) {
                         try {
-                            const response = await fetch(`http://localhost:8082/api/grouping/updateName?groupId=${groupId}&name=${encodeURIComponent(group.name)}`, {
-                                method: 'PUT'
+                            const response = await fetch(`/api/grouping/updateName?groupId=${groupId}&name=${encodeURIComponent(group.name)}`, {
+                                method: 'PUT',
+                                headers: this.getAuthHeaders()
                             });
                             const result = await response.json();
                             if (result.code === 200) {
@@ -1431,9 +1236,9 @@
                         const leaderId = leaderMember ? leaderMember.id : '';
                         try {
                             const url = leaderId 
-                                ? `http://localhost:8082/api/grouping/updateLeader?groupId=${groupId}&leaderId=${leaderId}`
-                                : `http://localhost:8082/api/grouping/updateLeader?groupId=${groupId}`;
-                            const response = await fetch(url, { method: 'PUT' });
+                                ? `/api/grouping/updateLeader?groupId=${groupId}&leaderId=${leaderId}`
+                                : `/api/grouping/updateLeader?groupId=${groupId}`;
+                            const response = await fetch(url, { method: 'PUT', headers: this.getAuthHeaders() });
                             const result = await response.json();
                             if (result.code === 200) {
                                 console.log('[Grouping] 组长已保存:', group.leader);
@@ -1645,9 +1450,9 @@
                                 }))
                             };
                             
-                            const response = await fetch('http://localhost:8082/api/grouping/save', {
+                            const response = await fetch('/api/grouping/save', {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: this.getAuthHeaders(),
                                 body: JSON.stringify(saveData)
                             });
                             const result = await response.json();
@@ -1701,12 +1506,12 @@
                         this.groupMembers[this.currentGroup.id] = [...this.currentGroupMembers];
                         // 调用后端API保存组名和组长
                         try {
-                            await fetch(`http://localhost:8082/api/grouping/updateName?groupId=${groupId}&name=${encodeURIComponent(this.currentGroup.name)}`, { method: 'PUT' });
+                            await fetch(`/api/grouping/updateName?groupId=${groupId}&name=${encodeURIComponent(this.currentGroup.name)}`, { method: 'PUT', headers: this.getAuthHeaders() });
                             if (this.currentGroup.leader) {
                                 const members = this.groupMembers[groupId] || [];
                                 const leaderMember = members.find(m => m.name === this.currentGroup.leader);
                                 if (leaderMember) {
-                                    await fetch(`http://localhost:8082/api/grouping/updateLeader?groupId=${groupId}&leaderId=${leaderMember.id}`, { method: 'PUT' });
+                                    await fetch(`/api/grouping/updateLeader?groupId=${groupId}&leaderId=${leaderMember.id}`, { method: 'PUT', headers: this.getAuthHeaders() });
                                 }
                             }
                             console.log('[Grouping] 组详情已保存到数据库');
@@ -1834,9 +1639,9 @@
                                     members: g.members.map(m => ({ id: String(m.id) }))
                                 }))
                             };
-                            const response = await fetch('http://localhost:8082/api/grouping/adjustMembers', {
+                            const response = await fetch('/api/grouping/adjustMembers', {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: this.getAuthHeaders(),
                                 body: JSON.stringify(adjustData)
                             });
                             const result = await response.json();
@@ -1905,8 +1710,9 @@
                             // 调用后端API移除成员
                             try {
                                 const groupId = this.currentGroup.id;
-                                const response = await fetch(`http://localhost:8082/api/grouping/removeMember?groupId=${groupId}&memberId=${memberId}`, {
-                                    method: 'DELETE'
+                                const response = await fetch(`/api/grouping/removeMember?groupId=${groupId}&memberId=${memberId}`, {
+                                    method: 'DELETE',
+                                    headers: this.getAuthHeaders()
                                 });
                                 const result = await response.json();
                                 if (result.code === 200) {
@@ -1920,96 +1726,16 @@
                     }
                 },
                 
-                getReminderTemplateContent() {
-                    const templates = {
-                        gentle: '尊敬的各位领导，2024年度技术峰会即将开始，诚邀贵单位参与报名...',
-                        urgent: '【紧急提醒】2024年度技术峰会报名即将截止，请尽快完成报名！',
-                        final: '【最后通知】2024年度技术峰会报名今日截止，这是最后的报名机会！',
-                        custom: '请在此处编辑自定义催报内容...'
-                    };
-                    return templates[this.reminderTemplate] || '';
-                },
-                
-                async sendReminder() {
-                    if (this.selectedUnits.length === 0) {
-                        this.$showToast('请选择要催报的单位', 'warning');
-                        return;
-                    }
-                    
-                    if (this.reminderChannels.length === 0) {
-                        this.$showToast('请选择至少一个催报渠道', 'warning');
-                        return;
-                    }
-                    
-                    const content = this.reminderTemplate === 'custom' 
-                        ? this.customTemplateContent 
-                        : this.getReminderTemplateContent();
-                    
-                    if (!content || !content.trim()) {
-                        this.$showToast('催报内容不能为空', 'warning');
-                        return;
-                    }
-                    
-                    try {
-                        this.$showLoading(`正在发送催报通知给 ${this.selectedUnits.length} 个单位...`);
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        this.reminderStats.sentReminders += this.selectedUnits.length;
-                        this.$hideLoading();
-                        this.$showToast(`已向 ${this.selectedUnits.length} 个单位发送催报通知`, 'success');
-                        this.showReminderModal = false;
-                        this.reminderStep = 1;
-                        this.selectedUnits = [];
-                        this.reminderChannels = ['sms'];
-                        this.reminderTemplate = 'gentle';
-                        this.customTemplateContent = '';
-                    } catch (error) {
-                        this.$hideLoading();
-                        this.$showToast('发送失败，请重试', 'error');
-                    }
-                },
-                
-                async sendReminderToAll() {
-                    if (this.reminderStats.unregisteredUnits === 0) {
-                        this.$showToast('当前没有未报名单位', 'info');
-                        return;
-                    }
-                    
-                    const confirmed = await this.$showConfirm(
-                        `确定要向所有 ${this.reminderStats.unregisteredUnits} 个未报名单位发送催报通知吗？`,
-                        '一键催报',
-                        'warning'
-                    );
-                    
-                    if (confirmed) {
-                        try {
-                            this.$showLoading(`正在发送催报通知给 ${this.reminderStats.unregisteredUnits} 个单位...`);
-                            await new Promise(resolve => setTimeout(resolve, 2000));
-                            this.reminderStats.sentReminders += this.reminderStats.unregisteredUnits;
-                            this.$hideLoading();
-                            this.$showToast(`已向 ${this.reminderStats.unregisteredUnits} 个单位发送催报通知`, 'success');
-                        } catch (error) {
-                            this.$hideLoading();
-                            this.$showToast('发送失败，请重试', 'error');
-                        }
-                    }
-                },
-                
-                selectiveReminder() {
-                    if (this.reminderStats.unregisteredUnits === 0) {
-                        this.$showToast('当前没有未报名单位', 'info');
-                        return;
-                    }
-                    this.$showToast('请在下方的未报名单位列表中选择需要催报的单位', 'info', 3000);
-                },
-                
                 filterData() {
                     let filtered = [...this.registrations];
                     
                     if (this.searchQuery) {
+                        const query = this.searchQuery.toLowerCase();
                         filtered = filtered.filter(r => 
-                            r.name.includes(this.searchQuery) ||
-                            r.unit.includes(this.searchQuery) ||
-                            r.department.includes(this.searchQuery)
+                            (r.name && r.name.toLowerCase().includes(query)) ||
+                            (r.unit && r.unit.toLowerCase().includes(query)) ||
+                            (r.department && r.department.toLowerCase().includes(query)) ||
+                            (r.phone && r.phone.includes(query))
                         );
                     }
                     
@@ -2022,6 +1748,18 @@
                     }
                     
                     this.filteredRegistrations = filtered;
+                    
+                    // 排序：未审核(pending)排最前，然后按报名时间倒序
+                    const statusOrder = { 'pending': 0, 'approved': 1, 'rejected': 2, 'cancelled': 3, 'checkedin': 4 };
+                    this.filteredRegistrations.sort((a, b) => {
+                        const sa = statusOrder[a.status] !== undefined ? statusOrder[a.status] : 9;
+                        const sb = statusOrder[b.status] !== undefined ? statusOrder[b.status] : 9;
+                        if (sa !== sb) return sa - sb;
+                        // 同状态按报名时间倒序（新的在前）
+                        const ta = a.submitTime ? new Date(a.submitTime).getTime() : 0;
+                        const tb = b.submitTime ? new Date(b.submitTime).getTime() : 0;
+                        return tb - ta;
+                    });
                     // totalPages 现在是计算属性，不需要手动设置
                     if (this.currentPage > Math.ceil(filtered.length / this.pageSize)) {
                         this.currentPage = 1;
@@ -2238,17 +1976,45 @@
                     if (confirmed) {
                         try {
                             this.$showLoading('处理中...');
-                            await new Promise(resolve => setTimeout(resolve, 500));
-                            const registration = this.registrations.find(r => r.id === id);
-                            if (registration) {
-                                registration.status = 'approved';
+                            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                            const tenantId = localStorage.getItem('tenantId') || '100';
+                            const userId = localStorage.getItem('userId') || '0';
+                            const headers = { 'Content-Type': 'application/json' };
+                            if (token) headers['Authorization'] = 'Bearer ' + token;
+                            if (tenantId) headers['X-Tenant-Id'] = tenantId;
+                            headers['X-User-Id'] = userId;
+                            
+                            // 后端接口: POST /api/registration/audit
+                            // 请求体: { registrationId, auditResult: 'approved'/'rejected', remark }
+                            const resp = await fetch('/api/registration/audit', {
+                                method: 'POST',
+                                headers: headers,
+                                body: JSON.stringify({
+                                    registrationId: id,
+                                    auditResult: 'approved',
+                                    remark: '快速通过'
+                                })
+                            });
+                            const result = await resp.json();
+                            
+                            if (result.code === 200 || result.code === 0) {
+                                // 更新本地数据
+                                const registration = this.registrations.find(r => r.id === String(id));
+                                if (registration) {
+                                    registration.status = 'approved';
+                                    registration.statusCode = 1;
+                                }
                                 this.filterData();
                                 await this.loadRegistrationStats();
                                 this.$hideLoading();
                                 this.$showToast('报名已通过', 'success');
+                            } else {
+                                this.$hideLoading();
+                                this.$showToast('操作失败: ' + (result.message || '未知错误'), 'error');
                             }
                         } catch (error) {
                             this.$hideLoading();
+                            console.error('快速审批失败:', error);
                             this.$showToast('操作失败，请重试', 'error');
                         }
                     }
@@ -2545,232 +2311,6 @@
             flex-shrink: 0;
         }
         
-        /* 催报弹窗样式 */
-        .reminder-step {
-            min-height: 300px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .reminder-step h4 {
-            font-size: var(--font-size-lg);
-            font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: var(--space-4);
-            padding-bottom: var(--space-3);
-            border-bottom: 2px solid var(--glass-border);
-        }
-        
-        .unit-selection {
-            margin-bottom: var(--space-5);
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .selection-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--space-3);
-            padding: var(--space-2) 0;
-        }
-        
-        .selected-count {
-            color: var(--gray-600);
-            font-weight: 600;
-            font-size: var(--font-size-sm);
-        }
-        
-        .unit-list {
-            max-height: 350px;
-            overflow-y: auto;
-            border: 2px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-2);
-            flex: 1;
-        }
-        
-        .unit-item {
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-            padding: var(--space-3);
-            border: 2px solid var(--glass-border);
-            border-radius: var(--radius-md);
-            margin-bottom: var(--space-2);
-            cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-        
-        .unit-item:hover {
-            border-color: var(--primary-color);
-            background: rgba(102, 126, 234, 0.05);
-        }
-        
-        .unit-item.selected {
-            border-color: var(--primary-color);
-            background: rgba(102, 126, 234, 0.1);
-        }
-        
-        .unit-info {
-            flex: 1;
-        }
-        
-        .unit-name {
-            font-weight: 600;
-            color: var(--gray-900);
-            margin-bottom: var(--space-1);
-        }
-        
-        .unit-meta {
-            font-size: var(--font-size-sm);
-            color: var(--gray-600);
-        }
-        
-        .channel-selection {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: var(--space-3);
-            margin-bottom: var(--space-5);
-        }
-        
-        .channel-option {
-            padding: var(--space-3);
-        }
-        
-        .channel-option {
-            display: flex;
-            align-items: center;
-            padding: var(--space-4);
-            border: 2px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-        
-        .channel-option:hover {
-            border-color: var(--primary-color);
-            background: rgba(102, 126, 234, 0.05);
-        }
-        
-        .channel-option.selected {
-            border-color: var(--primary-color);
-            background: rgba(102, 126, 234, 0.1);
-        }
-        
-        .channel-content {
-            display: flex;
-            align-items: center;
-            gap: var(--space-3);
-            flex: 1;
-        }
-        
-        .channel-content i {
-            font-size: var(--font-size-2xl);
-            color: var(--primary-color);
-        }
-        
-        .channel-name {
-            font-weight: 600;
-            color: var(--gray-900);
-        }
-        
-        .channel-desc {
-            font-size: var(--font-size-sm);
-            color: var(--gray-600);
-        }
-        
-        .template-selection {
-            margin-bottom: var(--space-5);
-        }
-        
-        .template-select {
-            width: 100%;
-            padding: var(--space-2) var(--space-3);
-            border: 2px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            margin-bottom: var(--space-3);
-            font-size: var(--font-size-sm);
-        }
-        
-        .template-preview {
-            padding: var(--space-3);
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: var(--radius-lg);
-            border: 2px solid var(--glass-border);
-        }
-        
-        .template-preview h5 {
-            font-weight: 600;
-            color: var(--gray-900);
-            margin-bottom: var(--space-2);
-            font-size: var(--font-size-sm);
-        }
-        
-        .preview-content {
-            padding: var(--space-3);
-            background: var(--glass-bg);
-            border-radius: var(--radius-md);
-            color: var(--gray-800);
-            line-height: 1.6;
-            min-height: 80px;
-            font-size: var(--font-size-sm);
-        }
-        
-        .custom-template-editor {
-            margin-top: var(--space-4);
-        }
-        
-        .custom-template-editor textarea {
-            width: 100%;
-            padding: var(--space-3);
-            border: 2px solid var(--glass-border);
-            border-radius: var(--radius-md);
-            font-size: var(--font-size-base);
-            font-family: inherit;
-            resize: vertical;
-        }
-        
-        .send-summary {
-            padding: var(--space-4);
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: var(--radius-lg);
-            border: 2px solid var(--glass-border);
-            margin-bottom: var(--space-4);
-        }
-        
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            padding: var(--space-2);
-            border-bottom: 1px solid var(--glass-border);
-            font-size: var(--font-size-sm);
-        }
-        
-        .summary-item:last-child {
-            border-bottom: none;
-        }
-        
-        .summary-item .label {
-            font-weight: 600;
-            color: var(--gray-700);
-        }
-        
-        .summary-item .value {
-            color: var(--gray-900);
-            font-weight: 600;
-        }
-        
-        .step-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: var(--space-3);
-            margin-top: auto;
-            padding-top: var(--space-4);
-            border-top: 2px solid var(--glass-border);
-        }
-        
         /* 智能分组弹窗样式 */
         .group-info {
             margin-bottom: var(--space-6);
@@ -2865,14 +2405,24 @@
             border-bottom-color: var(--primary-color);
         }
         
+        .member-edit-modal {
+            width: 90vw;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
         .groups-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: var(--space-4);
             margin-bottom: var(--space-5);
         }
         
         .group-column {
+            flex: 1 1 220px;
+            min-width: 200px;
+            max-width: 300px;
             border: 2px solid var(--glass-border);
             border-radius: var(--radius-lg);
             padding: var(--space-4);
@@ -2885,11 +2435,13 @@
             margin-bottom: var(--space-3);
             padding-bottom: var(--space-2);
             border-bottom: 2px solid var(--glass-border);
+            font-size: 14px;
+            text-align: center;
         }
         
         .members-drag-list {
-            min-height: 200px;
-            max-height: 400px;
+            min-height: 150px;
+            max-height: 350px;
             overflow-y: auto;
         }
         

@@ -33,7 +33,7 @@
             :class="{ active: activeCategory === category.value }"
             @click="switchCategory(category.value)"
           >
-            <text class="tab-icon">{{ category.icon }}</text>
+            <text class="tab-icon"><text :class="category.icon"></text></text>
             <text class="tab-label">{{ category.label }}</text>
           </view>
         </view>
@@ -55,8 +55,8 @@
             <view class="highlight-info">
               <text class="highlight-title">{{ highlight.title }}</text>
               <view class="highlight-meta">
-                <text class="meta-item">👁️ {{ highlight.views }}</text>
-                <text class="meta-item">❤️ {{ highlight.likes }}</text>
+                <text class="meta-item"><text class="fa fa-eye"></text> {{ highlight.views }}</text>
+                <text class="meta-item"><text class="fa fa-heart"></text> {{ highlight.likes }}</text>
               </view>
             </view>
           </view>
@@ -89,11 +89,11 @@ export default {
         '2024年度第二期干部综合素质提升培训'
       ],
       categories: [
-        { icon: '<text class="fa fa-camera"></text>', label: '全部', value: 'all' },
-        { icon: '🎤', label: '授课', value: 'lecture' },
-        { icon: '<text class="fa fa-comments"></text>', label: '讨论', value: 'discussion' },
-        { icon: '<text class="fa fa-users"></text>', label: '合影', value: 'group' },
-        { icon: '🎉', label: '活动', value: 'activity' }
+        { icon: 'fa-camera', label: '全部', value: 'all' },
+        { icon: 'fa-microphone', label: '授课', value: 'lecture' },
+        { icon: 'fa-comments', label: '讨论', value: 'discussion' },
+        { icon: 'fa-users', label: '合影', value: 'group' },
+        { icon: 'fa-glass-cheers', label: '活动', value: 'activity' }
       ],
       highlights: [
         {
@@ -243,6 +243,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .highlights-container {
   min-height: 100vh;

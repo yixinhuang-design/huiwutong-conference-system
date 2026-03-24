@@ -36,7 +36,7 @@
           class="evaluation-category"
         >
           <view class="category-header">
-            <view class="category-icon">{{ category.icon }}</view>
+            <view class="category-icon"><text :class="category.icon"></text></view>
             <view class="category-info">
               <text class="category-title">{{ category.title }}</text>
               <text class="category-desc">{{ category.description }}</text>
@@ -78,9 +78,11 @@
               v-for="star in 5"
               :key="star"
               class="star-icon"
+              :class="{ filled: star <= overallRating }"
               @click="selectOverallRating(star)"
             >
-              {{ star <= overallRating ? '⭐' : '☆' }}
+              <text v-if="star <= overallRating" class="fa fa-star"></text>
+              <text v-else class="fa fa-star-o"></text>
             </text>
           </view>
           <text class="overall-score">{{ overallRating }}.0</text>
@@ -126,7 +128,7 @@ export default {
       evaluationCategories: [
         {
           id: 1,
-          icon: '<text class="fa fa-book-open"></text>',
+          icon: 'fa-book-open',
           title: '培训内容',
           description: '对培训课程内容设置的评价',
           items: [
@@ -138,7 +140,7 @@ export default {
         },
         {
           id: 2,
-          icon: '👨‍🏫',
+          icon: 'fa-chalkboard-teacher',
           title: '讲师水平',
           description: '对授课讲师专业能力的评价',
           items: [
@@ -150,7 +152,7 @@ export default {
         },
         {
           id: 3,
-          icon: '🏛️',
+          icon: 'fa-university',
           title: '培训组织',
           description: '对培训组织安排的评价',
           items: [
@@ -162,7 +164,7 @@ export default {
         },
         {
           id: 4,
-          icon: '📈',
+          icon: 'fa-chart-line',
           title: '培训效果',
           description: '对个人收获提升的评价',
           items: [
@@ -310,6 +312,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .evaluation-container {
   min-height: 100vh;

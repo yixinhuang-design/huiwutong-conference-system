@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -925,9 +925,9 @@
         const { createApp } = Vue;
         
         // ===== 后端 API 配置 =====
-        const REGISTRATION_API = 'http://localhost:8082';
+        const REGISTRATION_API = '';
         const HANDBOOK_API = `${REGISTRATION_API}/api/handbook`;
-        const DEFAULT_TENANT_ID = localStorage.getItem('tenantId') || '2027317834622709762';
+        const DEFAULT_TENANT_ID = localStorage.getItem('tenantId') || '';
         
         function apiHeaders() {
             const h = {

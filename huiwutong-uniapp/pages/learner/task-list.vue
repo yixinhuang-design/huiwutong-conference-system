@@ -59,7 +59,7 @@
 
           <view class="task-meta">
             <text class="meta-item"><text class="fa fa-calendar-alt"></text> {{ task.deadline }}</text>
-            <text class="meta-item">⏰ {{ task.duration }}</text>
+            <text class="meta-item"><text class="fa fa-clock"></text> {{ task.duration }}</text>
           </view>
 
           <view class="task-desc">
@@ -199,6 +199,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .task-list-container {
   min-height: 100vh;

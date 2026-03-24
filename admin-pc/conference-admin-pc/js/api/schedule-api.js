@@ -1,4 +1,4 @@
-/*
+﻿/*
  * 日程管理 API 前端集成代码
  * 用于 schedule-mgr.html 的后端 API 集成
  * 放在 admin-pc/conference-admin-pc/js/api/schedule-api.js
@@ -10,7 +10,7 @@
 const ScheduleAPI = {
     // 基础URL（根据部署环境调整）
     // 注意：后端实际运行在 localhost:8084，不是 9001
-    baseURL: 'http://localhost:8084/api/schedule',
+    baseURL: '/api/schedule',
 
     /**
      * 创建日程
@@ -388,7 +388,7 @@ const ScheduleAPI = {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json().then(data => {
-            if (data.code === 0 || data.success) {
+            if (data.code === 200 || data.code === 0 || data.success) {
                 return data.data || data;
             } else {
                 throw new Error(data.message || '请求失败');
@@ -401,8 +401,9 @@ const ScheduleAPI = {
      * @private
      */
     getAuthToken() {
-        // 从localStorage或其他地方获取token
-        return localStorage.getItem('authToken') || '';
+        // 从lectalStorage获取token，添加Bearer前缀
+        const token = localStorage.getItem('authToken') || '';
+        return token ? `Bearer ${token}` : '';
     }
 };
 

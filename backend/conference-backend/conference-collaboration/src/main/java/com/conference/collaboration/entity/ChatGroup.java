@@ -30,6 +30,7 @@ public class ChatGroup {
     private String description;
     private String icon;
     private String announcement;
+    private String avatar;
 
     @JsonSerialize(using = ToStringSerializer.class)
     private Long ownerId;
@@ -39,7 +40,8 @@ public class ChatGroup {
     private Integer muteAll;
     private Integer allowInvite;
     private Integer autoCreated;
-    private Integer status;        // 0-已解散 1-正常
+    private Integer pinned;
+    private String status;         // 0-已解散 1-正常
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;

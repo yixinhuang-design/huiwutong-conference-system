@@ -25,6 +25,7 @@ public class ChatGroupMember {
 
     private String userName;
     private String department;
+    private String avatar;
     private String memberRole;     // owner/admin/member
     private Integer isMuted;
 

@@ -6,7 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * 用餐安排详情响应 DTO
@@ -41,10 +43,16 @@ public class DiningDetailResponse {
     @Schema(description = "可用餐位数", example = "55")
     private Integer availableSeats;
     
+    @Schema(description = "用餐日期")
+    private LocalDate diningDate;
+    
+    @Schema(description = "用餐时间")
+    private LocalTime diningTime;
+    
     @Schema(description = "用餐地址", example = "一楼大厅")
     private String location;
     
-    @Schema(description = "用餐时间", example = "12:00-13:30")
+    @Schema(description = "用餐时间(字符串格式)", example = "12:00-13:30")
     private String mealTime;
     
     @Schema(description = "菜单或特殊要求", example = "素食可选")

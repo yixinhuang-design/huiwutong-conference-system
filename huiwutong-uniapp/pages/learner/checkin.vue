@@ -103,7 +103,7 @@ export default {
     statusIcon() {
       if (this.loading) return '⏳'
       if (this.checked) return '<text class="fa fa-check"></text>'
-      return '⏰'
+      return '<text class="fa fa-clock"></text>'
     },
 
     statusText() {
@@ -278,6 +278,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .checkin-container {
   min-height: 100vh;

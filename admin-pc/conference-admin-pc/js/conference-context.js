@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 会议上下文管理系统
  * 实现基于具体会议的全局数据管理和状态控制
  */
@@ -25,7 +25,14 @@ class ConferenceContextManager {
                                 localStorage.getItem('currentConferenceId');
             
             if (conferenceId) {
-                await this.loadConference(conferenceId);
+                try {
+                    await this.loadConference(conferenceId);
+                } catch (loadError) {
+                    // 会议加载失败（可能已删除或不存在），清理无效ID并继续
+                    console.warn('会议加载失败，已清理无效会议ID:', conferenceId, loadError.message);
+                    localStorage.removeItem('currentConferenceId');
+                    this.currentConference = null;
+                }
             }
             
             // 设置全局事件监听
@@ -34,7 +41,6 @@ class ConferenceContextManager {
             console.log('会议上下文管理器初始化完成');
         } catch (error) {
             console.error('会议上下文管理器初始化失败:', error);
-            throw error;
         }
     }
     
@@ -79,6 +85,9 @@ class ConferenceContextManager {
             return conferenceData;
         } catch (error) {
             console.error('加载会议数据失败:', error);
+            // 清理无效的会议ID缓存
+            localStorage.removeItem('currentConferenceId');
+            this.cache.delete(conferenceId);
             throw error;
         }
     }
@@ -90,23 +99,30 @@ class ConferenceContextManager {
         const token = localStorage.getItem('authToken');
         const headers = {
             'Content-Type': 'application/json',
-            'X-Tenant-Id': '2027317834622709762'
+            'X-Tenant-Id': localStorage.getItem('tenantId') || '100'
         };
 
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const response = await fetch(`http://localhost:8084/api/meeting/${conferenceId}`, {
-            method: 'GET',
-            headers
-        });
-
-        if (!response.ok) {
-            throw new Error(`会议详情请求失败: HTTP ${response.status}`);
+        let response;
+        try {
+            response = await fetch(`/api/meeting/${conferenceId}`, {
+                method: 'GET',
+                headers
+            });
+        } catch (networkErr) {
+            throw new Error(`会议详情网络请求失败: ${networkErr.message}`);
         }
 
-        const result = await response.json();
+        const result = await response.json().catch(() => null);
+
+        if (!response.ok || !result || result.code !== 200) {
+            const msg = result?.message || `HTTP ${response.status}`;
+            throw new Error(`会议详情请求失败: ${msg}`);
+        }
+
         const meeting = result?.data;
 
         if (!meeting) {
@@ -212,12 +228,20 @@ class ConferenceContextManager {
     }
 
     buildRegistrationUrl(conferenceId) {
-        return `http://localhost/app/learner/scan-register.html?meetingId=${encodeURIComponent(String(conferenceId))}`;
+        // 报名链接供外部手机扫码使用，必须是公网可达地址
+        // 如果管理员通过 localhost / 127.0.0.1 访问后台，则使用配置的公网地址
+        let origin = window.location.origin;
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
+            // 公网服务器地址（部署时按实际情况修改）
+            origin = 'http://39.103.85.255';
+        }
+        return `${origin}/app/learner/scan-register.html?meetingId=${encodeURIComponent(String(conferenceId))}`;
     }
 
     async enrichRegistrationData(conference, headers) {
         try {
-            const statsResp = await fetch(`http://localhost:8082/api/registration/stats?conferenceId=${encodeURIComponent(String(conference.id))}`, {
+            const statsResp = await fetch(`/api/registration/stats?conferenceId=${encodeURIComponent(String(conference.id))}`, {
                 method: 'GET',
                 headers
             });
@@ -237,7 +261,7 @@ class ConferenceContextManager {
         // 从后端生成二维码
         try {
             const registrationUrl = conference.registration.open.qrCodeUrl;
-            const qrResp = await fetch(`http://localhost:8082/api/registration/qr/generate?conferenceId=${encodeURIComponent(String(conference.id))}&registrationUrl=${encodeURIComponent(registrationUrl)}`, {
+            const qrResp = await fetch(`/api/registration/qr/generate?conferenceId=${encodeURIComponent(String(conference.id))}&registrationUrl=${encodeURIComponent(registrationUrl)}`, {
                 method: 'GET',
                 headers
             });
@@ -293,7 +317,7 @@ class ConferenceContextManager {
         this.dataSources.set('seating', `${baseUrl}/${conferenceId}/seating`);
         this.dataSources.set('notifications', `${baseUrl}/${conferenceId}/notifications`);
         this.dataSources.set('attendance', `${baseUrl}/${conferenceId}/attendance`);
-        this.dataSources.set('data', `http://localhost:8088/api/data`);
+        this.dataSources.set('data', `/api/data`);
     }
     
     /**

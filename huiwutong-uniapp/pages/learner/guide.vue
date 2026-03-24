@@ -17,7 +17,7 @@
             class="nav-item"
             @click="scrollToSection(index)"
           >
-            <text class="nav-icon">{{ item.icon }}</text>
+            <text class="nav-icon"><text :class="item.icon"></text></text>
             <text class="nav-text">{{ item.title }}</text>
           </view>
         </view>
@@ -48,8 +48,8 @@ export default {
     return {
       scrollSection: '',
       quickNav: [
-        { icon: '<text class="fa fa-check"></text>', title: '报到须知' },
-        { icon: '⏰', title: '签到规则' }
+        { icon: 'fa-check', title: '报到须知' },
+        { icon: 'fa-clock', title: '签到规则' }
       ]
     }
   },
@@ -64,6 +64,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .guide-container {
   min-height: 100vh;

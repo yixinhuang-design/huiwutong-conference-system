@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -553,7 +553,7 @@
     <script src="../js/interaction-utils.js"></script>
     <script>
         const { createApp } = Vue;
-        const DATA_API = 'http://localhost:8088/api/data';
+        const DATA_API = '/api/data';
 
         // chart.umd.js 已自动注册所有组件，无需手动 Chart.register()
 
@@ -619,7 +619,7 @@
                         const resp = await fetch(DATA_API + path, {
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-Tenant-Id': '2027317834622709762',
+                                'X-Tenant-Id': localStorage.getItem('tenantId') || '',
                                 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
                             }
                         });
@@ -780,10 +780,10 @@
                         if (!ctx) return;
 
                         const initialData = Array.from({ length: 20 }, () => {
-                            if (id === 'cpuChart') return this.systemMetrics.cpu || Math.random() * 50;
-                            if (id === 'memoryChart') return this.systemMetrics.memory || Math.random() * 70;
-                            if (id === 'diskChart') return this.systemMetrics.disk || Math.random() * 40;
-                            return parseFloat(this.systemMetrics.network) || Math.random() * 15;
+                            if (id === 'cpuChart') return this.systemMetrics.cpu || 0;
+                            if (id === 'memoryChart') return this.systemMetrics.memory || 0;
+                            if (id === 'diskChart') return this.systemMetrics.disk || 0;
+                            return parseFloat(this.systemMetrics.network) || 0;
                         });
 
                         this.charts[id] = new Chart(ctx, {

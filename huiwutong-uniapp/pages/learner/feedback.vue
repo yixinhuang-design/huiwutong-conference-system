@@ -15,8 +15,8 @@
         <text class="questionnaire-title">{{ questionnaire.title }}</text>
         <text class="questionnaire-desc">{{ questionnaire.description }}</text>
         <view class="questionnaire-meta">
-          <text class="meta-item">⏰ 截止：{{ questionnaire.deadline }}</text>
-          <text class="meta-item">📊 已填：{{ questionnaire.completedCount }}/{{ questionnaire.totalCount }}</text>
+          <text class="meta-item"><text class="fa fa-clock"></text> 截止：{{ questionnaire.deadline }}</text>
+          <text class="meta-item"><text class="fa fa-chart-bar"></text> 已填：{{ questionnaire.completedCount }}/{{ questionnaire.totalCount }}</text>
         </view>
       </view>
 
@@ -86,7 +86,7 @@
                 :class="{ active: answers[question.id] >= star }"
                 @click="selectRating(question.id, star)"
               >
-                {{ star <= (answers[question.id] || 0) ? '⭐' : '☆' }}
+                {{ star <= (answers[question.id] || 0) ? '<text class="fa fa-star"></text>' : '☆' }}
               </text>
             </view>
             <text class="rating-text">{{ getRatingText(answers[question.id]) }}</text>
@@ -384,6 +384,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .feedback-container {
   min-height: 100vh;

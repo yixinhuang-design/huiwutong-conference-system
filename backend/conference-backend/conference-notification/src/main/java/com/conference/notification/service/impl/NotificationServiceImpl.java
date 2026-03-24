@@ -78,22 +78,90 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             notification.setStatus("pending");
         } else {
             // 立即发送
-            notification.setStatus("sent");
+            notification.setStatus("sending");
             notification.setSentTime(LocalDateTime.now());
-            // 模拟发送结果
-            int total = notification.getRecipientCount() > 0 ? notification.getRecipientCount() : 142;
+            int total = notification.getRecipientCount() > 0 ? notification.getRecipientCount() : 0;
             notification.setSentCount(total);
-            notification.setDeliveredCount((int) (total * 0.97));
+            notification.setDeliveredCount(0);
             notification.setReadCount(0);
-            notification.setFailedCount((int) (total * 0.03));
+            notification.setFailedCount(0);
         }
 
         notification.setCreateTime(LocalDateTime.now());
         notification.setUpdateTime(LocalDateTime.now());
         notificationMapper.insert(notification);
 
+        // 立即发送的通知，执行实际发送逻辑
+        if ("sending".equals(notification.getStatus())) {
+            doSendNotification(notification);
+        }
+
         log.info("[租户{}] 通知已创建: id={}, status={}", tenantId, notification.getId(), notification.getStatus());
         return notification;
+    }
+
+    /**
+     * 执行实际发送逻辑
+     * 当前仅支持SMS渠道，后续可扩展UniPush等
+     */
+    private void doSendNotification(Notification notification) {
+        try {
+            List<String> channels = notification.getChannels() != null
+                    ? JSON.parseArray(notification.getChannels(), String.class)
+                    : Collections.singletonList("sms");
+
+            String content = replaceTemplateVariables(notification.getContent(), notification);
+
+            int sentCount = notification.getSentCount();
+            int deliveredCount = 0;
+            int failedCount = 0;
+
+            for (String channel : channels) {
+                switch (channel) {
+                    case "sms":
+                        // TODO: 接入实际短信服务SDK（如阿里云短信、腾讯云短信）
+                        log.info("[通知发送] SMS渠道 - 通知ID={}, 标题={}, 接收人数={}, 内容={}",
+                                notification.getId(), notification.getTitle(), sentCount, content);
+                        deliveredCount = sentCount; // 标记为已投递，实际接入SDK后由回调更新
+                        break;
+                    case "unipush":
+                        // TODO: 接入UniPush 2.0推送SDK
+                        log.info("[通知发送] UniPush渠道 - 通知ID={}, 标题={}", notification.getId(), notification.getTitle());
+                        break;
+                    default:
+                        log.warn("[通知发送] 未知渠道: {}, 跳过", channel);
+                        break;
+                }
+            }
+
+            // 更新发送结果
+            notification.setStatus("sent");
+            notification.setDeliveredCount(deliveredCount);
+            notification.setFailedCount(failedCount);
+            notification.setUpdateTime(LocalDateTime.now());
+            notificationMapper.updateById(notification);
+
+        } catch (Exception e) {
+            log.error("[通知发送] 发送失败: notificationId={}, error={}", notification.getId(), e.getMessage(), e);
+            notification.setStatus("failed");
+            notification.setUpdateTime(LocalDateTime.now());
+            notificationMapper.updateById(notification);
+        }
+    }
+
+    /**
+     * 模板变量替换
+     * 支持 ${变量名} 格式的变量替换
+     */
+    private String replaceTemplateVariables(String content, Notification notification) {
+        if (!StringUtils.hasText(content)) return content;
+
+        // 替换通用变量
+        content = content.replace("${conferenceId}", notification.getConferenceId() != null ? String.valueOf(notification.getConferenceId()) : "");
+        content = content.replace("${sendTime}", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+        content = content.replace("${title}", notification.getTitle() != null ? notification.getTitle() : "");
+
+        return content;
     }
 
     @Override
@@ -202,7 +270,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notification.setType("registration");
         notification.setTitle("报名催报通知");
         notification.setContent("您有未完成的会议报名，请尽快完成报名手续。");
-        notification.setChannels("[\"sms\",\"wechat\"]");
+        notification.setChannels("[\"sms\"]");
         notification.setSendTiming("now");
         notification.setStatus("sent");
         notification.setSentTime(LocalDateTime.now());

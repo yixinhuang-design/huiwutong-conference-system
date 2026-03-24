@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.conference.common.result.Result;
+import com.conference.common.tenant.TenantContextHolder;
 import com.conference.registration.dto.RegistrationAuditRequest;
 import com.conference.registration.dto.RegistrationFieldConfigRequest;
 import com.conference.registration.dto.RegistrationRequest;
@@ -85,8 +86,11 @@ public class RegistrationController {
     @PostMapping("/audit")
     public Result<String> auditRegistration(
             @Valid @RequestBody RegistrationAuditRequest request,
-            @RequestHeader("X-User-Id") Long auditorId) {
-        registrationService.auditRegistration(request, auditorId);
+            @RequestHeader(value = "X-User-Id", required = false) Long auditorId) {
+        if (auditorId == null) {
+            auditorId = TenantContextHolder.getUserId();
+        }
+        registrationService.auditRegistration(request, auditorId != null ? auditorId : 0L);
         return Result.ok("审核成功");
     }
     
@@ -96,8 +100,11 @@ public class RegistrationController {
     @PostMapping("/batchAudit")
     public Result<String> batchAuditRegistration(
             @Valid @RequestBody List<RegistrationAuditRequest> requests,
-            @RequestHeader("X-User-Id") Long auditorId) {
-        registrationService.batchAuditRegistration(requests, auditorId);
+            @RequestHeader(value = "X-User-Id", required = false) Long auditorId) {
+        if (auditorId == null) {
+            auditorId = TenantContextHolder.getUserId();
+        }
+        registrationService.batchAuditRegistration(requests, auditorId != null ? auditorId : 0L);
         return Result.ok("批量审核成功");
     }
     
@@ -195,7 +202,7 @@ public class RegistrationController {
     }
     
     /**
-     * 生成 PDF 名册
+     * 生成名册（HTML格式，支持浏览器打印为PDF）
      */
     @PostMapping("/pdf/roster")
     public ResponseEntity<byte[]> generatePdfRoster(
@@ -207,8 +214,8 @@ public class RegistrationController {
         
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, 
-                    "attachment; filename=\"roster_" + conferenceId + ".pdf\"")
-                .contentType(MediaType.APPLICATION_PDF)
+                    "inline; filename=\"roster_" + conferenceId + ".html\"")
+                .contentType(MediaType.TEXT_HTML)
                 .body(pdfBytes);
     }
 
@@ -218,10 +225,17 @@ public class RegistrationController {
     @GetMapping("/qr/generate")
     public Result<String> generateQrCode(
             @RequestParam Long conferenceId,
-            @RequestParam(required = false) String registrationUrl) throws IOException {
+            @RequestParam(required = false) String registrationUrl,
+            jakarta.servlet.http.HttpServletRequest request) throws IOException {
         
         if (!StringUtils.hasText(registrationUrl)) {
-            registrationUrl = "http://localhost/app/learner/scan-register.html?meetingId=" + conferenceId;
+            // 动态获取请求来源的域名/IP
+            String scheme = request.getHeader("X-Forwarded-Proto");
+            if (!StringUtils.hasText(scheme)) scheme = request.getScheme();
+            String host = request.getHeader("X-Forwarded-Host");
+            if (!StringUtils.hasText(host)) host = request.getHeader("Host");
+            if (!StringUtils.hasText(host)) host = request.getServerName() + ":" + request.getServerPort();
+            registrationUrl = scheme + "://" + host + "/app/learner/scan-register.html?meetingId=" + conferenceId;
         }
         
         String qrCodeDataUrl = registrationService.getOrGenerateQrCode(conferenceId, registrationUrl);

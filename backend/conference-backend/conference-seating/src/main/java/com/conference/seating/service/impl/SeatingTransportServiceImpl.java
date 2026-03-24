@@ -58,6 +58,7 @@ public class SeatingTransportServiceImpl implements SeatingTransportService {
         SeatingTransport transport = new SeatingTransport();
         transport.setConferenceId(request.getConferenceId());
         transport.setTenantId(tenantId);
+        transport.setVehicleName(request.getVehicleName());
         transport.setLicensePlate(request.getLicensePlate());
         transport.setVehicleType(request.getVehicleType());
         transport.setCapacity(request.getCapacity());
@@ -82,6 +83,9 @@ public class SeatingTransportServiceImpl implements SeatingTransportService {
             throw new BusinessException("车辆不存在");
         }
         
+        if (request.getVehicleName() != null) {
+            transport.setVehicleName(request.getVehicleName());
+        }
         if (request.getLicensePlate() != null) {
             transport.setLicensePlate(request.getLicensePlate());
         }
@@ -182,6 +186,7 @@ public class SeatingTransportServiceImpl implements SeatingTransportService {
         return TransportDetailResponse.builder()
                 .id(transport.getId())
                 .conferenceId(transport.getConferenceId())
+                .vehicleName(transport.getVehicleName())
                 .licensePlate(transport.getLicensePlate())
                 .vehicleType(transport.getVehicleType())
                 .capacity(transport.getCapacity())

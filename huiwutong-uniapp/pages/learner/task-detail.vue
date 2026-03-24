@@ -33,7 +33,7 @@
             <text class="meta-text">发布人：{{ taskInfo.publisher }}</text>
           </view>
           <view class="meta-item" v-if="taskInfo.priority">
-            <text class="meta-icon">⭐</text>
+            <text class="meta-icon"><text class="fa fa-star"></text></text>
             <text class="meta-text">优先级：{{ taskInfo.priority }}</text>
           </view>
         </view>
@@ -335,6 +335,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .task-detail-container {
   min-height: 100vh;

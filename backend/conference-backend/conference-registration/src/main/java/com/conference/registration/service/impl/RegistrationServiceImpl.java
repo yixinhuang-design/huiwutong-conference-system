@@ -520,7 +520,67 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
 
     @Override
     public byte[] generatePdfRoster(Long conferenceId, String coverImage, String remarks) {
-        return new byte[0];
+        Long tenantId = currentTenantId();
+        log.info("[名册PDF] 生成名册, conferenceId={}, tenantId={}", conferenceId, tenantId);
+
+        // 查询已审核通过的报名记录
+        List<Registration> registrations = registrationMapper.selectList(
+                new LambdaQueryWrapper<Registration>()
+                        .eq(Registration::getConferenceId, conferenceId)
+                        .eq(Registration::getTenantId, tenantId)
+                        .eq(Registration::getStatus, STATUS_APPROVED)
+                        .eq(Registration::getDeleted, 0)
+                        .orderByAsc(Registration::getDepartment)
+                        .orderByAsc(Registration::getRealName)
+        );
+
+        if (registrations.isEmpty()) {
+            log.warn("[名册PDF] 没有已审核的报名记录, conferenceId={}", conferenceId);
+        }
+
+        // 生成可打印的HTML格式名册（浏览器可直接打印为PDF）
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head><meta charset='UTF-8'>");
+        html.append("<title>参会人员名册</title>");
+        html.append("<style>");
+        html.append("body{font-family:'Microsoft YaHei',sans-serif;margin:20px;color:#333;}");
+        html.append("h1{text-align:center;font-size:24px;margin-bottom:5px;}");
+        html.append("p.info{text-align:center;color:#666;font-size:14px;}");
+        html.append("table{width:100%;border-collapse:collapse;margin-top:20px;}");
+        html.append("th,td{border:1px solid #333;padding:8px 12px;text-align:left;font-size:13px;}");
+        html.append("th{background-color:#f0f0f0;font-weight:bold;}");
+        html.append("tr:nth-child(even){background-color:#fafafa;}");
+        html.append("@media print{body{margin:10mm;}@page{size:A4;margin:15mm;}}");
+        html.append("</style></head><body>");
+        html.append("<h1>参会人员名册</h1>");
+        html.append("<p class='info'>会议编号：").append(conferenceId)
+                .append(" | 共 ").append(registrations.size()).append(" 人</p>");
+        if (StringUtils.hasText(remarks)) {
+            html.append("<p class='info'>备注：").append(remarks).append("</p>");
+        }
+        html.append("<table><thead><tr>");
+        html.append("<th>序号</th><th>姓名</th><th>单位</th><th>职务</th><th>手机号</th><th>邮箱</th>");
+        html.append("</tr></thead><tbody>");
+
+        int idx = 1;
+        for (Registration reg : registrations) {
+            html.append("<tr>");
+            html.append("<td>").append(idx++).append("</td>");
+            html.append("<td>").append(nullable(reg.getRealName())).append("</td>");
+            html.append("<td>").append(nullable(reg.getDepartment())).append("</td>");
+            html.append("<td>").append(nullable(reg.getPosition())).append("</td>");
+            html.append("<td>").append(nullable(reg.getPhone())).append("</td>");
+            html.append("<td>").append(nullable(reg.getEmail())).append("</td>");
+            html.append("</tr>");
+        }
+
+        html.append("</tbody></table>");
+        html.append("<p class='info' style='margin-top:30px;'>生成时间：")
+                .append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                .append("</p>");
+        html.append("</body></html>");
+
+        return html.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     private Long currentTenantId() {

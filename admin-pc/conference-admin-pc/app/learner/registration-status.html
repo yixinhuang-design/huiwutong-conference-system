@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>报名状态</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #f5f6fa;
+            color: #333;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 16px 32px;
+            color: #fff;
+            text-align: center;
+            position: relative;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 0; right: 0;
+            height: 24px;
+            background: #f5f6fa;
+            border-radius: 16px 16px 0 0;
+        }
+        .header h1 { font-size: 18px; font-weight: 600; }
+
+        .content { padding: 8px 14px 40px; }
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        /* 状态图标 */
+        .status-icon {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+        .status-icon.pending { background: #fef3c7; }
+        .status-icon.approved { background: #d1fae5; }
+        .status-icon.rejected { background: #fee2e2; }
+        .status-icon.notfound { background: #f1f5f9; }
+
+        .status-title {
+            font-size: 20px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .status-desc {
+            font-size: 14px;
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* 信息列表 */
+        .info-list { margin-top: 16px; }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+        }
+        .info-item:last-child { border-bottom: none; }
+        .info-item .label { color: #94a3b8; }
+        .info-item .value { color: #334155; font-weight: 500; text-align: right; max-width: 60%; }
+
+        /* 状态标签 */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-badge.pending { background: #fef3c7; color: #b45309; }
+        .status-badge.approved { background: #d1fae5; color: #047857; }
+        .status-badge.rejected { background: #fee2e2; color: #b91c1c; }
+
+        /* 按钮 */
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .btn {
+            flex: 1;
+            height: 44px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn:active { opacity: 0.8; }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+        .btn-secondary { background: #f1f5f9; color: #64748b; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #667eea;
+            color: #667eea;
+        }
+
+        .loading-text {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        /* 查询输入框 */
+        .query-form { display: flex; gap: 10px; }
+        .query-form input {
+            flex: 1;
+            height: 44px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 14px;
+            font-size: 15px;
+            -webkit-appearance: none;
+        }
+        .query-form input:focus { outline: none; border-color: #667eea; }
+        .query-form .btn { flex: none; width: 80px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>报名状态查询</h1>
+</div>
+
+<div class="content">
+    <!-- 查询表单 -->
+    <div class="card" id="queryCard">
+        <div style="font-size:14px;color:#64748b;margin-bottom:12px;">输入报名手机号查询状态</div>
+        <div class="query-form">
+            <input type="tel" id="queryPhone" placeholder="请输入手机号" maxlength="11">
+            <button class="btn btn-primary" onclick="queryRegistration()">查询</button>
+        </div>
+    </div>
+
+    <!-- 查询结果 -->
+    <div id="resultArea"></div>
+
+    <!-- 操作按钮 -->
+    <div class="card" id="actionCard" style="display:none;">
+        <div class="btn-group">
+            <button class="btn btn-secondary" onclick="goBack()">返回报名</button>
+            <button class="btn btn-outline" onclick="queryRegistration()">刷新状态</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    const API_BASE = window.location.origin + '/api/registration';
+
+    function getUrlParam(key) {
+        return new URLSearchParams(window.location.search).get(key);
+    }
+
+    const meetingId = getUrlParam('meetingId') || getUrlParam('conferenceId');
+    const tenantId = getUrlParam('tenantId') || '100';
+    let initPhone = getUrlParam('phone') || '';
+
+    function init() {
+        if (initPhone) {
+            document.getElementById('queryPhone').value = initPhone;
+            queryRegistration();
+        }
+    }
+
+    window.queryRegistration = async function() {
+        const phone = document.getElementById('queryPhone').value.trim();
+        if (!phone) {
+            alert('请输入手机号');
+            return;
+        }
+        if (!/^1[3-9]\d{9}$/.test(phone)) {
+            alert('请输入正确的手机号');
+            return;
+        }
+
+        const resultArea = document.getElementById('resultArea');
+        resultArea.innerHTML = '<div class="loading-text">⏳ 查询中...</div>';
+
+        try {
+            const url = API_BASE + '/query?phone=' + encodeURIComponent(phone) + (meetingId ? '&conferenceId=' + meetingId : '');
+            const resp = await fetch(url, {
+                headers: { 'X-Tenant-Id': tenantId }
+            });
+            const result = await resp.json();
+
+            if (!resp.ok || result.code !== 200 || !result.data) {
+                showNotFound();
+                return;
+            }
+
+            const data = result.data;
+            // data 可能是单条或列表
+            const reg = Array.isArray(data) ? data[0] : data;
+
+            if (!reg) {
+                showNotFound();
+                return;
+            }
+
+            showResult(reg);
+            document.getElementById('actionCard').style.display = '';
+        } catch (e) {
+            console.error('查询失败:', e);
+            resultArea.innerHTML = '<div class="card"><div class="loading-text">查询失败，请稍后重试</div></div>';
+        }
+    };
+
+    function showNotFound() {
+        const resultArea = document.getElementById('resultArea');
+        resultArea.innerHTML = `
+            <div class="card" style="text-align:center;">
+                <div class="status-icon notfound" style="margin:0 auto 16px;">🔍</div>
+                <div class="status-title">未找到报名记录</div>
+                <div class="status-desc">请确认手机号是否正确，或尚未提交报名</div>
+            </div>`;
+        document.getElementById('actionCard').style.display = '';
+    }
+
+    function showResult(reg) {
+        const status = Number(reg.status);
+        let statusClass, statusEmoji, statusText, statusDesc;
+
+        switch (status) {
+            case 0:
+                statusClass = 'pending'; statusEmoji = '⏳'; statusText = '待审核';
+                statusDesc = '您的报名信息已提交，请等待管理员审核';
+                break;
+            case 1:
+                statusClass = 'approved'; statusEmoji = '✅'; statusText = '已通过';
+                statusDesc = '恭喜！您的报名已通过审核';
+                break;
+            case 2:
+                statusClass = 'rejected'; statusEmoji = '❌'; statusText = '已拒绝';
+                statusDesc = reg.auditRemark || reg.reviewRemark || '很抱歉，您的报名未通过审核';
+                break;
+            case 3:
+                statusClass = 'pending'; statusEmoji = '🚫'; statusText = '已取消';
+                statusDesc = '该报名已取消';
+                break;
+            case 4:
+                statusClass = 'approved'; statusEmoji = '📋'; statusText = '已签到';
+                statusDesc = '您已成功签到';
+                break;
+            default:
+                statusClass = 'pending'; statusEmoji = '❓'; statusText = '未知';
+                statusDesc = '状态未知';
+        }
+
+        const resultArea = document.getElementById('resultArea');
+        resultArea.innerHTML = `
+            <div class="card">
+                <div class="status-icon ${statusClass}">${statusEmoji}</div>
+                <div class="status-title">${statusText}</div>
+                <div class="status-desc">${escapeHtml(statusDesc)}</div>
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="label">姓名</span>
+                        <span class="value">${escapeHtml(reg.realName || '')}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">手机号</span>
+                        <span class="value">${escapeHtml(reg.phone || '')}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">单位</span>
+                        <span class="value">${escapeHtml(reg.department || reg.organization || '')}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">职位</span>
+                        <span class="value">${escapeHtml(reg.position || '')}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">报名时间</span>
+                        <span class="value">${formatDate(reg.registrationTime || reg.createTime || '')}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">状态</span>
+                        <span class="value"><span class="status-badge ${statusClass}">${statusText}</span></span>
+                    </div>
+                    ${reg.auditRemark || reg.reviewRemark ? `
+                    <div class="info-item">
+                        <span class="label">审核备注</span>
+                        <span class="value">${escapeHtml(reg.auditRemark || reg.reviewRemark)}</span>
+                    </div>` : ''}
+                </div>
+            </div>`;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        try {
+            const d = new Date(dateStr);
+            return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        } catch(e) { return dateStr; }
+    }
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+    window.goBack = function() {
+        if (meetingId) {
+            window.location.href = 'scan-register.html?meetingId=' + meetingId;
+        } else {
+            history.back();
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>

@@ -54,7 +54,7 @@
             :class="{ active: sortType === sort.value }"
             @click="selectSort(sort.value)"
           >
-            <text class="sort-icon">{{ sort.icon }}</text>
+            <text class="sort-icon"><text :class="sort.icon"></text></text>
             <text class="sort-label">{{ sort.label }}</text>
           </view>
         </view>
@@ -82,10 +82,10 @@
       <!-- 生成按钮 -->
       <view class="generate-section">
         <button class="btn btn-outline btn-block" @click="previewHandbook">
-          👁️ 预览名册
+          <text class="fa fa-eye"></text> 预览名册
         </button>
         <button class="btn btn-primary btn-block" @click="generateHandbook">
-          📄 生成名册
+          <text class="fa fa-file"></text> 生成名册
         </button>
       </view>
 
@@ -127,9 +127,9 @@ export default {
         { key: 'contact', label: '联系方式', desc: '显示学员联系电话', checked: false }
       ],
       sortOptions: [
-        { icon: '<text class="fa fa-users"></text>', label: '按分组', value: 'group' },
-        { icon: '<text class="fa fa-building"></text>', label: '按单位', value: 'department' },
-        { icon: '🔤', label: '按姓名', value: 'name' }
+        { icon: 'fa-users', label: '按分组', value: 'group' },
+        { icon: 'fa-building', label: '按单位', value: 'department' },
+        { icon: 'fa-sort-alpha-down', label: '按姓名', value: 'name' }
       ],
       stats: {
         total: 80,
@@ -274,6 +274,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .handbook-generate-container {
   min-height: 100vh;

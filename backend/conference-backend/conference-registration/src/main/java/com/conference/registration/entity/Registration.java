@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -17,24 +19,28 @@ import java.time.LocalDateTime;
 public class Registration {
     
     @TableId(type = IdType.ASSIGN_ID)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
     
     /**
      * 会议 ID
      */
     @TableField("meeting_id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long conferenceId;
     
     /**
      * 租户 ID
      */
     @TableField("tenant_id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long tenantId;
     
     /**
      * 用户 ID（报名人）
      */
     @TableField("user_id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
     
     /**
@@ -80,13 +86,45 @@ public class Registration {
     private String idCard;
     
     /**
-     * 身份证照片 URL
+     * 饮食要求
+     */
+    @TableField("dietary_requirements")
+    private String dietaryRequirements;
+    
+    /**
+     * 是否需要住宿：0-否, 1-是
+     */
+    @TableField("accommodation_required")
+    private Integer accommodationRequired;
+    
+    /**
+     * 到达时间
+     */
+    @TableField("arrival_time")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime arrivalTime;
+    
+    /**
+     * 离开时间
+     */
+    @TableField("departure_time")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime departureTime;
+    
+    /**
+     * 二维码
+     */
+    @TableField("qr_code")
+    private String qrCode;
+    
+    /**
+     * 身份证照片 URL（不在数据库中）
      */
     @TableField(exist = false)
     private String idCardPhotoUrl;
     
     /**
-     * 学历证明照片 URL
+     * 学历证明照片 URL（不在数据库中）
      */
     @TableField(exist = false)
     private String diplomaPhotoUrl;
@@ -113,6 +151,7 @@ public class Registration {
      * 审核人 ID
      */
     @TableField("review_by")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long auditorId;
     
     /**

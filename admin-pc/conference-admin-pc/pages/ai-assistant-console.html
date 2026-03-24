@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -1175,7 +1175,7 @@
         const { createApp } = Vue;
 
         // AI服务API基础地址
-        const AI_API_BASE = 'http://localhost:8085/api/ai';
+        const AI_API_BASE = '/api/ai';
 
         // 通用API请求方法
         async function aiApiFetch(path, options = {}) {
@@ -1183,7 +1183,7 @@
             const defaultHeaders = { 'Content-Type': 'application/json' };
             const token = localStorage.getItem('token');
             if (token) defaultHeaders['Authorization'] = 'Bearer ' + token;
-            const tenantId = localStorage.getItem('tenantId') || '2027317834622709762';
+            const tenantId = localStorage.getItem('tenantId') || '';
             defaultHeaders['X-Tenant-Id'] = tenantId;
 
             const resp = await fetch(url, {
@@ -1759,7 +1759,7 @@
                         if (this.uploadTags) formData.append('tags', this.uploadTags);
                         if (this.conference.id) formData.append('conferenceId', this.conference.id);
 
-                        const tenantId = localStorage.getItem('tenantId') || '2027317834622709762';
+                        const tenantId = localStorage.getItem('tenantId') || '';
                         const resp = await fetch(AI_API_BASE + '/knowledge/upload', {
                             method: 'POST',
                             headers: { 'X-Tenant-Id': tenantId },

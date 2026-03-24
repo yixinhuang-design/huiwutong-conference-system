@@ -10,7 +10,7 @@ import org.springframework.web.filter.CorsFilter;
  * CORS跨域配置
  * 允许前端应用跨域访问会议服务
  */
-// @Configuration  # 禁用CORS配置，由网关统一处理
+// @Configuration  // 已禁用：使用Gateway的统一CORS配置
 public class CorsConfig {
 
     @Bean

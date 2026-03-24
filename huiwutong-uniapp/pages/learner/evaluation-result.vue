@@ -18,8 +18,8 @@
         </view>
       </view>
       <view class="info-meta">
-        <text class="meta-item">📊 已评价：{{ evaluationInfo.completed }}/{{ evaluationInfo.total }}</text>
-        <text class="meta-item">⏰ 截止：{{ evaluationInfo.deadline }}</text>
+        <text class="meta-item"><text class="fa fa-chart-bar"></text> 已评价：{{ evaluationInfo.completed }}/{{ evaluationInfo.total }}</text>
+        <text class="meta-item"><text class="fa fa-clock"></text> 截止：{{ evaluationInfo.deadline }}</text>
       </view>
     </view>
 
@@ -38,7 +38,8 @@
             class="star-icon"
             :class="star <= overallRating.avg ? 'filled' : ''"
           >
-            {{ star <= overallRating.avg ? '⭐' : '☆' }}
+            <text v-if="star <= overallRating.avg" class="fa fa-star"></text>
+            <text v-else class="fa fa-star-o"></text>
           </text>
         </view>
       </view>
@@ -68,7 +69,7 @@
             class="category-item"
           >
             <view class="category-header">
-              <text class="category-icon">{{ category.icon }}</text>
+              <text class="category-icon"><text :class="category.icon"></text></text>
               <text class="category-name">{{ category.name }}</text>
             </view>
             <view class="category-rating">
@@ -79,7 +80,8 @@
                   class="star-icon-small"
                   :class="star <= category.avg ? 'filled' : ''"
                 >
-                  {{ star <= category.avg ? '⭐' : '☆' }}
+                  <text v-if="star <= category.avg" class="fa fa-star"></text>
+                  <text v-else class="fa fa-star-o"></text>
                 </text>
               </view>
               <text class="category-score">{{ category.avg }}</text>
@@ -147,7 +149,17 @@
                 </view>
               </view>
               <view class="review-rating">
-                <text class="rating-stars-mini">{{ getRatingStars(review.rating) }}</text>
+                <view class="rating-stars-mini">
+                  <text
+                    v-for="star in 5"
+                    :key="star"
+                    class="star-icon-mini"
+                    :class="star <= review.rating ? 'filled' : ''"
+                  >
+                    <text v-if="star <= review.rating" class="fa fa-star"></text>
+                    <text v-else class="fa fa-star-o"></text>
+                  </text>
+                </view>
                 <text class="rating-score">{{ review.rating }}.0</text>
               </view>
             </view>
@@ -205,10 +217,10 @@ export default {
         { star: 1, count: 0, percent: 0 }
       ],
       categoryResults: [
-        { id: 'content', name: '培训内容', icon: '<text class="fa fa-book-open"></text>', avg: 4.72, fullCount: 48 },
-        { id: 'teacher', name: '讲师水平', icon: '👨‍🏫', avg: 4.85, fullCount: 52 },
-        { id: 'organization', name: '培训组织', icon: '🏛️', avg: 4.65, fullCount: 45 },
-        { id: 'effect', name: '培训效果', icon: '📈', avg: 4.50, fullCount: 38 }
+        { id: 'content', name: '培训内容', icon: 'fa-book-open', avg: 4.72, fullCount: 48 },
+        { id: 'teacher', name: '讲师水平', icon: 'fa-chalkboard-teacher', avg: 4.85, fullCount: 52 },
+        { id: 'organization', name: '培训组织', icon: 'fa-university', avg: 4.65, fullCount: 45 },
+        { id: 'effect', name: '培训效果', icon: 'fa-chart-line', avg: 4.50, fullCount: 38 }
       ],
       evaluationStats: {
         totalCount: 56,
@@ -275,7 +287,7 @@ export default {
 
   methods: {
     getRatingStars(rating) {
-      return '⭐'.repeat(rating) + '☆'.repeat(5 - rating)
+      return rating // 返回数字，模板中用v-if渲染
     },
 
     getCategoryLabel(key) {
@@ -333,6 +345,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .evaluation-result-container {
   min-height: 100vh;

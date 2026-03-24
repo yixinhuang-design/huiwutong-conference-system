@@ -1,11 +1,11 @@
-/**
+﻿/**
  * API Service - 智能会议系统前端API调用封装
  * 用于管理所有与后端的通信
  */
 
 class AuthService {
     constructor() {
-        this.baseURL = 'http://localhost:8081/api';
+        this.baseURL = '/api';
         this.timeout = 10000;
     }
 

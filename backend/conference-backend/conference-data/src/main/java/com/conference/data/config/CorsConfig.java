@@ -9,7 +9,7 @@ import org.springframework.web.filter.CorsFilter;
 /**
  * 跨域配置（前端直连时需要）
  */
-@Configuration
+// @Configuration  // 已禁用：使用Gateway的统一CORS配置
 public class CorsConfig {
 
     @Bean

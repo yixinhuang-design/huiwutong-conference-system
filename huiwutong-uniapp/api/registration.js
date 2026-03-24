@@ -88,7 +88,7 @@ export default {
   upload(conferenceId, fileType, filePath) {
     return new Promise((resolve, reject) => {
       uni.uploadFile({
-        url: 'http://localhost:8080/api/v1/registration/upload',
+        url: 'http://localhost:8080/api/registration/upload',
         filePath,
         name: 'file',
         formData: {
@@ -163,5 +163,119 @@ export default {
       conferenceId,
       registrationUrl
     })
+  },
+
+  // ============ 手册管理 ============
+  /**
+   * 手册列表
+   * GET /registration/handbook/list?meetingId={id}
+   */
+  listHandbooks(meetingId) {
+    return get('/registration/handbook/list', { meetingId: meetingId })
+  },
+
+  /**
+   * 手册详情
+   * GET /registration/handbook/{id}
+   */
+  getHandbookDetail(id) {
+    return get(`/registration/handbook/${id}`)
+  },
+
+  /**
+   * 保存手册
+   * POST /registration/handbook/save
+   */
+  saveHandbook(data) {
+    return post('/registration/handbook/save', data)
+  },
+
+  /**
+   * 删除手册
+   * DELETE /registration/handbook/{id}
+   */
+  deleteHandbook(id) {
+    return post(`/registration/handbook/${id}/delete`)
+  },
+
+  /**
+   * 发布手册
+   * POST /registration/handbook/{id}/publish
+   */
+  publishHandbook(id) {
+    return post(`/registration/handbook/${id}/publish`)
+  },
+
+  /**
+   * 手册讨论列表
+   * GET /registration/handbook/{id}/discussions
+   */
+  listHandbookDiscussions(id) {
+    return get(`/registration/handbook/${id}/discussions`)
+  },
+
+  /**
+   * 添加手册讨论
+   * POST /registration/handbook/discussion/add
+   */
+  addHandbookDiscussion(data) {
+    return post('/registration/handbook/discussion/add', data)
+  },
+
+  // ============ 分组管理 ============
+  /**
+   * 分组列表
+   * GET /api/grouping/list?meetingId={id}
+   */
+  listGroupings(meetingId) {
+    return get('/grouping/list', { meetingId: meetingId })
+  },
+
+  /**
+   * 保存分组
+   * POST /api/grouping/save
+   */
+  saveGrouping(data) {
+    return post('/grouping/save', data)
+  },
+
+  /**
+   * 更新分组名称
+   * PUT /api/grouping/updateName
+   */
+  updateGroupName(data) {
+    return put('/grouping/updateName', data)
+  },
+
+  /**
+   * 更新组长
+   * PUT /api/grouping/updateLeader
+   */
+  updateGroupLeader(data) {
+    return put('/grouping/updateLeader', data)
+  },
+
+  /**
+   * 调整成员
+   * POST /api/grouping/adjustMembers
+   */
+  adjustGroupMembers(data) {
+    return post('/grouping/adjustMembers', data)
+  },
+
+  /**
+   * 移除成员
+   * DELETE /api/grouping/removeMember
+   */
+  removeGroupMember(data) {
+    return post('/grouping/removeMember', data)
+  },
+
+  /**
+   * 删除全部分组
+   * DELETE /api/grouping/deleteAll?meetingId={id}
+   */
+  deleteAllGroupings(meetingId) {
+    return post(`/grouping/deleteAll?meetingId=${meetingId}`)
   }
 }

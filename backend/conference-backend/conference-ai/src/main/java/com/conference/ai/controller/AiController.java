@@ -3,7 +3,6 @@ package com.conference.ai.controller;
 import com.conference.ai.entity.*;
 import com.conference.ai.service.*;
 import com.conference.common.result.Result;
-import com.conference.common.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -283,28 +282,35 @@ public class AiController {
         return Result.ok(chatService.getAiStats(conferenceId));
     }
 
-    // ===== OCR & 语音 (保留原有接口) =====
+    // ===== OCR & 语音 (功能建设中) =====
 
+    /**
+     * OCR识别 - 功能建设中
+     * 待接入第三方OCR服务(如百度AI、腾讯云等)
+     */
     @PostMapping("/ocr")
     public Result<Map<String, Object>> ocrRecognition(
-            @RequestParam String imageUrl,
-            @RequestParam String type) {
-        Long tenantId = TenantContextHolder.getTenantId();
-        log.info("[租户{}] 执行OCR识别, 类型: {}", tenantId, type);
+            @RequestParam(required = false) String imageUrl,
+            @RequestParam(required = false) String type) {
+        log.info("OCR识别请求 - 功能建设中, 类型: {}", type);
         Map<String, Object> result = new HashMap<>();
-        result.put("tenantId", tenantId != null ? tenantId.toString() : null);
-        result.put("recognitionId", "1");
+        result.put("status", "building");
+        result.put("message", "功能建设中，敬请期待");
         result.put("type", type);
-        result.put("confidence", 0.95);
-        return Result.ok("OCR识别完成", result);
+        return Result.ok("功能建设中", result);
     }
 
+    /**
+     * 语音识别 - 功能建设中
+     * 待接入第三方语音服务(如科大讯飞、百度AI等)
+     */
     @PostMapping("/speech-recognition")
-    public Result<Map<String, String>> speechRecognition(@RequestParam String audioUrl) {
+    public Result<Map<String, String>> speechRecognition(@RequestParam(required = false) String audioUrl) {
+        log.info("语音识别请求 - 功能建设中");
         Map<String, String> result = new HashMap<>();
-        result.put("text", "识别的文本内容");
-        result.put("language", "zh-CN");
-        return Result.ok(result);
+        result.put("status", "building");
+        result.put("message", "功能建设中，敬请期待");
+        return Result.ok("功能建设中", result);
     }
 
     // ===== 工具方法 =====

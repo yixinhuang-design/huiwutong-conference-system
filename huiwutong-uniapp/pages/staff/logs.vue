@@ -106,7 +106,7 @@
               <text class="meta-text">{{ log.ip }}</text>
             </view>
             <view class="meta-item">
-              <text class="meta-icon">⏰</text>
+              <text class="meta-icon"><text class="fa fa-clock"></text></text>
               <text class="meta-text">{{ log.time }}</text>
             </view>
           </view>
@@ -439,6 +439,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .logs-container {
   min-height: 100vh;

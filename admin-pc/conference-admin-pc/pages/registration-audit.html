@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -569,7 +569,7 @@
                 getApiHeaders() {
                     const headers = {
                         'Content-Type': 'application/json',
-                        'X-Tenant-Id': localStorage.getItem('tenantId') || '2027317834622709762',
+                        'X-Tenant-Id': localStorage.getItem('tenantId') || '',
                         'X-User-Id': localStorage.getItem('userId') || '1'
                     };
                     const token = localStorage.getItem('authToken');
@@ -652,11 +652,11 @@
 
                     try {
                         const [listResp, statsResp] = await Promise.all([
-                            fetch(`http://localhost:8082/api/registration/list?conferenceId=${encodeURIComponent(String(conferenceId))}&page=1&pageSize=1000`, {
+                            fetch(`/api/registration/list?conferenceId=${encodeURIComponent(String(conferenceId))}&page=1&pageSize=1000`, {
                                 method: 'GET',
                                 headers: this.getApiHeaders()
                             }),
-                            fetch(`http://localhost:8082/api/registration/stats?conferenceId=${encodeURIComponent(String(conferenceId))}`, {
+                            fetch(`/api/registration/stats?conferenceId=${encodeURIComponent(String(conferenceId))}`, {
                                 method: 'GET',
                                 headers: this.getApiHeaders()
                             })
@@ -751,10 +751,10 @@
                             formData.append('fileType', 'idCard');
                             formData.append('file', this.uploadedFiles[i].file);
 
-                            const uploadResp = await fetch('http://localhost:8082/api/registration/upload', {
+                            const uploadResp = await fetch('/api/registration/upload', {
                                 method: 'POST',
                                 headers: {
-                                    'X-Tenant-Id': localStorage.getItem('tenantId') || '2027317834622709762',
+                                    'X-Tenant-Id': localStorage.getItem('tenantId') || '',
                                     'X-User-Id': localStorage.getItem('userId') || '1'
                                 },
                                 body: formData
@@ -765,7 +765,7 @@
                             }
 
                             const photoUrl = uploadResult.data.fileUrl;
-                            const ocrResp = await fetch(`http://localhost:8082/api/registration/ocr/idCard?photoUrl=${encodeURIComponent(photoUrl)}`, {
+                            const ocrResp = await fetch(`/api/registration/ocr/idCard?photoUrl=${encodeURIComponent(photoUrl)}`, {
                                 method: 'POST',
                                 headers: this.getApiHeaders()
                             });
@@ -1047,7 +1047,7 @@
                 },
                 
                 async saveAuditResult(registrationId, result, remark) {
-                    const resp = await fetch('http://localhost:8082/api/registration/audit', {
+                    const resp = await fetch('/api/registration/audit', {
                         method: 'POST',
                         headers: this.getApiHeaders(),
                         body: JSON.stringify({

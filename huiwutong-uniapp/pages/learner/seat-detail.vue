@@ -29,7 +29,7 @@
             <text class="meta-text">{{ seatInfo.location }}</text>
           </view>
           <view class="meta-item">
-            <text class="meta-icon">🏷️</text>
+            <text class="meta-icon"><text class="fa fa-tag"></text></text>
             <text class="meta-text">{{ seatInfo.type }}</text>
           </view>
         </view>
@@ -87,7 +87,7 @@
             :key="index"
             class="facility-item"
           >
-            <text class="facility-icon">{{ facility.icon }}</text>
+            <text class="facility-icon"><text :class="facility.icon"></text></text>
             <view class="facility-info">
               <text class="facility-name">{{ facility.name }}</text>
               <text class="facility-desc">{{ facility.description }}</text>
@@ -132,7 +132,7 @@
           class="btn btn-outline btn-block"
           @click="viewSeatMap"
         >
-          🗺️ 查看座位图
+          <text class="fa fa-map"></text> 查看座位图
         </button>
       </view>
     </scroll-view>
@@ -164,10 +164,10 @@ export default {
           { id: '4', name: '刘芳', department: '市财政局', position: '科员', relativePos: '后排' }
         ],
         facilities: [
-          { icon: '<text class="fa fa-th-large"></text>', name: '桌椅', description: '培训桌椅', available: true },
-          { icon: '🔌', name: '电源插座', description: '220V电源', available: true },
-          { icon: '🥤', name: '饮水杯', description: '一次性水杯', available: true },
-          { icon: '<text class="fa fa-edit"></text>', name: '学习用品', description: '笔、本子', available: true }
+          { icon: 'fa-th-large', name: '桌椅', description: '培训桌椅', available: true },
+          { icon: 'fa-plug', name: '电源插座', description: '220V电源', available: true },
+          { icon: 'fa-glass-cheers', name: '饮水杯', description: '一次性水杯', available: true },
+          { icon: 'fa-edit', name: '学习用品', description: '笔、本子', available: true }
         ],
         photos: [
           'https://via.placeholder.com/300x200?text=座位正面',
@@ -260,6 +260,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .seat-detail-container {
   min-height: 100vh;

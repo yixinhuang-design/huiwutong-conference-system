@@ -240,7 +240,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     /** 从WebSocket Session中提取用户ID */
     private String getUserId(WebSocketSession session) {
-        // 从URL参数中获取 ?userId=xxx
+        // 优先从握手拦截器设置的attributes中获取
+        Object attrUserId = session.getAttributes().get("userId");
+        if (attrUserId != null) {
+            return attrUserId.toString();
+        }
+        // 兼容：从URL参数中获取 ?userId=xxx
         String query = session.getUri() != null ? session.getUri().getQuery() : null;
         if (query != null) {
             for (String param : query.split("&")) {

@@ -46,9 +46,35 @@ public class ChunkUploadServiceImpl implements IChunkUploadService {
 
     /**
      * 内存中维护上传任务元数据
-     * 实际应用中应使用数据库或Redis
+     * 注意：服务重启后上传状态会丢失，后续应迁移至Redis或数据库
      */
     private static final ConcurrentHashMap<String, UploadTaskMetadata> UPLOAD_TASKS = new ConcurrentHashMap<>();
+
+    /** 过期上传任务清理阈值（24小时） */
+    private static final long UPLOAD_EXPIRE_HOURS = 24;
+
+    /**
+     * 清理过期的上传任务（超过24小时未更新的任务）
+     * 可由外部定时任务或Controller接口调用
+     */
+    public int cleanExpiredTasks() {
+        int cleaned = 0;
+        LocalDateTime threshold = LocalDateTime.now().minusHours(UPLOAD_EXPIRE_HOURS);
+        Iterator<Map.Entry<String, UploadTaskMetadata>> it = UPLOAD_TASKS.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, UploadTaskMetadata> entry = it.next();
+            UploadTaskMetadata meta = entry.getValue();
+            if (meta.getLastUpdateTime() != null && meta.getLastUpdateTime().isBefore(threshold)) {
+                log.info("[ChunkUpload] 清理过期任务: uploadId={}, lastUpdate={}", meta.getUploadId(), meta.getLastUpdateTime());
+                it.remove();
+                cleaned++;
+            }
+        }
+        if (cleaned > 0) {
+            log.info("[ChunkUpload] 已清理{}个过期上传任务，当前剩余: {}", cleaned, UPLOAD_TASKS.size());
+        }
+        return cleaned;
+    }
 
     /**
      * 上传任务元数据

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -3147,6 +3147,160 @@
             margin-left: var(--space-2);
         }
 
+        /* ===== 指定分配模式样式 ===== */
+        .assign-mode-bar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2) var(--space-4);
+            background: linear-gradient(135deg, #2563eb15, #7c3aed15);
+            border: 1px solid #2563eb40;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-3);
+            animation: assignModeSlideIn 0.3s ease;
+        }
+        @keyframes assignModeSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .assign-mode-bar .assign-mode-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--font-size-sm);
+            color: #2563eb;
+            font-weight: 500;
+        }
+        .assign-mode-bar .assign-mode-info .person-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            background: #2563eb;
+            color: white;
+            border-radius: 20px;
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+        }
+        .assign-mode-bar .btn-cancel-assign {
+            padding: 4px 12px;
+            background: transparent;
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: var(--font-size-xs);
+            transition: all 0.2s;
+        }
+        .assign-mode-bar .btn-cancel-assign:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* 指定分配模式下座位的高亮效果 */
+        .seat.assign-target {
+            cursor: crosshair !important;
+            outline: 2px dashed #2563eb;
+            outline-offset: 2px;
+            animation: seatPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes seatPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.3); }
+            50% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+        }
+
+        /* 参会人员列表中的可点击选人样式 */
+        .attendee-pick-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 10px;
+            background: var(--gray-50);
+            border-radius: var(--radius-sm);
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            font-size: var(--font-size-sm);
+        }
+        .attendee-pick-item:hover {
+            background: #eff6ff;
+            border-color: #2563eb40;
+        }
+        .attendee-pick-item.selected-for-assign {
+            background: #2563eb15;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px #2563eb30;
+        }
+        .attendee-pick-item .pick-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .attendee-pick-item .pick-name {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+        .attendee-pick-item .pick-dept {
+            color: var(--gray-500);
+            font-size: var(--font-size-xs);
+        }
+        .attendee-pick-item .pick-status {
+            font-size: var(--font-size-xs);
+            padding: 1px 6px;
+            border-radius: 10px;
+        }
+        .attendee-pick-item .pick-status.seated {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .attendee-pick-item .pick-status.unseated {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .attendee-pick-item .vip-badge {
+            color: #f59e0b;
+            font-size: 10px;
+        }
+
+        /* 操作提示条 */
+        .seat-hint-bar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: #fffbeb;
+            border: 1px solid #fbbf2440;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+            font-size: var(--font-size-xs);
+            color: #92400e;
+        }
+        .seat-hint-bar i {
+            color: #f59e0b;
+        }
+        .seat-hint-bar .hint-shortcuts {
+            margin-left: auto;
+            display: flex;
+            gap: var(--space-3);
+        }
+        .seat-hint-bar .hint-shortcuts span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .seat-hint-bar .hint-shortcuts kbd {
+            display: inline-block;
+            padding: 1px 5px;
+            font-size: 10px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 3px;
+            box-shadow: 0 1px 0 #d1d5db;
+            font-family: monospace;
+        }
+
         /* 右键菜单样式 */
         .context-menu {
             position: fixed;
@@ -3155,7 +3309,7 @@
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-lg);
             z-index: 10000;
-            min-width: 180px;
+            min-width: 200px;
             overflow: hidden;
         }
 
@@ -4028,7 +4182,7 @@
                                             <!-- 座位 -->
                                             <div
                                                 class="seat"
-                                                :class="getSeatClass(seat)"
+                                                :class="[getSeatClass(seat), { 'assign-target': assignMode.active && seat.status === 'available' && !seat.isAisle }]"
                                                 :data-col="seat.col"
                                                 :data-seat-id="seat.id"
                                                 :draggable="editMode === 'drag' && seat.status === 'occupied'"
@@ -4040,7 +4194,7 @@
                                                 @drop="handleDrop($event, seat)"
                                                 @contextmenu.prevent="showSeatContextMenu($event, seat, area, Object.assign(row, {arrayIndex: rowIndex}), seatIndex)"
                                                 :style="area.venueType === 'round' ? 'left: ' + (seat.x - (row.tableCenterX || 0) + 75) + 'px; top: ' + (seat.y - (row.tableCenterY || 0) + 75) + 'px;' : ''"
-                                                :title="getSeatTooltip(seat) + ' | 双击编辑详情 | 拖拽交换座位'"
+                                                :title="getSeatTooltip(seat) + ' | 双击编辑详情 | 右键更多操作'"
                                             >
                                                 <span v-if="seat.occupant && seat.status === 'occupied'" class="seat-occupant-name">
                                                     {{ seat.occupant.name }}
@@ -4213,6 +4367,33 @@
                     </div>
                 </div>
 
+                <!-- 指定分配模式指示条 -->
+                <div class="assign-mode-bar" v-if="assignMode.active">
+                    <div class="assign-mode-info">
+                        <i class="fas fa-crosshairs"></i>
+                        <span>指定分配模式：</span>
+                        <span class="person-tag">
+                            <i class="fas fa-user"></i>
+                            {{ assignMode.attendee?.name }}
+                            <template v-if="assignMode.attendee?.department"> · {{ assignMode.attendee.department }}</template>
+                        </span>
+                        <span>👉 请点击要安排的座位</span>
+                    </div>
+                    <button class="btn-cancel-assign" @click="cancelAssignMode">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                </div>
+
+                <!-- 操作提示条 -->
+                <div class="seat-hint-bar" v-if="!assignMode.active && attendees.length > 0">
+                    <i class="fas fa-lightbulb"></i>
+                    <span><b>双击</b>座位可分配人员 | <b>右键</b>座位查看更多操作 | 左侧人员列表点击<b>📌</b>可直接指定座位</span>
+                    <div class="hint-shortcuts">
+                        <span><kbd>Ctrl</kbd>+点击 多选</span>
+                        <span><kbd>Ctrl+Z</kbd> 撤销</span>
+                    </div>
+                </div>
+
                 <!-- 编辑模式指示器 -->
                 <div class="edit-mode-indicator" v-if="editMode === 'drag'">
                     <i class="fas fa-hand-rock"></i>
@@ -4278,6 +4459,7 @@
                             <div class="attendee-stats">
                                 已导入 <strong>{{ attendees.length }}</strong> 人
                                 <span v-if="vipCount > 0">（VIP <strong>{{ vipCount }}</strong> 人）</span>
+                                <span v-if="getUnassignedAttendees().length > 0" style="color: #d97706;">（未排座 <strong>{{ getUnassignedAttendees().length }}</strong>）</span>
                             </div>
                         </div>
                         <div class="attendee-actions">
@@ -4296,6 +4478,42 @@
                                 style="display: none;"
                                 @change="handleExcelImport"
                             />
+                        </div>
+
+                        <!-- 参会人员列表 - 可点选指定座位 -->
+                        <div v-if="attendees.length > 0" style="margin-top: var(--space-3);">
+                            <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
+                                <input type="text" v-model="attendeeFilterKeyword" placeholder="搜索人员..." 
+                                    style="flex: 1; padding: 4px 8px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: var(--font-size-xs);" />
+                                <select v-model="attendeeFilterType" style="padding: 4px 6px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: var(--font-size-xs);">
+                                    <option value="all">全部</option>
+                                    <option value="unseated">未排座</option>
+                                    <option value="seated">已排座</option>
+                                    <option value="vip">VIP</option>
+                                </select>
+                            </div>
+                            <div class="attendee-list" style="max-height: 300px; overflow-y: auto;">
+                                <div v-for="att in filteredAttendeeList" :key="att.id"
+                                    class="attendee-pick-item"
+                                    :class="{ 'selected-for-assign': assignMode.active && assignMode.attendee?.id === att.id }"
+                                    @click="startAssignMode(att)"
+                                    :title="'点击选中 ' + att.name + '，然后点击座位完成分配'">
+                                    <div class="pick-info">
+                                        <span class="pick-name">{{ att.name }}</span>
+                                        <span class="vip-badge" v-if="att.isVip">★</span>
+                                        <span class="pick-dept">{{ att.department || '' }}</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <span class="pick-status" :class="isAttendeeSeated(att) ? 'seated' : 'unseated'">
+                                            {{ isAttendeeSeated(att) ? '已排座' : '未排座' }}
+                                        </span>
+                                        <span style="font-size: 14px; cursor: pointer;" title="点击指定座位">📌</span>
+                                    </div>
+                                </div>
+                                <div v-if="filteredAttendeeList.length === 0" style="text-align: center; padding: var(--space-3); color: var(--gray-400); font-size: var(--font-size-sm);">
+                                    无匹配人员
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -4463,8 +4681,25 @@
                         <div class="context-menu-item separator"></div>
                     </template>
 
-                    <!-- 上下方向（插入行）- 仅在不是行级过道时显示 -->
+                    <!-- 普通座位的操作菜单 -->
                     <template v-if="!contextMenu.isAisle && !contextMenu.isColumnAisle">
+                        <!-- === 人员操作 === -->
+                        <div class="context-menu-item" @click="openSeatDetailPanel(contextMenu.seat); hideContextMenu()" title="打开座位详情面板，分配或更换入座人员">
+                            <i class="fas fa-user-plus" style="color: #2563eb;"></i>
+                            <span style="color: #2563eb; font-weight: 500;">分配 / 更换人员</span>
+                        </div>
+                        <div class="context-menu-item" v-if="contextMenu.seat && contextMenu.seat.occupant" @click="quickClearSeat(contextMenu.seat); hideContextMenu()" title="清空此座位上的人员">
+                            <i class="fas fa-user-minus" style="color: #ef4444;"></i>
+                            <span style="color: #ef4444;">清空此座位</span>
+                        </div>
+                        <div class="context-menu-item" @click="quickToggleVip(contextMenu.seat); hideContextMenu()" title="切换VIP标记">
+                            <i class="fas fa-star" :style="{ color: contextMenu.seat?.type === 'vip' ? '#f59e0b' : '#9ca3af' }"></i>
+                            {{ contextMenu.seat?.type === 'vip' ? '取消VIP标记' : '设为VIP座位' }}
+                        </div>
+
+                        <div class="context-menu-item separator"></div>
+
+                        <!-- === 过道操作 === -->
                         <div class="context-menu-item" @click="insertRowAisle(contextMenu.area, contextMenu.rowArrayIndex, 'above'); hideContextMenu()" title="在选中座位所在行的上方插入过道">
                             <i class="fas fa-arrow-up"></i>
                             在上方插入过道
@@ -4474,10 +4709,8 @@
                             在下方插入过道
                         </div>
                         
-                        <!-- 分隔线 -->
                         <div class="context-menu-item separator"></div>
                         
-                        <!-- 左右方向（插入列） -->
                         <div class="context-menu-item" @click="insertColumnAisle(contextMenu.area, contextMenu.colIndex, 'left'); hideContextMenu()" title="在选中座位所在列的左方插入过道">
                             <i class="fas fa-arrow-left"></i>
                             在左边插入过道
@@ -4913,6 +5146,16 @@
                     notes: ''
                 });
 
+                // ===== 指定分配模式 =====
+                const assignMode = reactive({
+                    active: false,
+                    attendee: null
+                });
+
+                // 参会人员列表过滤
+                const attendeeFilterKeyword = ref('');
+                const attendeeFilterType = ref('all');
+
                 // 会场布局类型
                 console.log('[DEBUG-35] 初始化layoutTypes');
                 const layoutTypes = [
@@ -5224,7 +5467,7 @@
                                 // 使用 layout/load 端点一次性加载完整布局
                                 const confId = conference.value.id;
                                 const schedId = currentScheduleId.value || '';
-                                let loadUrl = `http://localhost:8086/api/seating/layout/load?conferenceId=${confId}`;
+                                let loadUrl = `/api/seating/layout/load?conferenceId=${confId}`;
                                 if (schedId) {
                                     loadUrl += `&scheduleId=${schedId}`;
                                 }
@@ -5354,7 +5597,7 @@
                                 }
                                 // 从报名服务获取该会议的报名列表（取足够大的pageSize以获取全部）
                                 const regResponse = await fetch(
-                                    `http://localhost:8082/api/registration/list?conferenceId=${conference.value.id}&page=1&pageSize=1000`,
+                                    `/api/registration/list?conferenceId=${conference.value.id}&page=1&pageSize=1000`,
                                     { method: 'GET', headers: regHeaders }
                                 );
                                 if (regResponse.ok) {
@@ -6221,6 +6464,12 @@
                 const handleSeatClick = (event, seat) => {
                     if (!seat || seat.isAisle) return;
 
+                    // ===== 指定分配模式：点击座位即分配 =====
+                    if (assignMode.active && assignMode.attendee) {
+                        executeAssignToSeat(seat, assignMode.attendee);
+                        return;
+                    }
+
                     const ctrlKey = event?.ctrlKey || event?.metaKey;
                     const shiftKey = event?.shiftKey;
 
@@ -6707,6 +6956,158 @@
                         window.InteractionUtils.showToast('座位信息已保存', 'success');
                     }
                 };
+
+                // ===== 指定分配模式方法 =====
+                const startAssignMode = (attendee) => {
+                    if (!attendee) return;
+                    assignMode.active = true;
+                    assignMode.attendee = attendee;
+                    if (window.InteractionUtils) {
+                        window.InteractionUtils.showToast(
+                            `已选中 「${attendee.name}」，请点击要安排的座位`,
+                            'info'
+                        );
+                    }
+                };
+
+                const cancelAssignMode = () => {
+                    assignMode.active = false;
+                    assignMode.attendee = null;
+                };
+
+                const executeAssignToSeat = (seat, attendee) => {
+                    if (!seat || !attendee) return;
+
+                    // 如果座位已有人，先提示
+                    if (seat.status === 'occupied' && seat.occupant) {
+                        if (!confirm(`座位 ${seat.number} 已被 ${seat.occupant.name} 占用，是否替换？`)) {
+                            return;
+                        }
+                    }
+
+                    // 如果该人员已在其他座位，先清空原座位
+                    seatingAreas.value.forEach(area => {
+                        if (area && area.rows) {
+                            area.rows.forEach(row => {
+                                if (row && row.seats) {
+                                    row.seats.forEach(s => {
+                                        if (s.occupant && String(s.occupant.id) === String(attendee.id) && s.id !== seat.id) {
+                                            s.status = 'available';
+                                            s.occupant = null;
+                                            if (s.type === 'vip') s.type = 'regular';
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+
+                    // 记录变更
+                    const oldOccupant = seat.occupant;
+                    recordSeatChange({
+                        type: oldOccupant ? 'replace' : 'assign',
+                        attendeeName: oldOccupant ? `${oldOccupant.name} -> ${attendee.name}` : attendee.name,
+                        oldPosition: oldOccupant ? `${seat.row}排${seat.number}号` : '未分配',
+                        newPosition: `${seat.row}排${seat.number}号`,
+                        reason: '指定分配',
+                        timestamp: new Date().toLocaleString()
+                    });
+
+                    // 执行分配
+                    seat.status = 'occupied';
+                    seat.occupant = attendee;
+                    if (attendee.isVip) seat.type = 'vip';
+
+                    saveData();
+                    updateStatistics();
+
+                    if (window.InteractionUtils) {
+                        window.InteractionUtils.showToast(
+                            `✅ ${attendee.name} 已分配到 ${seat.row || ''}排${seat.number}号`,
+                            'success'
+                        );
+                    }
+
+                    // 退出分配模式
+                    cancelAssignMode();
+                };
+
+                // ===== 右键菜单快捷操作 =====
+                const quickClearSeat = (seat) => {
+                    if (!seat || !seat.occupant) return;
+                    const name = seat.occupant.name;
+                    recordSeatChange({
+                        type: 'clear',
+                        attendeeName: name,
+                        oldPosition: `${seat.row}排${seat.number}号`,
+                        newPosition: '（已清空）',
+                        reason: '右键菜单清空',
+                        timestamp: new Date().toLocaleString()
+                    });
+                    seat.status = 'available';
+                    seat.occupant = null;
+                    if (seat.type === 'vip') seat.type = 'regular';
+                    saveData();
+                    updateStatistics();
+                    if (window.InteractionUtils) {
+                        window.InteractionUtils.showToast(`已清空座位（原：${name}）`, 'success');
+                    }
+                };
+
+                const quickToggleVip = (seat) => {
+                    if (!seat) return;
+                    seat.type = seat.type === 'vip' ? 'regular' : 'vip';
+                    saveData();
+                    if (window.InteractionUtils) {
+                        window.InteractionUtils.showToast(
+                            seat.type === 'vip' ? '已设为VIP座位 ★' : '已取消VIP标记',
+                            'success'
+                        );
+                    }
+                };
+
+                // ===== 参会人员列表过滤 =====
+                const isAttendeeSeated = (att) => {
+                    for (const area of seatingAreas.value) {
+                        if (area && area.rows) {
+                            for (const row of area.rows) {
+                                if (row && row.seats) {
+                                    for (const seat of row.seats) {
+                                        if (seat.occupant && String(seat.occupant.id) === String(att.id)) {
+                                            return true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return false;
+                };
+
+                const filteredAttendeeList = Vue.computed(() => {
+                    let list = attendees.value;
+                    
+                    // 按类型过滤
+                    if (attendeeFilterType.value === 'unseated') {
+                        list = list.filter(a => !isAttendeeSeated(a));
+                    } else if (attendeeFilterType.value === 'seated') {
+                        list = list.filter(a => isAttendeeSeated(a));
+                    } else if (attendeeFilterType.value === 'vip') {
+                        list = list.filter(a => a.isVip);
+                    }
+                    
+                    // 按关键字搜索
+                    const kw = attendeeFilterKeyword.value?.trim();
+                    if (kw) {
+                        list = list.filter(a => 
+                            (a.name && a.name.includes(kw)) ||
+                            (a.department && a.department.includes(kw)) ||
+                            (a.position && a.position.includes(kw))
+                        );
+                    }
+                    
+                    return list;
+                });
 
                 // ===== 批量交换座位 =====
                 const batchSwapSeats = () => {
@@ -10710,7 +11111,7 @@
                             }))
                         };
 
-                        const response = await fetch('http://localhost:8086/api/seating/layout/save', {
+                        const response = await fetch('/api/seating/layout/save', {
                             method: 'POST',
                             headers: headers,
                             body: JSON.stringify(payload)
@@ -11314,6 +11715,18 @@
                     getUnassignedAttendees,
                     saveSeatDetails,
                     clipboard,
+
+                    // 指定分配模式
+                    assignMode,
+                    startAssignMode,
+                    cancelAssignMode,
+                    executeAssignToSeat,
+                    quickClearSeat,
+                    quickToggleVip,
+                    attendeeFilterKeyword,
+                    attendeeFilterType,
+                    filteredAttendeeList,
+                    isAttendeeSeated,
 
                     // 右键菜单
                     contextMenu,

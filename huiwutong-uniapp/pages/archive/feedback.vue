@@ -213,7 +213,7 @@ export default {
     },
 
     getRatingStars(rating) {
-      return '⭐'.repeat(rating) + '☆'.repeat(5 - rating)
+      return '<text class="fa fa-star"></text>'.repeat(rating) + '☆'.repeat(5 - rating)
     },
 
     replyFeedback(item) {
@@ -308,6 +308,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .feedback-container {
   min-height: 100vh;

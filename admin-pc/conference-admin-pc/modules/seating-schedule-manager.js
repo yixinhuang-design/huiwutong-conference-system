@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 多日程管理模块
  * 
  * 功能：
@@ -76,7 +76,7 @@ export function useScheduleManager(context = {}, injectedRef, injectedReactive) 
                     scheduleHeaders['Authorization'] = `Bearer ${token}`;
                 }
                 const response = await fetch(
-                    `http://localhost:8084/api/schedule/all?meetingId=${conferenceId}`,
+                    `/api/schedule/all?meetingId=${conferenceId}`,
                     { 
                         method: 'GET',
                         headers: scheduleHeaders

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -394,14 +394,14 @@
         async function checkBackendConnection() {
             try {
                 showResult('connectionResult', '⏳ 正在连接...', true);
-                const response = await fetch('http://localhost:8081/', {
+                const response = await fetch('/', {
                     method: 'GET',
                     timeout: 5000
                 });
                 showResult('connectionResult', `✅ 后端连接成功\n状态码: ${response.status}\n`);
                 console.log('Backend response:', response);
             } catch (error) {
-                showResult('connectionResult', `❌ 后端连接失败\n${error.message}\n\n请确保:\n1. 后端服务运行在 http://localhost:8081\n2. 未被防火墙阻止\n3. 端口8081未被占用`, false);
+                showResult('connectionResult', `❌ 后端连接失败\n${error.message}\n\n请确保:\n1. 后端服务运行在 \n2. 未被防火墙阻止\n3. 端口8081未被占用`, false);
             }
         }
         
@@ -417,7 +417,7 @@
                     headers['Authorization'] = `Bearer ${token}`;
                 }
                 
-                const response = await fetch('http://localhost:8081/api/tenant/list', {
+                const response = await fetch('/api/tenant/list', {
                     method: 'GET',
                     headers: headers
                 });
@@ -444,7 +444,7 @@
                     headers['Authorization'] = `Bearer ${token}`;
                 }
                 
-                const response = await fetch('http://localhost:8081/api/tenant/list?page=1&pageSize=10', {
+                const response = await fetch('/api/tenant/list?page=1&pageSize=10', {
                     method: 'GET',
                     headers: headers
                 });
@@ -468,7 +468,7 @@
                     headers['Authorization'] = `Bearer ${token}`;
                 }
                 
-                const response = await fetch('http://localhost:8081/api/tenant/list', {
+                const response = await fetch('/api/tenant/list', {
                     method: 'GET',
                     headers: headers
                 });
@@ -482,9 +482,9 @@
         
         // 复制API URL
         function copyAPIUrl(type) {
-            let url = 'http://localhost:8081/api/tenant/list';
+            let url = '/api/tenant/list';
             if (type === 'detail') {
-                url = 'http://localhost:8081/api/tenant/{id}';
+                url = '/api/tenant/{id}';
             }
             navigator.clipboard.writeText(url).then(() => {
                 alert('✅ URL 已复制到剪贴板:\n' + url);
@@ -509,7 +509,7 @@
                     headers['Authorization'] = `Bearer ${token}`;
                 }
                 
-                const response = await fetch(`http://localhost:8081/api/tenant/${tenantId}`, {
+                const response = await fetch(`/api/tenant/${tenantId}`, {
                     method: 'GET',
                     headers: headers
                 });
@@ -551,7 +551,7 @@
                     headers['Authorization'] = `Bearer ${token}`;
                 }
                 
-                const response = await fetch('http://localhost:8081/api/tenant/create', {
+                const response = await fetch('/api/tenant/create', {
                     method: 'POST',
                     headers: headers,
                     body: JSON.stringify(data)

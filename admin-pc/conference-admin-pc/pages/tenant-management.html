@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -564,7 +564,7 @@
                         // 调用真实后端API: GET /api/tenant/list
                         // 简化查询参数，避免格式问题
                         console.log('🔄 正在调用 /api/tenant/list...');
-                        const response = await fetch('http://localhost:8081/api/tenant/list', {
+                        const response = await fetch('/api/tenant/list', {
                             method: 'GET',
                             headers: headers
                         });
@@ -574,7 +574,7 @@
                         // 记录请求headers（除了敏感信息）
                         console.log('📤 请求信息:', {
                             method: 'GET',
-                            url: 'http://localhost:8081/api/tenant/list',
+                            url: '/api/tenant/list',
                             hasAuthHeader: !!headers['Authorization'],
                             authHeaderPreview: headers['Authorization'] ? headers['Authorization'].substring(0, 20) + '...' : 'none'
                         });
@@ -996,7 +996,7 @@
                         // 调用真实后端API
                         if (this.editingTenant) {
                         // 更新客户: PUT /api/tenant/{tenantId}
-                            const response = await fetch(`http://localhost:8081/api/tenant/${this.editingTenant.id}`, {
+                            const response = await fetch(`/api/tenant/${this.editingTenant.id}`, {
                                 method: 'PUT',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -1036,7 +1036,7 @@
                             }
                         } else {
                             // 创建客户: POST /api/tenant/create
-                            const response = await fetch('http://localhost:8081/api/tenant/create', {
+                            const response = await fetch('/api/tenant/create', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -1107,7 +1107,7 @@
                             this.$showLoading('锁定中...');
                             
                             // 调用后端API: PUT /api/tenant/{tenantId}/status?status=locked
-                            const response = await fetch(`http://localhost:8081/api/tenant/${id}/status?status=locked`, {
+                            const response = await fetch(`/api/tenant/${id}/status?status=locked`, {
                                 method: 'PUT',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -1150,7 +1150,7 @@
                             this.$showLoading('禁用中...');
                             
                             // 调用后端API: PUT /api/tenant/{tenantId}/status?status=inactive
-                            const response = await fetch(`http://localhost:8081/api/tenant/${id}/status?status=inactive`, {
+                            const response = await fetch(`/api/tenant/${id}/status?status=inactive`, {
                                 method: 'PUT',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -1193,7 +1193,7 @@
                             this.$showLoading('启用中...');
                             
                             // 调用后端API: PUT /api/tenant/{tenantId}/status?status=active
-                            const response = await fetch(`http://localhost:8081/api/tenant/${id}/status?status=active`, {
+                            const response = await fetch(`/api/tenant/${id}/status?status=active`, {
                                 method: 'PUT',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -1236,7 +1236,7 @@
                             this.$showLoading('解锁中...');
                             
                             // 调用后端API: PUT /api/tenant/{tenantId}/status?status=active
-                            const response = await fetch(`http://localhost:8081/api/tenant/${id}/status?status=active`, {
+                            const response = await fetch(`/api/tenant/${id}/status?status=active`, {
                                 method: 'PUT',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -1279,7 +1279,7 @@
                             this.$showLoading('删除中...');
                             
                             // 调用后端API: DELETE /api/tenant/{tenantId}
-                            const response = await fetch(`http://localhost:8081/api/tenant/${id}`, {
+                            const response = await fetch(`/api/tenant/${id}`, {
                                 method: 'DELETE',
                                 headers: {
                                     'Content-Type': 'application/json',

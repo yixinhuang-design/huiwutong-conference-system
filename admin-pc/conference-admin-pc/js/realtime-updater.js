@@ -101,48 +101,39 @@ class RealtimeUpdater {
     }
     
     /**
-     * 模拟实时更新
+     * 模拟实时更新（WebSocket未连接时的降级方案，不生成随机数据）
+     * TODO: WebSocket连接成功后应由服务端推送真实数据
      */
     simulateRealtimeUpdates() {
-        setInterval(() => {
-            if (this.isConnected) {
-                // 模拟随机更新
-                const updateTypes = ['registration', 'task', 'attendance', 'group'];
-                const randomType = updateTypes[Math.floor(Math.random() * updateTypes.length)];
-                
-                this.emit(`${randomType}Update`, {
-                    type: randomType,
-                    timestamp: new Date().toISOString(),
-                    data: this.generateMockUpdate(randomType)
-                });
-            }
-        }, 10000); // 每10秒模拟一次更新
+        // WebSocket未实现前，不主动推送模拟数据
+        // 当WebSocket连接后，此方法将被替换为真实推送接收
+        console.log('[RealtimeUpdater] 等待WebSocket连接，暂不推送模拟数据');
     }
     
     /**
-     * 生成模拟更新数据
+     * 生成默认更新数据（返回零值，避免模拟随机数据）
      */
     generateMockUpdate(type) {
         switch (type) {
             case 'registration':
                 return {
-                    newRegistrations: Math.floor(Math.random() * 5),
-                    totalRegistered: 356 + Math.floor(Math.random() * 10)
+                    newRegistrations: 0,
+                    totalRegistered: 0
                 };
             case 'task':
                 return {
-                    completedTasks: Math.floor(Math.random() * 3),
-                    totalCompleted: 42 + Math.floor(Math.random() * 5)
+                    completedTasks: 0,
+                    totalCompleted: 0
                 };
             case 'attendance':
                 return {
-                    newCheckins: Math.floor(Math.random() * 8),
-                    totalCheckedIn: 328 + Math.floor(Math.random() * 10)
+                    newCheckins: 0,
+                    totalCheckedIn: 0
                 };
             case 'group':
                 return {
-                    newMessages: Math.floor(Math.random() * 15),
-                    activeGroups: 3 + Math.floor(Math.random() * 2)
+                    newMessages: 0,
+                    activeGroups: 0
                 };
             default:
                 return {};

@@ -3295,7 +3295,7 @@
                     }
 
                     const confirmed = await this.$showConfirm(
-                        '确定要创建工作人员群吗？\n\n工作人员群用于协管员之间的工作协同和沟通。',
+                        '确定要创建工作人员群吗？\n\n工作人员群用于协管员之间的工作协同和沟通。\n系统将自动把会议工作人员拉入群内。',
                         '创建工作人员群',
                         'info'
                     );
@@ -3303,17 +3303,50 @@
                     if (confirmed) {
                         try {
                             this.$showLoading('正在创建工作人员群...');
+                            const conferenceId = this.conference?.id;
                             const groupData = {
                                 groupName: '协管员工作群',
                                 description: '会务工作人员协同群组',
                                 groupType: 'manager',
-                                conferenceId: this.conference?.id,
+                                conferenceId: conferenceId,
                                 tenantId: this.conference?.tenantId,
                                 ownerId: '1',
                                 maxMembers: 200,
                                 announcement: '协管员工作群 - 用于会务工作协同和沟通'
                             };
-                            await GroupAPI.createGroup(groupData);
+                            const createdGroup = await GroupAPI.createGroup(groupData);
+                            const newGroupId = createdGroup?.id;
+
+                            // 从 conf_meeting_staff 查询该会议的工作人员并批量拉入群
+                            if (newGroupId && conferenceId) {
+                                try {
+                                    const token = localStorage.getItem('authToken') || '';
+                                    const tenantId = localStorage.getItem('tenantId') || '';
+                                    const headers = { 'Content-Type': 'application/json' };
+                                    if (token) headers['Authorization'] = 'Bearer ' + token;
+                                    if (tenantId) headers['X-Tenant-Id'] = tenantId;
+
+                                    const staffResp = await fetch(`/api/registration/staff/list?meetingId=${conferenceId}`, { headers });
+                                    const staffResult = await staffResp.json();
+                                    const staffList = (staffResult.code === 200 && Array.isArray(staffResult.data)) ? staffResult.data : [];
+
+                                    if (staffList.length > 0) {
+                                        const members = staffList.map(s => ({
+                                            userId: s.staffId,
+                                            userName: s.staffName || '工作人员',
+                                            department: '',
+                                            memberRole: 'member'
+                                        }));
+                                        await GroupAPI.batchAddMembers(newGroupId, members);
+                                        console.log(`已将 ${members.length} 名工作人员拉入群组`);
+                                    } else {
+                                        console.warn('该会议暂无已保存的工作人员，请先在创建会议时添加工作人员');
+                                    }
+                                } catch (staffErr) {
+                                    console.warn('拉取工作人员入群时出现异常:', staffErr);
+                                }
+                            }
+
                             this.autoGroupConditions.managerGroupCreated = true;
                             await this.loadGroupsFromAPI();
                             await this.loadGroupStatsFromAPI();

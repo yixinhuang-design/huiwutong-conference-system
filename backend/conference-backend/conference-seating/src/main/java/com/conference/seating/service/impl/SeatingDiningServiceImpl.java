@@ -62,6 +62,8 @@ public class SeatingDiningServiceImpl implements SeatingDiningService {
         dining.setMealType(request.getMealType());
         dining.setCapacity(request.getCapacity());
         dining.setLocation(request.getLocation());
+        dining.setDiningDate(request.getDiningDate());
+        dining.setDiningTime(request.getDiningTime());
         dining.setMealTime(request.getMealTime());
         dining.setRemarks(request.getRemarks());
         dining.setCreatedAt(LocalDateTime.now());
@@ -91,6 +93,12 @@ public class SeatingDiningServiceImpl implements SeatingDiningService {
         }
         if (request.getLocation() != null) {
             dining.setLocation(request.getLocation());
+        }
+        if (request.getDiningDate() != null) {
+            dining.setDiningDate(request.getDiningDate());
+        }
+        if (request.getDiningTime() != null) {
+            dining.setDiningTime(request.getDiningTime());
         }
         if (request.getMealTime() != null) {
             dining.setMealTime(request.getMealTime());
@@ -179,6 +187,8 @@ public class SeatingDiningServiceImpl implements SeatingDiningService {
                 .capacity(dining.getCapacity())
                 .assignedCount(assignedCount)
                 .availableSeats(availableSeats)
+                .diningDate(dining.getDiningDate())
+                .diningTime(dining.getDiningTime())
                 .location(dining.getLocation())
                 .mealTime(dining.getMealTime())
                 .remarks(dining.getRemarks())

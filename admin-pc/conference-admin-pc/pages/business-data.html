@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -436,7 +436,7 @@
     <script src="../js/interaction-utils.js"></script>
     <script>
         const { createApp } = Vue;
-        const DATA_API = 'http://localhost:8088/api/data';
+        const DATA_API = '/api/data';
 
         createApp({
             data() {
@@ -497,7 +497,7 @@
                         const resp = await fetch(DATA_API + path, {
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-Tenant-Id': '2027317834622709762',
+                                'X-Tenant-Id': localStorage.getItem('tenantId') || '',
                                 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
                             }
                         });

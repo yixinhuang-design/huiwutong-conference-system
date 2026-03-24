@@ -138,24 +138,29 @@ public class GroupController {
     /** 群组统计 */
     @GetMapping("/stats")
     public Result<Map<String, Object>> getStats(@RequestParam(required = false) Long conferenceId) {
-        Map<String, Object> stats = groupService.getStats(conferenceId);
-        stats.put("onlineTotal", webSocketHandler.getOnlineCount());
+        try {
+            Map<String, Object> stats = groupService.getStats(conferenceId);
+            stats.put("onlineTotal", webSocketHandler.getOnlineCount());
 
-        // 获取该会议下所有群组的今日消息统计
-        List<ChatGroup> groups = groupService.listByConference(conferenceId);
-        List<Long> groupIds = groups.stream().map(ChatGroup::getId).collect(Collectors.toList());
-        if (!groupIds.isEmpty()) {
-            long todayTotal = messageService.getTodayMessageCount(groupIds);
-            Map<Long, Long> todayByGroup = messageService.getTodayMessageCountByGroup(groupIds);
-            stats.put("todayMessages", todayTotal);
-            // 转为String key以便JSON序列化
-            Map<String, Long> todayByGroupStr = new java.util.LinkedHashMap<>();
-            todayByGroup.forEach((k, v) -> todayByGroupStr.put(k.toString(), v));
-            stats.put("todayMessagesByGroup", todayByGroupStr);
-        } else {
-            stats.put("todayMessages", 0L);
-            stats.put("todayMessagesByGroup", new java.util.LinkedHashMap<>());
+            // 获取该会议下所有群组的今日消息统计
+            List<ChatGroup> groups = groupService.listByConference(conferenceId);
+            List<Long> groupIds = groups.stream().map(ChatGroup::getId).collect(Collectors.toList());
+            if (!groupIds.isEmpty()) {
+                long todayTotal = messageService.getTodayMessageCount(groupIds);
+                Map<Long, Long> todayByGroup = messageService.getTodayMessageCountByGroup(groupIds);
+                stats.put("todayMessages", todayTotal);
+                // 转为String key以便JSON序列化
+                Map<String, Long> todayByGroupStr = new java.util.LinkedHashMap<>();
+                todayByGroup.forEach((k, v) -> todayByGroupStr.put(k.toString(), v));
+                stats.put("todayMessagesByGroup", todayByGroupStr);
+            } else {
+                stats.put("todayMessages", 0L);
+                stats.put("todayMessagesByGroup", new java.util.LinkedHashMap<>());
+            }
+            return Result.ok(stats);
+        } catch (Exception e) {
+            log.error("获取群组统计失败", e);
+            return Result.fail("获取群组统计失败: " + e.getClass().getSimpleName() + " - " + e.getMessage());
         }
-        return Result.ok(stats);
     }
 }

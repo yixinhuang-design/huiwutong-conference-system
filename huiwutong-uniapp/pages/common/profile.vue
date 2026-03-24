@@ -51,7 +51,7 @@
         class="function-item"
         @click="handleFunction(item.action)"
       >
-        <view class="function-icon">{{ item.icon }}</view>
+        <view class="function-icon"><text :class="item.icon"></text></view>
         <view class="function-info">
           <text class="function-title">{{ item.title }}</text>
           <text v-if="item.badge" class="function-badge">{{ item.badge }}</text>
@@ -85,48 +85,48 @@ export default {
       },
       functionList: [
         {
-          icon: '<text class="fa fa-user"></text>',
+          icon: 'fa-user',
           title: '个人信息',
           action: 'profile'
         },
         {
-          icon: '<text class="fa fa-bell"></text>',
+          icon: 'fa-bell',
           title: '消息通知',
           action: 'notifications',
           badge: 3
         },
         {
-          icon: '<text class="fa fa-clipboard"></text>',
+          icon: 'fa-clipboard',
           title: '我的任务',
           action: 'tasks'
         },
         {
-          icon: '📁',
+          icon: 'fa-folder',
           title: '我的档案',
           action: 'archives'
         },
         {
-          icon: '<text class="fa fa-edit"></text>',
+          icon: 'fa-edit',
           title: '我的反馈',
           action: 'feedback'
         },
         {
-          icon: '⭐',
+          icon: 'fa-star',
           title: '我的收藏',
           action: 'favorites'
         },
         {
-          icon: '🔒',
+          icon: 'fa-lock',
           title: '账号安全',
           action: 'security'
         },
         {
-          icon: '<text class="fa fa-cog"></text>',
+          icon: 'fa-cog',
           title: '系统设置',
           action: 'settings'
         },
         {
-          icon: '❓',
+          icon: 'fa-question-circle',
           title: '帮助中心',
           action: 'help'
         }
@@ -242,6 +242,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .profile-container {
   min-height: 100vh;

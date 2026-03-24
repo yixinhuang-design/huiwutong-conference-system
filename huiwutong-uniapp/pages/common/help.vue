@@ -51,7 +51,7 @@
           class="link-item"
           @click="handleLink(link.action)"
         >
-          <view class="link-icon">{{ link.icon }}</view>
+          <view class="link-icon"><text :class="link.icon"></text></view>
           <view class="link-title">{{ link.title }}</view>
         </view>
       </view>
@@ -69,7 +69,7 @@
           </view>
         </view>
         <view class="contact-item">
-          <text class="contact-icon">✉️</text>
+          <text class="contact-icon"><text class="fa fa-envelope"></text></text>
           <view class="contact-info">
             <text class="contact-label">客服邮箱</text>
             <text class="contact-value">support@huiwutong.com</text>
@@ -123,9 +123,9 @@ export default {
         }
       ],
       quickLinks: [
-        { icon: '<text class="fa fa-book"></text>', title: '使用指南', action: 'guide' },
-        { icon: '🎬', title: '视频教程', action: 'video' },
-        { icon: '<text class="fa fa-edit"></text>', title: '意见反馈', action: 'feedback' }
+        { icon: 'fa-book', title: '使用指南', action: 'guide' },
+        { icon: 'fa-film', title: '视频教程', action: 'video' },
+        { icon: 'fa-edit', title: '意见反馈', action: 'feedback' }
       ]
     }
   },
@@ -180,6 +180,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .help-container {
   min-height: 100vh;

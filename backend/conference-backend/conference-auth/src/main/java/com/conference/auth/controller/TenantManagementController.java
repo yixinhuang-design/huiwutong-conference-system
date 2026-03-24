@@ -6,6 +6,7 @@ import com.conference.common.tenant.TenantContextHolder;
 import com.conference.auth.dto.CreateTenantRequest;
 import com.conference.auth.dto.TenantUpdateRequest;
 import com.conference.auth.entity.SysTenant;
+import com.conference.auth.mapper.SysRoleMapper;
 import com.conference.auth.service.TenantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,17 +31,25 @@ import java.util.Map;
 public class TenantManagementController {
     
     private final TenantService tenantService;
+    private final SysRoleMapper roleMapper;
     
     /**
      * 验证用户是否为超级管理员
+     * 通过数据库查询用户角色列表，检查是否包含super_admin角色
      * @param userId 用户ID
      * @return 是否为超级管理员
      */
     private boolean isSuperAdmin(Long userId) {
-        // TODO: 实际应从数据库查询用户角色
-        // 这里临时返回true，表示所有操作都允许
-        // 实际生产环境应实现完整的权限检查逻辑
-        return true;
+        if (userId == null) {
+            return false;
+        }
+        try {
+            java.util.List<String> roles = roleMapper.selectRoleCodesByUserId(userId);
+            return roles != null && roles.contains("super_admin");
+        } catch (Exception e) {
+            log.error("[权限检查] 查询用户角色失败, userId={}", userId, e);
+            return false;
+        }
     }
     
     /**

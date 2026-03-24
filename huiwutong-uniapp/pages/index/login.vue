@@ -61,7 +61,7 @@
 
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon">🔒</text>
+            <text class="input-icon"><text class="fa fa-lock"></text></text>
             <input
               v-model="formData.password"
               :password="!showPassword"
@@ -75,7 +75,8 @@
               @touchend.prevent="showPassword = !showPassword"
               @click="showPassword = !showPassword"
             >
-              {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+              <text v-if="showPassword" class="fa fa-eye"></text>
+              <text v-else class="fa fa-eye-slash"></text>
             </text>
           </view>
         </view>
@@ -95,7 +96,7 @@
       <view v-else class="login-form">
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon">📱</text>
+            <text class="input-icon"><text class="fa fa-mobile-alt"></text></text>
             <input
               v-model="formData.phone"
               placeholder="请输入手机号"
@@ -389,6 +390,20 @@ export default {
 <style lang="scss">
 @import '../../styles/variables.scss';
 
+/* ========================================
+   登录页输入框层级体系
+   ========================================
+   层级说明：
+   - z-index: 1  -> input-wrapper（容器）
+   - z-index: 10 -> login-input, uni-input-input（输入框）
+   - z-index: 15 -> input-icon（图标，在输入框之上，不阻挡点击）
+   - z-index: 10 -> password-toggle, code-btn（按钮）
+
+   事件传递：
+   - pointer-events: none  -> 图标、placeholder
+   - pointer-events: auto  -> 输入框、按钮
+   ======================================== */
+
 .login-page {
   min-height: 100vh;
   background: $primary-gradient;
@@ -400,7 +415,7 @@ export default {
 
 .login-page .login-card {
   background: $bg-primary;
-  border-radius: $border-radius-xl;
+  border-radius: 40rpx; /* 匹配app原型的20px */
   padding: 64rpx 48rpx;
   box-shadow: $shadow-lg;
   width: 100%;
@@ -479,104 +494,111 @@ export default {
   margin-bottom: $spacing-md;
 }
 
+/* 容器层级：z-index: 1 */
 .login-page .input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-}
-
-.login-page .input-icon {
-  position: absolute;
-  left: $spacing-md;
-  color: $text-tertiary;
-  font-size: $font-size-lg;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* #ifdef H5 */
-.login-page .input-wrapper {
   z-index: 1;
 }
 
+/* 图标层级：z-index: 15，在输入框之上，但不阻挡点击事件 */
 .login-page .input-icon {
-  z-index: 0;
-}
-/* #endif */
-
-/* #ifdef H5 */
-/* UniApp H5 input 容器 */
-.login-page uni-input {
-  display: block !important;
-  width: 100% !important;
-  font-size: inherit !important;
+  position: absolute;
+  left: 32rpx; /* 匹配app原型的16px */
+  top: 50%;
+  transform: translateY(-50%);
+  color: $text-tertiary;
+  font-size: $font-size-lg;
+  z-index: 15;
+  pointer-events: none;
 }
 
-/* UniApp input 包装器 */
-.login-page .uni-input-wrapper {
-  position: relative !important;
-  display: flex !important;
-  width: 100% !important;
-  height: 100% !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-}
-/* #endif */
-
+/* 输入框层级：z-index: 10，确保可点击 */
 .login-page .login-input {
   width: 100%;
-  padding: $spacing-md;
-  padding-left: 88rpx;
+  padding: 28rpx 32rpx 28rpx 96rpx; /* 匹配app原型的14px 16px 14px 48px */
   border: 2rpx solid $border-color;
-  border-radius: $border-radius-md;
+  border-radius: 24rpx; /* 匹配app原型的12px */
   font-size: $font-size-md;
   transition: $transition-base;
   background: $bg-primary;
   color: $text-primary;
   position: relative;
-  z-index: 1;
+  z-index: 10;
+
   /* #ifdef H5 */
   outline: none;
   cursor: text;
   -webkit-appearance: none;
+  pointer-events: auto;
   /* #endif */
 }
 
+/* 带图标的输入框：左侧留出图标空间 */
+.login-page .input-with-icon {
+  padding-left: 96rpx; /* 与图标的 left + 图标宽度对齐 */
+}
+
 /* #ifdef H5 */
+/* UniApp H5 input 容器 */
+.login-page uni-input {
+  display: block;
+  width: 100%;
+  font-size: inherit;
+}
+
+/* UniApp input 包装器 */
+.login-page .uni-input-wrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+/* placeholder 不阻挡点击 */
+.login-page .uni-input-placeholder {
+  pointer-events: none;
+}
+
 /* UniApp H5 input 组件实际渲染的 input 元素类名是 uni-input-input */
 .login-page .uni-input-input {
-  padding: $spacing-md !important;
-  padding-left: 88rpx !important;
-  border: 2rpx solid $border-color !important;
-  border-radius: $border-radius-md !important;
-  background: $bg-primary !important;
-  color: $text-primary !important;
-  outline: none !important;
-  cursor: text !important;
-  -webkit-appearance: none !important;
-  min-height: 1.4em !important;
+  padding: 28rpx 32rpx 28rpx 96rpx;
+  border: none;
+  background: transparent;
+  color: $text-primary;
+  outline: none;
+  cursor: text;
+  -webkit-appearance: none;
+  min-height: 1.4em;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .login-page .uni-input-input:focus {
-  border-color: $primary-color !important;
-  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1) !important;
-  outline: none !important;
+  outline: none;
 }
 
 .login-page .uni-input-input::-webkit-input-placeholder {
-  color: $text-placeholder !important;
+  color: $text-placeholder;
 }
 
 .login-page .uni-input-input:-moz-placeholder {
-  color: $text-placeholder !important;
+  color: $text-placeholder;
 }
 
 .login-page .uni-input-input::-moz-placeholder {
-  color: $text-placeholder !important;
+  color: $text-placeholder;
 }
 
 .login-page .uni-input-input:-ms-input-placeholder {
-  color: $text-placeholder !important;
+  color: $text-placeholder;
 }
 /* #endif */
 
@@ -584,12 +606,8 @@ export default {
   border-color: $primary-color;
   box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
   /* #ifdef H5 */
-  outline: none !important;
+  outline: none;
   /* #endif */
-}
-
-.login-page .input-with-icon {
-  padding-left: 88rpx;
 }
 
 .login-page .password-toggle {
@@ -598,7 +616,11 @@ export default {
   font-size: $font-size-lg;
   padding: $spacing-sm;
   cursor: pointer;
-  z-index: 3;
+  z-index: 10;
+  /* #ifdef H5 */
+  pointer-events: auto;
+  user-select: none;
+  /* #endif */
 }
 
 .login-page .code-btn {
@@ -613,7 +635,11 @@ export default {
   border-radius: $border-radius-sm;
   font-size: $font-size-sm;
   line-height: 1;
-  z-index: 3;
+  z-index: 10;
+  /* #ifdef H5 */
+  pointer-events: auto;
+  user-select: none;
+  /* #endif */
 }
 
 .login-page .code-btn:disabled {
@@ -635,14 +661,14 @@ export default {
 
 .login-page .login-button {
   width: 100%;
-  padding: $spacing-md;
+  padding: 32rpx; /* 匹配app原型的16px */
   background: $primary-gradient;
   color: $text-white;
   border: none;
-  border-radius: $border-radius-md;
-  font-size: $font-size-lg;
+  border-radius: 24rpx; /* 匹配app原型的12px */
+  font-size: 32rpx; /* 匹配app原型的16px */
   font-weight: 600;
-  margin-top: $spacing-sm;
+  margin-top: 16rpx; /* 匹配app原型的8px */
   transition: $transition-base;
 }
 

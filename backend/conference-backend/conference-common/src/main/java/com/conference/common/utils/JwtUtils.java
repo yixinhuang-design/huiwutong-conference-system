@@ -10,9 +10,14 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- * JWT 工具类
+ * JWT 工具类 (JJWT实现 - 静态方法版)
+ * 
+ * @deprecated 建议迁移到 {@link com.conference.common.util.JwtUtils} (Hutool实现，Spring Component)
+ *             两个版本使用相同的密钥和HS384算法，Token互相兼容。
+ *             本类仅供 AuthServiceImpl 过渡使用，后续应统一为Hutool版本。
  */
 @Slf4j
+@Deprecated
 public class JwtUtils {
     
     /** 默认密钥（生产环境应从配置中读取） */

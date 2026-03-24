@@ -2,13 +2,14 @@ package com.conference.common.tenant;
 
 /**
  * 租户上下文持有者
- * 使用 ThreadLocal 存储当前线程的租户信息
+ * 使用 InheritableThreadLocal 存储当前线程的租户信息
+ * InheritableThreadLocal 确保子线程（如 @Async、CompletableFuture）能继承父线程的租户上下文
  */
 public class TenantContextHolder {
     
-    private static final ThreadLocal<Long> TENANT_ID = new ThreadLocal<>();
-    private static final ThreadLocal<Long> USER_ID = new ThreadLocal<>();
-    private static final ThreadLocal<String> USERNAME = new ThreadLocal<>();
+    private static final ThreadLocal<Long> TENANT_ID = new InheritableThreadLocal<>();
+    private static final ThreadLocal<Long> USER_ID = new InheritableThreadLocal<>();
+    private static final ThreadLocal<String> USERNAME = new InheritableThreadLocal<>();
     
     /**
      * 设置租户ID

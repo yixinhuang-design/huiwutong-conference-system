@@ -1,0 +1,322 @@
+/* 图标备用方案 - 使用 Unicode 字符 */
+/* 当 Font Awesome 字体文件无法加载时使用 */
+
+/* 使用纯 CSS 和伪元素显示图标 */
+.icon-fallback {
+  position: relative;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+}
+
+/* 勾选图标 */
+.icon-check::before {
+  content: '✓';
+  color: inherit;
+}
+
+/* 叉号图标 */
+.icon-times::before {
+  content: '✕';
+  color: inherit;
+}
+
+/* 星星图标 */
+.icon-star::before {
+  content: '★';
+  color: inherit;
+}
+
+/* 心形图标 */
+.icon-heart::before {
+  content: '♥';
+  color: inherit;
+}
+
+/* 房子图标 */
+.icon-home::before {
+  content: '⌂';
+  color: inherit;
+}
+
+/* 用户图标 */
+.icon-user::before {
+  content: '👤';
+  color: inherit;
+}
+
+/* 时钟图标 */
+.icon-clock::before {
+  content: '🕐';
+  color: inherit;
+}
+
+/* 日历图标 */
+.icon-calendar::before {
+  content: '📅';
+  color: inherit;
+}
+
+/* 搜索图标 */
+.icon-search::before {
+  content: '🔍';
+  color: inherit;
+}
+
+/* 设置图标 */
+.icon-cog::before {
+  content: '⚙';
+  color: inherit;
+}
+
+/* 铃铛图标 */
+.icon-bell::before {
+  content: '🔔';
+  color: inherit;
+}
+
+/* 相机图标 */
+.icon-camera::before {
+  content: '📷';
+  color: inherit;
+}
+
+/* 电话图标 */
+.icon-phone::before {
+  content: '📞';
+  color: inherit;
+}
+
+/* 邮件图标 */
+.icon-envelope::before {
+  content: '✉';
+  color: inherit;
+}
+
+/* 文件图标 */
+.icon-file::before {
+  content: '📄';
+  color: inherit;
+}
+
+/* 文件夹图标 */
+.icon-folder::before {
+  content: '📁';
+  color: inherit;
+}
+
+/* 锁图标 */
+.icon-lock::before {
+  content: '🔒';
+  color: inherit;
+}
+
+/* 地图图标 */
+.icon-map::before {
+  content: '🗺';
+  color: inherit;
+}
+
+/* 位置图标 */
+.icon-location::before {
+  content: '📍';
+  color: inherit;
+}
+
+/* 图表图标 */
+.icon-chart::before {
+  content: '📊';
+  color: inherit;
+}
+
+/* 列表图标 */
+.icon-list::before {
+  content: '☰';
+  color: inherit;
+}
+
+/* 菜单图标 */
+.icon-menu::before {
+  content: '≡';
+  color: inherit;
+}
+
+/* 编辑图标 */
+.icon-edit::before {
+  content: '✎';
+  color: inherit;
+}
+
+/* 删除图标 */
+.icon-trash::before {
+  content: '🗑';
+  color: inherit;
+}
+
+/* 下载图标 */
+.icon-download::before {
+  content: '⬇';
+  color: inherit;
+}
+
+/* 上传图标 */
+.icon-upload::before {
+  content: '⬆';
+  color: inherit;
+}
+
+/* 箭头左 */
+.icon-arrow-left::before {
+  content: '‹';
+  color: inherit;
+}
+
+/* 箭头右 */
+.icon-arrow-right::before {
+  content: '›';
+  color: inherit;
+}
+
+/* 加号 */
+.icon-plus::before {
+  content: '+';
+  color: inherit;
+}
+
+/* 减号 */
+.icon-minus::before {
+  content: '−';
+  color: inherit;
+}
+
+/* 问答图标 */
+.icon-question::before {
+  content: '?';
+  color: inherit;
+}
+
+/* 感叹号 */
+.icon-exclamation::before {
+  content: '!';
+  color: inherit;
+}
+
+/* 信息图标 */
+.icon-info::before {
+  content: 'ⓘ';
+  color: inherit;
+}
+
+/* 警告图标 */
+.icon-warning::before {
+  content: '⚠';
+  color: inherit;
+}
+
+/* 成功图标 */
+.icon-success::before {
+  content: '✔';
+  color: #10b981;
+}
+
+/* 错误图标 */
+.icon-error::before {
+  content: '✖';
+  color: #ef4444;
+}
+
+/* 用户组图标 */
+.icon-users::before {
+  content: '👥';
+  color: inherit;
+}
+
+/* 评论图标 */
+.icon-comments::before {
+  content: '💬';
+  color: inherit;
+}
+
+/* 眼睛图标 */
+.icon-eye::before {
+  content: '👁';
+  color: inherit;
+}
+
+/* 眼睛斜杠 */
+.icon-eye-slash::before {
+  content: '🙈';
+  color: inherit;
+}
+
+/* 书本图标 */
+.icon-book::before {
+  content: '📖';
+  color: inherit;
+}
+
+/* 地址簿 */
+.icon-address-book::before {
+  content: '📒';
+  color: inherit;
+}
+
+/* 二维码 */
+.icon-qrcode::before {
+  content: '⚐';
+  color: inherit;
+}
+
+/* 刷新 */
+.icon-refresh::before {
+  content: '↻';
+  color: inherit;
+}
+
+/* 撤放 */
+.icon-undo::before {
+  content: '↶';
+  color: inherit;
+}
+
+/* 暂停 */
+.icon-pause::before {
+  content: '⏸';
+  color: inherit;
+}
+
+/* 播放 */
+.icon-play::before {
+  content: '▶';
+  color: inherit;
+}
+
+/* 停止 */
+.icon-stop::before {
+  content: '⏹';
+  color: inherit;
+}
+
+/* 点 */
+.icon-dot::before {
+  content: '•';
+  color: inherit;
+}
+
+/* 三点 */
+.icon-ellipsis::before {
+  content: '⋯';
+  color: inherit;
+}
+
+/* 十字 */
+.icon-cross::before {
+  content: '✚';
+  color: inherit;
+}
+
+/* 对勾 */
+.icon-tick::before {
+  content: '✔';
+  color: inherit;
+}

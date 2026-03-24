@@ -61,3 +61,15 @@ Pods/
  # Local data
 .m2repo/
 redis/
+
+# Deploy artifacts (large binary files)
+deploy/upload-package/jars/*.jar
+deploy/conference-deploy.zip
+deploy/*.zip
+
+# Large binary files
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Response test files
+*_resp.txt

@@ -19,7 +19,7 @@
       </view>
       <view class="info-meta">
         <text class="meta-item">📊 已填写：{{ questionnaireInfo.completed }}/{{ questionnaireInfo.total }}</text>
-        <text class="meta-item">⏰ 截止：{{ questionnaireInfo.deadline }}</text>
+        <text class="meta-item"><text class="fa fa-clock"></text> 截止：{{ questionnaireInfo.deadline }}</text>
       </view>
     </view>
 
@@ -316,6 +316,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .feedback-result-container {
   min-height: 100vh;

@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 /**
  * 车辆运输更新请求 DTO
  * @author AI Assistant
@@ -18,6 +20,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @Schema(description = "车辆运输更新请求")
 public class TransportUpdateRequest {
+    
+    @Schema(description = "车辆名称", example = "1号大巴")
+    private String vehicleName;
     
     @Schema(description = "车牌号", example = "浙A·12345")
     private String licensePlate;
@@ -35,8 +40,8 @@ public class TransportUpdateRequest {
     @Schema(description = "目的地", example = "酒店")
     private String destination;
     
-    @Schema(description = "出发时间", example = "08:00")
-    private String departureTime;
+    @Schema(description = "出发时间", example = "2026-03-12T08:00:00")
+    private LocalDateTime departureTime;
     
     @Schema(description = "驾驶员名字", example = "张三")
     private String driver;

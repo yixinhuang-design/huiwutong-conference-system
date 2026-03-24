@@ -177,7 +177,7 @@ export default {
         checkin: '<text class="fa fa-map-marker-alt"></text>',
         registration: '<text class="fa fa-edit"></text>',
         task: '<text class="fa fa-clipboard"></text>',
-        satisfaction: '⭐',
+        satisfaction: '<text class="fa fa-star"></text>',
         seat: '<text class="fa fa-th-large"></text>',
         equipment: '🔧'
       }
@@ -276,6 +276,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .alert-handle-container {
   min-height: 100vh;

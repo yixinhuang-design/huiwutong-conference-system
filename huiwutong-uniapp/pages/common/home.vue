@@ -19,7 +19,7 @@
 
     <!-- 今日提醒 -->
     <view v-if="todayReminder" class="info-banner fade-in">
-      <strong>📢 今日提醒</strong>
+      <strong><text class="fa fa-bullhorn"></text> 今日提醒</strong>
       {{ todayReminder }}
     </view>
 
@@ -72,8 +72,8 @@
         class="feature-tile"
         @click="navigateTo(feature.path)"
       >
-        <view class="feature-icon-lg" :style="{ background: feature.gradient }">
-          <text>{{ feature.icon }}</text>
+        <view class="feature-icon-lg" :class="feature.colorClass || 'blue'">
+          <text :class="feature.icon"></text>
         </view>
         <view class="feature-title">{{ feature.title }}</view>
       </view>
@@ -95,40 +95,40 @@ export default {
       meetings: [],
       featureList: [
         {
-          icon: '<text class="fa fa-book"></text>',
+          icon: 'fa-book',
           title: '参会须知',
           path: '/pages/learner/guide',
-          gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+          colorClass: 'purple'
         },
         {
-          icon: '<text class="fa fa-calendar-alt"></text>',
+          icon: 'fa-calendar-alt',
           title: '日程安排',
           path: '/pages/learner/schedule',
-          gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+          colorClass: 'pink'
         },
         {
-          icon: '<text class="fa fa-address-book"></text>',
+          icon: 'fa-address-book',
           title: '通讯录',
           path: '/pages/learner/contact',
-          gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+          colorClass: 'blue'
         },
         {
-          icon: '<text class="fa fa-th-large"></text>',
+          icon: 'fa-th-large',
           title: '座位图',
           path: '/pages/learner/seat',
-          gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+          colorClass: 'green'
         },
         {
-          icon: '<text class="fa fa-check"></text>',
+          icon: 'fa-check',
           title: '报到签到',
           path: '/pages/learner/checkin',
-          gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+          colorClass: 'orange'
         },
         {
-          icon: '<text class="fa fa-book-open"></text>',
+          icon: 'fa-book-open',
           title: '学习资料',
           path: '/pages/learner/materials',
-          gradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+          colorClass: 'cyan'
         }
       ]
     }
@@ -247,43 +247,43 @@ export default {
      */
     adjustFeatureList() {
       if (this.userType === 'staff') {
-        // 工作人员显示不同功能
+        // 工作人员显示不同功能（使用Font Awesome图标和统一样式）
         this.featureList = [
           {
-            icon: '📊',
+            icon: 'fa-chart-bar',
             title: '数据看板',
             path: '/pages/staff/dashboard',
-            gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            colorClass: 'purple'
           },
           {
-            icon: '<text class="fa fa-check"></text>',
+            icon: 'fa-tasks',
             title: '任务管理',
             path: '/pages/staff/task-list',
-            gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+            colorClass: 'blue'
           },
           {
-            icon: '<text class="fa fa-users"></text>',
+            icon: 'fa-users',
             title: '报名管理',
             path: '/pages/staff/registration-manage',
-            gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+            colorClass: 'cyan'
           },
           {
-            icon: '<text class="fa fa-th-large"></text>',
+            icon: 'fa-th-large',
             title: '座位管理',
             path: '/pages/staff/seat-manage',
-            gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+            colorClass: 'green'
           },
           {
-            icon: '📢',
+            icon: 'fa-bullhorn',
             title: '通知管理',
             path: '/pages/staff/notice-manage',
-            gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+            colorClass: 'orange'
           },
           {
-            icon: '📈',
+            icon: 'fa-chart-line',
             title: '数据分析',
             path: '/pages/staff/data-analysis',
-            gradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+            colorClass: 'purple'
           }
         ]
       }
@@ -326,6 +326,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .home-container {
   min-height: 100vh;
@@ -337,19 +338,35 @@ export default {
 .welcome-card {
   margin: $spacing-md;
   margin-top: 20rpx;
+  border-radius: 24rpx; /* 匹配app原型的12px */
 }
 
 .avatar {
   width: 100rpx;
   height: 100rpx;
-  border-radius: $border-radius-lg;
-  background: $primary-gradient;
+  border-radius: 24rpx; /* 匹配app原型的12px */
+  background: $icon-gradient-blue; /* 使用统一的蓝色渐变 */
   display: flex;
   align-items: center;
   justify-content: center;
   color: $text-white;
-  font-size: $font-size-xl;
+  font-size: 40rpx; /* 匹配app原型的20px */
   font-weight: 600;
+  box-shadow: 0 8rpx 16rpx rgba(59, 130, 246, 0.3);
+}
+
+/* 用户头像图标（用于card-header） */
+.user-icon {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 24rpx; /* 匹配app原型的12px */
+  background: $icon-gradient-blue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $text-white;
+  font-size: 40rpx; /* 匹配app原型的20px */
+  box-shadow: 0 8rpx 16rpx rgba(59, 130, 246, 0.3);
 }
 
 .user-info {
@@ -359,6 +376,7 @@ export default {
 .meeting-card {
   margin: $spacing-sm $spacing-md;
   transition: $transition-base;
+  border-radius: 24rpx; /* 匹配app原型的12px */
 }
 
 .meeting-card:active {

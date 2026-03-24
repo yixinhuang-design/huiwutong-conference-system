@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -791,11 +791,14 @@
                     ],
                     notificationChannels: [
                         { id: 'sms', name: '短信通知', icon: 'fas fa-sms', online: true, sent: 0 },
-                        { id: 'wechat', name: '微信通知', icon: 'fas fa-comment', online: true, sent: 0 },
-                        { id: 'enterprise', name: '企业微信', icon: 'fas fa-building', online: true, sent: 0 },
+                        { id: 'unipush', name: '系统消息(UniPush)', icon: 'fas fa-bell', online: true, sent: 0 },
+                        // 微信通知 - 暂未配置，隐藏
+                        // { id: 'wechat', name: '微信通知', icon: 'fas fa-comment', online: false, sent: 0 },
+                        // 企业微信 - 暂未配置，隐藏
+                        // { id: 'enterprise', name: '企业微信', icon: 'fas fa-building', online: false, sent: 0 },
                         { id: 'qrcode', name: '二维码查询', icon: 'fas fa-qrcode', online: true, sent: 0 }
                     ],
-                    selectedChannels: ['sms', 'wechat'],
+                    selectedChannels: ['sms'],
                     reminderRules: [
                         { 
                             id: 'reminder1day', 
@@ -840,8 +843,8 @@
                     showHistoryModal: false,
                     historyRecords: [],
                     selectedTemplateId: null,
-                    REG_API_BASE: 'http://localhost:8082',
-                    GROUP_API_BASE: 'http://localhost:8089',
+                    REG_API_BASE: '',
+                    GROUP_API_BASE: '',
                     personalVariables: [
                         { tag: '{name}', description: '参会者姓名', example: '张三' },
                         { tag: '{conference}', description: '会议名称', example: '2024年度技术峰会' },
@@ -876,7 +879,7 @@
                         read: 0,
                         failed: 0
                     },
-                    API_BASE: 'http://localhost:8083',
+                    API_BASE: '',
                     qrcodeConfig: {
                         enabled: true,
                         expiryDays: 7,
@@ -914,7 +917,7 @@
                 async loadParticipants() {
                     try {
                         const resp = await fetch(`${this.REG_API_BASE}/api/registration/list?conferenceId=${this.conference.id}&page=1&pageSize=9999`, {
-                            headers: { 'X-Tenant-Id': '2027317834622709762' }
+                            headers: { 'X-Tenant-Id': localStorage.getItem('tenantId') || '' }
                         });
                         const result = await resp.json();
                         if (result.code === 200) {
@@ -963,7 +966,7 @@
                 async loadGroups() {
                     try {
                         const resp = await fetch(`${this.GROUP_API_BASE}/api/group/list?conferenceId=${this.conference.id}`, {
-                            headers: { 'X-Tenant-Id': '2027317834622709762' }
+                            headers: { 'X-Tenant-Id': localStorage.getItem('tenantId') || '' }
                         });
                         const result = await resp.json();
                         if (result.code === 200 && result.data) {

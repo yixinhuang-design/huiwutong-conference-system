@@ -80,5 +80,75 @@ export default {
    */
   getMySeat(id) {
     return get(`/meeting/${id}/my-seat`)
+  },
+
+  /**
+   * 会议统计
+   * GET /api/meeting/{id}/statistics
+   */
+  getStatistics(id) {
+    return get(`/meeting/${id}/statistics`)
+  },
+
+  /**
+   * 进行中的会议
+   * GET /api/meeting/ongoing
+   */
+  getOngoing() {
+    return get('/meeting/ongoing')
+  },
+
+  /**
+   * 上传会议封面
+   * POST /api/meeting/upload/cover
+   * Content-Type: multipart/form-data
+   */
+  uploadCover(filePath) {
+    return new Promise((resolve, reject) => {
+      uni.uploadFile({
+        url: 'http://localhost:8080/api/meeting/upload/cover',
+        filePath,
+        name: 'file',
+        success: (res) => {
+          if (res.statusCode === 200) {
+            const data = JSON.parse(res.data)
+            if (data.code === 200) {
+              resolve(data.data)
+            } else {
+              uni.showToast({
+                title: data.message || '上传失败',
+                icon: 'none'
+              })
+              reject(data)
+            }
+          } else {
+            reject(res)
+          }
+        },
+        fail: (error) => {
+          uni.showToast({
+            title: '上传失败',
+            icon: 'none'
+          })
+          reject(error)
+        }
+      })
+    })
+  },
+
+  /**
+   * 添加会议工作人员
+   * POST /api/meeting/{id}/staff
+   */
+  addStaff(id, data) {
+    return post(`/meeting/${id}/staff`, data)
+  },
+
+  /**
+   * 更新会议状态
+   * PUT /api/meeting/{id}/status?status=xxx
+   */
+  updateStatus(id, status) {
+    return put(`/meeting/${id}/status?status=${status}`)
   }
 }

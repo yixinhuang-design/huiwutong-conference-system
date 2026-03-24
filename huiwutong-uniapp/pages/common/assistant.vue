@@ -62,7 +62,7 @@
           @click="handleAction(action.action)"
         >
           <view class="action-icon" :style="{ background: action.gradient }">
-            <text>{{ action.icon }}</text>
+            <text :class="action.icon"></text>
           </view>
           <view class="action-info">
             <view class="action-title feature-title">{{ action.title }}</view>
@@ -154,42 +154,42 @@ export default {
       ],
       quickActions: [
         {
-          icon: '<text class="fa fa-calendar-alt"></text>',
+          icon: 'fa-calendar-alt',
           title: '查看日程',
           desc: '查看完整的培训日程',
           action: 'schedule',
           gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
         },
         {
-          icon: '<text class="fa fa-th-large"></text>',
+          icon: 'fa-th-large',
           title: '我的座位',
           desc: '查看座位信息和导航',
           action: 'seat',
           gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
         },
         {
-          icon: '<text class="fa fa-book-open"></text>',
+          icon: 'fa-book-open',
           title: '学习资料',
           desc: '下载培训相关资料',
           action: 'materials',
           gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
         },
         {
-          icon: '📢',
+          icon: 'fa-bullhorn',
           title: '通知消息',
           desc: '查看最新通知',
           action: 'notifications',
           gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
         },
         {
-          icon: '<text class="fa fa-address-book"></text>',
+          icon: 'fa-address-book',
           title: '通讯录',
           desc: '查看学员联系方式',
           action: 'contact',
           gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
         },
         {
-          icon: '<text class="fa fa-comments"></text>',
+          icon: 'fa-comments',
           title: '群组聊天',
           desc: '进入群组聊天',
           action: 'chat',
@@ -312,6 +312,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .assistant-container {
   min-height: 100vh;

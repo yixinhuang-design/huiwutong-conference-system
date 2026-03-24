@@ -62,7 +62,8 @@ export const useUserStore = defineStore('user', {
         // 调用登录API
         const res = await auth.login({
           username: loginData.username,
-          password: loginData.password
+          password: loginData.password,
+          tenantCode: 'DEFAULT' // 默认租户代码
         })
 
         // 保存Token和用户信息

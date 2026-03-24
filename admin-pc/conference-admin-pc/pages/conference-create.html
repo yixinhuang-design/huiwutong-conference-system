@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -1345,7 +1345,7 @@
                             const formData = new FormData();
                             formData.append('file', file);
 
-                            const response = await fetch('http://localhost:8084/api/meeting/upload/cover', {
+                            const response = await fetch('/api/meeting/upload/cover', {
                                 method: 'POST',
                                 headers: {
                                     'Authorization': `Bearer ${token}`
@@ -1605,9 +1605,9 @@
                         return;
                     }
 
-                    // 添加工作人员
+                    // 添加工作人员（用手机号作为staffId，11位数字可作为Long，且保证同手机号ID稳定一致）
                     this.staffList.push({
-                        id: Date.now().toString(),
+                        id: this.newStaff.phone.trim(),
                         name: this.newStaff.name.trim(),
                         phone: this.newStaff.phone.trim(),
                         position: this.newStaff.position || '',
@@ -1641,40 +1641,36 @@
 
                     this.searchingUsers = true;
 
-                    // 模拟API调用
-                    setTimeout(() => {
-                        // 模拟数据
-                        this.systemUsers = [
-                            {
-                                id: '1',
-                                name: '张三',
-                                phone: '13800138001',
-                                department: '技术部',
-                                avatar: ''
-                            },
-                            {
-                                id: '2',
-                                name: '李四',
-                                phone: '13800138002',
-                                department: '行政部',
-                                avatar: ''
-                            },
-                            {
-                                id: '3',
-                                name: '王五',
-                                phone: '13800138003',
-                                department: '财务部',
-                                avatar: ''
+                    // 调用后端用户搜索API
+                    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                    const tenantId = localStorage.getItem('tenantId') || '100';
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = 'Bearer ' + token;
+                    if (tenantId) headers['X-Tenant-Id'] = tenantId;
+                    
+                    const keyword = encodeURIComponent(this.userSearchKeyword.trim());
+                    fetch(`/api/auth/users/search?keyword=${keyword}`, { headers })
+                        .then(resp => resp.json())
+                        .then(result => {
+                            if (result.code === 200 && result.data) {
+                                const users = Array.isArray(result.data) ? result.data : (result.data.records || []);
+                                this.systemUsers = users.map(u => ({
+                                    id: String(u.id),
+                                    name: u.realName || u.username || '',
+                                    phone: u.phone || '',
+                                    department: u.department || '',
+                                    avatar: u.avatar || ''
+                                }));
+                            } else {
+                                this.systemUsers = [];
                             }
-                        ].filter(user => {
-                            const keyword = this.userSearchKeyword.toLowerCase();
-                            return user.name.toLowerCase().includes(keyword) ||
-                                   user.phone.includes(keyword) ||
-                                   (user.department && user.department.toLowerCase().includes(keyword));
+                            this.searchingUsers = false;
+                        })
+                        .catch(err => {
+                            console.warn('搜索用户失败:', err);
+                            this.systemUsers = [];
+                            this.searchingUsers = false;
                         });
-
-                        this.searchingUsers = false;
-                    }, 500);
                 },
                 isUserSelected(userId) {
                     return this.selectedUsers.some(u => u.id === userId);
@@ -1693,9 +1689,10 @@
                         return;
                     }
 
+                    let addedCount = 0;
                     this.selectedUsers.forEach(user => {
-                        // 检查是否已存在
-                        const exists = this.staffList.some(s => s.phone === user.phone);
+                        // 检查是否已存在（按手机号或ID去重）
+                        const exists = this.staffList.some(s => s.phone === user.phone || s.id === user.id);
                         if (!exists) {
                             this.staffList.push({
                                 id: user.id,
@@ -1714,6 +1711,7 @@
                                     dataExport: false
                                 }
                             });
+                            addedCount++;
                         }
                     });
 
@@ -1721,7 +1719,11 @@
                     this.userSearchKeyword = '';
                     this.systemUsers = [];
 
-                    this.$showToast(`成功添加 ${this.selectedUsers.length || this.staffList.length} 位工作人员`, 'success');
+                    if (addedCount > 0) {
+                        this.$showToast(`成功添加 ${addedCount} 位工作人员`, 'success');
+                    } else {
+                        this.$showToast('所选用户已全部存在于列表中', 'info');
+                    }
                 },
                 removeStaff(index) {
                     this.$showConfirm(
@@ -1909,10 +1911,17 @@
                     return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`;
                 },
                 
-                // 生成安全令牌
+                // 生成安全令牌（使用crypto API提高安全性）
                 generateSecureToken() {
                     const timestamp = Date.now().toString(36);
-                    const randomStr = Math.random().toString(36).substring(2, 15);
+                    let randomStr;
+                    if (window.crypto && window.crypto.getRandomValues) {
+                        const arr = new Uint8Array(12);
+                        window.crypto.getRandomValues(arr);
+                        randomStr = Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+                    } else {
+                        randomStr = Math.random().toString(36).substring(2, 15);
+                    }
                     return `${timestamp}_${randomStr}`;
                 },
                 
@@ -1920,7 +1929,7 @@
                 async loadConferenceForEdit(conferenceId) {
                     try {
                         const token = localStorage.getItem('authToken') || localStorage.getItem('token') || '';
-                        const tenantId = localStorage.getItem('tenantId') || '2027317834622709762';
+                        const tenantId = localStorage.getItem('tenantId') || '';
                         
                         if (!token) {
                             alert('请先登录系统');
@@ -1928,7 +1937,7 @@
                             return;
                         }
                         
-                        const response = await fetch(`http://localhost:8084/api/meeting/${conferenceId}`, {
+                        const response = await fetch(`/api/meeting/${conferenceId}`, {
                             method: 'GET',
                             headers: {
                                 'Authorization': `Bearer ${token}`,
@@ -2012,6 +2021,51 @@
                         // 通知配置
                         if (notifConfig.channels) this.form.notification.channels = notifConfig.channels;
                         if (notifConfig.templates) this.form.notification.templates = { ...this.form.notification.templates, ...notifConfig.templates };
+                        
+                        // 加载已有工作人员列表
+                        try {
+                            const staffResp = await fetch(`/api/registration/staff/list?meetingId=${conferenceId}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json',
+                                    'X-Tenant-Id': tenantId
+                                }
+                            });
+                            if (staffResp.ok) {
+                                const staffResult = await staffResp.json();
+                                if ((staffResult.code === 200 || staffResult.code === 0) && Array.isArray(staffResult.data)) {
+                                    this.staffList = staffResult.data.map(s => {
+                                        // 解析权限：可能是对象、JSON字符串或null
+                                        let perms = s.permissions;
+                                        if (typeof perms === 'string') {
+                                            try { perms = JSON.parse(perms); } catch(e) { perms = null; }
+                                        }
+                                        const defaultPerms = {
+                                            participantManagement: false,
+                                            seatManagement: false,
+                                            taskPublish: false,
+                                            scheduleManagement: false,
+                                            checkinManagement: false,
+                                            materialManagement: false,
+                                            notificationManagement: false,
+                                            dataExport: false
+                                        };
+                                        return {
+                                            id: String(s.staffId || s.staff_id || s.id),
+                                            name: s.staffName || s.staff_name || '',
+                                            phone: s.staffPhone || s.staff_phone || '',
+                                            position: s.role === 0 ? '工作人员' : '管理员',
+                                            avatar: '',
+                                            permissions: Object.assign({}, defaultPerms, perms || {})
+                                        };
+                                    });
+                                    console.log(`已加载 ${this.staffList.length} 位工作人员`);
+                                }
+                            }
+                        } catch (staffErr) {
+                            console.warn('加载工作人员列表失败:', staffErr);
+                        }
                         
                         // 编辑模式默认跳到第1步让用户确认
                         this.currentStep = 1;
@@ -2156,7 +2210,7 @@
                         
                         // 获取租户ID和Token（从AuthService统一存储位置）
                         const token = localStorage.getItem('authToken') || localStorage.getItem('token') || '';
-                        const tenantId = localStorage.getItem('tenantId') || '2027317834622709762'; // 使用默认租户ID
+                        const tenantId = localStorage.getItem('tenantId') || ''; // 使用默认租户ID
                         
                         // 检查是否登录
                         if (!token) {
@@ -2169,8 +2223,8 @@
                         
                         // 根据模式选择 API：编辑模式用 PUT，新建模式用 POST
                         const apiUrl = this.isEditMode 
-                            ? `http://localhost:8084/api/meeting/${this.editConferenceId}`
-                            : 'http://localhost:8084/api/meeting/create';
+                            ? `/api/meeting/${this.editConferenceId}`
+                            : '/api/meeting/create';
                         const httpMethod = this.isEditMode ? 'PUT' : 'POST';
                         
                         const response = await fetch(apiUrl, {
@@ -2178,7 +2232,7 @@
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${token}`,
-                                'X-Tenant-Id': tenantId || '2027317834622709762'
+                                'X-Tenant-Id': tenantId || localStorage.getItem('tenantId') || ''
                             },
                             body: JSON.stringify(meetingRequest)
                         });
@@ -2202,6 +2256,33 @@
                             // 编辑模式：PUT 返回 Boolean
                             if (isApiSuccess) {
                                 console.log('会议更新成功');
+                                
+                                // 编辑模式：始终同步工作人员（包括全部移除的情况）
+                                try {
+                                    const staffPayload = {
+                                        meetingId: this.editConferenceId,
+                                        staffList: (this.staffList || []).map(staff => ({
+                                            staffId: staff.id,
+                                            staffName: staff.name,
+                                            staffPhone: staff.phone,
+                                            role: 0,
+                                            permissions: staff.permissions
+                                        }))
+                                    };
+                                    await fetch('/api/registration/staff/save', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': `Bearer ${token}`,
+                                            'X-Tenant-Id': tenantId || localStorage.getItem('tenantId') || ''
+                                        },
+                                        body: JSON.stringify(staffPayload)
+                                    });
+                                    console.log('工作人员已同步保存');
+                                } catch (staffError) {
+                                    console.warn('保存工作人员失败:', staffError);
+                                }
+                                
                                 localStorage.removeItem('conferenceDraft');
                                 this.$hideLoading();
                                 this.$showToast('会议修改成功！正在跳转...', 'success', 2000);
@@ -2215,28 +2296,31 @@
                             const createdMeeting = result.data;
                             console.log('会议创建成功:', createdMeeting);
                             
-                            // 如果有工作人员，调用 API 添加他们
+                            // 如果有工作人员，批量保存到 conf_meeting_staff
                             if (this.staffList && this.staffList.length > 0) {
                                 try {
-                                    for (const staff of this.staffList) {
-                                        await fetch(`http://localhost:8084/api/meeting/${createdMeeting.id}/staff`, {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'Authorization': `Bearer ${token}`,
-                                                'X-Tenant-Id': tenantId || '2027317834622709762'
-                                            },
-                                            body: JSON.stringify({
-                                                staffId: staff.id,
-                                                staffName: staff.name,
-                                                staffPhone: staff.phone,
-                                                permissions: staff.permissions
-                                            })
-                                        });
-                                    }
-                                    console.log('工作人员已添加');
+                                    const staffPayload = {
+                                        meetingId: createdMeeting.id,
+                                        staffList: this.staffList.map(staff => ({
+                                            staffId: staff.id,
+                                            staffName: staff.name,
+                                            staffPhone: staff.phone,
+                                            role: 0,
+                                            permissions: staff.permissions
+                                        }))
+                                    };
+                                    await fetch('/api/registration/staff/save', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': `Bearer ${token}`,
+                                            'X-Tenant-Id': tenantId || localStorage.getItem('tenantId') || ''
+                                        },
+                                        body: JSON.stringify(staffPayload)
+                                    });
+                                    console.log('工作人员已保存到数据库');
                                 } catch (staffError) {
-                                    console.warn('添加工作人员失败:', staffError);
+                                    console.warn('保存工作人员失败:', staffError);
                                     // 不中断主流程，继续跳转
                                 }
                             }

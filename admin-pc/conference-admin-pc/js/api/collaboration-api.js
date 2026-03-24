@@ -1,4 +1,4 @@
-/*
+﻿/*
  * 群组管理 & 聊天 API 前端集成代码
  * 用于 group-management.html 的后端 API 集成
  * 放在 admin-pc/conference-admin-pc/js/api/collaboration-api.js
@@ -8,7 +8,7 @@
  * 群组管理 API 模块
  */
 const GroupAPI = {
-    baseURL: 'http://localhost:8089/api/group',
+    baseURL: '/api/group',
 
     /** 创建群组 */
     createGroup(groupData) {
@@ -120,7 +120,8 @@ const GroupAPI = {
     },
 
     getAuthToken() {
-        return localStorage.getItem('authToken') || '';
+        const token = localStorage.getItem('authToken') || '';
+        return token ? `Bearer ${token}` : '';
     }
 };
 
@@ -128,7 +129,7 @@ const GroupAPI = {
  * 聊天消息 API 模块
  */
 const ChatAPI = {
-    baseURL: 'http://localhost:8089/api/chat',
+    baseURL: '/api/chat',
 
     /** 发送消息(HTTP) */
     sendMessage(messageData) {
@@ -176,7 +177,8 @@ const ChatAPI = {
     },
 
     getAuthToken() {
-        return localStorage.getItem('authToken') || '';
+        const token = localStorage.getItem('authToken') || '';
+        return token ? `Bearer ${token}` : '';
     }
 };
 
@@ -184,7 +186,7 @@ const ChatAPI = {
  * 任务分派 API 模块
  */
 const TaskAPI = {
-    baseURL: 'http://localhost:8089/api/task',
+    baseURL: '/api/task',
 
     /** 创建任务 */
     createTask(taskData) {
@@ -317,7 +319,8 @@ const TaskAPI = {
     },
 
     getAuthToken() {
-        return localStorage.getItem('authToken') || '';
+        const token = localStorage.getItem('authToken') || '';
+        return token ? `Bearer ${token}` : '';
     }
 };
 
@@ -325,7 +328,7 @@ const TaskAPI = {
  * 资料管理 API 模块
  */
 const MaterialAPI = {
-    baseURL: 'http://localhost:8089/api/material',
+    baseURL: '/api/material',
 
     /** 上传资料 */
     uploadMaterial(materialData) {
@@ -404,7 +407,8 @@ const MaterialAPI = {
     },
 
     getAuthToken() {
-        return localStorage.getItem('authToken') || '';
+        const token = localStorage.getItem('authToken') || '';
+        return token ? `Bearer ${token}` : '';
     }
 };
 
@@ -424,7 +428,8 @@ class ChatWebSocket {
 
     /** 连接WebSocket */
     connect() {
-        const wsUrl = `ws://localhost:8089/ws/chat?userId=${this.userId}`;
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}/ws/chat?userId=${this.userId}`;
         this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {

@@ -34,15 +34,13 @@ public class RegistrationRequest {
     private String email;
     
     /**
-     * 部门
+     * 部门 (是否必填由动态字段配置决定)
      */
-    @NotBlank(message = "部门不能为空")
     private String department;
     
     /**
-     * 职位
+     * 职位 (是否必填由动态字段配置决定)
      */
-    @NotBlank(message = "职位不能为空")
     private String position;
     
     /**

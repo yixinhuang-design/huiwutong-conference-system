@@ -748,80 +748,11 @@
                         this.$hideLoading();
                         console.error('加载日程失败:', error);
                         this.$showToast('加载日程失败，请检查网络连接', 'error');
-                        // 如果API加载失败，使用默认模拟数据
-                        this.loadMockData(conferenceId);
+                        // API加载失败时显示空列表
+                        this.conference = { id: conferenceId, name: '会议(加载失败)' };
+                        this.schedules = [];
+                        this.filterSchedules();
                     }
-                },
-
-                // 加载模拟数据
-                loadMockData(conferenceId) {
-                    this.conference = {
-                        id: conferenceId,
-                        name: '2024年度技术峰会',
-                        status: 'preparing',
-                        startDate: '2024-06-15',
-                        endDate: '2024-06-17'
-                    };
-
-                    // 模拟日程数据
-                    this.schedules = [
-                        {
-                            id: 'sched_001',
-                            title: '开幕式及主题演讲',
-                            startTime: '2024-06-15T09:00',
-                            endTime: '2024-06-15T10:30',
-                            location: '主会场A厅',
-                            host: '张主任',
-                            speaker: '李教授',
-                            notes: '开幕式致辞，随后进行主题演讲',
-                            settings: {
-                                needCheckin: true,
-                                checkinMethod: 'qrcode',
-                                needReminder: true,
-                                reminderTarget: 'all',
-                                reminderMethods: ['app', 'sms'],
-                                reminderTime: '15'
-                            }
-                        },
-                        {
-                            id: 'sched_002',
-                            title: '智能会议系统功能演示',
-                            startTime: '2024-06-15T10:45',
-                            endTime: '2024-06-15T12:00',
-                            location: '主会场A厅',
-                            host: '王经理',
-                            speaker: '技术团队',
-                            notes: '现场演示系统各项功能',
-                            settings: {
-                                needCheckin: true,
-                                checkinMethod: 'qrcode',
-                                needReminder: true,
-                                reminderTarget: 'all',
-                                reminderMethods: ['app'],
-                                reminderTime: '10'
-                            }
-                        },
-                        {
-                            id: 'sched_003',
-                            title: '分组讨论与实践操作',
-                            startTime: '2024-06-15T14:00',
-                            endTime: '2024-06-15T17:00',
-                            location: '分会场B厅、C厅',
-                            host: '各小组组长',
-                            speaker: '',
-                            notes: '分组进行实践操作，现场答疑',
-                            settings: {
-                                needCheckin: false,
-                                checkinMethod: 'qrcode',
-                                needReminder: true,
-                                reminderTarget: 'staff',
-                                reminderMethods: ['app'],
-                                reminderTime: '30'
-                            }
-                        }
-                    ];
-
-                    this.filterSchedules();
                 },
 
                 // 筛选日程

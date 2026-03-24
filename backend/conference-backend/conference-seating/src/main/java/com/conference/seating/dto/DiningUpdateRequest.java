@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 /**
  * 用餐安排更新请求 DTO
  * @author AI Assistant
@@ -32,7 +35,13 @@ public class DiningUpdateRequest {
     @Schema(description = "用餐地址", example = "一楼大厅")
     private String location;
     
-    @Schema(description = "用餐时间", example = "12:00-13:30")
+    @Schema(description = "用餐日期", example = "2026-03-12")
+    private LocalDate diningDate;
+    
+    @Schema(description = "用餐时间", example = "12:00")
+    private LocalTime diningTime;
+    
+    @Schema(description = "用餐时间(字符串格式，兼容)", example = "12:00-13:30")
     private String mealTime;
     
     @Schema(description = "菜单或特殊要求", example = "素食可选")
