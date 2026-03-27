@@ -1,0 +1,425 @@
+/* 智能会议助手 - 通用样式 */
+
+@import './variables.scss';
+
+/* ==================== 卡片样式 ==================== */
+.card {
+  background: $bg-primary;
+  border-radius: $border-radius-md;
+  padding: $spacing-md;
+  margin: $spacing-sm;
+  box-shadow: $shadow-sm;
+  border: 2rpx solid $border-color;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.card-title {
+  font-size: $font-size-lg;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.card-subtitle {
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  margin-top: $spacing-xs;
+}
+
+.card-subtitle-inline {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  flex-wrap: wrap;
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  margin-top: $spacing-xs;
+
+  .sep {
+    color: $border-color;
+  }
+}
+
+.card-content {
+  padding: $spacing-sm 0;
+}
+
+.card-no-padding {
+  padding: 0;
+}
+
+.card-large-shadow {
+  box-shadow: $shadow-md;
+}
+
+/* ==================== 按钮样式 ==================== */
+.btn {
+  padding: $spacing-md $spacing-lg;
+  border-radius: $border-radius-md;
+  font-size: $font-size-md;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: $transition-base;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+}
+
+.btn-primary {
+  background: $primary-gradient;
+  color: $text-white;
+}
+
+.btn-primary-light {
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+  color: $text-white;
+}
+
+.btn-secondary {
+  background: $bg-tertiary;
+  color: $text-primary;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2rpx solid $border-color;
+  color: $text-primary;
+}
+
+.btn-sm {
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-sm;
+}
+
+.btn-lg {
+  padding: $spacing-lg $spacing-xl;
+  font-size: $font-size-lg;
+}
+
+.btn-block {
+  width: 100%;
+  display: flex;
+}
+
+/* ==================== 表单样式 ==================== */
+.form-group {
+  margin-bottom: $spacing-md;
+}
+
+.form-label {
+  display: block;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  color: $text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-field {
+  width: 100%;
+  padding: $spacing-md;
+  border: 2rpx solid $border-color;
+  border-radius: $border-radius-md;
+  font-size: $font-size-md;
+  transition: $transition-base;
+  background: $bg-primary;
+}
+
+.input-field:focus {
+  border-color: $primary-color;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+  outline: none;
+}
+
+.input-icon {
+  position: absolute;
+  left: $spacing-md;
+  color: $text-tertiary;
+  font-size: $font-size-lg;
+}
+
+.input-with-icon {
+  padding-left: 88rpx !important;
+}
+
+/* ==================== 标签样式 ==================== */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 8rpx $spacing-md;
+  border-radius: $border-radius-lg;
+  font-size: $font-size-xs;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-accent {
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+  color: $accent-color;
+}
+
+.status-warn {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+.status-success {
+  background: #d1fae5;
+  color: $success-color;
+}
+
+.status-danger {
+  background: #fee2e2;
+  color: $danger-color;
+}
+
+/* ==================== 网格布局 ==================== */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+}
+
+/* ==================== 功能入口 ==================== */
+.feature-tile {
+  background: $bg-primary;
+  border-radius: $border-radius-md;
+  padding: $spacing-lg;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  box-shadow: $shadow-sm;
+  transition: $transition-base;
+  text-decoration: none;
+}
+
+.feature-tile:active {
+  transform: scale(0.95);
+}
+
+.feature-icon-lg {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: $border-radius-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  background: $primary-gradient;
+  color: $text-white;
+}
+
+.feature-title {
+  font-size: $font-size-sm;
+  font-weight: 500;
+  color: $text-primary;
+  text-align: center;
+}
+
+/* ==================== 列表样式 ==================== */
+.list-item {
+  background: $bg-primary;
+  padding: $spacing-md;
+  border-bottom: 1rpx solid $border-color;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-item-title {
+  font-size: $font-size-md;
+  font-weight: 500;
+  color: $text-primary;
+  flex: 1;
+}
+
+.list-item-meta {
+  font-size: $font-size-sm;
+  color: $text-secondary;
+}
+
+/* ==================== 横幅样式 ==================== */
+.info-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: $border-radius-md;
+  padding: $spacing-md;
+  margin: $spacing-sm;
+  font-size: $font-size-sm;
+  color: #92400e;
+  border-left: 6rpx solid #f59e0b;
+
+  strong {
+    display: block;
+    margin-bottom: 6rpx;
+    font-size: $font-size-md;
+  }
+}
+
+/* ==================== 章节标题 ==================== */
+.section-title {
+  font-size: $font-size-lg;
+  font-weight: 600;
+  color: $text-primary;
+  padding: $spacing-lg $spacing-md $spacing-sm;
+}
+
+/* ==================== 徽章 ==================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36rpx;
+  height: 36rpx;
+  padding: 0 10rpx;
+  background: $danger-color;
+  color: $text-white;
+  font-size: $font-size-xs;
+  border-radius: 18rpx;
+  font-weight: 600;
+}
+
+/* ==================== 分割线 ==================== */
+.divider {
+  height: 1rpx;
+  background: $border-color;
+  margin: $spacing-md 0;
+}
+
+/* ==================== 空状态 ==================== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xxl;
+  color: $text-tertiary;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: $spacing-md;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: $font-size-md;
+}
+
+/* ==================== 动画 ==================== */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ==================== 工具类 ==================== */
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-primary {
+  color: $text-primary;
+}
+
+.text-secondary {
+  color: $text-secondary;
+}
+
+.text-tertiary {
+  color: $text-tertiary;
+}
+
+.mt-xs { margin-top: $spacing-xs; }
+.mt-sm { margin-top: $spacing-sm; }
+.mt-md { margin-top: $spacing-md; }
+.mt-lg { margin-top: $spacing-lg; }
+
+.mb-xs { margin-bottom: $spacing-xs; }
+.mb-sm { margin-bottom: $spacing-sm; }
+.mb-md { margin-bottom: $spacing-md; }
+.mb-lg { margin-bottom: $spacing-lg; }
+
+.p-xs { padding: $spacing-xs; }
+.p-sm { padding: $spacing-sm; }
+.p-md { padding: $spacing-md; }
+.p-lg { padding: $spacing-lg; }
+
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-1 {
+  flex: 1;
+}

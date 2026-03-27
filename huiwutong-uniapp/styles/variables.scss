@@ -1,0 +1,84 @@
+/* 智能会议助手 - 样式变量定义 */
+/* 与 app 高保真原型保持完全一致 */
+
+/* ==================== 主色调 ==================== */
+$primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$primary-color: #667eea;
+$secondary-color: #764ba2;
+$accent-color: #3b82f6;
+
+/* ==================== 文字颜色 ==================== */
+$text-primary: #1e293b;
+$text-secondary: #64748b;
+$text-tertiary: #94a3b8;
+$text-placeholder: #cbd5e1;
+$text-white: #ffffff;
+
+/* ==================== 背景色 ==================== */
+$bg-primary: #ffffff;
+$bg-secondary: #f8fafc;
+$bg-tertiary: #f1f5f9;
+$bg-disabled: #e2e8f0;
+
+/* ==================== 边框 ==================== */
+$border-color: #e2e8f0;
+$border-color-light: #f1f5f9;
+
+/* ==================== 圆角 ==================== */
+$border-radius-xs: 4rpx;
+$border-radius-sm: 8rpx;
+$border-radius-md: 12rpx;
+$border-radius-lg: 16rpx;
+$border-radius-xl: 20rpx;
+$border-radius-xxl: 24rpx;
+
+/* ==================== 阴影 ==================== */
+$shadow-xs: 0 1rpx 4rpx rgba(0, 0, 0, 0.05);
+$shadow-sm: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+$shadow-md: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 40rpx 120rpx rgba(0, 0, 0, 0.3);
+
+/* ==================== 间距（8px网格系统） ==================== */
+$spacing-xs: 8rpx;
+$spacing-sm: 16rpx;
+$spacing-md: 24rpx;
+$spacing-lg: 32rpx;
+$spacing-xl: 48rpx;
+$spacing-xxl: 64rpx;
+
+/* ==================== 字体大小 ==================== */
+$font-size-xs: 24rpx;
+$font-size-sm: 28rpx;
+$font-size-md: 32rpx;
+$font-size-lg: 36rpx;
+$font-size-xl: 40rpx;
+$font-size-xxl: 48rpx;
+
+/* ==================== 行高 ==================== */
+$line-height-sm: 1.2;
+$line-height-md: 1.5;
+$line-height-lg: 1.8;
+
+/* ==================== Z-index ==================== */
+$z-index-base: 1;
+$z-index-dropdown: 10;
+$z-index-sticky: 20;
+$z-index-fixed: 30;
+$z-index-modal-backdrop: 40;
+$z-index-modal: 50;
+$z-index-popover: 60;
+$z-index-tooltip: 70;
+
+/* ==================== 状态颜色 ==================== */
+$success-color: #10b981;
+$warning-color: #f59e0b;
+$danger-color: #ef4444;
+$info-color: #3b82f6;
+
+/* ==================== 过渡动画 ==================== */
+$transition-base: all 0.3s ease;
+$transition-fast: all 0.15s ease;
+$transition-slow: all 0.5s ease;
+
+/* ==================== Font Awesome ==================== */
+$fa-font-path: '@/static/fontawesome/webfonts';

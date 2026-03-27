@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>太空战机 - Space Fighter</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 游戏容器 -->
+    <div id="game-container">
+        <!-- HUD (Heads-Up Display) -->
+        <div id="hud">
+            <div class="hud-item">
+                <span class="hud-label">SCORE</span>
+                <span id="score" class="hud-value">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">HEALTH</span>
+                <span id="health" class="hud-value">100</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">WAVE</span>
+                <span id="wave" class="hud-value">1</span>
+            </div>
+        </div>
+
+        <!-- 游戏画布 -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- 开始界面 -->
+        <div id="start-screen" class="screen">
+            <h1 class="game-title">太空战机</h1>
+            <p class="game-subtitle">SPACE FIGHTER</p>
+            <button id="start-btn" class="btn btn-primary">开始游戏</button>
+            <div class="instructions">
+                <p>💻 PC: WASD / 方向键移动</p>
+                <p>📱 手机: 触摸拖动</p>
+            </div>
+        </div>
+
+        <!-- 游戏结束界面 -->
+        <div id="gameover-screen" class="screen hidden">
+            <h1 class="game-over-title">游戏结束</h1>
+            <div class="final-score">
+                <p>本局得分</p>
+                <p id="final-score" class="score-value">0</p>
+            </div>
+            <div class="high-score">
+                <p>最高记录</p>
+                <p id="high-score" class="score-value">0</p>
+            </div>
+            <button id="restart-btn" class="btn btn-primary">再来一局</button>
+        </div>
+    </div>
+
+    <!-- 脚本加载 - 使用ES模块 -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

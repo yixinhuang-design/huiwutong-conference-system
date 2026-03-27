@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Input Debug</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    .debug-section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+
+    .debug-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 10px;
+      font-size: 20px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 10px;
+      padding-left: 45px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      background: white;
+      color: #333;
+      position: relative;
+      z-index: 1;
+    }
+
+    .input-field:focus {
+      border-color: #667eea;
+      outline: none;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      background: white;
+      min-height: 40px;
+    }
+
+    textarea:focus {
+      border-color: #667eea;
+      outline: none;
+    }
+
+    .debug-info {
+      background: #f0f7ff;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="debug-section">
+    <div class="debug-title">测试1: 原生 input（绝对定位图标）</div>
+    <div class="input-wrapper">
+      <span class="input-icon">👤</span>
+      <input type="text" class="input-field" placeholder="原生input，带图标">
+    </div>
+  </div>
+
+  <div class="debug-section">
+    <div class="debug-title">测试2: 原生 input（无图标）</div>
+    <input type="text" class="input-field" placeholder="原生input，无图标">
+  </div>
+
+  <div class="debug-section">
+    <div class="debug-title">测试3: textarea</div>
+    <textarea placeholder="textarea测试"></textarea>
+  </div>
+
+  <div class="debug-section">
+    <div class="debug-title">测试4: 检查元素层级</div>
+    <div class="input-wrapper" style="background: #ffe;">
+      <span class="input-icon" style="background: #fee;">👤 图标 z-index: 0</span>
+      <input type="text" class="input-field" placeholder="input z-index: 1" style="background: #efe;">
+    </div>
+    <div class="debug-info">
+      点击 input 测试是否能获取焦点<br>
+      使用浏览器开发者工具检查元素
+    </div>
+  </div>
+
+  <div class="debug-section">
+    <div class="debug-title">测试5: UniApp 模拟结构</div>
+    <div id="uni-input-wrapper" style="position: relative; display: flex; align-items: center; margin-bottom: 10px;">
+      <uni-input style="display: block; font-size: 16px; line-height: 1.4em; height: 1.4em; min-height: 1.4em; overflow: hidden;">
+        <div class="uni-input-wrapper" style="outline: none; border: none; padding: 0; margin: 0; display: flex; position: relative; width: 100%; height: 100%; flex-direction: column; justify-content: center;">
+          <div class="uni-input-form" style="outline: none; border: none; padding: 0; margin: 0; display: flex; position: relative; width: 100%; height: 100%; flex-direction: column; justify-content: center;">
+            <span style="position: absolute; left: 10px; z-index: 0; pointer-events: none;">👤</span>
+            <input class="uni-input-input" type="text" placeholder="UniApp 模拟 input" style="position: relative; display: block; height: 100%; background: none; color: inherit; opacity: 1; font: inherit; line-height: inherit; letter-spacing: inherit; text-align: inherit; text-indent: inherit; text-transform: inherit; text-shadow: inherit; outline: none; border: none; padding: 0; margin: 0; width: 100%; padding-left: 45px; border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
+          </div>
+        </div>
+      </uni-input>
+    </div>
+  </div>
+
+  <script>
+    // 监听所有输入框的 focus 和 blur 事件
+    document.querySelectorAll('input, textarea').forEach(el => {
+      el.addEventListener('focus', (e) => {
+        console.log('Element focused:', e.target.tagName, e.target.className);
+        alert(`Element focused: ${e.target.tagName} with class: ${e.target.className}`);
+      });
+
+      el.addEventListener('blur', (e) => {
+        console.log('Element blurred:', e.target.tagName, e.target.className);
+      });
+    });
+
+    // 检查元素是否被覆盖
+    document.addEventListener('click', (e) => {
+      const element = document.elementFromPoint(e.clientX, e.clientY);
+      console.log('Clicked element:', element);
+    });
+  </script>
+</body>
+</html>
