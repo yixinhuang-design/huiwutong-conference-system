@@ -1,0 +1,58 @@
+server:
+  port: 8088
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: conference-data
+  
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3308/conference_db?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
+    username: root
+    password: Hnhx@123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+  
+  flyway:
+    enabled: false
+  
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:dev}
+        enabled: ${NACOS_ENABLED:false}
+        register-enabled: false
+      config:
+        server-addr: ${NACOS_SERVER:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:dev}
+        enabled: false
+        import-check:
+          enabled: false
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    root: info
+    com.conference: debug
+
+# data 服务自身不需要上报访问日志给自己（它直接本地记录）
+monitor:
+  access-log:
+    enabled: false

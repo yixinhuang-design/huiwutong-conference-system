@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-ai" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-ai/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-ai/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-auth" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-auth/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-auth/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-collaboration" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-collaboration/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-collaboration/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-common" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-common/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-data" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-data/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-data/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-gateway" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-gateway/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-meeting/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-meeting/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-navigation" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-navigation/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-navigation/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-notification" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-notification/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-notification/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-registration" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-registration/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-registration/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-seating" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-seating/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/conference-seating/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
+  </component>
+</project>

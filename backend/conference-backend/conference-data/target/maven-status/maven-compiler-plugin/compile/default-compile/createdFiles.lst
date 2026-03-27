@@ -1,0 +1,17 @@
+com\conference\data\mapper\UserActivityMapper.class
+com\conference\data\mapper\SystemMetricsMapper.class
+com\conference\data\config\AppStartupListener.class
+com\conference\data\controller\DataController.class
+com\conference\data\config\CorsConfig.class
+com\conference\data\service\SystemMonitorService.class
+com\conference\data\entity\UserActivity.class
+com\conference\data\entity\SystemMetrics.class
+com\conference\data\mapper\SystemEventMapper.class
+com\conference\data\mapper\ServiceHealthMapper.class
+com\conference\data\mapper\ApiAccessLogMapper.class
+com\conference\data\entity\ApiAccessLog.class
+com\conference\data\DataApplication.class
+com\conference\data\service\BusinessDataService.class
+com\conference\data\entity\SystemEvent.class
+com\conference\data\mapper\BusinessDataMapper.class
+com\conference\data\entity\ServiceHealth.class

@@ -1,0 +1,975 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/login",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/common/home",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/common/assistant",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/common/communication",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/common/past",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/common/profile",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/common/navigation",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/common/settings",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/common/help",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/common/guide",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/meeting-detail",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/schedule",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/checkin",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/seat",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/materials",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/groups",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/chat-room",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/chat-private",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/dashboard",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/task-list",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/registration-manage",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/grouping-manage",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/seat-manage",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/notice-manage",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/task-detail",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/task-feedback",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/data-analysis",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/chat-room",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/handbook-generate",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/alert-config",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/alert-handle",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/training",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/training-create",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/notice-edit",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/mobile-alert",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/mobile-notice",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/tenant-manage",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/user-manage",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/department-manage",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/role-manage",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/system-settings",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/tenant-detail",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/user-detail",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/logs",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/database-backup",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/staff/api-config",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/contact",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/notifications",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/task-list",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/task-detail",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/feedback",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/evaluation",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/feedback-result",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/evaluation-result",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/guide",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/scan-register",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/registration-form",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/registration-status",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/scan-seat",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/seat-detail",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/arrangements",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/guestbook",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/learner/highlights",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/common/system-intro",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/archive/materials",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/archive/feedback",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/archive/highlights",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/archive/reports",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    },
+    {
+      "path": "pages/archive/messages",
+      "style": {
+        "navigationStyle": "custom",
+        "backgroundColor": "#f8fafc"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "智能会议助手",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8",
+    "backgroundTextStyle": "dark",
+    "enablePullDownRefresh": false
+  },
+  "subPackages": [
+    {
+      "root": "pages/learner",
+      "pages": [
+        {
+          "path": "meeting-detail",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "schedule",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc",
+            "enablePullDownRefresh": true
+          }
+        },
+        {
+          "path": "checkin",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "seat",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "materials",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "groups",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "chat-room",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "chat-private",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "contact",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "notifications",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc",
+            "enablePullDownRefresh": true
+          }
+        },
+        {
+          "path": "task-list",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc",
+            "enablePullDownRefresh": true
+          }
+        },
+        {
+          "path": "task-detail",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "feedback",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "evaluation",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "feedback-result",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "evaluation-result",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "guide",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "scan-register",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "registration-form",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "registration-status",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "scan-seat",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "seat-detail",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "arrangements",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "guestbook",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "highlights",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/staff",
+      "pages": [
+        {
+          "path": "dashboard",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc",
+            "enablePullDownRefresh": true
+          }
+        },
+        {
+          "path": "task-list",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc",
+            "enablePullDownRefresh": true
+          }
+        },
+        {
+          "path": "registration-manage",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc",
+            "enablePullDownRefresh": true
+          }
+        },
+        {
+          "path": "grouping-manage",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "seat-manage",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "notice-manage",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc",
+            "enablePullDownRefresh": true
+          }
+        },
+        {
+          "path": "task-detail",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "task-feedback",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "data-analysis",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "chat-room",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "handbook-generate",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "alert-config",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "alert-handle",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "training",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "training-create",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "notice-edit",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "mobile-alert",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "mobile-notice",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "tenant-manage",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc",
+            "enablePullDownRefresh": true
+          }
+        },
+        {
+          "path": "user-manage",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc",
+            "enablePullDownRefresh": true
+          }
+        },
+        {
+          "path": "department-manage",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "role-manage",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "system-settings",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "tenant-detail",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "user-detail",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "logs",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "database-backup",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "api-config",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/archive",
+      "pages": [
+        {
+          "path": "materials",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "feedback",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "highlights",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "reports",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        },
+        {
+          "path": "messages",
+          "style": {
+            "navigationStyle": "custom",
+            "backgroundColor": "#f8fafc"
+          }
+        }
+      ]
+    }
+  ],
+  "preloadRule": {
+    "pages/common/home": {
+      "network": "all",
+      "packages": ["pages/learner"]
+    },
+    "pages/common/profile": {
+      "network": "all",
+      "packages": ["pages/staff"]
+    }
+  },
+  "tabBar": {
+    "color": "#64748b",
+    "selectedColor": "#3b82f6",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/common/home",
+        "text": "首页",
+        "iconPath": "static/icons/home.png",
+        "selectedIconPath": "static/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/common/assistant",
+        "text": "助理",
+        "iconPath": "static/icons/assistant.png",
+        "selectedIconPath": "static/icons/assistant-active.png"
+      },
+      {
+        "pagePath": "pages/common/communication",
+        "text": "沟通",
+        "iconPath": "static/icons/chat.png",
+        "selectedIconPath": "static/icons/chat-active.png"
+      },
+      {
+        "pagePath": "pages/common/past",
+        "text": "档案",
+        "iconPath": "static/icons/archive.png",
+        "selectedIconPath": "static/icons/archive-active.png"
+      },
+      {
+        "pagePath": "pages/common/profile",
+        "text": "我的",
+        "iconPath": "static/icons/profile.png",
+        "selectedIconPath": "static/icons/profile-active.png"
+      }
+    ]
+  }
+}

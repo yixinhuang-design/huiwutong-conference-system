@@ -20,7 +20,7 @@
             :class="{ active: activeCategory === category.value }"
             @click="switchCategory(category.value)"
           >
-            <text class="tab-icon">{{ category.icon }}</text>
+            <text class="tab-icon"><text :class="category.icon"></text></text>
             <text class="tab-label">{{ category.label }}</text>
           </view>
         </view>
@@ -42,7 +42,8 @@
             <view class="photo-info">
               <view class="photo-likes" @click.stop="likePhoto(photo)">
                 <text class="like-icon" :class="{ liked: photo.isLiked }">
-                  {{ photo.isLiked ? '❤️' : '🤍' }}
+                  <text v-if="photo.isLiked" class="fa fa-heart"></text>
+                  <text v-else class="fa fa-heart-o"></text>
                 </text>
                 <text class="like-count">{{ photo.likeCount }}</text>
               </view>
@@ -62,7 +63,7 @@
 
     <!-- 浮动按钮 -->
     <view class="fab" @click="uploadPhoto">
-      <text class="fab-icon">📷</text>
+      <text class="fab-icon"><text class="fa fa-camera"></text></text>
     </view>
   </view>
 </template>
@@ -76,11 +77,11 @@ export default {
       hasMore: true,
       currentPage: 1,
       categories: [
-        { icon: '📸', label: '全部', value: 'all' },
-        { icon: '🎤', label: '授课', value: 'lecture' },
-        { icon: '💬', label: '讨论', value: 'discussion' },
-        { icon: '👥', label: '合影', value: 'group' },
-        { icon: '🎉', label: '活动', value: 'activity' }
+        { icon: 'fa-camera', label: '全部', value: 'all' },
+        { icon: 'fa-microphone', label: '授课', value: 'lecture' },
+        { icon: 'fa-comments', label: '讨论', value: 'discussion' },
+        { icon: 'fa-users', label: '合影', value: 'group' },
+        { icon: 'fa-glass-cheers', label: '活动', value: 'activity' }
       ],
       photos: [
         {
@@ -274,6 +275,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .highlights-container {
   min-height: 100vh;

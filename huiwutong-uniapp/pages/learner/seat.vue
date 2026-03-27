@@ -13,12 +13,12 @@
       <view class="seat-info">
         <view class="seat-number">{{ mySeat.number }}</view>
         <view class="seat-details">
-          <text class="detail-item">📍 {{ mySeat.area }}</text>
-          <text class="detail-item">🪑 第{{ mySeat.row }}行 第{{ mySeat.column }}列</text>
+          <text class="detail-item"><text class="fa fa-map-marker-alt"></text> {{ mySeat.area }}</text>
+          <text class="detail-item"><text class="fa fa-th-large"></text> 第{{ mySeat.row }}行 第{{ mySeat.column }}列</text>
         </view>
       </view>
       <button class="nav-btn btn btn-primary btn-block" @click="navigateToSeat">
-        <text>🧭</text> 导航到座位
+        <text><text class="fa fa-location-arrow"></text></text> 导航到座位
       </button>
     </view>
 
@@ -294,6 +294,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .seat-container {
   min-height: 100vh;

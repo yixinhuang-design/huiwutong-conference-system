@@ -32,11 +32,21 @@ $border-radius-lg: 16rpx;
 $border-radius-xl: 20rpx;
 $border-radius-xxl: 24rpx;
 
-/* ==================== 阴影 ==================== */
+/* ==================== 阴影（匹配app原型） ==================== */
+/* 小阴影 - 标签、小卡片 */
 $shadow-xs: 0 1rpx 4rpx rgba(0, 0, 0, 0.05);
+
+/* 中阴影 - 标准卡片（app原型：0 2px 8px rgba(0,0,0,0.06)） */
 $shadow-sm: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
-$shadow-md: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+
+/* 大阴影 - 悬停效果（app原型：0 4px 16px rgba(0,0,0,0.12)） */
+$shadow-md: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+
+/* 超大阴影 - 登录卡片等（app原型：0 20px 60px rgba(0,0,0,0.3)） */
 $shadow-lg: 0 40rpx 120rpx rgba(0, 0, 0, 0.3);
+
+/* 按钮阴影（app原型：0 2px 4px rgba(0,0,0,0.1)） */
+$shadow-btn: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
 
 /* ==================== 间距（8px网格系统） ==================== */
 $spacing-xs: 8rpx;
@@ -74,6 +84,22 @@ $success-color: #10b981;
 $warning-color: #f59e0b;
 $danger-color: #ef4444;
 $info-color: #3b82f6;
+
+/* ==================== 图标渐变色（匹配app原型） ==================== */
+/* 蓝色 - 主要功能图标 */
+$icon-gradient-blue: linear-gradient(135deg, #3b82f6, #1d4ed8);
+
+/* 青色 - 辅助功能图标 */
+$icon-gradient-cyan: linear-gradient(135deg, #06b6d4, #0891b2);
+
+/* 绿色 - 成功、确认相关 */
+$icon-gradient-green: linear-gradient(135deg, #10b981, #059669);
+
+/* 橙色 - 警告、待处理相关 */
+$icon-gradient-orange: linear-gradient(135deg, #f97316, #ea580c);
+
+/* 紫色 - 高级功能、AI相关 */
+$icon-gradient-purple: linear-gradient(135deg, #8b5cf6, #7c3aed);
 
 /* ==================== 过渡动画 ==================== */
 $transition-base: all 0.3s ease;

@@ -247,7 +247,7 @@ export default {
     },
 
     getTemplateIcon(type) {
-      const icons = { conference: '📢', registration: '⏰', checkin: '✅', schedule: '📅', seat: '👺', bus: '🚌', accommodation: '🏠', full: '📝', custom: '✏️' }
+      const icons = { conference: '📢', registration: '<text class="fa fa-clock"></text>', checkin: '<text class="fa fa-check"></text>', schedule: '<text class="fa fa-calendar-alt"></text>', seat: '👺', bus: '🚌', accommodation: '🏠', full: '<text class="fa fa-edit"></text>', custom: '<text class="fa fa-pen"></text>' }
       return icons[type] || '📢'
     },
 
@@ -414,6 +414,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .mobile-notice-container {
   min-height: 100vh;

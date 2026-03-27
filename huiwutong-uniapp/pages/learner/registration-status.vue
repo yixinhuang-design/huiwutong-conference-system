@@ -12,7 +12,7 @@
     <scroll-view class="status-scroll" scroll-y>
       <!-- 当前状态 -->
       <view class="status-card" :class="'status-' + currentStatus.type">
-        <view class="status-icon">{{ currentStatus.icon }}</view>
+        <view class="status-icon"><text :class="currentStatus.icon"></text></view>
         <view class="status-info">
           <text class="status-title">{{ currentStatus.title }}</text>
           <text class="status-desc">{{ currentStatus.desc }}</text>
@@ -102,14 +102,14 @@
           class="btn btn-primary btn-block"
           @click="reRegister"
         >
-          🔄 重新报名
+          <text class="fa fa-redo"></text> 重新报名
         </button>
         <button
           v-if="registrationInfo.status === 'approved'"
           class="btn btn-outline btn-block"
           @click="viewDetails"
         >
-          📋 查看培训详情
+          <text class="fa fa-clipboard"></text> 查看培训详情
         </button>
         <button
           v-if="registrationInfo.status === 'pending'"
@@ -122,7 +122,7 @@
 
       <!-- 温馨提示 -->
       <view class="tips-section card">
-        <view class="tips-title">💡 温馨提示</view>
+        <view class="tips-title"><text class="fa fa-lightbulb"></text> 温馨提示</view>
         <view class="tips-list">
           <text class="tips-item">• 审核通过后将收到短信通知</text>
           <text class="tips-item">• 请保持手机畅通，注意查收通知</text>
@@ -163,21 +163,21 @@ export default {
       const statusMap = {
         pending: {
           type: 'pending',
-          icon: '⏳',
+          icon: 'fa-hourglass-half',
           title: '待审核',
           desc: '您的报名正在审核中，请耐心等待',
           time: '预计1-2个工作日完成审核'
         },
         approved: {
           type: 'approved',
-          icon: '✅',
+          icon: 'fa-check',
           title: '审核通过',
           desc: '恭喜您，报名审核已通过',
           time: '请按时参加培训'
         },
         rejected: {
           type: 'rejected',
-          icon: '❌',
+          icon: 'fa-times',
           title: '审核未通过',
           desc: '很遗憾，您的报名未通过审核',
           time: '您可以重新报名'
@@ -278,6 +278,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .registration-status-container {
   min-height: 100vh;

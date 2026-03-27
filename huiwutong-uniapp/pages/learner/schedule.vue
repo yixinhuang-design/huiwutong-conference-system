@@ -36,7 +36,7 @@
         <view
           v-for="(item, index) in scheduleList"
           :key="item.id"
-          class="schedule-item card"
+          class="schedule-item card fade-in"
           :class="{ checked: item.checked }"
         >
           <view class="schedule-time">
@@ -49,11 +49,11 @@
           <view class="schedule-content">
             <view class="schedule-title">{{ item.title }}</view>
             <view class="schedule-location">
-              <text class="location-icon">📍</text>
+              <text class="fa fa-map-marker-alt location-icon"></text>
               {{ item.location }}
             </view>
             <view class="schedule-speaker" v-if="item.speaker">
-              <text class="speaker-icon">👤</text>
+              <text class="fa fa-user speaker-icon"></text>
               {{ item.speaker }}
             </view>
           </view>
@@ -61,20 +61,20 @@
           <view class="schedule-status">
             <view
               v-if="item.checked"
-              class="status-badge checked"
+              class="status-badge status-success"
             >
-              <text>✅</text>
+              <text class="fa fa-check"></text>
               已签到
             </view>
             <view
               v-else-if="item.canCheckin"
-              class="status-badge checkin"
+              class="status-badge status-accent"
               @click="handleCheckin(item)"
             >
-              <text>📱</text>
+              <text class="fa fa-qrcode"></text>
               签到
             </view>
-            <view v-else class="status-badge wait">
+            <view v-else class="status-badge status-tertiary">
               未开始
             </view>
           </view>
@@ -82,7 +82,7 @@
       </view>
 
       <view v-else class="empty-state">
-        <text class="empty-icon">📅</text>
+        <text class="fa fa-calendar empty-icon"></text>
         <text class="empty-text">暂无日程安排</text>
       </view>
     </view>
@@ -261,6 +261,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .schedule-container {
   min-height: 100vh;
@@ -296,6 +297,7 @@ export default {
 .date-selector {
   margin: $spacing-md;
   padding: 0;
+  border-radius: 24rpx; /* 匹配app原型 */
 }
 
 .date-scroll {
@@ -309,13 +311,14 @@ export default {
   justify-content: center;
   padding: $spacing-md $spacing-lg;
   margin: $spacing-sm;
-  border-radius: $border-radius-md;
+  border-radius: 20rpx; /* 匹配app原型 */
   transition: $transition-base;
 }
 
 .date-item.active {
   background: $primary-gradient;
   color: $text-white;
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.4);
 }
 
 .date-weekday {
@@ -342,10 +345,12 @@ export default {
   gap: $spacing-md;
   margin-bottom: $spacing-md;
   transition: $transition-base;
+  border-radius: 24rpx; /* 匹配app原型 */
+  animation: fadeIn 0.3s ease-in;
 }
 
 .schedule-item.checked {
-  background: linear-gradient(135deg, #d1fae5 0%, #e0e7ff 100%);
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
   border-color: $success-color;
 }
 
@@ -355,10 +360,11 @@ export default {
   align-items: center;
   justify-content: center;
   padding: $spacing-sm;
-  background: $bg-tertiary;
-  border-radius: $border-radius-sm;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 20rpx; /* 匹配app原型 */
   min-width: 120rpx;
   text-align: center;
+  border: 2rpx solid $border-color;
 }
 
 .time-range {
@@ -392,7 +398,13 @@ export default {
   margin-bottom: 6rpx;
   display: flex;
   align-items: center;
-  gap: 6rpx;
+  gap: 8rpx;
+}
+
+.location-icon,
+.speaker-icon {
+  color: $primary-color;
+  font-size: $font-size-md;
 }
 
 .schedule-status {
@@ -407,24 +419,44 @@ export default {
   align-items: center;
   gap: 6rpx;
   padding: 8rpx $spacing-md;
-  border-radius: $border-radius-lg;
+  border-radius: 20rpx; /* 匹配app原型 */
   font-size: $font-size-xs;
   font-weight: 500;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
-.status-badge.checked {
-  background: $success-color;
-  color: $text-white;
+.status-success {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #10b981;
 }
 
-.status-badge.checkin {
-  background: $primary-color;
-  color: $text-white;
+.status-accent {
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+  color: #3b82f6;
   cursor: pointer;
 }
 
-.status-badge.wait {
+.status-tertiary {
   background: $bg-tertiary;
   color: $text-secondary;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xxl;
+  color: $text-tertiary;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: $spacing-md;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: $font-size-md;
 }
 </style>

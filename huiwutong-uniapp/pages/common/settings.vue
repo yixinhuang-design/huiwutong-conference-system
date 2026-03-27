@@ -17,7 +17,7 @@
           class="setting-item"
           @click="handleSetting(item.action)"
         >
-          <view class="setting-icon">{{ item.icon }}</view>
+          <view class="setting-icon"><text :class="item.icon"></text></view>
           <view class="setting-info">{{ item.title }}</view>
           <view class="setting-value" v-if="item.value">{{ item.value }}</view>
           <text class="setting-arrow" v-else>›</text>
@@ -32,7 +32,7 @@
           class="setting-item"
           @click="handleSetting(item.action)"
         >
-          <view class="setting-icon">{{ item.icon }}</view>
+          <view class="setting-icon"><text :class="item.icon"></text></view>
           <view class="setting-info">{{ item.title }}</view>
           <switch
             v-if="item.type === 'switch'"
@@ -52,7 +52,7 @@
           class="setting-item"
           @click="handleSetting(item.action)"
         >
-          <view class="setting-icon">{{ item.icon }}</view>
+          <view class="setting-icon"><text :class="item.icon"></text></view>
           <view class="setting-info">{{ item.title }}</view>
           <text class="setting-arrow">›</text>
         </view>
@@ -72,18 +72,18 @@ export default {
     return {
       accountSettings: [
         {
-          icon: '🔒',
+          icon: 'fa-lock',
           title: '修改密码',
           action: 'password'
         },
         {
-          icon: '📱',
+          icon: 'fa-mobile-alt',
           title: '手机号',
           value: '138****8888',
           action: 'phone'
         },
         {
-          icon: '✉️',
+          icon: 'fa-envelope',
           title: '邮箱',
           value: '未绑定',
           action: 'email'
@@ -91,26 +91,26 @@ export default {
       ],
       generalSettings: [
         {
-          icon: '🔔',
+          icon: 'fa-bell',
           title: '消息通知',
           type: 'switch',
           checked: true,
           action: 'notification'
         },
         {
-          icon: '🌙',
+          icon: 'fa-moon',
           title: '深色模式',
           type: 'switch',
           checked: false,
           action: 'darkMode'
         },
         {
-          icon: '📐',
+          icon: 'fa-text-height',
           title: '字体大小',
           action: 'fontSize'
         },
         {
-          icon: '🌐',
+          icon: 'fa-globe',
           title: '语言',
           value: '简体中文',
           action: 'language'
@@ -118,22 +118,22 @@ export default {
       ],
       otherSettings: [
         {
-          icon: '🧹',
+          icon: 'fa-broom',
           title: '清除缓存',
           action: 'cache'
         },
         {
-          icon: '📄',
+          icon: 'fa-file-alt',
           title: '用户协议',
           action: 'agreement'
         },
         {
-          icon: '🔒',
+          icon: 'fa-lock',
           title: '隐私政策',
           action: 'privacy'
         },
         {
-          icon: 'ℹ️',
+          icon: 'fa-info-circle',
           title: '关于我们',
           action: 'about'
         }
@@ -184,6 +184,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .settings-container {
   min-height: 100vh;

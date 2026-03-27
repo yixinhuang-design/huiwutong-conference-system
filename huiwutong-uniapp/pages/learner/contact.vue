@@ -10,7 +10,7 @@
     <!-- 搜索框 -->
     <view class="search-bar card">
       <view class="search-input-wrapper">
-        <text class="search-icon">🔍</text>
+        <text class="search-icon"><text class="fa fa-search"></text></text>
         <input
           v-model="searchKeyword"
           class="search-input"
@@ -40,14 +40,14 @@
             <view class="contact-org">{{ contact.organization }}</view>
           </view>
           <view class="contact-actions">
-            <text class="action-icon" @click.stop="callContact(contact)">📞</text>
-            <text class="action-icon" @click.stop="chatContact(contact)">💬</text>
+            <text class="action-icon" @click.stop="callContact(contact)"><text class="fa fa-phone"></text></text>
+            <text class="action-icon" @click.stop="chatContact(contact)"><text class="fa fa-comments"></text></text>
           </view>
         </view>
       </view>
 
       <view v-if="contactList.length === 0" class="empty-state">
-        <text class="empty-icon">📒</text>
+        <text class="empty-icon"><text class="fa fa-address-book"></text></text>
         <text class="empty-text">暂无联系人</text>
       </view>
     </view>
@@ -239,6 +239,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .contact-container {
   min-height: 100vh;

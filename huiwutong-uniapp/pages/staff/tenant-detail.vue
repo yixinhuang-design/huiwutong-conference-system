@@ -27,7 +27,7 @@
         <view class="info-row">
           <text class="info-label">租户状态</text>
           <view
-            class="status-badge"
+            class="status-badge status-chip"
             :class="tenantInfo.status"
           >
             <text class="status-text">{{ getStatusLabel(tenantInfo.status) }}</text>
@@ -123,7 +123,7 @@
             class="module-item"
           >
             <view class="module-info">
-              <text class="module-icon">{{ module.icon }}</text>
+              <text class="module-icon"><text :class="module.icon"></text></text>
               <view class="module-details">
                 <text class="module-name">{{ module.name }}</text>
                 <text class="module-desc">{{ module.description }}</text>
@@ -166,20 +166,21 @@
       <!-- 操作按钮 -->
       <view class="actions-section">
         <button class="btn btn-outline btn-block" @click="resetPassword">
-          🔄 重置管理员密码
+          <text class="fa fa-redo"></text> 重置管理员密码
         </button>
         <button class="btn btn-outline btn-block" @click="renewTenant">
-          📅 续费租户
+          <text class="fa fa-calendar-alt"></text> 续费租户
         </button>
         <button
           class="btn btn-outline btn-block"
           :class="{ disabled: tenantInfo.status === 'suspended' }"
           @click="toggleTenantStatus"
         >
-          {{ tenantInfo.status === 'active' ? '⏸️ 暂停租户' : '▶️ 启用租户' }}
+          <text :class="tenantInfo.status === 'active' ? 'fa fa-pause' : 'fa fa-play'"></text>
+          {{ tenantInfo.status === 'active' ? '暂停租户' : '启用租户' }}
         </button>
         <button class="btn btn-danger btn-block" @click="deleteTenant">
-          🗑️ 删除租户
+          <text class="fa fa-trash"></text> 删除租户
         </button>
       </view>
     </scroll-view>
@@ -208,12 +209,12 @@ export default {
         learnerCount: 156,
         activeUsers: 45,
         modules: [
-          { id: 1, name: '培训管理', icon: '📚', description: '创建和管理培训活动', enabled: true },
-          { id: 2, name: '学员管理', icon: '👥', description: '管理学员信息和分组', enabled: true },
-          { id: 3, name: '签到管理', icon: '✅', description: '学员签到和考勤', enabled: true },
-          { id: 4, name: '评价反馈', icon: '⭐', description: '收集学员反馈', enabled: true },
-          { id: 5, name: '数据分析', icon: '📊', description: '培训数据统计分析', enabled: true },
-          { id: 6, name: '档案管理', icon: '📁', description: '历史数据归档', enabled: false }
+          { id: 1, name: '培训管理', icon: 'fa-book-open', description: '创建和管理培训活动', enabled: true },
+          { id: 2, name: '学员管理', icon: 'fa-users', description: '管理学员信息和分组', enabled: true },
+          { id: 3, name: '签到管理', icon: 'fa-check', description: '学员签到和考勤', enabled: true },
+          { id: 4, name: '评价反馈', icon: 'fa-star', description: '收集学员反馈', enabled: true },
+          { id: 5, name: '数据分析', icon: 'fa-chart-bar', description: '培训数据统计分析', enabled: true },
+          { id: 6, name: '档案管理', icon: 'fa-folder', description: '历史数据归档', enabled: false }
         ]
       },
       operationLogs: [
@@ -397,6 +398,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .tenant-detail-container {
   min-height: 100vh;

@@ -88,7 +88,7 @@
 
       <!-- 报名须知 -->
       <view class="notice-section card">
-        <view class="section-title">📋 报名须知</view>
+        <view class="section-title"><text class="fa fa-clipboard"></text> 报名须知</view>
         <view class="notice-list">
           <view class="notice-item">
             <text class="notice-dot">•</text>
@@ -216,6 +216,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .scan-register-container {
   min-height: 100vh;

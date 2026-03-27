@@ -42,8 +42,8 @@
           </view>
 
           <view class="role-meta">
-            <text class="meta-item">👥 用户数：{{ role.userCount }}</text>
-            <text class="meta-item">📝 描述：{{ role.description }}</text>
+            <text class="meta-item"><text class="fa fa-users"></text> 用户数：{{ role.userCount }}</text>
+            <text class="meta-item"><text class="fa fa-edit"></text> 描述：{{ role.description }}</text>
           </view>
 
           <view class="role-permissions">
@@ -561,6 +561,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .role-manage-container {
   min-height: 100vh;

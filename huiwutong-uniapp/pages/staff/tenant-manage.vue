@@ -12,7 +12,7 @@
     <!-- 搜索栏 -->
     <view class="search-section">
       <view class="search-bar">
-        <text class="search-icon">🔍</text>
+        <text class="search-icon"><text class="fa fa-search"></text></text>
         <input
           v-model="searchKeyword"
           class="search-input"
@@ -23,7 +23,7 @@
     </view>
 
     <!-- 统计卡片 -->
-    <view class="stats-section">
+    <view class="stats-section card">
       <view class="stat-card">
         <text class="stat-value">{{ tenantStats.total }}</text>
         <text class="stat-label">总租户数</text>
@@ -503,6 +503,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .tenant-manage-container {
   min-height: 100vh;

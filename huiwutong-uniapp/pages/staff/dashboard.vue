@@ -11,7 +11,7 @@
     <view class="realtime-cards">
       <view class="realtime-card card">
         <view class="card-top">
-          <text class="card-icon">👥</text>
+          <text class="card-icon"><text class="fa fa-users"></text></text>
           <text class="card-label">总人数</text>
         </view>
         <view class="card-value">{{ stats.totalPeople }}</view>
@@ -23,7 +23,7 @@
 
       <view class="realtime-card card">
         <view class="card-top">
-          <text class="card-icon">✅</text>
+          <text class="card-icon"><text class="fa fa-check"></text></text>
           <text class="card-label">已签到</text>
         </view>
         <view class="card-value">{{ stats.checkedIn }}</view>
@@ -35,7 +35,7 @@
 
       <view class="realtime-card card">
         <view class="card-top">
-          <text class="card-icon">⏰</text>
+          <text class="card-icon"><text class="fa fa-clock"></text></text>
           <text class="card-label">进行中</text>
         </view>
         <view class="card-value">{{ stats.ongoing }}</view>
@@ -44,7 +44,7 @@
 
       <view class="realtime-card card">
         <view class="card-top">
-          <text class="card-icon">📊</text>
+          <text class="card-icon"><text class="fa fa-chart-bar"></text></text>
           <text class="card-label">完成率</text>
         </view>
         <view class="card-value">{{ stats.completionRate }}%</view>
@@ -70,7 +70,7 @@
           <view class="schedule-info">
             <view class="schedule-title">{{ item.title }}</view>
             <view class="schedule-location">
-              <text>📍</text> {{ item.location }}
+              <text><text class="fa fa-map-marker-alt"></text></text> {{ item.location }}
             </view>
           </view>
           <view class="schedule-status" :class="item.statusClass">
@@ -84,7 +84,7 @@
     <view class="chart-section card">
       <view class="section-title">签到统计</view>
       <view class="chart-placeholder">
-        <text class="chart-icon">📈</text>
+        <text class="chart-icon"><text class="fa fa-chart-line"></text></text>
         <text class="chart-text">签到趋势图</text>
         <text class="chart-hint">（图表功能开发中）</text>
       </view>
@@ -94,29 +94,29 @@
     <view class="quick-actions card">
       <view class="section-title">快捷操作</view>
       <view class="action-grid grid-3">
-        <view class="action-tile" @click="goToManage('registration')">
-          <view class="action-icon">👥</view>
-          <view class="action-title">报名管理</view>
+        <view class="action-tile feature-tile" @click="goToManage('registration')">
+          <view class="action-icon"><text class="fa fa-users"></text></view>
+          <view class="action-title feature-title">报名管理</view>
         </view>
-        <view class="action-tile" @click="goToManage('grouping')">
-          <view class="action-icon">🔖</view>
-          <view class="action-title">分组管理</view>
+        <view class="action-tile feature-tile" @click="goToManage('grouping')">
+          <view class="action-icon"><text class="fa fa-bookmark"></text></view>
+          <view class="action-title feature-title">分组管理</view>
         </view>
-        <view class="action-tile" @click="goToManage('seat')">
-          <view class="action-icon">🪑</view>
-          <view class="action-title">座位管理</view>
+        <view class="action-tile feature-tile" @click="goToManage('seat')">
+          <view class="action-icon"><text class="fa fa-th-large"></text></view>
+          <view class="action-title feature-title">座位管理</view>
         </view>
-        <view class="action-tile" @click="goToManage('notice')">
-          <view class="action-icon">📢</view>
-          <view class="action-title">通知管理</view>
+        <view class="action-tile feature-tile" @click="goToManage('notice')">
+          <view class="action-icon"><text class="fa fa-bullhorn"></text></view>
+          <view class="action-title feature-title">通知管理</view>
         </view>
-        <view class="action-tile" @click="goToManage('task')">
-          <view class="action-icon">✅</view>
-          <view class="action-title">任务管理</view>
+        <view class="action-tile feature-tile" @click="goToManage('task')">
+          <view class="action-icon"><text class="fa fa-check"></text></view>
+          <view class="action-title feature-title">任务管理</view>
         </view>
-        <view class="action-tile" @click="goToManage('data')">
-          <view class="action-icon">📊</view>
-          <view class="action-title">数据分析</view>
+        <view class="action-tile feature-tile" @click="goToManage('data')">
+          <view class="action-icon"><text class="fa fa-chart-bar"></text></view>
+          <view class="action-title feature-title">数据分析</view>
         </view>
       </view>
     </view>
@@ -132,7 +132,7 @@
           @click="handlePending(item)"
         >
           <view class="pending-icon" :style="{ background: item.color }">
-            <text>{{ item.icon }}</text>
+            <text :class="item.icon"></text>
           </view>
           <view class="pending-info">
             <view class="pending-title">{{ item.title }}</view>
@@ -191,7 +191,7 @@ export default {
           title: '待审核报名',
           meta: '5人申请',
           count: 5,
-          icon: '👤',
+          icon: 'fa-user',
           color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           action: 'registration'
         },
@@ -199,7 +199,7 @@ export default {
           title: '待发布通知',
           meta: '2条草稿',
           count: 2,
-          icon: '📢',
+          icon: 'fa-bullhorn',
           color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
           action: 'notice'
         },
@@ -207,7 +207,7 @@ export default {
           title: '待处理预警',
           meta: '3条提醒',
           count: 3,
-          icon: '⚠️',
+          icon: 'fa-exclamation-triangle',
           color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
           action: 'alert'
         }
@@ -265,6 +265,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .dashboard-container {
   min-height: 100vh;

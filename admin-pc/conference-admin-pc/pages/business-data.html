@@ -1,0 +1,684 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>业务数据监控 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <style>
+        /* 业务数据模块 */
+        .data-modules {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .data-module {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .module-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .module-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .module-icon.report {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+        }
+
+        .module-icon.checkin {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .module-icon.dormitory {
+            background: rgba(139, 92, 246, 0.2);
+            color: #8b5cf6;
+        }
+
+        /* 核心统计卡片 */
+        .rate-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .rate-stat-card {
+            padding: 1.25rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value.rate {
+            color: var(--primary-color);
+        }
+
+        .stat-value.warning {
+            color: var(--warning-color);
+        }
+
+        .stat-value.success {
+            color: var(--success-color);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        /* 日程/日期数据表格 */
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .schedule-table thead {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .schedule-table th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-700);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .schedule-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--gray-600);
+        }
+
+        .schedule-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* 进度条 */
+        .rate-progress {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 0.5rem;
+            transition: width 0.3s;
+        }
+
+        .progress-fill.good {
+            background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        }
+
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .progress-fill.low {
+            background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .progress-text {
+            min-width: 50px;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* 催促按钮 */
+        .btn-urge {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .btn-urge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-urge.small {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* 操作区域 */
+        .module-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* 标签样式 */
+        .rate-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .rate-badge.high {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success-color);
+        }
+
+        .rate-badge.medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .rate-badge.low {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+        }
+
+        .export-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">业务数据监控</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <div class="page-with-nav" style="padding-top: 90px !important;">
+        <div class="page-header glass-card">
+            <div>
+                <h2>📊 业务数据监控</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="exportAllData">
+                    <i class="fas fa-download"></i>
+                    导出全部数据
+                </button>
+            </div>
+        </div>
+
+        <!-- 业务数据模块 -->
+        <div class="data-modules">
+            <!-- 报到率模块 -->
+            <div class="data-module glass-card">
+                <div class="module-header">
+                    <div class="module-title">
+                        <div class="module-icon report">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <span>📋 报到率监控</span>
+                    </div>
+                    <button class="btn-urge" @click="goToUrge('report')">
+                        <i class="fas fa-bell"></i>
+                        催报到
+                    </button>
+                </div>
+                <div class="rate-stats">
+                    <div class="rate-stat-card">
+                        <div class="stat-value">{{ reportData.expected }}</div>
+                        <div class="stat-label">应报到</div>
+                    </div>
+                    <div class="rate-stat-card">
+                        <div class="stat-value success">{{ reportData.actual }}</div>
+                        <div class="stat-label">已报到</div>
+                    </div>
+                    <div class="rate-stat-card">
+                        <div class="stat-value rate">{{ reportData.rate }}%</div>
+                        <div class="stat-label">报到率</div>
+                    </div>
+                </div>
+                <div class="rate-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" :class="getRateClass(reportData.rate)" :style="{ width: reportData.rate + '%' }"></div>
+                    </div>
+                    <span class="progress-text" :class="'rate-badge ' + getRateClass(reportData.rate)">{{ reportData.rate }}%</span>
+                </div>
+            </div>
+
+            <!-- 签到率模块 -->
+            <div class="data-module glass-card">
+                <div class="module-header">
+                    <div class="module-title">
+                        <div class="module-icon checkin">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <span>✅ 签到率监控</span>
+                    </div>
+                    <button class="btn-urge" @click="goToUrge('checkin')">
+                        <i class="fas fa-bell"></i>
+                        催签到
+                    </button>
+                </div>
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>日程名称</th>
+                            <th>时间</th>
+                            <th>应签到</th>
+                            <th>已签到</th>
+                            <th>签到率</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in checkinData" :key="item.id">
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.time }}</td>
+                            <td>{{ item.expected }}</td>
+                            <td>{{ item.actual }}</td>
+                            <td>
+                                <div class="rate-progress" style="max-width: 150px;">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" :class="getRateClass(item.rate)" :style="{ width: item.rate + '%' }"></div>
+                                    </div>
+                                    <span class="progress-text">{{ item.rate }}%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn-urge small" @click="goToUrge('checkin', item.id)">
+                                    <i class="fas fa-bell"></i>
+                                    催签
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 查寝率模块 -->
+            <div class="data-module glass-card">
+                <div class="module-header">
+                    <div class="module-title">
+                        <div class="module-icon dormitory">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                        <span>🛏️ 查寝率监控</span>
+                    </div>
+                    <button class="btn-urge" @click="goToUrge('dormitory')">
+                        <i class="fas fa-bell"></i>
+                        催就寝
+                    </button>
+                </div>
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>应就寝</th>
+                            <th>已就寝</th>
+                            <th>就寝率</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in dormitoryData" :key="item.date">
+                            <td>{{ item.date }}</td>
+                            <td>{{ item.expected }}</td>
+                            <td>{{ item.actual }}</td>
+                            <td>
+                                <div class="rate-progress" style="max-width: 150px;">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" :class="getRateClass(item.rate)" :style="{ width: item.rate + '%' }"></div>
+                                    </div>
+                                    <span class="progress-text">{{ item.rate }}%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn-urge small" @click="goToUrge('dormitory', item.date)">
+                                    <i class="fas fa-bell"></i>
+                                    催寝
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 数据导出 -->
+        <div class="glass-card" style="margin-top: 1.5rem;">
+            <h4>📥 数据导出</h4>
+            <div class="export-actions" style="margin-top: 1rem;">
+                <button class="btn-outline" @click="exportData('report')">
+                    <i class="fas fa-file-excel"></i>
+                    导出报到数据
+                </button>
+                <button class="btn-outline" @click="exportData('checkin')">
+                    <i class="fas fa-file-excel"></i>
+                    导出签到数据
+                </button>
+                <button class="btn-outline" @click="exportData('dormitory')">
+                    <i class="fas fa-file-excel"></i>
+                    导出查寝数据
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+        const DATA_API = '/api/data';
+
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    conferenceId: null,
+                    loading: false,
+                    // 报到率数据
+                    reportData: {
+                        expected: 0,
+                        actual: 0,
+                        rate: 0
+                    },
+                    // 签到率数据 - 按日程
+                    checkinData: [],
+                    // 查寝率数据 - 按日期
+                    dormitoryData: []
+                }
+            },
+            async mounted() {
+                await this.initialize();
+                await this.loadAllBusinessData();
+            },
+            methods: {
+                async initialize() {
+                    const urlConferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (urlConferenceId) {
+                        this.conferenceId = urlConferenceId;
+                        try {
+                            this.conference = await window.conferenceContext.loadConference(urlConferenceId);
+                        } catch (e) {
+                            this.conference = { id: urlConferenceId, name: '会议 ' + urlConferenceId };
+                        }
+                    } else {
+                        // 尝试从API获取第一个会议
+                        try {
+                            const meetings = await this.apiGet('/business/meetings');
+                            if (meetings && meetings.length > 0) {
+                                this.conferenceId = meetings[0].id;
+                                this.conference = {
+                                    id: meetings[0].id,
+                                    name: meetings[0].meeting_name || '默认会议'
+                                };
+                            } else {
+                                this.conference = { id: '', name: '暂无会议' };
+                            }
+                        } catch (e) {
+                            this.conference = { id: '', name: '未连接服务' };
+                        }
+                    }
+                },
+
+                async apiGet(path) {
+                    try {
+                        const resp = await fetch(DATA_API + path, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Tenant-Id': localStorage.getItem('tenantId') || '',
+                                'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
+                            }
+                        });
+                        const json = await resp.json();
+                        if (json.code === 200) return json.data;
+                        console.warn('API返回非200:', path, json);
+                        return null;
+                    } catch (e) {
+                        console.warn('API请求失败:', path, e.message);
+                        return null;
+                    }
+                },
+
+                async loadAllBusinessData() {
+                    this.loading = true;
+                    try {
+                        await Promise.all([
+                            this.loadReportData(),
+                            this.loadCheckinData(),
+                            this.loadDormitoryData()
+                        ]);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async loadReportData() {
+                    const param = this.conferenceId ? '?conferenceId=' + this.conferenceId : '';
+                    const data = await this.apiGet('/business/report-rate' + param);
+                    if (data) {
+                        this.reportData.expected = data.expected || 0;
+                        this.reportData.actual = data.actual || 0;
+                        this.reportData.rate = data.rate || 0;
+                    }
+                },
+
+                async loadCheckinData() {
+                    const param = this.conferenceId ? '?conferenceId=' + this.conferenceId : '';
+                    const data = await this.apiGet('/business/checkin-rate' + param);
+                    if (data && data.length > 0) {
+                        this.checkinData = data.map(item => ({
+                            id: item.id,
+                            name: item.name || '未命名日程',
+                            time: item.time || '',
+                            expected: item.expected || 0,
+                            actual: item.actual || 0,
+                            rate: item.rate || 0
+                        }));
+                    } else {
+                        this.checkinData = [{
+                            id: 0,
+                            name: '暂无日程数据',
+                            time: '-',
+                            expected: 0,
+                            actual: 0,
+                            rate: 0
+                        }];
+                    }
+                },
+
+                async loadDormitoryData() {
+                    const param = this.conferenceId ? '?conferenceId=' + this.conferenceId : '';
+                    const data = await this.apiGet('/business/dormitory-rate' + param);
+                    if (data && data.length > 0) {
+                        this.dormitoryData = data.map(item => ({
+                            date: item.date || '',
+                            expected: item.expected || 0,
+                            actual: item.actual || 0,
+                            rate: item.rate || 0
+                        }));
+                    } else {
+                        this.dormitoryData = [{
+                            date: '暂无数据',
+                            expected: 0,
+                            actual: 0,
+                            rate: 0
+                        }];
+                    }
+                },
+
+                getRateClass(rate) {
+                    if (rate >= 80) return 'good';
+                    if (rate >= 60) return 'warning';
+                    return 'low';
+                },
+
+                goToUrge(type, id = null) {
+                    let url = 'reminder-urge.html?type=' + type;
+                    if (id) {
+                        url += '&id=' + id;
+                    }
+                    if (this.conferenceId) {
+                        url += '&conferenceId=' + this.conferenceId;
+                    }
+                    window.location.href = url;
+                },
+
+                async exportData(type) {
+                    try {
+                        const typeMap = {
+                            report: '报到数据',
+                            checkin: '签到数据',
+                            dormitory: '查寝数据'
+                        };
+                        this.$showLoading(`正在导出${typeMap[type]}...`);
+
+                        // 准备导出数据
+                        let exportContent = '';
+                        if (type === 'report') {
+                            exportContent = JSON.stringify({
+                                type: '报到率数据',
+                                conference: this.conference.name,
+                                data: this.reportData,
+                                exportTime: new Date().toISOString()
+                            }, null, 2);
+                        } else if (type === 'checkin') {
+                            exportContent = JSON.stringify({
+                                type: '签到率数据',
+                                conference: this.conference.name,
+                                data: this.checkinData,
+                                exportTime: new Date().toISOString()
+                            }, null, 2);
+                        } else {
+                            exportContent = JSON.stringify({
+                                type: '查寝率数据',
+                                conference: this.conference.name,
+                                data: this.dormitoryData,
+                                exportTime: new Date().toISOString()
+                            }, null, 2);
+                        }
+
+                        const blob = new Blob([exportContent], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${typeMap[type]}_${this.conference.name}_${new Date().toISOString().slice(0, 10)}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+
+                        this.$hideLoading();
+                        this.$showToast(`${typeMap[type]}导出成功`, 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导出失败: ' + error.message, 'error');
+                    }
+                },
+
+                async exportAllData() {
+                    try {
+                        this.$showLoading('正在导出全部业务数据...');
+                        const allData = {
+                            conference: this.conference.name,
+                            conferenceId: this.conferenceId,
+                            exportTime: new Date().toISOString(),
+                            reportData: this.reportData,
+                            checkinData: this.checkinData,
+                            dormitoryData: this.dormitoryData
+                        };
+                        const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `全部业务数据_${this.conference.name}_${new Date().toISOString().slice(0, 10)}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        this.$hideLoading();
+                        this.$showToast('全部业务数据导出成功', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导出失败: ' + error.message, 'error');
+                    }
+                },
+
+                goBack() {
+                    window.history.back();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1413 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会议归档管理 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <style>
+        .archive-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .archive-tab-btn {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            background: transparent;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .archive-tab-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--primary-color);
+        }
+
+        .archive-tab-btn.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary-color);
+        }
+
+        .archive-tab-btn .badge {
+            padding: 0.125rem 0.5rem;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 1rem;
+            font-size: 0.75rem;
+        }
+
+        .archive-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .archive-stat-card {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+            text-align: center;
+        }
+
+        .archive-stat-card.primary {
+            border-color: rgba(102, 126, 234, 0.3);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .archive-stat-card.success {
+            border-color: rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.05);
+        }
+
+        .archive-stat-card.warning {
+            border-color: rgba(245, 158, 11, 0.3);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .archive-stat-card.info {
+            border-color: rgba(59, 130, 246, 0.3);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .archive-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+
+        .archive-stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        /* 资料列表 */
+        .material-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .material-card {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .material-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary-color);
+        }
+
+        .material-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .material-card.ppt .material-icon {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .material-card.pdf .material-icon {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .material-card.word .material-icon {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .material-card.video .material-icon {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+
+        .material-card.image .material-icon {
+            background: rgba(168, 85, 247, 0.1);
+            color: #a855f7;
+        }
+
+        .material-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+
+        .material-meta {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-bottom: 0.5rem;
+        }
+
+        .material-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* 学员互动内容 */
+        .interaction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .interaction-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .interaction-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .interaction-media {
+            width: 100%;
+            height: 140px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-500);
+            font-size: 2rem;
+        }
+
+        .interaction-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .interaction-content {
+            padding: 1rem;
+        }
+
+        .interaction-type {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary-color);
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .interaction-type.photo { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+        .interaction-type.video { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+        .interaction-type.experience { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .interaction-type.exchange { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
+        .interaction-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+
+        .interaction-text {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .interaction-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        /* 业务数据表格 */
+        .data-excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .data-excel-table thead {
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .data-excel-table th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-700);
+            border-bottom: 2px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .data-excel-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--gray-600);
+        }
+
+        .data-excel-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .data-excel-table .rate-cell {
+            font-weight: 600;
+        }
+
+        .data-excel-table .rate-cell.high { color: var(--success-color); }
+        .data-excel-table .rate-cell.medium { color: var(--warning-color); }
+        .data-excel-table .rate-cell.low { color: var(--error-color); }
+
+        .excel-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .data-section {
+            margin-bottom: 2rem;
+        }
+
+        .data-section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 1rem;
+        }
+
+        /* 消息记录 */
+        .message-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .message-group {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+        }
+
+        .message-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .message-group-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .message-group-meta {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        .message-preview {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-preview:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-content {
+            font-size: 0.875rem;
+            color: var(--gray-700);
+            margin-bottom: 0.25rem;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        .batch-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* 设置开关 */
+        .settings-card {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .settings-info { flex: 1; min-width: 200px; }
+
+        .settings-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+
+        .settings-desc {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .3s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* 危险操作区域 */
+        .danger-zone {
+            padding: 1.5rem;
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 0.75rem;
+            margin-top: 2rem;
+        }
+
+        .danger-zone h4 {
+            color: var(--error-color);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .danger-zone p {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 1rem;
+        }
+
+        .btn-danger {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-danger:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">会议归档管理</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav" style="padding-top: 90px !important;">
+            <!-- 页面头部 -->
+            <div class="page-header glass-card">
+                <div>
+                    <h2>📦 会议归档管理</h2>
+                    <div class="conference-context">
+                        <span class="context-label">当前会议:</span>
+                        <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    </div>
+                </div>
+                <div class="page-actions">
+                    <button class="btn-outline" @click="goBack">
+                        <i class="fas fa-arrow-left"></i>
+                        返回
+                    </button>
+                    <button class="btn-primary" @click="packAndDownload">
+                        <i class="fas fa-file-archive"></i>
+                        一键打包下载
+                    </button>
+                </div>
+            </div>
+
+            <!-- 归档概览统计 -->
+            <div class="archive-stats">
+                <div class="archive-stat-card primary">
+                    <div class="archive-stat-value">{{ archiveStats.courseware }}</div>
+                    <div class="archive-stat-label">📚 课件资料</div>
+                </div>
+                <div class="archive-stat-card success">
+                    <div class="archive-stat-value">{{ archiveStats.interaction }}</div>
+                    <div class="archive-stat-label">👥 学员互动</div>
+                </div>
+                <div class="archive-stat-card warning">
+                    <div class="archive-stat-value">{{ archiveStats.businessData }}</div>
+                    <div class="archive-stat-label">📊 业务数据</div>
+                </div>
+                <div class="archive-stat-card info">
+                    <div class="archive-stat-value">{{ archiveStats.messages }}</div>
+                    <div class="archive-stat-label">💬 消息条数</div>
+                </div>
+            </div>
+
+            <!-- 归档标签页 -->
+            <div class="archive-tabs">
+                <button class="archive-tab-btn" :class="{ active: currentTab === 'courseware' }" @click="switchTab('courseware')">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    课件类
+                    <span class="badge">{{ archiveStats.courseware }}</span>
+                </button>
+                <button class="archive-tab-btn" :class="{ active: currentTab === 'interaction' }" @click="switchTab('interaction')">
+                    <i class="fas fa-users"></i>
+                    学员互动类
+                    <span class="badge">{{ archiveStats.interaction }}</span>
+                </button>
+                <button class="archive-tab-btn" :class="{ active: currentTab === 'business' }" @click="switchTab('business')">
+                    <i class="fas fa-table"></i>
+                    业务数据类
+                    <span class="badge">{{ archiveStats.businessData }}</span>
+                </button>
+                <button class="archive-tab-btn" :class="{ active: currentTab === 'messages' }" @click="switchTab('messages')">
+                    <i class="fas fa-comments"></i>
+                    群组消息记录
+                    <span class="badge">{{ messageGroups.length }}</span>
+                </button>
+            </div>
+
+            <!-- ==================== 课件类 ==================== -->
+            <div v-show="currentTab === 'courseware'" class="glass-card">
+                <h3>📚 课件类资料</h3>
+                <p style="color: var(--gray-500); margin-bottom: 1rem;">管理员上传的课件、PPT、会议手册等资料</p>
+
+                <!-- 操作按钮 -->
+                <div class="batch-actions">
+                    <button class="btn-primary" @click="uploadCourseware">
+                        <i class="fas fa-upload"></i>
+                        上传课件
+                    </button>
+                    <button class="btn-outline" @click="downloadCategory('courseware')">
+                        <i class="fas fa-download"></i>
+                        下载全部课件
+                    </button>
+                </div>
+
+                <!-- 课件列表 -->
+                <div class="material-grid">
+                    <div v-for="item in coursewareList" :key="item.id" class="material-card" :class="item.type">
+                        <div class="material-icon">
+                            <i :class="getMaterialIcon(item.type)"></i>
+                        </div>
+                        <div class="material-title">{{ item.title }}</div>
+                        <div class="material-meta">
+                            {{ item.size }} · {{ item.uploadTime }} · {{ item.uploader }}
+                        </div>
+                        <div class="material-actions">
+                            <button class="btn-sm btn-outline" @click="downloadItem(item)">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn-sm btn-outline" @click="previewItem(item)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-sm btn-outline" @click="deleteItem(item, 'courseware')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 学员互动类 ==================== -->
+            <div v-show="currentTab === 'interaction'" class="glass-card">
+                <h3>👥 学员互动类资料</h3>
+                <p style="color: var(--gray-500); margin-bottom: 1rem;">交流照片、视频、交流内容、学习心得等</p>
+
+                <!-- 学员上传权限设置 -->
+                <div class="settings-card">
+                    <div class="settings-info">
+                        <div class="settings-title">
+                            <i class="fas fa-user-edit"></i>
+                            允许学员上传
+                        </div>
+                        <div class="settings-desc">会议初期需由管理员确认是否允许学员上传照片、视频、心得等内容</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" v-model="allowStudentUpload" @change="toggleStudentUpload">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="batch-actions">
+                    <button class="btn-primary" @click="uploadInteraction">
+                        <i class="fas fa-upload"></i>
+                        上传互动内容
+                    </button>
+                    <button class="btn-outline" @click="downloadCategory('interaction')">
+                        <i class="fas fa-download"></i>
+                        下载全部互动内容
+                    </button>
+                </div>
+
+                <!-- 互动内容列表 -->
+                <div class="interaction-grid">
+                    <div v-for="item in interactionList" :key="item.id" class="interaction-card">
+                        <div class="interaction-media">
+                            <img v-if="item.thumbnail" :src="item.thumbnail" :alt="item.title">
+                            <i v-else :class="getInteractionIcon(item.category)"></i>
+                        </div>
+                        <div class="interaction-content">
+                            <span class="interaction-type" :class="item.category">{{ getInteractionTypeLabel(item.category) }}</span>
+                            <div class="interaction-title">{{ item.title }}</div>
+                            <div class="interaction-text" v-if="item.content">{{ item.content }}</div>
+                            <div class="interaction-meta">
+                                <span><i class="fas fa-user"></i> {{ item.author }}</span>
+                                <span><i class="fas fa-clock"></i> {{ item.time }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 业务数据类 ==================== -->
+            <div v-show="currentTab === 'business'" class="glass-card">
+                <h3>📊 业务数据类</h3>
+                <p style="color: var(--gray-500); margin-bottom: 1rem;">报到率、签到率等业务数据，以Excel表格方式展示</p>
+
+                <!-- 操作按钮 -->
+                <div class="batch-actions">
+                    <button class="btn-primary" @click="exportBusinessExcel">
+                        <i class="fas fa-file-excel"></i>
+                        导出Excel
+                    </button>
+                    <button class="btn-outline" @click="refreshBusinessData">
+                        <i class="fas fa-sync"></i>
+                        刷新数据
+                    </button>
+                </div>
+
+                <!-- 报到率数据 -->
+                <div class="data-section">
+                    <div class="data-section-title">
+                        <span class="excel-icon"><i class="fas fa-file-excel"></i> Excel</span>
+                        报到率统计
+                    </div>
+                    <table class="data-excel-table">
+                        <thead>
+                            <tr>
+                                <th>部门/单位</th>
+                                <th>应报到</th>
+                                <th>已报到</th>
+                                <th>未报到</th>
+                                <th>报到率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in reportRateData" :key="item.department">
+                                <td>{{ item.department }}</td>
+                                <td>{{ item.expected }}</td>
+                                <td>{{ item.actual }}</td>
+                                <td>{{ item.expected - item.actual }}</td>
+                                <td class="rate-cell" :class="getRateClass(item.rate)">{{ item.rate }}%</td>
+                            </tr>
+                            <tr style="font-weight: 600; background: rgba(255,255,255,0.05);">
+                                <td>合计</td>
+                                <td>{{ totalReportData.expected }}</td>
+                                <td>{{ totalReportData.actual }}</td>
+                                <td>{{ totalReportData.expected - totalReportData.actual }}</td>
+                                <td class="rate-cell" :class="getRateClass(totalReportData.rate)">{{ totalReportData.rate }}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 签到率数据 -->
+                <div class="data-section">
+                    <div class="data-section-title">
+                        <span class="excel-icon"><i class="fas fa-file-excel"></i> Excel</span>
+                        签到率统计
+                    </div>
+                    <table class="data-excel-table">
+                        <thead>
+                            <tr>
+                                <th>日程名称</th>
+                                <th>日期时间</th>
+                                <th>应签到</th>
+                                <th>已签到</th>
+                                <th>缺席</th>
+                                <th>签到率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in checkinRateData" :key="item.id">
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.datetime }}</td>
+                                <td>{{ item.expected }}</td>
+                                <td>{{ item.actual }}</td>
+                                <td>{{ item.expected - item.actual }}</td>
+                                <td class="rate-cell" :class="getRateClass(item.rate)">{{ item.rate }}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 就寝率数据 -->
+                <div class="data-section">
+                    <div class="data-section-title">
+                        <span class="excel-icon"><i class="fas fa-file-excel"></i> Excel</span>
+                        查寝率统计
+                    </div>
+                    <table class="data-excel-table">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>应就寝</th>
+                                <th>已就寝</th>
+                                <th>未就寝</th>
+                                <th>就寝率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in dormitoryRateData" :key="item.date">
+                                <td>{{ item.date }}</td>
+                                <td>{{ item.expected }}</td>
+                                <td>{{ item.actual }}</td>
+                                <td>{{ item.expected - item.actual }}</td>
+                                <td class="rate-cell" :class="getRateClass(item.rate)">{{ item.rate }}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ==================== 群组消息记录 ==================== -->
+            <div v-show="currentTab === 'messages'" class="glass-card">
+                <h3>💬 群组消息记录</h3>
+                <p style="color: var(--gray-500); margin-bottom: 1rem;">群组内所有聊天记录归档</p>
+
+                <!-- 操作按钮 -->
+                <div class="batch-actions" style="align-items: center;">
+                    <button class="btn-primary" @click="exportAllMessages">
+                        <i class="fas fa-file-export"></i>
+                        导出全部消息
+                    </button>
+                    <div style="flex: 1;"></div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input v-model="messageSearchKeyword" type="text" placeholder="搜索消息内容..."
+                            style="padding: 0.5rem 1rem; border: 1px solid rgba(255,255,255,0.15); border-radius: 0.5rem; background: rgba(255,255,255,0.05); color: var(--gray-700); font-size: 0.875rem; width: 200px;"
+                            @keyup.enter="searchMessages">
+                        <button class="btn-outline" @click="searchMessages">
+                            <i class="fas fa-search"></i>
+                            搜索
+                        </button>
+                        <button v-if="messageSearchKeyword" class="btn-outline" @click="messageSearchKeyword=''; loadMessageGroups()">
+                            <i class="fas fa-times"></i>
+                            清除
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 消息群组列表 -->
+                <div class="message-list">
+                    <div v-for="group in messageGroups" :key="group.id" class="message-group">
+                        <div class="message-group-header">
+                            <div class="message-group-title">
+                                <i class="fas fa-users"></i>
+                                {{ group.name }}
+                            </div>
+                            <div class="message-group-meta">
+                                {{ group.messageCount }}条消息 · 最后活跃: {{ group.lastActive }}
+                            </div>
+                            <button class="btn-sm btn-outline" @click="exportGroupMessages(group.id)">
+                                <i class="fas fa-download"></i>
+                                导出
+                            </button>
+                        </div>
+                        <div class="message-preview" v-for="msg in group.previewMessages" :key="msg.id">
+                            <div class="message-content">{{ msg.content }}</div>
+                            <div class="message-time">{{ msg.sender }} · {{ msg.time }}</div>
+                        </div>
+                        <div style="text-align: center; margin-top: 0.5rem;">
+                            <button class="btn-sm btn-outline" @click="viewAllMessages(group.id)">
+                                {{ expandedGroupId === group.id ? '收起消息' : '查看全部 ' + group.messageCount + ' 条消息' }}
+                            </button>
+                        </div>
+                        <!-- 展开的完整消息列表 -->
+                        <div v-if="expandedGroupId === group.id" style="margin-top: 0.75rem; max-height: 400px; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.75rem;">
+                            <div v-for="msg in expandedMessages" :key="msg.id" class="message-preview">
+                                <div class="message-content">{{ msg.content }}</div>
+                                <div class="message-time">{{ msg.sender }} · {{ msg.sendTime || '' }}</div>
+                            </div>
+                            <div v-if="expandedMessages.length === 0" style="text-align: center; color: var(--gray-500); padding: 1rem;">暂无消息记录</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== 危险操作区域 ==================== -->
+            <div class="danger-zone">
+                <h4><i class="fas fa-exclamation-triangle"></i> 危险操作区域</h4>
+                <p>下载完成后，您可以清空所有归档资料以保护数据安全。此操作不可恢复，请谨慎操作。</p>
+                <button class="btn-danger" :disabled="!hasDownloaded" @click="clearAllArchive">
+                    <i class="fas fa-trash-alt"></i>
+                    一键清空所有资料
+                </button>
+                <span v-if="!hasDownloaded" style="margin-left: 1rem; font-size: 0.875rem; color: var(--gray-500);">
+                    请先完成打包下载后再进行清空操作
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+        const API_BASE = '';
+
+        createApp({
+            data() {
+                return {
+                    conference: { id: '', name: '加载中...' },
+                    conferenceId: null,
+                    currentTab: 'courseware',
+                    hasDownloaded: false,
+                    allowStudentUpload: true,
+                    archiveStats: { courseware: 0, interaction: 0, businessData: 0, messages: 0 },
+                    coursewareList: [],
+                    interactionList: [],
+                    reportRateData: [],
+                    checkinRateData: [],
+                    dormitoryRateData: [],
+                    messageGroups: [],
+                    messageSearchKeyword: '',
+                    expandedGroupId: null,
+                    expandedMessages: [],
+                    coursewareLoaded: false,
+                    interactionLoaded: false,
+                    businessLoaded: false,
+                    messagesLoaded: false,
+                }
+            },
+            computed: {
+                totalReportData() {
+                    if (this.reportRateData.length === 0) return { expected: 0, actual: 0, rate: 0 };
+                    const expected = this.reportRateData.reduce((sum, item) => sum + item.expected, 0);
+                    const actual = this.reportRateData.reduce((sum, item) => sum + item.actual, 0);
+                    return { expected, actual, rate: expected > 0 ? Math.round(actual / expected * 100) : 0 };
+                }
+            },
+            async mounted() {
+                await this.initialize();
+            },
+            methods: {
+                // ===== API 通用方法 =====
+                getAuthHeaders() {
+                    const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('auth_token');
+                    const headers = { 'Content-Type': 'application/json', 'X-Tenant-Id': localStorage.getItem('tenantId') || '' };
+                    if (token) headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+                    return headers;
+                },
+                async apiGet(path) {
+                    const resp = await fetch(`${API_BASE}${path}`, { method: 'GET', headers: this.getAuthHeaders() });
+                    if (!resp.ok) throw new Error(`请求失败 ${resp.status}`);
+                    return await resp.json();
+                },
+                async apiPost(path, body) {
+                    const resp = await fetch(`${API_BASE}${path}`, { method: 'POST', headers: this.getAuthHeaders(), body: JSON.stringify(body) });
+                    if (!resp.ok) throw new Error(`请求失败 ${resp.status}`);
+                    return await resp.json();
+                },
+                async apiPut(path, body) {
+                    const resp = await fetch(`${API_BASE}${path}`, { method: 'PUT', headers: this.getAuthHeaders(), body: JSON.stringify(body) });
+                    if (!resp.ok) throw new Error(`请求失败 ${resp.status}`);
+                    return await resp.json();
+                },
+                async apiDelete(path) {
+                    const resp = await fetch(`${API_BASE}${path}`, { method: 'DELETE', headers: this.getAuthHeaders() });
+                    if (!resp.ok) throw new Error(`请求失败 ${resp.status}`);
+                    return await resp.json();
+                },
+                archiveApi(sub) { return `/api/meeting/${this.conferenceId}/archive${sub}`; },
+
+                // ===== 初始化 =====
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        this.conferenceId = conferenceId;
+                        try {
+                            this.conference = await window.conferenceContext.loadConference(conferenceId);
+                        } catch (e) {
+                            console.warn('通过conferenceContext加载失败, 直接请求API:', e);
+                            try {
+                                const result = await this.apiGet(`/api/meeting/${conferenceId}`);
+                                if (result.code === 200 && result.data) {
+                                    this.conference = { id: String(result.data.id), name: result.data.meetingName || '会议' };
+                                }
+                            } catch (e2) {
+                                this.conference = { id: conferenceId, name: '会议信息加载失败' };
+                            }
+                        }
+                        await this.syncFromSource();
+                        await this.loadArchiveStats();
+                        await this.loadCourseware();
+                    } else {
+                        this.conference = { id: '', name: '未指定会议' };
+                        this.$showToast('缺少会议ID参数', 'warning');
+                    }
+                },
+
+                // ===== 统计加载 =====
+                async loadArchiveStats() {
+                    try {
+                        const result = await this.apiGet(this.archiveApi('/stats'));
+                        if (result.code === 200 && result.data) {
+                            this.archiveStats = {
+                                courseware: result.data.courseware || 0,
+                                interaction: result.data.interaction || 0,
+                                businessData: result.data.businessData || 0,
+                                messages: result.data.messages || 0
+                            };
+                            this.allowStudentUpload = result.data.allowStudentUpload !== false;
+                            this.hasDownloaded = result.data.isPacked === true;
+                        }
+                    } catch (e) { console.error('加载归档统计失败:', e); }
+                },
+
+                // ===== 从源数据同步 =====
+                async syncFromSource() {
+                    try {
+                        const result = await this.apiPost(this.archiveApi('/sync'), {});
+                        if (result.code === 200 && result.data) {
+                            const d = result.data;
+                            const total = (d.materialsSynced || 0) + (d.messageGroupsSynced || 0) + (d.messagesSynced || 0) + (d.checkinDataSynced || 0);
+                            if (total > 0) {
+                                console.log(`归档数据同步完成: 资料${d.materialsSynced}条, 群组${d.messageGroupsSynced}个, 消息${d.messagesSynced}条, 签到${d.checkinDataSynced}条`);
+                            }
+                        }
+                    } catch (e) { console.warn('归档数据同步(非阻塞):', e.message); }
+                },
+
+                // ===== Tab 切换(懒加载) =====
+                async switchTab(tab) {
+                    this.currentTab = tab;
+                    if (tab === 'courseware' && !this.coursewareLoaded) await this.loadCourseware();
+                    if (tab === 'interaction' && !this.interactionLoaded) await this.loadInteraction();
+                    if (tab === 'business' && !this.businessLoaded) await this.loadBusinessData();
+                    if (tab === 'messages' && !this.messagesLoaded) await this.loadMessageGroups();
+                },
+
+                // ===== 课件加载 =====
+                async loadCourseware() {
+                    try {
+                        const result = await this.apiGet(this.archiveApi('/materials?category=courseware'));
+                        if (result.code === 200) {
+                            this.coursewareList = (result.data || []).map(m => ({
+                                id: m.id, title: m.title, type: m.subCategory || 'file',
+                                size: m.fileSize || '', uploadTime: m.uploadTime ? m.uploadTime.split(' ')[0] : '',
+                                uploader: m.author || '管理员', fileUrl: m.fileUrl
+                            }));
+                            this.coursewareLoaded = true;
+                        }
+                    } catch (e) { console.error('加载课件失败:', e); }
+                },
+
+                // ===== 互动内容加载 =====
+                async loadInteraction() {
+                    try {
+                        const result = await this.apiGet(this.archiveApi('/materials?category=interaction'));
+                        if (result.code === 200) {
+                            this.interactionList = (result.data || []).map(m => ({
+                                id: m.id, title: m.title, category: m.subCategory || 'photo',
+                                thumbnail: m.thumbnailUrl || '', author: m.author || '',
+                                time: m.uploadTime || '', content: m.content || '', fileUrl: m.fileUrl
+                            }));
+                            this.interactionLoaded = true;
+                        }
+                    } catch (e) { console.error('加载互动内容失败:', e); }
+                },
+
+                // ===== 业务数据加载 =====
+                async loadBusinessData() {
+                    try {
+                        const result = await this.apiGet(this.archiveApi('/business-data'));
+                        if (result.code === 200 && result.data) {
+                            const allData = result.data;
+                            this.reportRateData = allData.filter(d => d.dataType === 'report_rate').map(d => ({
+                                department: d.dataLabel, expected: d.expectedCount || 0, actual: d.actualCount || 0, rate: Number(d.rate) || 0
+                            }));
+                            this.checkinRateData = allData.filter(d => d.dataType === 'checkin_rate').map(d => ({
+                                id: d.id, name: d.dataLabel, datetime: d.dataDatetime || '',
+                                expected: d.expectedCount || 0, actual: d.actualCount || 0, rate: Number(d.rate) || 0
+                            }));
+                            this.dormitoryRateData = allData.filter(d => d.dataType === 'dormitory_rate').map(d => ({
+                                date: d.dataLabel, expected: d.expectedCount || 0, actual: d.actualCount || 0, rate: Number(d.rate) || 0
+                            }));
+                            this.businessLoaded = true;
+                        }
+                    } catch (e) { console.error('加载业务数据失败:', e); }
+                },
+
+                // ===== 消息群组加载 =====
+                async loadMessageGroups() {
+                    try {
+                        const result = await this.apiGet(this.archiveApi('/message-groups'));
+                        if (result.code === 200) {
+                            this.messageGroups = (result.data || []).map(g => ({
+                                id: g.id, name: g.groupName, messageCount: g.messageCount || 0,
+                                lastActive: g.lastActive || '未知',
+                                previewMessages: (g.previewMessages || []).map(m => ({
+                                    id: m.id, content: m.content, sender: m.sender,
+                                    time: m.sendTime ? m.sendTime.substring(11, 16) : ''
+                                }))
+                            }));
+                            this.messagesLoaded = true;
+                        }
+                    } catch (e) { console.error('加载消息群组失败:', e); }
+                },
+
+                // ===== UI 辅助 =====
+                getMaterialIcon(type) {
+                    const icons = { ppt: 'fas fa-file-powerpoint', pdf: 'fas fa-file-pdf', word: 'fas fa-file-word',
+                        video: 'fas fa-file-video', image: 'fas fa-file-image', excel: 'fas fa-file-excel' };
+                    return icons[type] || 'fas fa-file';
+                },
+                getInteractionIcon(category) {
+                    const icons = { photo: 'fas fa-camera', video: 'fas fa-video', experience: 'fas fa-lightbulb', exchange: 'fas fa-comments' };
+                    return icons[category] || 'fas fa-file';
+                },
+                getInteractionTypeLabel(category) {
+                    const labels = { photo: '交流照片', video: '交流视频', experience: '学习心得', exchange: '交流内容' };
+                    return labels[category] || '其他';
+                },
+                getRateClass(rate) {
+                    if (rate >= 90) return 'high';
+                    if (rate >= 70) return 'medium';
+                    return 'low';
+                },
+
+                // ===== 课件操作 =====
+                uploadCourseware() {
+                    const input = document.createElement('input');
+                    input.type = 'file'; input.multiple = true;
+                    input.accept = '.ppt,.pptx,.pdf,.doc,.docx,.xls,.xlsx';
+                    input.onchange = async (e) => {
+                        const files = e.target.files;
+                        if (!files || files.length === 0) return;
+                        this.$showLoading('正在上传课件...');
+                        try {
+                            for (const file of files) {
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                const headers = this.getAuthHeaders();
+                                delete headers['Content-Type'];
+                                const uploadResp = await fetch(`${API_BASE}${this.archiveApi('/materials/upload')}`, {
+                                    method: 'POST', headers, body: formData
+                                });
+                                const uploadResult = await uploadResp.json();
+                                if (uploadResult.code !== 200) throw new Error(uploadResult.message);
+                                await this.apiPost(this.archiveApi('/materials'), {
+                                    meetingId: this.conferenceId, category: 'courseware',
+                                    subCategory: uploadResult.data.fileType || 'file',
+                                    title: file.name.replace(/\.[^.]+$/, ''),
+                                    fileUrl: uploadResult.data.url, fileSize: uploadResult.data.fileSize,
+                                    fileType: uploadResult.data.fileType, author: '管理员'
+                                });
+                            }
+                            this.$hideLoading();
+                            this.$showToast(`${files.length}个课件上传成功`, 'success');
+                            this.coursewareLoaded = false; await this.loadCourseware(); await this.loadArchiveStats();
+                        } catch (err) { this.$hideLoading(); this.$showToast('上传失败: ' + err.message, 'error'); }
+                    };
+                    input.click();
+                },
+
+                async downloadCategory(category) {
+                    this.$showLoading(`正在下载${category === 'courseware' ? '课件' : '互动内容'}...`);
+                    try {
+                        const list = category === 'courseware' ? this.coursewareList : this.interactionList;
+                        for (const item of list) {
+                            if (item.fileUrl) {
+                                const a = document.createElement('a'); a.href = item.fileUrl; a.download = item.title; a.target = '_blank'; a.click();
+                                try { await this.apiPost(this.archiveApi(`/materials/${item.id}/download-count`), {}); } catch(e) {}
+                                await new Promise(r => setTimeout(r, 500));
+                            }
+                        }
+                        this.$hideLoading(); this.$showToast('下载完成', 'success');
+                    } catch (e) { this.$hideLoading(); this.$showToast('下载失败: ' + e.message, 'error'); }
+                },
+
+                downloadItem(item) {
+                    if (item.fileUrl) {
+                        const a = document.createElement('a'); a.href = item.fileUrl; a.download = item.title; a.target = '_blank'; a.click();
+                        try { this.apiPost(this.archiveApi(`/materials/${item.id}/download-count`), {}); } catch(e) {}
+                        this.$showToast(`正在下载: ${item.title}`, 'success');
+                    } else { this.$showToast('该资料没有可下载的文件', 'warning'); }
+                },
+
+                previewItem(item) {
+                    if (item.fileUrl) { window.open(item.fileUrl, '_blank'); }
+                    else { this.$showToast('该资料没有可预览的文件', 'warning'); }
+                },
+
+                async deleteItem(item, category) {
+                    const confirmed = await this.$showConfirm(`确定要删除 "${item.title}" 吗？`, '删除确认', 'warning');
+                    if (!confirmed) return;
+                    try {
+                        const result = await this.apiDelete(this.archiveApi(`/materials/${item.id}`));
+                        if (result.code === 200) {
+                            this.$showToast(`已删除: ${item.title}`, 'success');
+                            if (category === 'courseware') { this.coursewareLoaded = false; await this.loadCourseware(); }
+                            else { this.interactionLoaded = false; await this.loadInteraction(); }
+                            await this.loadArchiveStats();
+                        } else { this.$showToast(result.message || '删除失败', 'error'); }
+                    } catch (e) { this.$showToast('删除失败: ' + e.message, 'error'); }
+                },
+
+                // ===== 互动操作 =====
+                uploadInteraction() {
+                    const input = document.createElement('input');
+                    input.type = 'file'; input.multiple = true;
+                    input.accept = 'image/*,video/*,.pdf,.doc,.docx';
+                    input.onchange = async (e) => {
+                        const files = e.target.files;
+                        if (!files || files.length === 0) return;
+                        this.$showLoading('正在上传互动内容...');
+                        try {
+                            for (const file of files) {
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                const headers = this.getAuthHeaders();
+                                delete headers['Content-Type'];
+                                const uploadResp = await fetch(`${API_BASE}${this.archiveApi('/materials/upload')}`, {
+                                    method: 'POST', headers, body: formData
+                                });
+                                const uploadResult = await uploadResp.json();
+                                if (uploadResult.code !== 200) throw new Error(uploadResult.message);
+                                let subCategory = 'photo';
+                                const ft = (uploadResult.data.fileType || '').toLowerCase();
+                                if (['video', 'mp4', 'avi', 'mov'].includes(ft)) subCategory = 'video';
+                                else if (['pdf', 'word', 'doc', 'docx'].includes(ft)) subCategory = 'exchange';
+                                await this.apiPost(this.archiveApi('/materials'), {
+                                    meetingId: this.conferenceId, category: 'interaction',
+                                    subCategory: subCategory, title: file.name.replace(/\.[^.]+$/, ''),
+                                    fileUrl: uploadResult.data.url, fileSize: uploadResult.data.fileSize,
+                                    fileType: uploadResult.data.fileType, author: '管理员'
+                                });
+                            }
+                            this.$hideLoading();
+                            this.$showToast(`${files.length}个互动内容上传成功`, 'success');
+                            this.interactionLoaded = false; await this.loadInteraction(); await this.loadArchiveStats();
+                        } catch (err) { this.$hideLoading(); this.$showToast('上传失败: ' + err.message, 'error'); }
+                    };
+                    input.click();
+                },
+
+                async toggleStudentUpload() {
+                    try {
+                        const result = await this.apiPut(this.archiveApi('/config'), { allowStudentUpload: this.allowStudentUpload });
+                        if (result.code === 200) {
+                            const status = this.allowStudentUpload ? '已开启' : '已关闭';
+                            this.$showToast(`学员上传权限${status}`, this.allowStudentUpload ? 'success' : 'warning');
+                        }
+                    } catch (e) {
+                        this.allowStudentUpload = !this.allowStudentUpload;
+                        this.$showToast('设置失败: ' + e.message, 'error');
+                    }
+                },
+
+                // ===== 业务数据操作 =====
+                async exportBusinessExcel() {
+                    this.$showLoading('正在生成导出文件...');
+                    try {
+                        const headers = this.getAuthHeaders();
+                        for (const type of ['report_rate', 'checkin_rate', 'dormitory_rate']) {
+                            const resp = await fetch(`${API_BASE}${this.archiveApi(`/export/business-data?type=${type}`)}`, { method: 'GET', headers });
+                            if (resp.ok) {
+                                const blob = await resp.blob();
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a'); a.href = url;
+                                a.download = `业务数据_${type}.csv`; a.click();
+                                URL.revokeObjectURL(url);
+                                await new Promise(r => setTimeout(r, 300));
+                            }
+                        }
+                        this.$hideLoading(); this.$showToast('业务数据导出成功', 'success');
+                    } catch (e) { this.$hideLoading(); this.$showToast('导出失败: ' + e.message, 'error'); }
+                },
+
+                async refreshBusinessData() {
+                    this.$showLoading('正在刷新数据...');
+                    this.businessLoaded = false;
+                    await this.loadBusinessData();
+                    this.$hideLoading();
+                    this.$showToast('数据已刷新', 'success');
+                },
+
+                // ===== 消息操作 =====
+                async exportAllMessages() {
+                    this.$showLoading('正在导出全部消息记录...');
+                    try {
+                        const headers = this.getAuthHeaders();
+                        const resp = await fetch(`${API_BASE}${this.archiveApi('/export/messages')}`, { method: 'GET', headers });
+                        if (resp.ok) {
+                            const blob = await resp.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a'); a.href = url; a.download = '全部消息记录.csv'; a.click();
+                            URL.revokeObjectURL(url);
+                        }
+                        this.$hideLoading(); this.$showToast('消息记录导出成功', 'success');
+                    } catch (e) { this.$hideLoading(); this.$showToast('导出失败: ' + e.message, 'error'); }
+                },
+
+                async searchMessages() {
+                    if (!this.messageSearchKeyword.trim()) {
+                        this.messagesLoaded = false; await this.loadMessageGroups();
+                        return;
+                    }
+                    this.$showLoading('正在搜索...');
+                    try {
+                        const keyword = this.messageSearchKeyword.trim();
+                        const result = await this.apiGet(this.archiveApi('/message-groups'));
+                        if (result.code === 200) {
+                            const filtered = [];
+                            for (const g of (result.data || [])) {
+                                const msgResult = await this.apiGet(this.archiveApi(`/message-groups/${g.id}/messages?keyword=${encodeURIComponent(keyword)}`));
+                                if (msgResult.code === 200 && msgResult.data && msgResult.data.length > 0) {
+                                    filtered.push({
+                                        id: g.id, name: g.groupName, messageCount: msgResult.data.length,
+                                        lastActive: '搜索结果',
+                                        previewMessages: msgResult.data.slice(0, 3).map(m => ({
+                                            id: m.id, content: m.content, sender: m.sender,
+                                            time: m.sendTime ? m.sendTime.substring(11, 16) : ''
+                                        }))
+                                    });
+                                }
+                            }
+                            this.messageGroups = filtered;
+                        }
+                        this.$hideLoading();
+                        this.$showToast(`搜索到 ${this.messageGroups.length} 个相关群组`, 'info');
+                    } catch (e) { this.$hideLoading(); this.$showToast('搜索失败: ' + e.message, 'error'); }
+                },
+
+                async exportGroupMessages(groupId) {
+                    const group = this.messageGroups.find(g => g.id === groupId);
+                    this.$showLoading(`正在导出: ${group ? group.name : ''}...`);
+                    try {
+                        const headers = this.getAuthHeaders();
+                        const resp = await fetch(`${API_BASE}${this.archiveApi(`/export/messages?groupId=${groupId}`)}`, { method: 'GET', headers });
+                        if (resp.ok) {
+                            const blob = await resp.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a'); a.href = url;
+                            a.download = `${group ? group.name : '群组消息'}.csv`; a.click();
+                            URL.revokeObjectURL(url);
+                        }
+                        this.$hideLoading(); this.$showToast('消息导出成功', 'success');
+                    } catch (e) { this.$hideLoading(); this.$showToast('导出失败: ' + e.message, 'error'); }
+                },
+
+                async viewAllMessages(groupId) {
+                    if (this.expandedGroupId === groupId) {
+                        this.expandedGroupId = null; this.expandedMessages = []; return;
+                    }
+                    try {
+                        const result = await this.apiGet(this.archiveApi(`/message-groups/${groupId}/messages`));
+                        if (result.code === 200) {
+                            this.expandedMessages = result.data || [];
+                            this.expandedGroupId = groupId;
+                        }
+                    } catch (e) { this.$showToast('加载消息失败: ' + e.message, 'error'); }
+                },
+
+                // ===== 打包下载 =====
+                async packAndDownload() {
+                    this.$showLoading('正在按目录结构打包全部资料...');
+                    try {
+                        if (!this.coursewareLoaded) await this.loadCourseware();
+                        if (!this.interactionLoaded) await this.loadInteraction();
+                        const allItems = [...this.coursewareList, ...this.interactionList];
+                        let downloadCount = 0;
+                        for (const item of allItems) {
+                            if (item.fileUrl) {
+                                const a = document.createElement('a'); a.href = item.fileUrl; a.download = item.title; a.target = '_blank'; a.click();
+                                downloadCount++; await new Promise(r => setTimeout(r, 500));
+                            }
+                        }
+                        const headers = this.getAuthHeaders();
+                        for (const type of ['report_rate', 'checkin_rate', 'dormitory_rate']) {
+                            try {
+                                const resp = await fetch(`${API_BASE}${this.archiveApi(`/export/business-data?type=${type}`)}`, { method: 'GET', headers });
+                                if (resp.ok) {
+                                    const blob = await resp.blob(); const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a'); a.href = url; a.download = `业务数据_${type}.csv`; a.click();
+                                    URL.revokeObjectURL(url); downloadCount++;
+                                    await new Promise(r => setTimeout(r, 300));
+                                }
+                            } catch (e) { console.warn('导出业务数据失败:', type, e); }
+                        }
+                        try {
+                            const resp = await fetch(`${API_BASE}${this.archiveApi('/export/messages')}`, { method: 'GET', headers });
+                            if (resp.ok) {
+                                const blob = await resp.blob(); const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a'); a.href = url; a.download = '全部消息记录.csv'; a.click();
+                                URL.revokeObjectURL(url); downloadCount++;
+                            }
+                        } catch (e) { console.warn('导出消息失败:', e); }
+                        await this.apiPost(this.archiveApi('/pack'), {});
+                        this.hasDownloaded = true;
+                        this.$hideLoading();
+                        this.$showToast(`打包下载完成！共下载 ${downloadCount} 个文件`, 'success');
+                    } catch (e) { this.$hideLoading(); this.$showToast('打包下载失败: ' + e.message, 'error'); }
+                },
+
+                // ===== 清空 =====
+                async clearAllArchive() {
+                    if (!this.hasDownloaded) {
+                        this.$showToast('请先完成打包下载后再进行清空操作', 'warning');
+                        return;
+                    }
+                    const firstConfirm = await this.$showConfirm('此操作将清空所有归档资料，且不可恢复！确定要继续吗？', '⚠️ 警告', 'danger');
+                    if (!firstConfirm) return;
+                    const secondConfirm = await this.$showConfirm('您确定要清空所有资料吗？此操作不可撤销！', '再次确认', 'danger');
+                    if (!secondConfirm) return;
+                    this.$showLoading('正在清空所有资料...');
+                    try {
+                        const result = await this.apiDelete(this.archiveApi('/clear'));
+                        if (result.code === 200) {
+                            this.coursewareList = []; this.interactionList = [];
+                            this.reportRateData = []; this.checkinRateData = []; this.dormitoryRateData = [];
+                            this.messageGroups = [];
+                            this.archiveStats = { courseware: 0, interaction: 0, businessData: 0, messages: 0 };
+                            this.expandedGroupId = null; this.expandedMessages = [];
+                            this.$hideLoading();
+                            this.$showToast('所有资料已清空，数据安全已保护', 'success');
+                        } else { this.$hideLoading(); this.$showToast(result.message || '清空失败', 'error'); }
+                    } catch (e) { this.$hideLoading(); this.$showToast('清空失败: ' + e.message, 'error'); }
+                },
+
+                goBack() {
+                    window.history.back();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+</body>
+</html>

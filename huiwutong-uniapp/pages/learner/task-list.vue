@@ -58,8 +58,8 @@
           </view>
 
           <view class="task-meta">
-            <text class="meta-item">📅 {{ task.deadline }}</text>
-            <text class="meta-item">⏰ {{ task.duration }}</text>
+            <text class="meta-item"><text class="fa fa-calendar-alt"></text> {{ task.deadline }}</text>
+            <text class="meta-item"><text class="fa fa-clock"></text> {{ task.duration }}</text>
           </view>
 
           <view class="task-desc">
@@ -82,7 +82,7 @@
       </view>
 
       <view v-else class="empty-state">
-        <text class="empty-icon">📋</text>
+        <text class="empty-icon"><text class="fa fa-clipboard"></text></text>
         <text class="empty-text">暂无任务</text>
       </view>
     </view>
@@ -199,6 +199,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .task-list-container {
   min-height: 100vh;

@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="conference-data-local" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ACTIVE_PROFILES" value="local" />
+    <envs>
+      <env name="NACOS_ENABLED" value="false" />
+      <env name="NACOS_REGISTER_ENABLED" value="false" />
+      <env name="NACOS_CONFIG_ENABLED" value="false" />
+      <env name="MYSQL_HOST" value="127.0.0.1" />
+      <env name="MYSQL_PORT" value="3308" />
+      <env name="MYSQL_USER" value="root" />
+      <env name="MYSQL_PASSWORD" value="Hnhx@123" />
+    </envs>
+    <module name="conference-data" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.conference.data.DataApplication" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

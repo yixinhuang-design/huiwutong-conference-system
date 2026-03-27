@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>测试排座页面语法</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        h1 { color: #333; }
+        h2 { color: #666; margin-top: 30px; }
+        h3 { color: #888; }
+        ul { line-height: 1.8; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+    </style>
+</head>
+<body>
+    <h1>🔍 智能排座页面语法检查</h1>
+    <div id="test-result">正在测试...</div>
+
+    <script>
+        async function runTests() {
+            const resultDiv = document.getElementById('test-result');
+            
+            try {
+                // 获取页面内容
+                const response = await fetch('./seating-mgr.html');
+                const content = await response.text();
+                
+                let html = '<h2>✅ 测试完成</h2>';
+                
+                // 1. 检查标签闭合
+                html += '<h3>1. HTML标签检查</h3><ul>';
+                const tests = [
+                    { name: 'DOCTYPE声明', pass: content.includes('<!DOCTYPE html>') },
+                    { name: 'html标签', pass: (content.match(/<html/g) || []).length === (content.match(/<\/html>/g) || []).length },
+                    { name: 'body标签', pass: (content.match(/<body/g) || []).length === (content.match(/<\/body>/g) || []).length },
+                    { name: 'script标签', pass: (content.match(/<script/g) || []).length === (content.match(/<\/script>/g) || []).length },
+                ];
+                
+                let allPass = true;
+                tests.forEach(test => {
+                    html += `<li class="${test.pass ? 'success' : 'error'}">${test.pass ? '✅' : '❌'} ${test.name}</li>`;
+                    if (!test.pass) allPass = false;
+                });
+                html += '</ul>';
+                
+                // 2. 检查优化功能
+                html += '<h3>2. 优化功能检查</h3><ul>';
+                const features = [
+                    { name: '优化补丁引用', code: 'seating-optimization-patch.js' },
+                    { name: 'Toast通知', code: 'typeof toast' },
+                    { name: '增强确认对话框', code: 'typeof showConfirm' },
+                    { name: '进度指示器', code: 'typeof progress' },
+                    { name: 'Excel验证', code: 'ExcelDataValidator' },
+                ];
+                
+                features.forEach(feature => {
+                    const found = content.includes(feature.code);
+                    html += `<li class="${found ? 'success' : 'warning'}">${found ? '✅' : '⚠️'} ${feature.name}</li>`;
+                });
+                html += '</ul>';
+                
+                // 3. 检查常见问题
+                html += '<h3>3. 常见问题检查</h3><ul>';
+                const issues = [];
+                
+                // 检查函数定义顺序
+                if (content.indexOf('onMounted') < content.indexOf('initializeOptimizations')) {
+                    if (content.indexOf('initializeOptimizations()') > content.indexOf('onMounted')) {
+                        if (content.indexOf('const initializeOptimizations') > content.indexOf('onMounted')) {
+                            issues.push({ msg: '函数调用在定义之前', fixed: false });
+                        }
+                    }
+                }
+                
+                if (issues.length === 0) {
+                    html += '<li class="success">✅ 未发现常见问题</li>';
+                } else {
+                    issues.forEach(issue => {
+                        html += `<li class="${issue.fixed ? 'success' : 'warning'}">${issue.fixed ? '✅' : '⚠️'} ${issue.msg}</li>`;
+                    });
+                }
+                html += '</ul>';
+                
+                // 4. 总结
+                html += '<h3>4. 总结</h3>';
+                if (allPass) {
+                    html += '<p class="success">✅ 页面语法检查通过！可以正常使用。</p>';
+                } else {
+                    html += '<p class="error">❌ 发现问题，请检查上述错误。</p>';
+                }
+                
+                html += '<p><a href="./seating-mgr.html" style="color: #667eea; text-decoration: none; font-weight: bold;">🚀 打开智能排座页面</a></p>';
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ 测试失败: ${error.message}</p>`;
+            }
+        }
+        
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

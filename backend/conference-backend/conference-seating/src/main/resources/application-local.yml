@@ -1,0 +1,37 @@
+server:
+  port: 8086
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: conference-seating
+  
+  config:
+    import:
+      - optional:nacos:conference-seating.yml
+  
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3308/conference_seating?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+    username: root
+    password: Hnhx@123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+
+logging:
+  level:
+    root: info
+    com.conference: debug

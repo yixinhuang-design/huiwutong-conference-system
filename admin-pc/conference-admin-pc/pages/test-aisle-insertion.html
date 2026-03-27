@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>过道插入功能测试</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+
+        .test-section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .seating-layout {
+            display: inline-block;
+            border: 1px solid #999;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .row-wrapper {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+
+        .row-control {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .btn-tiny {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border: 1px solid #ccc;
+            background: white;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-tiny:hover {
+            background: #0066cc;
+            color: white;
+            border-color: #0066cc;
+        }
+
+        .row {
+            display: flex;
+            gap: 5px;
+        }
+
+        .seat {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .seat.aisle {
+            background: #ddd;
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .row-label {
+            min-width: 30px;
+            text-align: right;
+            font-weight: bold;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+
+        .info {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        button {
+            padding: 8px 16px;
+            margin: 5px 5px 5px 0;
+            border: 1px solid #ccc;
+            background: #f0f0f0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #e0e0e0;
+        }
+
+        button.primary {
+            background: #0066cc;
+            color: white;
+            border-color: #0066cc;
+        }
+
+        button.primary:hover {
+            background: #0052a3;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <h1>过道插入功能测试</h1>
+
+            <div class="test-section">
+                <h2>测试1：插入行过道</h2>
+                <div class="info">
+                    在座位布局中的指定行上方或下方插入过道行。过道行不占用座位编号，其他行的座位号保持连贯。
+                </div>
+
+                <div class="seating-layout">
+                    <div class="row-wrapper" v-for="(row, rowIdx) in testData1.rows" :key="row.id">
+                        <div class="row-control">
+                            <button 
+                                v-if="!row.isAisle"
+                                class="btn-tiny" 
+                                @click="insertRowAisle(testData1, rowIdx, 'above')"
+                                title="在此行上方插入过道">
+                                ⬆
+                            </button>
+                            <button 
+                                v-if="!row.isAisle"
+                                class="btn-tiny" 
+                                @click="insertRowAisle(testData1, rowIdx, 'below')"
+                                title="在此行下方插入过道">
+                                ⬇
+                            </button>
+                        </div>
+                        <div class="row-label">{{ row.isAisle ? '过道' : row.number + '排' }}</div>
+                        <div class="row">
+                            <div v-for="seat in row.seats" :key="seat.id" class="seat" :class="{ aisle: seat.isAisle }">
+                                {{ seat.isAisle ? '' : seat.number }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="primary" @click="resetTest1">重置测试1</button>
+            </div>
+
+            <div class="test-section">
+                <h2>测试2：插入列过道</h2>
+                <div class="info">
+                    在所有行的指定列位置左侧或右侧插入过道列。过道座位不计入编号，其他座位号保持正常序列。
+                </div>
+
+                <div class="seating-layout">
+                    <div class="row-wrapper" v-for="(row, rowIdx) in testData2.rows" :key="row.id">
+                        <div class="row-label">{{ row.isAisle ? '过道' : row.number + '排' }}</div>
+                        <div class="row">
+                            <div v-for="(seat, seatIdx) in row.seats" :key="seat.id" class="seat" :class="{ aisle: seat.isAisle }">
+                                <span v-if="!seat.isAisle">{{ seat.number }}</span>
+                            </div>
+                        </div>
+                        <div class="row-control" v-if="seatIdx === row.seats.length - 1">
+                            <button 
+                                class="btn-tiny" 
+                                @click="insertColumnAisle(testData2, row.seats.length, 'right')"
+                                title="在此列右方插入过道">
+                                ➡
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="primary" @click="resetTest2">重置测试2</button>
+            </div>
+
+            <div class="test-section">
+                <h2>结果验证</h2>
+                <div>
+                    <h3>测试1 - 行过道插入结果：</h3>
+                    <pre v-if="testData1.rows.length > 0">{{ JSON.stringify(testData1.rows.map(r => ({
+                        id: r.id,
+                        number: r.number,
+                        isAisle: r.isAisle,
+                        seatCount: r.seats.length,
+                        seatNumbers: r.seats.filter(s => !s.isAisle).map(s => s.number)
+                    })), null, 2) }}</pre>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h3>测试2 - 列过道插入结果：</h3>
+                    <pre v-if="testData2.rows.length > 0">{{ JSON.stringify(testData2.rows.map(r => ({
+                        id: r.id,
+                        number: r.number,
+                        seatCount: r.seats.length,
+                        seatNumbers: r.seats.filter(s => !s.isAisle).map(s => s.number),
+                        aisleCount: r.seats.filter(s => s.isAisle).length
+                    })), null, 2) }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive } = Vue;
+
+        createApp({
+            setup() {
+                const testData1 = reactive({
+                    id: 'test_area_1',
+                    rows: createInitialRows(4, 6)
+                });
+
+                const testData2 = reactive({
+                    id: 'test_area_2',
+                    rows: createInitialRows(4, 6)
+                });
+
+                function createInitialRows(rowCount, colCount) {
+                    const rows = [];
+                    for (let r = 1; r <= rowCount; r++) {
+                        const seats = [];
+                        for (let c = 1; c <= colCount; c++) {
+                            seats.push({
+                                id: `seat_${r}_${c}`,
+                                number: c,
+                                col: c,
+                                row: r,
+                                isAisle: false,
+                                status: 'available'
+                            });
+                        }
+                        rows.push({
+                            id: `row_${r}`,
+                            number: r,
+                            isAisle: false,
+                            seats: seats
+                        });
+                    }
+                    return rows;
+                }
+
+                const insertRowAisle = (area, rowIndex, direction) => {
+                    if (!area || !area.rows || rowIndex < 0 || rowIndex >= area.rows.length) {
+                        console.warn('Invalid row index or area');
+                        return;
+                    }
+
+                    const insertPosition = direction === 'above' ? rowIndex : rowIndex + 1;
+                    const colCount = area.rows[0]?.seats?.length || 0;
+
+                    const aisleRow = {
+                        id: `${area.id}_aisle_row_${Date.now()}`,
+                        number: null,
+                        isAisle: true,
+                        seats: Array.from({ length: colCount }, (_, colIndex) => ({
+                            id: `${area.id}_aisle_seat_${Date.now()}_${colIndex}`,
+                            number: null,
+                            col: colIndex + 1,
+                            row: null,
+                            isAisle: true,
+                            status: 'aisle'
+                        }))
+                    };
+
+                    area.rows.splice(insertPosition, 0, aisleRow);
+
+                    let rowNumber = 1;
+                    area.rows.forEach((row, idx) => {
+                        if (!row.isAisle) {
+                            row.number = rowNumber;
+                            row.seats.forEach(seat => {
+                                if (!seat.isAisle) {
+                                    seat.row = rowNumber;
+                                }
+                            });
+                            rowNumber++;
+                        }
+                    });
+
+                    console.log(`[插入行过道] 在第${rowIndex}行的${direction === 'above' ? '上方' : '下方'}插入过道行`);
+                };
+
+                const insertColumnAisle = (area, colIndex, direction) => {
+                    if (!area || !area.rows || area.rows.length === 0) {
+                        console.warn('Invalid area or column index');
+                        return;
+                    }
+
+                    const insertPosition = direction === 'left' ? colIndex - 1 : colIndex;
+
+                    area.rows.forEach((row, rowIdx) => {
+                        if (row && row.seats) {
+                            const aisleSeat = {
+                                id: `${area.id}_aisle_seat_${Date.now()}_${rowIdx}`,
+                                number: null,
+                                col: insertPosition + 1,
+                                row: row.isAisle ? null : row.number,
+                                isAisle: true,
+                                status: 'aisle'
+                            };
+
+                            row.seats.splice(insertPosition, 0, aisleSeat);
+
+                            for (let i = insertPosition + 1; i < row.seats.length; i++) {
+                                row.seats[i].col = i + 1;
+                            }
+                        }
+                    });
+
+                    console.log(`[插入列过道] 在第${colIndex}列的${direction === 'left' ? '左边' : '右边'}插入过道列`);
+                };
+
+                const resetTest1 = () => {
+                    testData1.rows = createInitialRows(4, 6);
+                };
+
+                const resetTest2 = () => {
+                    testData2.rows = createInitialRows(4, 6);
+                };
+
+                return {
+                    testData1,
+                    testData2,
+                    insertRowAisle,
+                    insertColumnAisle,
+                    resetTest1,
+                    resetTest2
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

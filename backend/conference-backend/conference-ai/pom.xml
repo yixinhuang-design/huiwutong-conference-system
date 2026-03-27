@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.conference</groupId>
+        <artifactId>conference-backend</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    <artifactId>conference-ai</artifactId>
+    <packaging>jar</packaging>
+    <name>AI服务</name>
+    <description>OCR识别、语音识别、智能问答</description>
+    <dependencies>
+        <dependency><groupId>com.conference</groupId><artifactId>conference-common</artifactId></dependency>
+        <dependency><groupId>com.alibaba.cloud</groupId><artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId></dependency>
+        <dependency><groupId>com.alibaba.cloud</groupId><artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId></dependency>
+        <dependency><groupId>com.mysql</groupId><artifactId>mysql-connector-j</artifactId></dependency>
+        <dependency><groupId>com.alibaba</groupId><artifactId>druid-spring-boot-3-starter</artifactId></dependency>
+        <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><optional>true</optional></dependency>
+        
+        <!-- Apache POI - 解析Word/Excel文档 -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </dependency>
+        
+        <!-- Apache PDFBox - 解析PDF文档 -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+    </dependencies>
+    <build><plugins><plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin></plugins></build>
+</project>

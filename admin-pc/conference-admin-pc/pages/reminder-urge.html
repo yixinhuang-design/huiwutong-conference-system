@@ -1,0 +1,1398 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>催办提醒 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="../css/stat-cards-standard.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <style>
+        /* ==================== 页面整体布局 ==================== */
+        .page-with-nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-4);
+        }
+
+        /* ==================== 卡片内边距标准 ==================== */
+        .glass-card {
+            padding: var(--space-5);
+        }
+
+        /* ==================== 统计网格 ==================== */
+        .urge-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        @media (max-width: 1200px) {
+            .urge-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .urge-stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ==================== 筛选区域 ==================== */
+        .filter-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-5);
+        }
+
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-4);
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .filter-group label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            cursor: pointer;
+            font-size: var(--font-size-sm);
+        }
+
+        .search-input {
+            padding: var(--space-2) var(--space-3);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.05);
+            font-size: var(--font-size-sm);
+            min-width: 200px;
+        }
+
+        /* ==================== 用户列表 ==================== */
+        .user-list-container {
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .user-table th,
+        .user-table td {
+            padding: var(--space-3);
+            text-align: left;
+            border-bottom: var(--space-px) solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-table th {
+            background: rgba(102, 126, 234, 0.2);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .user-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .user-avatar {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+        }
+
+        /* ==================== 状态标签 ==================== */
+        .status-badge {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: rgba(234, 179, 8, 0.15);
+            color: #ca8a04;
+        }
+
+        .status-in_progress {
+            background: rgba(59, 130, 246, 0.15);
+            color: #2563eb;
+        }
+
+        .status-overdue {
+            background: rgba(239, 68, 68, 0.15);
+            color: #dc2626;
+        }
+
+        .overdue-tag {
+            background: rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            margin-left: var(--space-2);
+        }
+
+        /* ==================== 进度条 ==================== */
+        .progress-wrapper {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+            min-width: 35px;
+            text-align: right;
+        }
+
+        /* ==================== 模板选择 ==================== */
+        .template-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+        }
+
+        @media (max-width: 768px) {
+            .template-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .template-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--space-px) solid transparent;
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .template-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 var(--space-1) var(--space-3) rgba(0, 0, 0, 0.1);
+        }
+
+        .template-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.15);
+        }
+
+        .template-icon {
+            font-size: var(--font-size-2xl);
+            margin-bottom: var(--space-2);
+            text-align: center;
+        }
+
+        .template-name {
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: var(--space-1);
+        }
+
+        .template-desc {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+            text-align: center;
+        }
+
+        /* ==================== 消息编辑 ==================== */
+        .message-editor {
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+        }
+
+        .message-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: var(--space-3);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.05);
+            font-size: var(--font-size-sm);
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .message-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* ==================== 渠道选择 ==================== */
+        .channel-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+        }
+
+        .channel-option {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .channel-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .channel-option.selected {
+            background: rgba(102, 126, 234, 0.15);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        /* ==================== 步骤指示器 ==================== */
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--space-6);
+            position: relative;
+        }
+
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: var(--space-px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: var(--space-px) solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            transition: all var(--transition-normal);
+        }
+
+        .step-item.active .step-circle {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .step-item.completed .step-circle {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+
+        .step-label {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+        }
+
+        /* ==================== 历史记录表格 ==================== */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: var(--space-3);
+            text-align: left;
+            border-bottom: var(--space-px) solid rgba(255, 255, 255, 0.1);
+        }
+
+        .history-table th {
+            background: rgba(102, 126, 234, 0.1);
+            font-weight: 600;
+        }
+
+        /* ==================== 空状态 ==================== */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-8);
+            color: var(--gray-600);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--gray-400);
+            margin-bottom: var(--space-3);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a :href="mode === 'business' ? 'business-data.html?conferenceId=' + conference.id : 'task-management.html?conferenceId=' + conference.id" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>{{ mode === 'business' ? '返回业务数据' : '返回任务管理' }}</span>
+                </a>
+                <h1 class="nav-title">{{ mode === 'business' ? taskTitle : '任务催报催收' }}</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+            <!-- 页面头部 -->
+            <div class="page-header glass-card">
+                <div>
+                    <h2>🔔 {{ mode === 'business' ? taskTitle + '系统' : '任务催报催收系统' }}</h2>
+                    <div class="conference-context">
+                        <span class="context-label">当前会议:</span>
+                        <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                        <span class="context-label">{{ mode === 'business' ? '类型:' : '任务:' }}</span>
+                        <span class="context-value">{{ taskTitle }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 统计概览 -->
+            <div class="urge-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ urgeStats.totalAssignees }}</div>
+                        <div class="stat-label">{{ mode === 'business' ? '应完成人数' : '任务执行人' }}</div>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ urgeStats.completedCount }}</div>
+                        <div class="stat-label">已完成</div>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ urgeStats.incompleteCount }}</div>
+                        <div class="stat-label">{{ mode === 'business' ? '待催办人数' : '未完成' }}</div>
+                    </div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ urgeStats.overdueCount }}</div>
+                        <div class="stat-label">已超时</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤指示器 -->
+            <div class="step-indicator glass-card">
+                <div class="step-item" :class="{ active: currentStep === 1, completed: currentStep > 1 }">
+                    <div class="step-circle">1</div>
+                    <span class="step-label">选择用户</span>
+                </div>
+                <div class="step-item" :class="{ active: currentStep === 2, completed: currentStep > 2 }">
+                    <div class="step-circle">2</div>
+                    <span class="step-label">确认信息</span>
+                </div>
+                <div class="step-item" :class="{ active: currentStep === 3, completed: currentStep > 3 }">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">编辑消息</span>
+                </div>
+                <div class="step-item" :class="{ active: currentStep === 4, completed: currentStep > 4 }">
+                    <div class="step-circle">4</div>
+                    <span class="step-label">发送催办</span>
+                </div>
+                <div class="step-item" :class="{ active: currentStep === 5, completed: currentStep > 5 }">
+                    <div class="step-circle">5</div>
+                    <span class="step-label">查看结果</span>
+                </div>
+            </div>
+
+            <!-- 步骤1: 选择未完成任务的用户 -->
+            <div class="glass-card" v-if="currentStep === 1">
+                <h3>📋 步骤1：选择待催办用户</h3>
+
+                <!-- 筛选区域 -->
+                <div class="filter-section">
+                    <h4>筛选条件</h4>
+                    <div class="filter-controls">
+                        <div class="filter-group">
+                            <label>用户状态:</label>
+                            <select v-model="filterType" class="search-input">
+                                <option value="all">全部未完成</option>
+                                <option value="overdue">已超时</option>
+                                <option value="urgent">紧急（超时或进度<50%）</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>搜索用户:</label>
+                            <input type="text" v-model="searchUser" class="search-input" placeholder="姓名或单位">
+                        </div>
+                        <div class="filter-group">
+                            <label>
+                                <input type="checkbox" v-model="selectAll" @change="toggleSelectAll">
+                                全选
+                            </label>
+                            <span style="font-size: var(--font-size-xs); color: var(--gray-600);">
+                                (已选 {{ totalSelected }}/{{ filteredUsers.length }} 人)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户列表 -->
+                <div class="user-list-container">
+                    <table class="user-table" v-if="filteredUsers.length > 0">
+                        <thead>
+                            <tr>
+                                <th width="50">选择</th>
+                                <th>用户信息</th>
+                                <th>单位</th>
+                                <th>联系方式</th>
+                                <th>任务进度</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="user in filteredUsers" :key="user.id">
+                                <td>
+                                    <input type="checkbox"
+                                           :checked="selectedUsers.includes(user.id)"
+                                           @change="toggleUserSelection(user.id)">
+                                </td>
+                                <td>
+                                    <div class="user-avatar">
+                                        <div class="avatar-circle">{{ user.name.charAt(0) }}</div>
+                                        <span>{{ user.name }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ user.unit }}</td>
+                                <td>{{ user.phone }}</td>
+                                <td>
+                                    <div class="progress-wrapper">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" :style="{ width: user.progress + '%' }"></div>
+                                        </div>
+                                        <span class="progress-text">{{ user.progress }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge" :class="'status-' + user.status">
+                                        {{ getUserStatusText(user.status) }}
+                                    </span>
+                                    <span v-if="user.isOverdue" class="overdue-tag">已超时</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div v-else class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>没有符合条件的用户</p>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div style="margin-top: var(--space-4); text-align: right;">
+                    <button class="btn-primary" @click="goToStep(2)" :disabled="selectedUsers.length === 0">
+                        <i class="fas fa-arrow-right"></i>
+                        下一步：确认信息
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步骤2: 确认信息 -->
+            <div class="glass-card" v-if="currentStep === 2">
+                <h3>✅ 步骤2：确认催办信息</h3>
+
+                <div style="margin-bottom: var(--space-5);">
+                    <h4>已选择用户 ({{ totalSelected }}人)</h4>
+                    <div class="user-list-container" style="max-height: 300px;">
+                        <table class="user-table">
+                            <thead>
+                                <tr>
+                                    <th>用户信息</th>
+                                    <th>单位</th>
+                                    <th>当前状态</th>
+                                    <th>进度</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="user in selectedUsersList" :key="user.id">
+                                    <td>{{ user.name }}</td>
+                                    <td>{{ user.unit }}</td>
+                                    <td>
+                                        <span class="status-badge" :class="'status-' + user.status">
+                                            {{ getUserStatusText(user.status) }}
+                                        </span>
+                                        <span v-if="user.isOverdue" class="overdue-tag">已超时</span>
+                                    </td>
+                                    <td>{{ user.progress }}%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: var(--space-3); justify-content: space-between;">
+                    <button class="btn-outline" @click="currentStep = 1">
+                        <i class="fas fa-arrow-left"></i>
+                        上一步
+                    </button>
+                    <button class="btn-primary" @click="goToStep(3)">
+                        <i class="fas fa-arrow-right"></i>
+                        下一步：编辑消息
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步骤3: 编辑催办消息 -->
+            <div class="glass-card" v-if="currentStep === 3">
+                <h3>✏️ 步骤3：编辑催办消息</h3>
+
+                <!-- 模板选择 -->
+                <div style="margin-bottom: var(--space-5);">
+                    <h4>选择消息模板</h4>
+                    <div class="template-cards">
+                        <div class="template-card"
+                             :class="{ selected: selectedTemplate === 'normal' }"
+                             @click="selectTemplate('normal')">
+                            <div class="template-icon" style="color: #3b82f6;">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div class="template-name">普通提醒</div>
+                            <div class="template-desc">温和提醒用户完成任务</div>
+                        </div>
+                        <div class="template-card"
+                             :class="{ selected: selectedTemplate === 'urgent' }"
+                             @click="selectTemplate('urgent')">
+                            <div class="template-icon" style="color: #f59e0b;">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div class="template-name">紧急催办</div>
+                            <div class="template-desc">任务即将到期，紧急催办</div>
+                        </div>
+                        <div class="template-card"
+                             :class="{ selected: selectedTemplate === 'overdue' }"
+                             @click="selectTemplate('overdue')">
+                            <div class="template-icon" style="color: #ef4444;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="template-name">超时警告</div>
+                            <div class="template-desc">任务已超时，严厉催办</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 消息编辑 -->
+                <div class="message-editor">
+                    <h4 style="margin-bottom: var(--space-3);">催办消息内容</h4>
+                    <textarea v-model="templateContent"
+                              class="message-textarea"
+                              placeholder="请输入催办消息内容..."></textarea>
+                </div>
+
+                <!-- 发送渠道 -->
+                <div style="margin-top: var(--space-5);">
+                    <h4 style="margin-bottom: var(--space-3);">发送渠道</h4>
+                    <div class="channel-options">
+                        <div class="channel-option"
+                             :class="{ selected: channels.app }"
+                             @click="channels.app = !channels.app">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>APP通知</span>
+                        </div>
+                        <div class="channel-option"
+                             :class="{ selected: channels.sms }"
+                             @click="channels.sms = !channels.sms">
+                            <i class="fas fa-sms"></i>
+                            <span>短信</span>
+                        </div>
+                        <div class="channel-option"
+                             :class="{ selected: channels.app }"
+                             @click="channels.app = !channels.app">
+                            <i class="fas fa-bell"></i>
+                            <span>系统消息(UniPush)</span>
+                        </div>
+                        <!-- 微信通知 - 暂未配置 -->
+                        <!--
+                        <div class="channel-option"
+                             :class="{ selected: channels.wechat }"
+                             @click="channels.wechat = !channels.wechat">
+                            <i class="fab fa-weixin"></i>
+                            <span>微信</span>
+                        </div>
+                        -->
+                        <!-- 邮件通知 - 暂未配置 -->
+                        <!--
+                        <div class="channel-option"
+                             :class="{ selected: channels.email }"
+                             @click="channels.email = !channels.email">
+                            <i class="fas fa-envelope"></i>
+                            <span>邮件</span>
+                        </div>
+                        -->
+                    </div>
+                </div>
+
+                <div style="margin-top: var(--space-4); display: flex; gap: var(--space-3); justify-content: space-between;">
+                    <button class="btn-outline" @click="currentStep = 2">
+                        <i class="fas fa-arrow-left"></i>
+                        上一步
+                    </button>
+                    <button class="btn-primary" @click="goToStep(4)">
+                        <i class="fas fa-arrow-right"></i>
+                        下一步：发送催办
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步骤4: 发送催办 -->
+            <div class="glass-card" v-if="currentStep === 4">
+                <h3>📤 步骤4：发送催办通知</h3>
+
+                <div style="margin-bottom: var(--space-5);">
+                    <h4>发送确认</h4>
+                    <div style="background: rgba(102, 126, 234, 0.1); border: var(--space-px) solid rgba(102, 126, 234, 0.3); border-radius: var(--radius-lg); padding: var(--space-4);">
+                        <div style="margin-bottom: var(--space-2);">
+                            <strong>任务名称：</strong>{{ taskTitle }}
+                        </div>
+                        <div style="margin-bottom: var(--space-2);">
+                            <strong>催办人数：</strong>{{ totalSelected }} 人
+                        </div>
+                        <div style="margin-bottom: var(--space-2);">
+                            <strong>发送渠道：</strong>
+                            <span v-if="channels.app">APP通知</span>
+                            <span v-if="channels.sms">短信</span>
+                            <span v-if="channels.wechat">微信</span>
+                            <span v-if="channels.email">邮件</span>
+                        </div>
+                        <div>
+                            <strong>消息类型：</strong>{{ getTemplateName(selectedTemplate) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: var(--space-3); justify-content: space-between;">
+                    <button class="btn-outline" @click="currentStep = 3">
+                        <i class="fas fa-arrow-left"></i>
+                        上一步
+                    </button>
+                    <button class="btn-success" @click="sendReminder" :disabled="isSending">
+                        <i class="fas fa-paper-plane"></i>
+                        {{ isSending ? '发送中...' : '发送催办通知' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步骤5: 查看结果 -->
+            <div class="glass-card" v-if="currentStep === 5">
+                <h3>📊 步骤5：发送结果</h3>
+
+                <div class="stat-grid" style="margin-bottom: var(--space-5);">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ sendResults.total }}</div>
+                            <div class="stat-label">发送总数</div>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ sendResults.success }}</div>
+                            <div class="stat-label">发送成功</div>
+                        </div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-icon">
+                            <i class="fas fa-times"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ sendResults.failed }}</div>
+                            <div class="stat-label">发送失败</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: right;">
+                    <button class="btn-primary" @click="finishReminder">
+                        <i class="fas fa-check"></i>
+                        完成
+                    </button>
+                </div>
+            </div>
+
+            <!-- 催办历史 -->
+            <div class="glass-card" style="margin-top: var(--space-5);">
+                <h3>📋 催办历史记录</h3>
+
+                <div class="filter-controls" style="margin-bottom: var(--space-3);">
+                    <div class="filter-group">
+                        <label>筛选:</label>
+                        <select v-model="historyFilter" class="search-input">
+                            <option value="all">全部</option>
+                            <option value="completed">已完成</option>
+                            <option value="sending">发送中</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="user-list-container" style="max-height: 300px;">
+                    <table class="history-table" v-if="filteredHistory.length > 0">
+                        <thead>
+                            <tr>
+                                <th>轮次</th>
+                                <th>发送时间</th>
+                                <th>发送渠道</th>
+                                <th>发送人数</th>
+                                <th>完成人数</th>
+                                <th>操作人</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="record in filteredHistory" :key="record.id">
+                                <td>第{{ record.round }}轮</td>
+                                <td>{{ formatDateTime(record.sendTime) }}</td>
+                                <td>{{ record.channels.join(', ') }}</td>
+                                <td>{{ record.sentCount }}</td>
+                                <td>{{ record.completedCount }}</td>
+                                <td>{{ record.operator }}</td>
+                                <td>
+                                    <span class="status-badge" :class="'status-' + record.status">
+                                        {{ getHistoryStatusText(record.status) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div v-else class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <p>暂无催办历史</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/api/collaboration-api.js"></script>
+    <script>
+        const { createApp } = Vue;
+        const DATA_API = '/api/data';
+        const NOTIFICATION_API = '/api/notification';
+
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    // 模式：'task'=任务催办（原有）, 'business'=业务数据催办（新增）
+                    mode: 'task',
+                    // 业务催办类型：checkin/dormitory/report
+                    urgeType: '',
+                    // 业务催办关联ID（日程ID或日期）
+                    urgeId: '',
+                    // 任务相关
+                    taskId: null,
+                    taskTitle: '',
+                    currentStep: 1,
+
+                    // 步骤1数据
+                    filterType: 'all',
+                    searchUser: '',
+                    selectAll: false,
+                    selectedUsers: [],
+
+                    // 步骤3数据
+                    selectedTemplate: 'normal',
+                    templateContent: '',
+                    channels: {
+                        app: true,
+                        sms: false,
+                        wechat: false,
+                        email: false
+                    },
+
+                    // 步骤5数据
+                    sendResults: {
+                        total: 0,
+                        success: 0,
+                        failed: 0,
+                        details: []
+                    },
+                    isSending: false,
+
+                    // 统计数据
+                    urgeStats: {
+                        totalAssignees: 0,
+                        completedCount: 0,
+                        incompleteCount: 0,
+                        overdueCount: 0
+                    },
+
+                    // 用户列表
+                    users: [],
+
+                    // 催办历史
+                    reminderHistory: [],
+                    historyFilter: 'all'
+                }
+            },
+            computed: {
+                filteredUsers() {
+                    let users = this.users;
+
+                    if (this.filterType === 'overdue') {
+                        users = users.filter(u => u.isOverdue);
+                    } else if (this.filterType === 'urgent') {
+                        users = users.filter(u => u.isOverdue || u.progress < 50);
+                    }
+
+                    if (this.searchUser) {
+                        users = users.filter(u => u.name.includes(this.searchUser) || u.unit.includes(this.searchUser));
+                    }
+
+                    return users;
+                },
+
+                totalSelected() {
+                    return this.selectedUsers.length;
+                },
+
+                selectedUsersList() {
+                    return this.users.filter(u => this.selectedUsers.includes(u.id));
+                },
+
+                filteredHistory() {
+                    if (this.historyFilter === 'all') {
+                        return this.reminderHistory;
+                    }
+                    return this.reminderHistory.filter(h => h.status === this.historyFilter);
+                }
+            },
+            async mounted() {
+                await this.initialize();
+                this.updateTemplateContent();
+            },
+            methods: {
+                async initialize() {
+                    const params = new URLSearchParams(window.location.search);
+                    const conferenceId = params.get('conferenceId');
+                    this.taskId = params.get('taskId');
+                    this.taskTitle = params.get('taskTitle') || '未命名任务';
+
+                    // 检测业务催办模式（从business-data.html跳转）
+                    const type = params.get('type');
+                    if (type && ['checkin', 'dormitory', 'report'].includes(type)) {
+                        this.mode = 'business';
+                        this.urgeType = type;
+                        this.urgeId = params.get('id') || '';
+                        const typeNames = { checkin: '催签到', dormitory: '催就寝', report: '催报到' };
+                        this.taskTitle = typeNames[type] || '催办';
+                    }
+
+                    if (conferenceId) {
+                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                    } else {
+                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '示例会议'
+                        };
+                    }
+
+                    // 根据模式加载数据
+                    if (this.mode === 'business') {
+                        await this.loadBusinessData();
+                    } else {
+                        await this.loadTaskData();
+                    }
+                },
+
+                async loadTaskData() {
+                    if (!this.taskId) {
+                        this.$showToast('未指定任务ID', 'error');
+                        return;
+                    }
+                    try {
+                        // 从后端获取任务详情（含执行人和日志）
+                        const detail = await TaskAPI.getTaskDetail(this.taskId);
+                        if (!detail) {
+                            this.$showToast('任务不存在', 'error');
+                            return;
+                        }
+                        const taskInfo = detail.task || {};
+                        const assignees = detail.assignees || [];
+                        const logs = detail.logs || [];
+
+                        this.taskTitle = taskInfo.taskName || this.taskTitle;
+
+                        // 筛选未完成的执行人作为催报对象
+                        const now = new Date();
+                        const deadline = taskInfo.deadline ? new Date(taskInfo.deadline) : null;
+                        this.users = assignees
+                            .filter(a => a.status !== 'completed')
+                            .map(a => ({
+                                id: a.userId || a.id,
+                                name: a.userName || '未知',
+                                unit: a.department || '',
+                                phone: '',
+                                status: a.status || 'pending',
+                                progress: a.status === 'submitted' ? 80 : a.status === 'in_progress' ? 30 : 0,
+                                isOverdue: deadline ? now > deadline : false
+                            }));
+
+                        const completedCount = assignees.filter(a => a.status === 'completed').length;
+                        this.urgeStats = {
+                            totalAssignees: assignees.length,
+                            completedCount: completedCount,
+                            incompleteCount: this.users.length,
+                            overdueCount: this.users.filter(u => u.isOverdue).length
+                        };
+
+                        // 从日志中提取催报历史
+                        const urgedLogs = logs.filter(l => l.action === 'urged');
+                        this.reminderHistory = urgedLogs.map((l, i) => ({
+                            id: l.id || i,
+                            round: i + 1,
+                            sendTime: l.createTime ? new Date(l.createTime) : new Date(),
+                            channels: ['APP通知'],
+                            sentCount: this.users.length,
+                            completedCount: 0,
+                            operator: l.operatorName || '管理员',
+                            status: 'completed'
+                        }));
+
+                        if (this.users.length === 0) {
+                            this.$showToast('所有执行人均已完成任务，无需催报', 'info');
+                        }
+                    } catch (e) {
+                        console.error('加载任务数据失败:', e);
+                        this.$showToast('加载任务数据失败: ' + e.message, 'error');
+                    }
+                },
+
+                /** 业务数据催办模式 - 从conference-data服务加载未完成人员 */
+                async loadBusinessData() {
+                    try {
+                        let apiUrl = '';
+                        if (this.urgeType === 'checkin' && this.urgeId) {
+                            apiUrl = `${DATA_API}/business/unchecked-users?conferenceId=${this.conference.id}&scheduleId=${this.urgeId}`;
+                        } else if (this.urgeType === 'dormitory' && this.urgeId) {
+                            apiUrl = `${DATA_API}/business/undormitory-users?conferenceId=${this.conference.id}&date=${this.urgeId}`;
+                        } else {
+                            // report模式 或 checkin/dormitory无具体ID时，统一催所有未报到人员
+                            apiUrl = `${DATA_API}/business/unreported-users?conferenceId=${this.conference.id}`;
+                        }
+
+                        const resp = await fetch(apiUrl, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Tenant-Id': localStorage.getItem('tenantId') || '',
+                                'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
+                            }
+                        });
+                        const json = await resp.json();
+                        if (json.code === 200 && json.data) {
+                            const data = json.data;
+                            this.taskTitle = data.title || this.taskTitle;
+                            const userList = data.users || [];
+
+                            this.users = userList.map(u => ({
+                                id: u.id || u.user_id,
+                                name: u.name || '未知',
+                                unit: u.organization || '',
+                                phone: u.phone || '',
+                                status: 'pending',
+                                progress: 0,
+                                isOverdue: false
+                            }));
+
+                            // 获取对应的统计数据来填充已完成数
+                            let rateUrl = '';
+                            if (this.urgeType === 'checkin') {
+                                rateUrl = `${DATA_API}/business/checkin-rate?conferenceId=${this.conference.id}`;
+                            } else if (this.urgeType === 'dormitory') {
+                                rateUrl = `${DATA_API}/business/dormitory-rate?conferenceId=${this.conference.id}`;
+                            } else {
+                                rateUrl = `${DATA_API}/business/report-rate?conferenceId=${this.conference.id}`;
+                            }
+                            try {
+                                const rateResp = await fetch(rateUrl, {
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-Tenant-Id': localStorage.getItem('tenantId') || '',
+                                        'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
+                                    }
+                                });
+                                const rateJson = await rateResp.json();
+                                if (rateJson.code === 200 && rateJson.data) {
+                                    const rateData = rateJson.data;
+                                    if (this.urgeType === 'report') {
+                                        this.urgeStats = {
+                                            totalAssignees: rateData.expected || 0,
+                                            completedCount: rateData.actual || 0,
+                                            incompleteCount: this.users.length,
+                                            overdueCount: 0
+                                        };
+                                    } else if (Array.isArray(rateData)) {
+                                        // checkin/dormitory返回数组，找到匹配项
+                                        let matched = null;
+                                        if (this.urgeType === 'checkin' && this.urgeId) {
+                                            matched = rateData.find(r => String(r.id) === String(this.urgeId));
+                                        } else if (this.urgeType === 'dormitory' && this.urgeId) {
+                                            matched = rateData.find(r => r.date === this.urgeId);
+                                        }
+                                        if (matched) {
+                                            this.urgeStats = {
+                                                totalAssignees: matched.expected || 0,
+                                                completedCount: matched.actual || 0,
+                                                incompleteCount: this.users.length,
+                                                overdueCount: 0
+                                            };
+                                        } else {
+                                            this.urgeStats.incompleteCount = this.users.length;
+                                        }
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn('获取统计数据失败:', e);
+                                this.urgeStats.incompleteCount = this.users.length;
+                            }
+
+                            if (this.users.length === 0) {
+                                const typeNames = { checkin: '签到', dormitory: '就寝', report: '报到' };
+                                this.$showToast(`所有人员均已完成${typeNames[this.urgeType]}，无需催办`, 'info');
+                            }
+                        } else {
+                            this.$showToast('加载人员数据失败', 'error');
+                        }
+                    } catch (e) {
+                        console.error('加载业务催办数据失败:', e);
+                        this.$showToast('加载数据失败: ' + e.message, 'error');
+                    }
+                },
+
+                goToStep(step) {
+                    this.currentStep = step;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                getUserStatusText(status) {
+                    const map = {
+                        pending: '待开始',
+                        in_progress: '进行中',
+                        completed: '已完成'
+                    };
+                    return map[status] || status;
+                },
+
+                getHistoryStatusText(status) {
+                    const map = {
+                        completed: '已完成',
+                        sending: '发送中',
+                        failed: '发送失败'
+                    };
+                    return map[status] || status;
+                },
+
+                toggleUserSelection(userId) {
+                    const index = this.selectedUsers.indexOf(userId);
+                    if (index > -1) {
+                        this.selectedUsers.splice(index, 1);
+                    } else {
+                        this.selectedUsers.push(userId);
+                    }
+                    this.updateSelectAll();
+                },
+
+                toggleSelectAll() {
+                    if (this.selectAll) {
+                        this.selectedUsers = this.filteredUsers.map(u => u.id);
+                    } else {
+                        this.selectedUsers = [];
+                    }
+                },
+
+                updateSelectAll() {
+                    this.selectAll = this.filteredUsers.length > 0 &&
+                                     this.filteredUsers.every(u => this.selectedUsers.includes(u.id));
+                },
+
+                selectTemplate(templateId) {
+                    this.selectedTemplate = templateId;
+                    this.updateTemplateContent();
+                },
+
+                updateTemplateContent() {
+                    const typeNames = { checkin: '签到', dormitory: '就寝', report: '报到' };
+                    const actionName = this.mode === 'business' ? (typeNames[this.urgeType] || '完成') : '完成';
+                    const taskName = this.taskTitle;
+
+                    const templates = this.mode === 'business' ? {
+                        normal: `【${actionName}提醒】您好！
+
+您有待完成的${actionName}事项"${taskName}"。
+
+请尽快登录系统完成${actionName}。
+
+如有任何问题，请及时联系会务组。
+
+谢谢您的配合！`,
+
+                        urgent: `【紧急催办】您好！
+
+"${taskName}"${actionName}即将截止，请立即完成！
+
+请务必按时${actionName}！
+
+如有问题请立即联系会务组！`,
+
+                        overdue: `【超时警告】您好！
+
+"${taskName}"${actionName}已超时！
+
+请立即完成${actionName}！
+
+这是最后警告，请务必重视！`
+                    } : {
+                        normal: `【任务提醒】您好！
+
+您有一个任务"{{taskTitle}}"待完成。
+
+请尽快登录系统查看并完成该任务。
+
+如有任何问题，请及时联系会务组。
+
+谢谢您的配合！`,
+
+                        urgent: `【紧急催办】您好！
+
+任务"{{taskTitle}}"即将到期，请立即登录系统完成！
+
+这是重要任务，请务必按时完成！
+
+如有问题请立即联系会务组！`,
+
+                        overdue: `【超时警告】您好！
+
+任务"{{taskTitle}}"已超时未完成！
+
+请立即登录系统完成该任务！
+
+这是最后警告，请务必重视！`
+                    };
+
+                    this.templateContent = templates[this.selectedTemplate] || '';
+                    // 替换任务标题占位符
+                    this.templateContent = this.templateContent.replace(/{{taskTitle}}/g, this.taskTitle);
+                },
+
+                getTemplateName(templateId) {
+                    const names = {
+                        normal: '普通提醒',
+                        urgent: '紧急催办',
+                        overdue: '超时警告'
+                    };
+                    return names[templateId] || templateId;
+                },
+
+                async sendReminder() {
+                    try {
+                        this.isSending = true;
+                        this.$showLoading('正在发送催办通知...');
+
+                        const currentUserId = localStorage.getItem('userId') || '8';
+                        const currentUserName = localStorage.getItem('userName') || '管理员';
+                        let successCount = 0;
+                        let failCount = 0;
+
+                        if (this.mode === 'business') {
+                            // 业务催办模式：调用通知服务
+                            try {
+                                const resp = await fetch(`${NOTIFICATION_API}/urge`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-Tenant-Id': localStorage.getItem('tenantId') || '',
+                                        'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
+                                    },
+                                    body: JSON.stringify({
+                                        conferenceId: this.conference.id,
+                                        type: this.urgeType,
+                                        targetUsers: this.selectedUsers,
+                                        message: this.templateContent,
+                                        operatorId: currentUserId,
+                                        operatorName: currentUserName
+                                    })
+                                });
+                                const json = await resp.json();
+                                if (json.code === 200) {
+                                    successCount = this.totalSelected;
+                                } else {
+                                    throw new Error(json.message || '发送失败');
+                                }
+                            } catch(e) {
+                                failCount = this.totalSelected;
+                                throw e;
+                            }
+                        } else {
+                            // 任务催办模式：调用协同服务TaskAPI（原有逻辑）
+                            try {
+                                await TaskAPI.urgeTask(this.taskId, {
+                                    operatorId: currentUserId,
+                                    operatorName: currentUserName
+                                });
+                                successCount = this.totalSelected;
+                            } catch(e) {
+                                failCount = this.totalSelected;
+                                throw e;
+                            }
+                        }
+
+                        // 发送结果
+                        this.sendResults = {
+                            total: this.totalSelected,
+                            success: successCount,
+                            failed: failCount
+                        };
+
+                        // 添加到历史记录
+                        this.reminderHistory.unshift({
+                            id: Date.now(),
+                            round: this.reminderHistory.length + 1,
+                            sendTime: new Date(),
+                            channels: this.getEnabledChannels(),
+                            sentCount: this.totalSelected,
+                            completedCount: 0,
+                            operator: currentUserName,
+                            status: 'completed'
+                        });
+
+                        this.isSending = false;
+                        this.$hideLoading();
+                        this.$showToast(`催报通知已发送！成功${successCount}人`, 'success');
+                        this.goToStep(5);
+                    } catch (error) {
+                        this.isSending = false;
+                        this.$hideLoading();
+                        this.$showToast('发送失败: ' + (error.message || '请重试'), 'error');
+                    }
+                },
+
+                getEnabledChannels() {
+                    const channels = [];
+                    if (this.channels.app) channels.push('APP通知');
+                    if (this.channels.sms) channels.push('短信');
+                    if (this.channels.wechat) channels.push('微信');
+                    if (this.channels.email) channels.push('邮件');
+                    return channels;
+                },
+
+                finishReminder() {
+                    this.$showToast('催办流程已完成', 'success');
+                    setTimeout(() => {
+                        // 优先尝试关闭标签页（仅对 window.open 打开的页面有效）
+                        // 如果关闭失败，根据模式跳回不同页面
+                        if (window.opener) {
+                            window.close();
+                        } else if (this.mode === 'business') {
+                            window.location.href = 'business-data.html?conferenceId=' + this.conference.id;
+                        } else {
+                            window.location.href = 'task-management.html?conferenceId=' + this.conference.id;
+                        }
+                    }, 1000);
+                },
+
+                formatDateTime(date) {
+                    if (!date) return '';
+                    const d = new Date(date);
+                    return d.toLocaleString('zh-CN');
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+</body>
+</html>

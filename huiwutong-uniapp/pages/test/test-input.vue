@@ -35,7 +35,7 @@
       <view class="test-item">
         <text class="test-label">测试5: 带图标的input</text>
         <view class="input-wrapper">
-          <text class="input-icon">👤</text>
+          <text class="input-icon"><text class="fa fa-user"></text></text>
           <input v-model="test5" type="text" placeholder="带图标" class="input-with-icon" />
         </view>
         <text class="test-value">值: {{ test5 }}</text>

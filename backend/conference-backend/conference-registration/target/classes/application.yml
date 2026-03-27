@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: conference-registration
+  
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+        register-enabled: false
+      config:
+        enabled: false
+        import-check:
+          enabled: false
+  
+  config:
+    import: "optional:nacos:"
+  
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3308/conference_registration?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
+    username: root
+    password: Hnhx@123
+    druid:
+      initial-size: 5
+      max-active: 20
+      min-idle: 5
+      test-while-idle: true
+      test-on-borrow: true
+      validation-query: select 1
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+# MyBatis Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.conference.registration.entity
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+server:
+  port: 8082
+  servlet:
+    context-path: /
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.conference: DEBUG
+    com.baomidou: DEBUG
+
+registration:
+  ocr:
+    api-url: https://api.ocr.space/parse/imageurl
+    api-key: helloworld

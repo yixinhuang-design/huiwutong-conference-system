@@ -293,7 +293,7 @@
 
         <view class="modal-body">
           <view class="result-status" :class="testResult.success ? 'success' : 'error'">
-            <text class="status-icon">{{ testResult.success ? '✅' : '❌' }}</text>
+            <text class="status-icon">{{ testResult.success ? '<text class="fa fa-check"></text>' : '<text class="fa fa-times"></text>' }}</text>
             <text class="status-text">{{ testResult.success ? '连接成功' : '连接失败' }}</text>
           </view>
 
@@ -491,6 +491,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .api-config-container {
   min-height: 100vh;

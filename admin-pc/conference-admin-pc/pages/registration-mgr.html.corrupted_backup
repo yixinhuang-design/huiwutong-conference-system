@@ -1,0 +1,4101 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鎶ュ悕姹囨€荤郴缁?- 鏅鸿兘浼氳绯荤粺</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="../css/stat-cards-standard.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 椤甸潰瀵艰埅鏍?-->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>杩斿洖浼氳鍒楄〃</span>
+                </a>
+                <h1 class="nav-title">鎶ュ悕姹囨€荤郴缁?/h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 涓诲唴瀹瑰尯鍩?-->
+        <div class="page-with-nav" style="padding-top: 90px !important;">
+        <!-- 椤甸潰澶撮儴 -->
+        <div class="page-header glass-card">
+            <div>
+                <h2>鎶ュ悕姹囨€荤郴缁?/h2>
+                <div class="conference-context">
+                    <span class="context-label">褰撳墠浼氳:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goToAudit">
+                    <i class="fas fa-user-check"></i>
+                    鏅鸿兘瀹℃牳
+                </button>
+                <button class="btn-primary" @click="goToSeating">
+                    <i class="fas fa-chair"></i>
+                    鏅鸿兘鎺掑骇
+                </button>
+                <button class="btn-outline" @click="goToRosterGeneration">
+                    <i class="fas fa-file-export"></i>
+                    鐢熸垚鍚嶅唽
+                </button>
+            </div>
+        </div>
+
+        <!-- 鎶ュ悕缁熻姒傝闈㈡澘 -->
+        <div class="registration-stats-overview glass-card">
+            <h3>鎶ュ悕缁熻姒傝</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ registrationStats.total }}</div>
+                        <div class="stat-label">鎬绘姤鍚嶆暟</div>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ registrationStats.approved }}</div>
+                        <div class="stat-label">宸插鏍告暟</div>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ registrationStats.pending }}</div>
+                        <div class="stat-label">鏈鏍告暟</div>
+                    </div>
+                </div>
+                <div class="stat-card info" v-if="registrationStats.limitCount">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-lock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ registrationStats.limitCount }}</div>
+                        <div class="stat-label">闄愬畾鎶ュ悕浜烘暟</div>
+                    </div>
+                </div>
+                <div class="stat-card danger" v-if="registrationStats.unregisteredUnits > 0">
+                    <div class="stat-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ registrationStats.unregisteredUnits }}</div>
+                        <div class="stat-label">鏈姤鍚嶅崟浣?/div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 鎶ュ悕瓒嬪娍鍥?-->
+            <div class="trend-chart-section">
+                <div class="chart-header">
+                    <h4>鎶ュ悕瓒嬪娍鍥?/h4>
+                    <div class="chart-controls">
+                        <select v-model="trendTimeRange" @change="updateTrendChart">
+                            <option value="today">浠婂ぉ</option>
+                            <option value="week">鏈懆</option>
+                            <option value="month">鏈湀</option>
+                            <option value="custom">鑷畾涔?/option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div id="trendChart" style="width: 100%; height: 300px;"></div>
+                </div>
+            </div>
+            
+            <!-- 蹇€熸搷浣?-->
+            <div class="quick-actions">
+                <a href="reminder-urge.html" class="btn-warning btn-lg">
+                    <i class="fas fa-bell"></i>
+                    鍌姤鍌敹绯荤粺
+                </a>
+                <button class="btn-outline" @click="generateMockData">
+                    <i class="fas fa-database"></i>
+                    鐢熸垚铏氭嫙鏁版嵁
+                </button>
+                <button class="btn-outline" @click="exportStatsReport">
+                    <i class="fas fa-file-download"></i>
+                    瀵煎嚭缁熻鎶ュ憡
+                </button>
+            </div>
+        </div>
+
+        <!-- 澶氭笭閬撴姤鍚嶇鐞?-->
+        <div class="channel-management glass-card">
+            <h3>馃搳 澶氭笭閬撴姤鍚嶅垎鏋?/h3>
+            <div class="channel-cards">
+                <div v-for="channel in channels" :key="channel.type" 
+                     class="channel-card" 
+                     :class="{ active: selectedChannel === channel.type }"
+                     @click="selectChannel(channel.type)">
+                    <i :class="channel.icon"></i>
+                    <span class="channel-name">{{ channel.name }}</span>
+                    <div class="channel-stats">
+                        <span class="stat-number">{{ channel.count }}</span>
+                        <span class="stat-label">浜烘暟</span>
+                    </div>
+                    <div class="channel-trend" :class="channel.trend > 0 ? 'trend-up' : 'trend-down'">
+                        {{ channel.trend > 0 ? '+' : '' }}{{ channel.trend }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 鎶ュ悕鏁版嵁琛ㄦ牸 - 鍙傝€冧細璁鐞嗕腑蹇冩牱寮?-->
+        <div class="registration-data glass-card">
+            <div class="section-header">
+                <h3>馃搳 鎶ュ悕鏁版嵁鍒楄〃</h3>
+                    <div class="header-actions">
+                        <span class="data-count">鍏?{{ filteredRegistrations.length }} 鏉¤褰?/span>
+                        <button class="btn-outline" @click="exportRegistrationData">
+                            <i class="fas fa-download"></i>
+                            瀵煎嚭鏁版嵁
+                        </button>
+                    </div>
+            </div>
+            
+            <!-- 琛ㄦ牸宸ュ叿鏍?-->
+            <div class="table-toolbar">
+                <div class="toolbar-left">
+                    <input type="text" 
+                           v-model="searchQuery" 
+                           @input="filterData"
+                           placeholder="鎼滅储濮撳悕銆佸崟浣嶃€侀儴闂?.."
+                           class="search-input">
+                    <select v-model="statusFilter" @change="filterData" class="filter-select">
+                        <option value="">鍏ㄩ儴鐘舵€?/option>
+                        <option value="approved">宸查€氳繃</option>
+                        <option value="pending">寰呭鏍?/option>
+                        <option value="rejected">宸叉嫆缁?/option>
+                    </select>
+                    <select v-model="channelFilter" @change="filterData" class="filter-select">
+                        <option value="">鍏ㄩ儴娓犻亾</option>
+                        <option value="web">缃戦〉鎶ュ悕</option>
+                        <option value="miniprogram">灏忕▼搴忔姤鍚?/option>
+                        <option value="mobile">绉诲姩绔姤鍚?/option>
+                    </select>
+                </div>
+                <div class="toolbar-right">
+                    <template v-if="selectedRegistrations.length > 0">
+                        <span class="batch-count">宸查€?{{ selectedRegistrations.length }} 浜?/span>
+                        <button class="btn-sm btn-primary" @click="batchApproveSelected" v-if="hasPendingSelected">
+                            <i class="fas fa-check"></i> 鎵归噺閫氳繃
+                        </button>
+                        <button class="btn-sm btn-outline" @click="clearSelectedRegistrations">
+                            <i class="fas fa-times"></i> 娓呴櫎閫夋嫨
+                        </button>
+                    </template>
+                    <template v-if="selectedRegistrations.length > 0 && groupingPreview.length > 0">
+                        <select v-model="batchTargetGroup" class="batch-group-select">
+                            <option value="">鍒嗛厤鍒扮粍</option>
+                            <option v-for="group in groupingPreview" :key="group.id" :value="group.id">
+                                {{ group.name }} ({{ group.memberCount }}浜?
+                            </option>
+                        </select>
+                        <button class="btn-sm btn-primary" @click="batchAssignToGroup" :disabled="!batchTargetGroup">
+                            <i class="fas fa-user-plus"></i> 鍒嗛厤
+                        </button>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- 鎶ュ悕浜哄憳琛ㄦ牸 -->
+            <div class="table-wrapper">
+                <table class="registration-table">
+                    <thead>
+                        <tr>
+                            <th width="40">
+                                <input type="checkbox" v-model="selectAll" @change="toggleSelectAll">
+                            </th>
+                            <th>濮撳悕</th>
+                            <th>鍗曚綅</th>
+                            <th>閮ㄩ棬</th>
+                            <th>鑱屽姟</th>
+                            <th>鎶ュ悕娓犻亾</th>
+                            <th>鎶ュ悕鏃堕棿</th>
+                            <th>鏅鸿兘瀹℃牳</th>
+                            <th>瀹℃牳鐘舵€?/th>
+                            <th>鎿嶄綔</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="registration in paginatedRegistrations" :key="registration.id" :class="'status-row-' + registration.status">
+                            <td>
+                                <input type="checkbox" :checked="selectedRegistrations.includes(registration.id)" @change="toggleRegistration(registration.id)">
+                            </td>
+                            <td><strong>{{ registration.name }}</strong></td>
+                            <td>{{ registration.unit }}</td>
+                            <td>{{ registration.department }}</td>
+                            <td>{{ registration.position }}</td>
+                            <td>
+                                <span class="channel-badge" :class="'channel-' + registration.channel">
+                                    {{ getChannelText(registration.channel) }}
+                                </span>
+                            </td>
+                            <td>{{ formatDate(registration.registeredAt) }}</td>
+                            <td>
+                                <span v-if="registration.ocrResult" class="badge" :class="'badge-' + getOCRStatusType(registration.ocrResult)">
+                                    {{ getOCRStatusText(registration.ocrResult) }}
+                                </span>
+                                <span v-else class="badge badge-secondary">
+                                    <i class="fas fa-minus-circle"></i> 鏈瘑鍒?                                </span>
+                            </td>
+                            <td>
+                                <span class="badge" :class="'badge-review-' + registration.status">
+                                    {{ getStatusText(registration.status) }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button v-if="registration.status === 'pending'" class="btn-xs btn-primary" @click="quickApprove(registration.id)">
+                                        <i class="fas fa-check"></i> 閫氳繃
+                                    </button>
+                                    <button v-if="registration.status === 'pending'" class="btn-xs btn-danger" @click="quickReject(registration.id)">
+                                        <i class="fas fa-times"></i> 鎷掔粷
+                                    </button>
+                                    <button class="btn-xs btn-outline" @click="viewDetails(registration.id)">
+                                        <i class="fas fa-eye"></i> 璇︽儏
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 鍒嗛〉 -->
+            <div class="table-pagination">
+                <button class="btn-pagination btn-prev" :disabled="currentPage === 1" @click="prevPage" title="涓婁竴椤?>
+                    <i class="fas fa-chevron-left"></i>
+                    <span>涓婁竴椤?/span>
+                </button>
+                <div class="page-indicator">
+                    <span class="page-text">绗?<strong>{{ currentPage }}</strong> / <strong>{{ totalPages }}</strong> 椤?鍏?<strong>{{ filteredRegistrations.length }}</strong> 鏉?/span>
+                </div>
+                <button class="btn-pagination btn-next" :disabled="currentPage >= totalPages" @click="nextPage" title="涓嬩竴椤?>
+                    <span>涓嬩竴椤?/span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 鏅鸿兘鍒嗙粍绠＄悊 -->
+        <div class="smart-grouping glass-card">
+            <div class="section-header">
+                <h3>馃懃 鏅鸿兘鍒嗙粍绠＄悊</h3>
+                <div class="header-actions">
+                    <div class="grouping-toggle">
+                        <span class="toggle-label">鍚敤鍒嗙粍:</span>
+                        <button class="toggle-btn" :class="{ active: groupingEnabled }" @click="toggleGrouping">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">{{ groupingEnabled ? '宸插惎鐢? : '鏈惎鐢? }}</span>
+                        </button>
+                    </div>
+                    <button class="btn-outline" @click="quickExportExcel" :disabled="!groupingEnabled">
+                        <i class="fas fa-file-excel"></i>
+                        瀵煎嚭Excel
+                    </button>
+                </div>
+            </div>
+            <div class="grouping-config" :class="{ disabled: !groupingEnabled }">
+                <div class="config-item">
+                    <label>鍒嗙粍渚濇嵁:</label>
+                    <select v-model="groupingCriteria" @change="updateGroupingPreview">
+                        <option value="department">鎸夐儴闂ㄥ垎缁?/option>
+                        <option value="position">鎸夎亴绾у垎缁?/option>
+                        <option value="expertise">鎸変笓涓氶鍩?/option>
+                        <option value="mixed">娣峰悎鍒嗙粍</option>
+                        <option value="random">闅忔満鍒嗙粍</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>姣忕粍浜烘暟:</label>
+                    <input type="number" v-model="groupSize" min="10" max="50" @change="updateGroupingPreview">
+                </div>
+                <div class="config-item">
+                    <label>鍒嗙粍鏁伴噺:</label>
+                    <input type="number" v-model="groupCount" min="1" max="20" readonly :disabled="!groupingEnabled">
+                </div>
+                <button class="btn-primary" @click="autoGrouping" :disabled="!groupingEnabled">
+                    <i class="fas fa-users-cog"></i>
+                    鎵ц鏅鸿兘鍒嗙粍
+                </button>
+            </div>
+            <div class="grouping-preview" :class="{ disabled: !groupingEnabled }">
+                <div v-if="groupingPreview.length === 0" class="empty-preview">
+                    <p>璇峰厛閰嶇疆鍒嗙粍鍙傛暟骞舵墽琛屾櫤鑳藉垎缁?/p>
+                </div>
+                <div v-else>
+                    <div class="preview-actions">
+                        <button class="btn-sm btn-outline" @click="generateGroups">
+                            <i class="fas fa-users"></i>
+                            鑷姩鐢熸垚缇ょ粍
+                        </button>
+                    </div>
+                    <table class="group-table">
+                        <thead>
+                            <tr>
+                                <th>缁勫悕</th>
+                                <th>浜烘暟</th>
+                                <th>缁勯暱</th>
+                                <th>鍒嗙粍渚濇嵁</th>
+                                <th>鎿嶄綔</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="group in groupingPreview" :key="group.id">
+                                <td>
+                                    <input type="text" 
+                                           v-model="group.name" 
+                                           @blur="saveGroupName(group.id)"
+                                           class="group-name-input">
+                                </td>
+                                <td>{{ group.memberCount }}浜?/td>
+                                <td>
+                                    <select v-model="group.leader" 
+                                            @change="saveGroupLeader(group.id)"
+                                            class="leader-select">
+                                        <option value="">鏈寚瀹?/option>
+                                        <option v-for="member in getGroupMembers(group.id)" 
+                                                :key="member.id" 
+                                                :value="member.name">
+                                            {{ member.name }} ({{ member.unit }})
+                                        </option>
+                                    </select>
+                                </td>
+                                <td>{{ group.criteria }}</td>
+                                <td>
+                                    <button class="btn-sm btn-outline" @click="editGroupMembers(group.id)">
+                                        <i class="fas fa-edit"></i>
+                                        璋冩暣鎴愬憳
+                                    </button>
+                                    <button class="btn-sm btn-outline" @click="viewGroup(group.id)">
+                                        <i class="fas fa-eye"></i>
+                                        鏌ョ湅
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 椤甸潰搴曢儴鎿嶄綔鍖?-->
+        <div class="page-bottom-actions glass-card">
+            <div class="bottom-actions-content">
+                <div class="bottom-actions-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>瀹屾垚鎶ュ悕鏁版嵁瀹℃牳鍜屽垎缁勯厤缃悗锛岀偣鍑诲彸渚ф寜閽敓鎴愬弬浼氫汉鍛樺悕鍐?/span>
+                </div>
+                <button class="btn-primary btn-lg" @click="goToRosterGeneration">
+                    <i class="fas fa-file-export"></i>
+                    鐢熸垚鍙備細浜哄憳鍚嶅唽
+                </button>
+            </div>
+        </div>
+        </div><!-- 鍏抽棴page-with-nav -->
+
+        <!-- 涓€閿偓鎶ュ脊绐?-->
+        <div v-if="showReminderModal" class="modal-overlay" @click.self="showReminderModal = false">
+            <div class="modal-content glass-card reminder-modal" @click.stop>
+                <div class="modal-header">
+                    <h3>鈴?涓€閿偓鎶?/h3>
+                    <button class="btn-icon" @click="showReminderModal = false">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- 姝ラ1: 閫夋嫨鍗曚綅 -->
+                    <div class="reminder-step" v-if="reminderStep === 1">
+                        <h4>姝ラ1: 閫夋嫨瑕佸偓鎶ョ殑鍗曚綅</h4>
+                        <div class="unit-selection">
+                            <div class="selection-actions">
+                                <button class="btn-sm btn-outline" @click="selectAllUnits">
+                                    {{ allUnitsSelected ? '鍙栨秷鍏ㄩ€? : '鍏ㄩ€? }}
+                                </button>
+                                <span class="selected-count">宸查€夋嫨 {{ selectedUnits.length }} 涓崟浣?/span>
+                            </div>
+                            <div class="unit-list">
+                                <div v-for="unit in unregisteredUnits" :key="unit.id" 
+                                     class="unit-item" 
+                                     :class="{ selected: selectedUnits.includes(unit.id) }"
+                                     @click="toggleUnit(unit.id)">
+                                    <input type="checkbox" 
+                                           :checked="selectedUnits.includes(unit.id)"
+                                           @change.stop="toggleUnit(unit.id)">
+                                    <div class="unit-info">
+                                        <div class="unit-name">{{ unit.name }}</div>
+                                        <div class="unit-meta">棰勮浜烘暟: {{ unit.expectedCount }}浜?/div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn-outline" @click="showReminderModal = false">鍙栨秷</button>
+                            <button class="btn-primary" @click="reminderStep = 2" :disabled="selectedUnits.length === 0">
+                                涓嬩竴姝ワ細閫夋嫨娓犻亾
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 姝ラ2: 閫夋嫨娓犻亾 -->
+                    <div class="reminder-step" v-if="reminderStep === 2">
+                        <h4>姝ラ2: 閫夋嫨鍌姤娓犻亾</h4>
+                        <div class="channel-selection">
+                            <label class="channel-option" 
+                                   v-for="channel in availableChannels" 
+                                   :key="channel.value"
+                                   :class="{ selected: reminderChannels.includes(channel.value) }">
+                                <input type="checkbox" 
+                                       :value="channel.value"
+                                       v-model="reminderChannels">
+                                <div class="channel-content">
+                                    <i :class="channel.icon"></i>
+                                    <div>
+                                        <div class="channel-name">{{ channel.name }}</div>
+                                        <div class="channel-desc">{{ channel.desc }}</div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn-outline" @click="reminderStep = 1">涓婁竴姝?/button>
+                            <button class="btn-primary" @click="reminderStep = 3" :disabled="reminderChannels.length === 0">
+                                涓嬩竴姝ワ細閫夋嫨妯℃澘
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 姝ラ3: 閫夋嫨妯℃澘 -->
+                    <div class="reminder-step" v-if="reminderStep === 3">
+                        <h4>姝ラ3: 閫夋嫨鍌姤妯℃澘</h4>
+                        <div class="template-selection">
+                            <select v-model="reminderTemplate" class="template-select">
+                                <option value="gentle">娓╁拰鎻愰啋妯℃澘</option>
+                                <option value="urgent">绱ф€ュ偓鎶ユā鏉?/option>
+                                <option value="final">鏈€鍚庢満浼氭ā鏉?/option>
+                                <option value="custom">鑷畾涔夋ā鏉?/option>
+                            </select>
+                            <div class="template-preview">
+                                <h5>妯℃澘棰勮锛?/h5>
+                                <div class="preview-content">
+                                    {{ getReminderTemplateContent() }}
+                                </div>
+                                <div v-if="reminderTemplate === 'custom'" class="custom-template-editor">
+                                    <textarea v-model="customTemplateContent" 
+                                              placeholder="璇疯緭鍏ヨ嚜瀹氫箟鍌姤鍐呭..."
+                                              rows="6"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn-outline" @click="reminderStep = 2">涓婁竴姝?/button>
+                            <button class="btn-primary" @click="reminderStep = 4">
+                                涓嬩竴姝ワ細纭鍙戦€?                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 姝ラ4: 纭鍙戦€?-->
+                    <div class="reminder-step" v-if="reminderStep === 4">
+                        <h4>姝ラ4: 纭鍙戦€?/h4>
+                        <div class="send-summary">
+                            <div class="summary-item">
+                                <span class="label">閫夋嫨鍗曚綅:</span>
+                                <span class="value">{{ selectedUnits.length }} 涓崟浣?/span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">鍌姤娓犻亾:</span>
+                                <span class="value">{{ getChannelNames() }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">鍌姤妯℃澘:</span>
+                                <span class="value">{{ getTemplateName() }}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">棰勮鍙戦€?</span>
+                                <span class="value">{{ getEstimatedCount() }} 鏉℃秷鎭?/span>
+                            </div>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn-outline" @click="reminderStep = 3">涓婁竴姝?/button>
+                            <button class="btn-primary" @click="sendReminder">
+                                <i class="fas fa-paper-plane"></i>
+                                纭鍙戦€?                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 鏅鸿兘鍒嗙粍 - 缁勮鎯呭脊绐?-->
+        <div v-if="showGroupDetailModal" class="modal-overlay" @click.self="showGroupDetailModal = false">
+            <div class="modal-content glass-card" @click.stop style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h3>缁勮鎯?- {{ currentGroup?.name }}</h3>
+                    <button class="btn-icon" @click="showGroupDetailModal = false">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="group-info">
+                        <div class="info-row">
+                            <span class="label">缁勫悕:</span>
+                            <input type="text" v-model="currentGroup.name" class="group-name-input">
+                        </div>
+                        <div class="info-row">
+                            <span class="label">浜烘暟:</span>
+                            <span class="value">{{ currentGroup?.memberCount }}浜?/span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">缁勯暱:</span>
+                            <select v-model="currentGroup.leader" class="leader-select">
+                                <option value="">鏈寚瀹?/option>
+                                <option v-for="member in currentGroupMembers" 
+                                        :key="member.id" 
+                                        :value="member.name">
+                                    {{ member.name }} ({{ member.unit }})
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="members-list">
+                        <h4>鎴愬憳鍒楄〃 ({{ currentGroupMembers.length }}浜?</h4>
+                        <div class="members-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>搴忓彿</th>
+                                        <th>濮撳悕</th>
+                                        <th>鍗曚綅</th>
+                                        <th>閮ㄩ棬</th>
+                                        <th>鑱岀骇</th>
+                                        <th>鎿嶄綔</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(member, index) in currentGroupMembers" :key="member.id">
+                                        <td>{{ index + 1 }}</td>
+                                        <td>{{ member.name }}</td>
+                                        <td>{{ member.unit }}</td>
+                                        <td>{{ member.department }}</td>
+                                        <td>{{ member.position }}</td>
+                                        <td>
+                                            <button class="btn-sm btn-danger" @click="removeMemberFromGroup(member.id)">
+                                                绉婚櫎
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-outline" @click="showGroupDetailModal = false">鍏抽棴</button>
+                        <button class="btn-primary" @click="saveGroupDetail">淇濆瓨淇敼</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 鏅鸿兘鍒嗙粍 - 鎴愬憳璋冩暣寮圭獥 -->
+        <div v-if="showMemberEditModal" class="modal-overlay" @click.self="showMemberEditModal = false">
+            <div class="modal-content glass-card member-edit-modal" @click.stop>
+                <div class="modal-header">
+                    <h3>璋冩暣缁勬垚鍛?- {{ editingGroup?.name }}</h3>
+                    <button class="btn-icon" @click="showMemberEditModal = false">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="edit-tabs">
+                        <button class="tab-btn" 
+                                :class="{ active: memberEditMode === 'drag' }"
+                                @click="memberEditMode = 'drag'">
+                            <i class="fas fa-arrows-alt"></i>
+                            鎷栧姩鍒嗙粍
+                        </button>
+                        <button class="tab-btn" 
+                                :class="{ active: memberEditMode === 'number' }"
+                                @click="memberEditMode = 'number'">
+                            <i class="fas fa-sort-numeric-down"></i>
+                            搴忓彿鍒嗙粍
+                        </button>
+                    </div>
+                    
+                    <!-- 鎷栧姩鍒嗙粍妯″紡 -->
+                    <div v-if="memberEditMode === 'drag'" class="drag-mode">
+                        <div class="groups-container">
+                            <div v-for="group in allGroupsForEdit" :key="group.id" class="group-column">
+                                <div class="group-column-header">
+                                    <h5>{{ group.name }}</h5>
+                                    <span class="member-count-badge">{{ group.members.length }}浜?/span>
+                                </div>
+                                <div class="members-drag-list" 
+                                     @dragover.prevent
+                                     @drop.prevent="handleDrop(group.id, $event)">
+                                    <div class="members-grid">
+                                        <div v-for="member in group.members" 
+                                             :key="member.id"
+                                             class="member-drag-item"
+                                             draggable="true"
+                                             @dragstart="handleDragStart(member, group.id)"
+                                             :title="member.unit + ' - ' + member.position">
+                                            <i class="fas fa-grip-vertical drag-handle"></i>
+                                            <span class="member-name">{{ member.name }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 搴忓彿鍒嗙粍妯″紡 -->
+                    <div v-if="memberEditMode === 'number'" class="number-mode">
+                        <div class="number-edit-controls">
+                            <label>璁剧疆搴忓彿鑼冨洿鍒嗙粍:</label>
+                            <input type="number" v-model.number="numberGroupSize" min="1" placeholder="姣忕粍浜烘暟">
+                            <button class="btn-primary" @click="applyNumberGrouping">搴旂敤鍒嗙粍</button>
+                        </div>
+                        <div class="members-number-list">
+                            <div v-for="(member, index) in allMembersForEdit" 
+                                 :key="member.id"
+                                 class="member-number-item">
+                                <span class="member-number">{{ index + 1 }}</span>
+                                <span class="member-info">{{ member.name }} ({{ member.unit }})</span>
+                                <select v-model="member.groupId" @change="updateMemberGroup(member.id, member.groupId)">
+                                    <option v-for="group in allGroupsForEdit" 
+                                            :key="group.id" 
+                                            :value="group.id">
+                                        {{ group.name }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button class="btn-outline" @click="showMemberEditModal = false">鍙栨秷</button>
+                        <button class="btn-primary" @click="saveMemberEdit">淇濆瓨璋冩暣</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 鎸囧畾宸ヤ綔浜哄憳寮圭獥 -->
+        <div v-if="showStaffModal" class="modal-overlay" @click.self="showStaffModal = false">
+            <div class="modal-content glass-card staff-modal" @click.stop>
+                <div class="modal-header">
+                    <h3>鎸囧畾宸ヤ綔浜哄憳 - {{ editingGroup?.name }}</h3>
+                    <button class="btn-icon" @click="showStaffModal = false">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="staff-selection">
+                        <p>浠庡凡鎶ュ悕浜哄憳涓€夋嫨宸ヤ綔浜哄憳锛?/p>
+                        <div class="staff-list">
+                            <label v-for="member in availableStaff" 
+                                   :key="member.id"
+                                   class="staff-option"
+                                   :class="{ selected: editingGroup && editingGroup.staff && editingGroup.staff.includes(member.id) }">
+                                <input type="checkbox" 
+                                       :value="member.id"
+                                       :checked="editingGroup && editingGroup.staff && editingGroup.staff.includes(member.id)"
+                                       @change="toggleStaff(member.id)">
+                                <div class="staff-info">
+                                    <div class="staff-name">{{ member.name }}</div>
+                                    <div class="staff-meta">{{ member.unit }} - {{ member.position }}</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-outline" @click="showStaffModal = false">鍙栨秷</button>
+                        <button class="btn-primary" @click="saveStaff">淇濆瓨</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '鍔犺浇涓?..'
+                    },
+                    registrationStats: {
+                        total: 356,
+                        approved: 328,
+                        pending: 23,
+                        rejected: 5,
+                        limitCount: 500,
+                        unregisteredUnits: 7
+                    },
+                    trendTimeRange: 'month',
+                    trendChartData: [],
+                    trendChart: null,
+                    channels: [
+                        { type: 'web', name: '缃戦〉鎶ュ悕', icon: 'fas fa-globe', count: 156, trend: 12 },
+                        { type: 'miniprogram', name: '灏忕▼搴忔姤鍚?, icon: 'fas fa-comment', count: 142, trend: 8 },
+                        { type: 'mobile', name: '绉诲姩绔姤鍚?, icon: 'fas fa-mobile-alt', count: 58, trend: -3 }
+                    ],
+                    selectedChannel: null,
+                    showReminderModal: false,
+                    reminderStep: 1, // 鍌姤姝ラ锛?-閫夋嫨鍗曚綅, 2-閫夋嫨娓犻亾, 3-閫夋嫨妯℃澘, 4-纭鍙戦€?                    availableChannels: [
+                        { value: 'sms', name: '鐭俊', icon: 'fas fa-sms', desc: '鏀寔闈炴敞鍐岀敤鎴凤紝瀛楁暟闄愬埗160瀛? },
+                        { value: 'wechat', name: '寰俊', icon: 'fab fa-weixin', desc: '闇€娉ㄥ唽鐢ㄦ埛锛屾ā鏉挎秷鎭? },
+                        { value: 'app', name: 'APP鎺ㄩ€?, icon: 'fas fa-mobile-alt', desc: '闇€娉ㄥ唽鐢ㄦ埛锛岃闃呮秷鎭? },
+                        { value: 'qr', name: '浜岀淮鐮佹煡璇?, icon: 'fas fa-qrcode', desc: '闈炴敞鍐岀敤鎴凤紝鐢熸垚鍞竴浜岀淮鐮? }
+                    ],
+                    customTemplateContent: '',
+                    ocrApiOnline: true,
+                    ocrResult: null,
+                    groupingEnabled: false, // 鏄惁鍚敤鍒嗙粍
+                    groupingCriteria: 'department',
+                    groupSize: 25,
+                    groupCount: 0,
+                    groupingPreview: [],
+                    groupMembers: {}, // 瀛樺偍姣忎釜缁勭殑鎴愬憳鍒楄〃
+                    editingGroupId: null, // 褰撳墠姝ｅ湪缂栬緫鐨勭粍ID
+                    showGroupDetailModal: false, // 缁勮鎯呭脊绐?                    showMemberEditModal: false, // 鎴愬憳璋冩暣寮圭獥
+                    showStaffModal: false, // 鎸囧畾宸ヤ綔浜哄憳寮圭獥
+                    currentGroup: null, // 褰撳墠鏌ョ湅鐨勭粍
+                    currentGroupMembers: [], // 褰撳墠缁勭殑鎴愬憳鍒楄〃
+                    editingGroup: null, // 姝ｅ湪缂栬緫鐨勭粍
+                    memberEditMode: 'drag', // 鎴愬憳缂栬緫妯″紡锛歞rag-鎷栧姩, number-搴忓彿
+                    allGroupsForEdit: [], // 鐢ㄤ簬缂栬緫鐨勬墍鏈夌粍
+                    allMembersForEdit: [], // 鐢ㄤ簬缂栬緫鐨勬墍鏈夋垚鍛?                    draggedMember: null, // 姝ｅ湪鎷栧姩鐨勬垚鍛?                    draggedFromGroup: null, // 鎴愬憳鏉ユ簮缁?                    numberGroupSize: 25, // 搴忓彿鍒嗙粍姣忕粍浜烘暟
+                    availableStaff: [], // 鍙€夌殑宸ヤ綔浜哄憳鍒楄〃
+                    reminderStats: {
+                        unregisteredUnits: 0,
+                        involvedPersons: 0,
+                        sentReminders: 0
+                    },
+                    reminderTemplate: 'gentle',
+                    reminderChannels: ['sms'],
+                    selectedUnits: [],
+                    unregisteredUnits: [
+                        { id: 'unit_1', name: '绀轰緥鍗曚綅A', expectedCount: 5 },
+                        { id: 'unit_2', name: '绀轰緥鍗曚綅B', expectedCount: 3 },
+                        { id: 'unit_3', name: '绀轰緥鍗曚綅C', expectedCount: 8 }
+                    ],
+                    searchQuery: '',
+                    statusFilter: '',
+                    channelFilter: '',
+                    registrations: [],
+                    filteredRegistrations: [],
+                    selectedRegistrations: [],
+                    selectAll: false,
+                    currentPage: 1,
+                    pageSize: 20,
+                    batchTargetGroup: '',  // 鎵归噺鍒嗛厤鐩爣缁?                }
+            },
+            computed: {
+                paginatedRegistrations() {
+                    const start = (this.currentPage - 1) * this.pageSize;
+                    const end = start + this.pageSize;
+                    return this.filteredRegistrations.slice(start, end);
+                },
+                totalPages() {
+                    const pages = Math.ceil(this.filteredRegistrations.length / this.pageSize);
+                    return pages > 0 ? pages : 1;
+                },
+                allUnitsSelected() {
+                    return this.unregisteredUnits.length > 0 && 
+                           this.selectedUnits.length === this.unregisteredUnits.length;
+                },
+                hasPendingSelected() {
+                    return this.selectedRegistrations.some(id => {
+                        const reg = this.registrations.find(r => r.id === id);
+                        return reg && reg.status === 'pending';
+                    });
+                }
+            },
+            watch: {
+                paginatedRegistrations: {
+                    handler() {
+                        // 褰撳垎椤垫暟鎹彉鍖栨椂锛屾洿鏂板叏閫夌姸鎬?                        if (this.updateSelectAllState) {
+                            this.updateSelectAllState();
+                        }
+                    },
+                    immediate: false
+                }
+            },
+            async mounted() {
+                try {
+                    // 纭繚 interaction-utils 宸插姞杞?                    if (!window.InteractionMixin) {
+                        console.warn('InteractionMixin 鏈姞杞斤紝绛夊緟鍔犺浇...');
+                        let retries = 0;
+                        while (!window.InteractionMixin && retries < 50) {
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            retries++;
+                        }
+                    }
+                    
+                    // 绛夊緟conferenceContext鍒濆鍖栧畬鎴?                    await this.waitForConferenceContext();
+                    await this.initialize();
+                    this.initTrendChart();
+                } catch (error) {
+                    console.error('椤甸潰鍒濆鍖栧け璐?', error);
+                    // 鍗充娇鍒濆鍖栧け璐ワ紝涔熷皾璇曟樉绀洪〉闈?                    this.$nextTick(() => {
+                        if (this.loadRegistrations) {
+                            this.loadRegistrations();
+                        }
+                    });
+                }
+            },
+            methods: {
+                // 鐢熸垚妯℃嫙鎶ュ悕鏁版嵁
+                generateMockRegistrations() {
+                    const units = ['甯傚缁勭粐閮?, '甯傚瀹ｄ紶閮?, '甯傛暀鑲插眬', '甯傝储鏀垮眬', '甯傚崼鍋ュ', '甯傚叕瀹夊眬', '甯備汉绀惧眬', '甯傚彂鏀瑰', '甯備綇寤哄眬', '甯備氦閫氬眬'];
+                    const departments = ['缁煎悎绉?, '鍔炲叕瀹?, '浜轰簨绉?, '璐㈠姟绉?, '鏀跨瓥娉曡绉?, '涓氬姟涓€绉?, '涓氬姟浜岀', '鐩戠潱绉?];
+                    const positions = ['澶勯暱', '鍓闀?, '绉戦暱', '鍓闀?, '涓讳换绉戝憳', '绉戝憳', '鍔炰簨鍛?];
+                    const surnames = ['寮?, '鏉?, '鐜?, '璧?, '閽?, '瀛?, '鍛?, '鍚?, '閮?, '鍐?, '闄?, '瑜?, '鍗?, '钂?, '娌?, '闊?, '鏉?, '鏈?, '绉?, '灏?];
+                    const names = ['浼?, '鑺?, '濞?, '鏁?, '闈?, '涓?, '寮?, '纾?, '鍐?, '娲?, '鍕?, '鑹?, '鏉?, '濞?, '娑?, '鏄?, '瓒?, '绉€鑻?, '鍗?, '骞?];
+                    
+                    const registrations = [];
+                    for (let i = 1; i <= 100; i++) {
+                        const surname = surnames[Math.floor(Math.random() * surnames.length)];
+                        const name = names[Math.floor(Math.random() * names.length)];
+                        const unit = units[Math.floor(Math.random() * units.length)];
+                        const department = departments[Math.floor(Math.random() * departments.length)];
+                        const position = positions[Math.floor(Math.random() * positions.length)];
+                        // 80%閫氳繃锛?5%寰呭鏍革紝5%鎷掔粷
+                        const rand = Math.random();
+                        const status = rand < 0.80 ? 'approved' : (rand < 0.95 ? 'pending' : 'rejected');
+                        
+                        registrations.push({
+                            id: i,
+                            name: surname + name,
+                            unit: unit,
+                            department: department,
+                            position: position,
+                            phone: `138${String(Math.floor(Math.random() * 100000000)).padStart(8, '0')}`,
+                            email: `user${i}@example.com`,
+                            status: status,
+                            channel: ['web', 'miniprogram', 'mobile'][Math.floor(Math.random() * 3)],
+                            registeredAt: new Date(2024, 0, Math.floor(Math.random() * 30) + 1),
+                            submitTime: new Date(2024, 0, Math.floor(Math.random() * 30) + 1),
+                            auditTime: status !== 'pending' ? new Date(2024, 0, Math.floor(Math.random() * 30) + 1) : null,
+                            reviewer: status !== 'pending' ? `瀹℃牳鍛?{String.fromCharCode(65 + Math.floor(Math.random() * 3))}` : null
+                        });
+                    }
+                    return registrations;
+                },
+                
+                async waitForConferenceContext() {
+                    // 绛夊緟conferenceContext鍒濆鍖栧畬鎴?                    let retries = 0;
+                    while (!window.conferenceContext && retries < 10) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        retries++;
+                    }
+                    // 濡傛灉conferenceContext宸插垵濮嬪寲锛岀瓑寰呭叾initialize瀹屾垚
+                    if (window.conferenceContext && window.conferenceContext.initialize) {
+                        try {
+                            await window.conferenceContext.initialize();
+                        } catch (error) {
+                            console.warn('conferenceContext鍒濆鍖栬鍛?', error);
+                        }
+                    }
+                },
+                
+                getConferenceId() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) return conferenceId;
+                    if (window.conferenceContext && window.conferenceContext.currentConference) {
+                        return window.conferenceContext.currentConference.id;
+                    }
+                    return localStorage.getItem('currentConferenceId');
+                },
+
+                getApiHeaders() {
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        'X-Tenant-Id': localStorage.getItem('tenantId') || '2027317834622709762',
+                        'X-User-Id': localStorage.getItem('userId') || '1'
+                    };
+                    const token = localStorage.getItem('authToken');
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                    return headers;
+                },
+
+                mapStatusCode(statusCode) {
+                    const map = {
+                        0: 'pending',
+                        1: 'approved',
+                        2: 'rejected',
+                        3: 'cancelled',
+                        4: 'checkedin'
+                    };
+                    if (typeof statusCode === 'string') return statusCode;
+                    return map[statusCode] || 'pending';
+                },
+
+                mapRegistrationFromApi(item) {
+                    let registrationData = {};
+                    try {
+                        registrationData = item.registrationData ? JSON.parse(item.registrationData) : {};
+                    } catch (e) {
+                        registrationData = {};
+                    }
+                    const files = registrationData.files || {};
+                    return {
+                        id: item.id,
+                        name: item.realName || item.name || '',
+                        unit: item.department || item.organization || registrationData.unit || '',
+                        department: item.department || item.organization || registrationData.department || '',
+                        position: item.position || '',
+                        phone: item.phone || '',
+                        email: item.email || '',
+                        status: this.mapStatusCode(item.status),
+                        channel: registrationData.channel || 'mobile',
+                        registeredAt: item.registrationTime || item.createTime || new Date(),
+                        submitTime: item.registrationTime || item.createTime || new Date(),
+                        auditTime: item.auditTime || null,
+                        reviewer: item.auditorId ? `瀹℃牳鍛?{item.auditorId}` : null,
+                        ocrResult: registrationData.ocr || null,
+                        idCardPhotoUrl: files.idCardPhotoUrl || ''
+                    };
+                },
+
+                async initialize() {
+                    const conferenceId = this.getConferenceId();
+                    if (conferenceId) {
+                        if (window.conferenceContext) {
+                            try {
+                                // 濡傛灉conferenceContext宸插姞杞戒簡璇ヤ細璁紝鐩存帴浣跨敤
+                                if (window.conferenceContext.currentConference && 
+                                    window.conferenceContext.currentConference.id === conferenceId) {
+                                    this.conference = window.conferenceContext.currentConference;
+                                } else {
+                                    // 鍚﹀垯鍔犺浇浼氳鏁版嵁
+                                    this.conference = await window.conferenceContext.loadConference(conferenceId);
+                                }
+                            } catch (error) {
+                                console.error('鍔犺浇浼氳鏁版嵁澶辫触:', error);
+                                // 浣跨敤绀轰緥鏁版嵁浣滀负fallback
+                                this.conference = {
+                                    id: conferenceId,
+                                    name: '绀轰緥浼氳'
+                                };
+                            }
+                        } else {
+                            // conferenceContext鏈垵濮嬪寲锛屼娇鐢ㄧず渚嬫暟鎹?                            this.conference = {
+                                id: conferenceId,
+                                name: '绀轰緥浼氳'
+                            };
+                        }
+                    } else {
+                        // 濡傛灉娌℃湁浼氳ID锛屼娇鐢ㄧず渚嬫暟鎹?                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '绀轰緥浼氳'
+                        };
+                    }
+                    // 鏃犺鏄惁鏈変細璁甀D锛岄兘鍔犺浇绀轰緥鏁版嵁
+                    await this.loadRegistrations();
+                    // 纭繚鏁版嵁鍔犺浇瀹屾垚鍚庡啀鏇存柊缁熻鍜岄瑙?                    await this.loadRegistrationStats();
+                    // 浠庡悗绔姞杞藉凡鏈夊垎缁勬暟鎹紙濡傛灉鏈夛級
+                    await this.loadGroupsFromBackend();
+                    // 鍒濆鍖栧畬鎴愬悗鏇存柊鍏ㄩ€夌姸鎬?                    this.$nextTick(() => {
+                        if (this.updateSelectAllState) {
+                            this.updateSelectAllState();
+                        }
+                    });
+                },
+                
+                async loadRegistrationStats() {
+                    const conferenceId = this.getConferenceId();
+
+                    let total = this.registrations.length;
+                    let approved = this.registrations.filter(r => r.status === 'approved').length;
+                    let pending = this.registrations.filter(r => r.status === 'pending').length;
+                    let rejected = this.registrations.filter(r => r.status === 'rejected').length;
+
+                    if (conferenceId) {
+                        try {
+                            const resp = await fetch(`http://localhost:8082/api/registration/stats?conferenceId=${encodeURIComponent(String(conferenceId))}`, {
+                                method: 'GET',
+                                headers: this.getApiHeaders()
+                            });
+                            const result = await resp.json();
+                            if (resp.ok && result.code === 200 && result.data) {
+                                const stats = result.data;
+                                approved = Number(stats.approved || 0);
+                                pending = Number(stats.pending || 0);
+                                rejected = Number(stats.rejected || 0);
+                                total = approved + pending + rejected + Number(stats.cancelled || 0) + Number(stats.checkedin || 0);
+                            }
+                        } catch (e) {
+                            console.warn('鍔犺浇鎶ュ悕缁熻澶辫触锛屼娇鐢ㄦ湰鍦扮粺璁?', e);
+                        }
+                    }
+                    
+                    // 璁＄畻鍚勬笭閬撶殑鎶ュ悕鏁伴噺
+                    const channelCounts = {
+                        web: this.registrations.filter(r => r.channel === 'web').length,
+                        miniprogram: this.registrations.filter(r => r.channel === 'miniprogram').length,
+                        mobile: this.registrations.filter(r => r.channel === 'mobile').length
+                    };
+                    
+                    // 鏇存柊娓犻亾鏁版嵁
+                    this.channels = [
+                        { 
+                            type: 'web', 
+                            name: '缃戦〉鎶ュ悕', 
+                            icon: 'fas fa-globe', 
+                            count: channelCounts.web,
+                            trend: channelCounts.web > 0 ? Math.floor((channelCounts.web / total) * 100) : 0
+                        },
+                        { 
+                            type: 'miniprogram', 
+                            name: '灏忕▼搴忔姤鍚?, 
+                            icon: 'fas fa-comment', 
+                            count: channelCounts.miniprogram,
+                            trend: channelCounts.miniprogram > 0 ? Math.floor((channelCounts.miniprogram / total) * 100) : 0
+                        },
+                        { 
+                            type: 'mobile', 
+                            name: '绉诲姩绔姤鍚?, 
+                            icon: 'fas fa-mobile-alt', 
+                            count: channelCounts.mobile,
+                            trend: channelCounts.mobile > 0 ? Math.floor((channelCounts.mobile / total) * 100) : 0
+                        }
+                    ];
+                    
+                    // 鏇存柊缁熻鏁版嵁
+                    this.registrationStats = {
+                        total: total,
+                        approved: approved,
+                        pending: pending,
+                        rejected: rejected,
+                        limitCount: 500,
+                        unregisteredUnits: Math.max(0, 23 - Math.floor(total / 10)) // 鏍规嵁鎶ュ悕鏁颁及绠楁湭鎶ュ悕鍗曚綅
+                    };
+                    
+                    // 鏇存柊鍌姤缁熻鏁版嵁
+                    this.reminderStats = {
+                        unregisteredUnits: this.registrationStats.unregisteredUnits,
+                        involvedPersons: this.registrationStats.unregisteredUnits * 7, // 浼扮畻娑夊強浜烘暟
+                        sentReminders: Math.floor(this.registrationStats.unregisteredUnits * 0.5) // 浼扮畻宸插彂閫佸偓鎶ユ暟
+                    };
+                    
+                    // 鍒濆鍖栨湭鎶ュ悕鍗曚綅鍒楄〃锛堝疄闄呭簲鐢ㄤ腑搴旇浠嶢PI鑾峰彇锛?                    if (this.registrationStats.unregisteredUnits > 0) {
+                        // 鐢熸垚绀轰緥鏈姤鍚嶅崟浣?                        const units = [];
+                        for (let i = 1; i <= Math.min(this.registrationStats.unregisteredUnits, 20); i++) {
+                            units.push({
+                                id: `unit_${i}`,
+                                name: `绀轰緥鍗曚綅${String.fromCharCode(64 + i)}`,
+                                expectedCount: Math.floor(Math.random() * 10) + 3
+                            });
+                        }
+                        this.unregisteredUnits = units;
+                    }
+                },
+                
+                initTrendChart() {
+                    // 鍒濆鍖栬秼鍔垮浘锛堥渶瑕丒Charts锛?                    this.$nextTick(() => {
+                        const chartDom = document.getElementById('trendChart');
+                        if (chartDom && typeof echarts !== 'undefined') {
+                            // 濡傛灉鍥捐〃宸插瓨鍦紝鍏堥攢姣?                            const existingChart = echarts.getInstanceByDom(chartDom);
+                            if (existingChart) {
+                                existingChart.dispose();
+                            }
+                            // 鍒涘缓鏂板浘琛ㄥ疄渚?                            this.trendChart = echarts.init(chartDom);
+                            this.updateTrendChart();
+                        }
+                    });
+                },
+                
+                updateTrendChart() {
+                    // 妯℃嫙鐢熸垚瓒嬪娍鏁版嵁
+                    const days = this.trendTimeRange === 'today' ? 24 : 
+                                this.trendTimeRange === 'week' ? 7 : 
+                                this.trendTimeRange === 'month' ? 30 : 7;
+                    
+                    const data = [];
+                    for (let i = 0; i < days; i++) {
+                        data.push({
+                            date: new Date(Date.now() - (days - i - 1) * 86400000).toLocaleDateString(),
+                            count: Math.floor(Math.random() * 50) + 10
+                        });
+                    }
+                    
+                    this.trendChartData = data;
+                    
+                    // 鏇存柊鍥捐〃
+                    if (this.trendChart) {
+                        const option = {
+                            xAxis: {
+                                type: 'category',
+                                data: data.map(d => d.date)
+                            },
+                            yAxis: {
+                                type: 'value'
+                            },
+                            series: [{
+                                data: data.map(d => d.count),
+                                type: 'line',
+                                smooth: true,
+                                areaStyle: {
+                                    color: {
+                                        type: 'linear',
+                                        x: 0,
+                                        y: 0,
+                                        x2: 0,
+                                        y2: 1,
+                                        colorStops: [
+                                            { offset: 0, color: 'rgba(102, 126, 234, 0.3)' },
+                                            { offset: 1, color: 'rgba(102, 126, 234, 0.1)' }
+                                        ]
+                                    }
+                                },
+                                lineStyle: {
+                                    color: '#667eea'
+                                }
+                            }]
+                        };
+                        this.trendChart.setOption(option);
+                    } else {
+                        // 濡傛灉鍥捐〃瀹炰緥涓嶅瓨鍦紝閲嶆柊鍒濆鍖?                        this.initTrendChart();
+                    }
+                },
+                
+                goToReminderFlow() {
+                    // 鎵撳紑鍌姤寮圭獥锛屽紑濮嬪偓鎶ユ祦绋?                    this.reminderStep = 1;
+                    this.selectedUnits = [];
+                    this.reminderChannels = ['sms'];
+                    this.reminderTemplate = 'gentle';
+                    this.customTemplateContent = '';
+                    this.showReminderModal = true;
+                },
+                
+                toggleUnit(unitId) {
+                    const index = this.selectedUnits.indexOf(unitId);
+                    if (index > -1) {
+                        this.selectedUnits.splice(index, 1);
+                    } else {
+                        this.selectedUnits.push(unitId);
+                    }
+                },
+                
+                selectAllUnits() {
+                    if (this.allUnitsSelected) {
+                        this.selectedUnits = [];
+                    } else {
+                        this.selectedUnits = this.unregisteredUnits.map(u => u.id);
+                    }
+                },
+                
+                getChannelNames() {
+                    return this.reminderChannels.map(ch => {
+                        const channel = this.availableChannels.find(c => c.value === ch);
+                        return channel ? channel.name : ch;
+                    }).join('銆?);
+                },
+                
+                getTemplateName() {
+                    const names = {
+                        gentle: '娓╁拰鎻愰啋妯℃澘',
+                        urgent: '绱ф€ュ偓鎶ユā鏉?,
+                        final: '鏈€鍚庢満浼氭ā鏉?,
+                        custom: '鑷畾涔夋ā鏉?
+                    };
+                    return names[this.reminderTemplate] || '鏈煡妯℃澘';
+                },
+                
+                getEstimatedCount() {
+                    let count = 0;
+                    this.selectedUnits.forEach(unitId => {
+                        const unit = this.unregisteredUnits.find(u => u.id === unitId);
+                        if (unit) {
+                            count += unit.expectedCount * this.reminderChannels.length;
+                        }
+                    });
+                    return count;
+                },
+                
+                openReminderModal() {
+                    this.showReminderModal = true;
+                },
+                
+                async exportStatsReport() {
+                    try {
+                        this.$showLoading('姝ｅ湪鐢熸垚缁熻鎶ュ憡...');
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        this.$hideLoading();
+                        this.$showToast('缁熻鎶ュ憡宸茬敓鎴愬苟涓嬭浇', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('瀵煎嚭澶辫触锛岃閲嶈瘯', 'error');
+                    }
+                },
+
+                // 鐢熸垚铏氭嫙鎶ュ悕鏁版嵁
+                async generateMockData() {
+                    const confirmed = await this.$showConfirm(
+                        '纭畾瑕佺敓鎴?0鏉¤櫄鎷熸姤鍚嶆暟鎹悧锛熻繖灏嗘坊鍔犲埌鐜版湁鏁版嵁涓€?,
+                        '鐢熸垚铏氭嫙鏁版嵁',
+                        'info'
+                    );
+
+                    if (!confirmed) return;
+
+                    try {
+                        this.$showLoading('姝ｅ湪鐢熸垚铏氭嫙鏁版嵁...');
+
+                        const units = [
+                            '甯傚缁勭粐閮?, '甯傚瀹ｄ紶閮?, '甯傛暀鑲插眬', '甯傝储鏀垮眬', '甯傚崼鍋ュ',
+                            '甯傚叕瀹夊眬', '甯備汉绀惧眬', '甯傚彂鏀瑰', '甯備綇寤哄眬', '甯備氦閫氬眬',
+                            '甯傚啘涓氬啘鏉戝眬', '甯傚晢鍔″眬', '甯傛枃鏃呭眬', '甯備綋鑲插眬', '甯傜鎶€灞€'
+                        ];
+
+                        const departments = ['鍔炲叕瀹?, '浜轰簨绉?, '璐㈠姟绉?, '涓氬姟绉?, '缁煎悎澶?, '绠＄悊澶?, '瑙勫垝绉?];
+                        const positions = ['澶勯暱', '鍓闀?, '绉戦暱', '鍓闀?, '绉戝憳', '涓讳换', '鍓富浠?, '鍔炰簨鍛?];
+
+                        const existingIds = this.registrations.map(r => r.id);
+                        let maxId = Math.max(...existingIds, 0);
+
+                        const mockData = [];
+                        for (let i = 0; i < 20; i++) {
+                            maxId++;
+                            const unit = units[Math.floor(Math.random() * units.length)];
+                            const department = departments[Math.floor(Math.random() * departments.length)];
+                            const position = positions[Math.floor(Math.random() * positions.length)];
+                            const phone = '138' + String(Math.floor(Math.random() * 100000000)).padStart(8, '0');
+
+                            const statuses = ['approved', 'approved', 'approved', 'pending'];
+                            const status = statuses[Math.floor(Math.random() * statuses.length)];
+
+                            const submitDate = new Date(Date.now() - Math.floor(Math.random() * 7) * 24 * 60 * 60 * 1000);
+
+                            mockData.push({
+                                id: maxId,
+                                name: this.getRandomName(),
+                                unit: unit,
+                                department: department,
+                                position: position,
+                                phone: phone,
+                                email: `user${maxId}@example.com`,
+                                status: status,
+                                submitTime: submitDate,
+                                auditTime: status === 'approved' ? new Date(submitDate.getTime() + Math.floor(Math.random() * 2) * 60 * 60 * 1000) : null,
+                                reviewer: status === 'approved' ? '瀹℃牳鍛? + String(Math.floor(Math.random() * 3) + 1) : null
+                            });
+                        }
+
+                        // 娣诲姞鍒扮幇鏈夋暟鎹?                        this.registrations = [...this.registrations, ...mockData];
+
+                        // 鏇存柊缁熻鏁版嵁
+                        await this.loadRegistrationStats();
+
+                        // 杩囨护鏁版嵁
+                        this.filterData();
+
+                        // 淇濆瓨鍒發ocalStorage
+                        this.saveRegistrationData();
+
+                        this.$hideLoading();
+                        this.$showToast(`鎴愬姛鐢熸垚20鏉¤櫄鎷熸姤鍚嶆暟鎹紝褰撳墠鎬绘姤鍚嶆暟锛?{this.registrations.length}`, 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('鐢熸垚铏氭嫙鏁版嵁澶辫触锛岃閲嶈瘯', 'error');
+                        console.error('鐢熸垚铏氭嫙鏁版嵁閿欒:', error);
+                    }
+                },
+
+                // 鐢熸垚闅忔満涓枃濮撳悕
+                getRandomName() {
+                    const surnames = ['鐜?, '鏉?, '寮?, '鍒?, '闄?, '鏉?, '璧?, '榛?, '鍛?, '鍚?, '寰?, '瀛?, '鑳?, '鏈?, '楂?, '鏋?, '浣?, '閮?, '椹?, '缃?];
+                    const names1 = ['寤?, '鍥?, '鏄?, '鏂?, '骞?, '绔?, '蹇?, '娴?, '姘?, '涓?, '寰?, '閲?, '鐜?, '鏅?, '鍏?, '鏄?, '鍠?, '瀹?, '姝?];
+                    const names2 = ['寮?, '鍐?, '浼?, '鍕?, '杈?, '鏉?, '娑?, '瓒?, '娉?, '鏄?, '浜?, '鍗?, '骞?, '寤?, '鍥?, '鏄?, '鏂?, '骞?, '绔?];
+
+                    const surname = surnames[Math.floor(Math.random() * surnames.length)];
+                    const name1 = names1[Math.floor(Math.random() * names1.length)];
+                    const name2 = Math.random() > 0.5 ? names2[Math.floor(Math.random() * names2.length)] : '';
+
+                    return surname + name1 + name2;
+                },
+
+                goToRosterGeneration() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    const url = conferenceId ? `roster-generation.html?conferenceId=${conferenceId}` : 'roster-generation.html';
+                    window.location.href = url;
+                },
+                
+                goToAudit() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    const url = conferenceId ? `registration-audit.html?conferenceId=${conferenceId}` : 'registration-audit.html';
+                    window.location.href = url;
+                },
+
+                goToSeating() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    const url = conferenceId ? `seating-mgr.html?conferenceId=${conferenceId}` : 'seating-mgr.html';
+                    // 淇濆瓨鎶ュ悕鏁版嵁鍒發ocalStorage锛屼緵鎺掑骇绯荤粺浣跨敤
+                    this.saveRegistrationData();
+                    window.location.href = url;
+                },
+
+                // 淇濆瓨鎶ュ悕鏁版嵁鍒發ocalStorage
+                saveRegistrationData() {
+                    const data = {
+                        registrations: this.registrations,
+                        timestamp: Date.now(),
+                        conference: this.conference
+                    };
+                    localStorage.setItem('registrationData', JSON.stringify(data));
+                    console.log('鎶ュ悕鏁版嵁宸蹭繚瀛樺埌localStorage锛屽叡', this.registrations.length, '鏉¤褰?);
+                },
+                
+                async quickExportExcel() {
+                    try {
+                        this.$showLoading('姝ｅ湪瀵煎嚭Excel...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.$hideLoading();
+                        this.$showToast('Excel鏂囦欢宸插鍑?, 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('瀵煎嚭澶辫触锛岃閲嶈瘯', 'error');
+                    }
+                },
+                
+                async quickExportPDF() {
+                    try {
+                        this.$showLoading('姝ｅ湪瀵煎嚭PDF...');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.$hideLoading();
+                        this.$showToast('PDF鏂囦欢宸插鍑?, 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('瀵煎嚭澶辫触锛岃閲嶈瘯', 'error');
+                    }
+                },
+                
+                async loadRegistrations() {
+                    const conferenceId = this.getConferenceId();
+                    if (!conferenceId) {
+                        this.registrations = [];
+                        this.filterData();
+                        return;
+                    }
+
+                    try {
+                        const resp = await fetch(`http://localhost:8082/api/registration/list?conferenceId=${encodeURIComponent(String(conferenceId))}&page=1&pageSize=1000`, {
+                            method: 'GET',
+                            headers: this.getApiHeaders()
+                        });
+                        const result = await resp.json();
+                        if (!resp.ok || result.code !== 200) {
+                            throw new Error(result.message || '鍔犺浇鎶ュ悕鏁版嵁澶辫触');
+                        }
+                        const records = (result.data && result.data.records) ? result.data.records : [];
+                        this.registrations = records.map(item => this.mapRegistrationFromApi(item));
+                    } catch (error) {
+                        console.error('鍔犺浇鎶ュ悕鏁版嵁澶辫触:', error);
+                        this.$showToast('鍔犺浇鎶ュ悕鏁版嵁澶辫触', 'error');
+                        this.registrations = [];
+                    }
+
+                    this.filterData();
+                },
+                
+                selectChannel(type) {
+                    this.selectedChannel = type;
+                    this.channelFilter = type;
+                    this.filterData();
+                },
+                
+                getConfidenceClass(confidence) {
+                    if (confidence >= 95) return 'high';
+                    if (confidence >= 85) return 'medium';
+                    return 'low';
+                },
+                
+                updateGroupingPreview() {
+                    const totalMembers = this.registrations.filter(r => r.status === 'approved').length;
+                    if (totalMembers === 0) {
+                        this.groupCount = 0;
+                        this.groupingPreview = [];
+                        this.groupMembers = {};
+                        return;
+                    }
+                    this.groupCount = Math.ceil(totalMembers / this.groupSize);
+                    
+                    // 鏍规嵁鍒嗙粍渚濇嵁杩涜瀹為檯鍒嗙粍
+                    const approvedRegistrations = this.registrations.filter(r => r.status === 'approved');
+                    const groups = this.performGrouping(approvedRegistrations);
+                    
+                    this.groupingPreview = groups.map((group, i) => ({
+                        id: `group_${i + 1}`,
+                        name: `绗?{i + 1}瀛︿範灏忕粍`,
+                        memberCount: group.members.length,
+                        leader: group.leader || '',
+                        staff: group.staff || [],
+                        criteria: this.getCriteriaText(),
+                        members: group.members
+                    }));
+                    
+                    // 淇濆瓨姣忎釜缁勭殑鎴愬憳鍒楄〃
+                    this.groupMembers = {};
+                    this.groupingPreview.forEach(group => {
+                        this.groupMembers[group.id] = group.members || [];
+                    });
+                },
+                
+                performGrouping(registrations) {
+                    // 鏍规嵁鍒嗙粍渚濇嵁杩涜鍒嗙粍
+                    const groups = [];
+                    const groupCount = this.groupCount;
+                    const groupSize = parseInt(this.groupSize) || 25;
+                    
+                    // 鍒濆鍖栫┖缁?                    for (let i = 0; i < groupCount; i++) {
+                        groups.push({ members: [], leader: '', staff: [] });
+                    }
+                    
+                    if (this.groupingCriteria === 'department') {
+                        // 鎸夐儴闂ㄥ垎缁?- 鍚岄儴闂ㄥ敖閲忓湪涓€缁勶紝浣嗕笉瓒呰繃姣忕粍浜烘暟闄愬埗
+                        const departmentMap = {};
+                        registrations.forEach(reg => {
+                            const dept = reg.department || '鏈垎绫?;
+                            if (!departmentMap[dept]) {
+                                departmentMap[dept] = [];
+                            }
+                            departmentMap[dept].push(reg);
+                        });
+                        
+                        // 鎸夐儴闂ㄤ汉鏁版帓搴忥紝浜哄鐨勯儴闂ㄤ紭鍏堝垎閰?                        const sortedDepts = Object.entries(departmentMap)
+                            .sort((a, b) => b[1].length - a[1].length);
+                        
+                        sortedDepts.forEach(([dept, members]) => {
+                            members.forEach(member => {
+                                // 鎵惧埌浜烘暟鏈€灏戠殑缁?                                let minGroup = groups[0];
+                                groups.forEach(g => {
+                                    if (g.members.length < minGroup.members.length) {
+                                        minGroup = g;
+                                    }
+                                });
+                                if (minGroup.members.length < groupSize) {
+                                    minGroup.members.push(member);
+                                }
+                            });
+                        });
+                    } else if (this.groupingCriteria === 'position') {
+                        // 鎸夎亴绾у垎缁?- 鍚岃亴绾у敖閲忓湪涓€缁?                        const positionMap = {};
+                        registrations.forEach(reg => {
+                            const pos = reg.position || '鏈垎绫?;
+                            if (!positionMap[pos]) {
+                                positionMap[pos] = [];
+                            }
+                            positionMap[pos].push(reg);
+                        });
+                        
+                        const sortedPositions = Object.entries(positionMap)
+                            .sort((a, b) => b[1].length - a[1].length);
+                        
+                        sortedPositions.forEach(([pos, members]) => {
+                            members.forEach(member => {
+                                let minGroup = groups[0];
+                                groups.forEach(g => {
+                                    if (g.members.length < minGroup.members.length) {
+                                        minGroup = g;
+                                    }
+                                });
+                                if (minGroup.members.length < groupSize) {
+                                    minGroup.members.push(member);
+                                }
+                            });
+                        });
+                    } else if (this.groupingCriteria === 'random') {
+                        // 闅忔満鍒嗙粍
+                        const shuffled = [...registrations].sort(() => Math.random() - 0.5);
+                        shuffled.forEach((member, idx) => {
+                            const groupIdx = idx % groupCount;
+                            if (groups[groupIdx].members.length < groupSize) {
+                                groups[groupIdx].members.push(member);
+                            }
+                        });
+                    } else {
+                        // 娣峰悎鍒嗙粍锛堥粯璁わ級- 鎸夐『搴忓钩鍧囧垎閰?                        registrations.forEach((member, idx) => {
+                            const groupIdx = Math.floor(idx / groupSize);
+                            if (groupIdx < groupCount && groups[groupIdx].members.length < groupSize) {
+                                groups[groupIdx].members.push(member);
+                            }
+                        });
+                    }
+                    
+                    // 杩囨护鎺夌┖缁?                    return groups.filter(g => g.members.length > 0);
+                },
+                
+                getGroupMembers(groupId) {
+                    return this.groupMembers[groupId] || [];
+                },
+                
+                async saveGroupName(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (!group) return;
+                    try {
+                        const resp = await fetch(`http://localhost:8082/api/grouping/updateName?groupId=${groupId}&name=${encodeURIComponent(group.name)}`, {
+                            method: 'PUT',
+                            headers: this.getApiHeaders()
+                        });
+                        const result = await resp.json();
+                        if (resp.ok && result.code === 200) {
+                            console.log('[saveGroupName] 缁勫悕宸蹭繚瀛?', group.name);
+                        } else {
+                            this.$showToast('淇濆瓨缁勫悕澶辫触', 'error');
+                        }
+                    } catch (e) {
+                        console.error('淇濆瓨缁勫悕澶辫触:', e);
+                    }
+                },
+                
+                async saveGroupLeader(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (!group) return;
+                    // 鎵惧埌缁勯暱瀵瑰簲鐨?registration id
+                    const members = this.groupMembers[groupId] || [];
+                    const leaderMember = members.find(m => m.name === group.leader);
+                    const leaderId = leaderMember ? leaderMember.id : '';
+                    try {
+                        const url = leaderId 
+                            ? `http://localhost:8082/api/grouping/updateLeader?groupId=${groupId}&leaderId=${leaderId}`
+                            : `http://localhost:8082/api/grouping/updateLeader?groupId=${groupId}`;
+                        const resp = await fetch(url, {
+                            method: 'PUT',
+                            headers: this.getApiHeaders()
+                        });
+                        const result = await resp.json();
+                        if (resp.ok && result.code === 200) {
+                            console.log('[saveGroupLeader] 缁勯暱宸蹭繚瀛?', group.leader);
+                        } else {
+                            this.$showToast('淇濆瓨缁勯暱澶辫触', 'error');
+                        }
+                    } catch (e) {
+                        console.error('淇濆瓨缁勯暱澶辫触:', e);
+                    }
+                },
+                
+                assignStaff(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (group) {
+                        this.editingGroup = { ...group, staff: group.staff || [] };
+                        // 鍑嗗鍙€夊伐浣滀汉鍛樺垪琛紙宸叉姤鍚嶄汉鍛橈級
+                        this.availableStaff = this.registrations
+                            .filter(r => r.status === 'approved')
+                            .map(r => ({
+                                id: r.id,
+                                name: r.name,
+                                unit: r.unit,
+                                position: r.position
+                            }));
+                        this.showStaffModal = true;
+                    }
+                },
+                
+                editGroupMembers(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (group) {
+                        this.editingGroup = { ...group };
+                        // 鍑嗗鎵€鏈夌粍鍜屾垚鍛樻暟鎹敤浜庣紪杈?                        this.allGroupsForEdit = this.groupingPreview.map(g => ({
+                            id: g.id,
+                            name: g.name,
+                            members: [...(this.groupMembers[g.id] || [])]
+                        }));
+                        // 鏀堕泦鎵€鏈夋垚鍛?                        const allMembers = [];
+                        this.groupingPreview.forEach(g => {
+                            const members = this.groupMembers[g.id] || [];
+                            members.forEach(m => {
+                                allMembers.push({ ...m, groupId: g.id });
+                            });
+                        });
+                        this.allMembersForEdit = allMembers;
+                        this.memberEditMode = 'drag';
+                        this.showMemberEditModal = true;
+                    }
+                },
+                
+                handleDragStart(member, groupId) {
+                    this.draggedMember = member;
+                    this.draggedFromGroup = groupId;
+                },
+                
+                handleDrop(targetGroupId, event) {
+                    if (!this.draggedMember || !this.draggedFromGroup) return;
+                    
+                    // 浠庡師缁勭Щ闄?                    const fromGroup = this.allGroupsForEdit.find(g => g.id === this.draggedFromGroup);
+                    const toGroup = this.allGroupsForEdit.find(g => g.id === targetGroupId);
+                    
+                    if (fromGroup && toGroup && fromGroup.id !== toGroup.id) {
+                        const memberIndex = fromGroup.members.findIndex(m => m.id === this.draggedMember.id);
+                        if (memberIndex > -1) {
+                            fromGroup.members.splice(memberIndex, 1);
+                            toGroup.members.push(this.draggedMember);
+                            // 鏇存柊鎴愬憳鐨刧roupId
+                            const member = this.allMembersForEdit.find(m => m.id === this.draggedMember.id);
+                            if (member) {
+                                member.groupId = targetGroupId;
+                            }
+                        }
+                    }
+                    
+                    this.draggedMember = null;
+                    this.draggedFromGroup = null;
+                },
+                
+                applyNumberGrouping() {
+                    if (!this.numberGroupSize || this.numberGroupSize < 1) {
+                        this.$showToast('璇疯緭鍏ユ湁鏁堢殑姣忕粍浜烘暟', 'warning');
+                        return;
+                    }
+                    
+                    // 鎸夊簭鍙烽噸鏂板垎缁?                    const groupCount = Math.ceil(this.allMembersForEdit.length / this.numberGroupSize);
+                    this.allGroupsForEdit.forEach((group, index) => {
+                        const start = index * this.numberGroupSize;
+                        const end = Math.min(start + this.numberGroupSize, this.allMembersForEdit.length);
+                        const members = this.allMembersForEdit.slice(start, end);
+                        group.members = members;
+                        members.forEach(m => {
+                            m.groupId = group.id;
+                        });
+                    });
+                    
+                    this.$showToast('搴忓彿鍒嗙粍宸插簲鐢?, 'success');
+                },
+                
+                updateMemberGroup(memberId, newGroupId) {
+                    const member = this.allMembersForEdit.find(m => m.id === memberId);
+                    if (!member) return;
+                    
+                    // 浠庡師缁勭Щ闄?                    const oldGroup = this.allGroupsForEdit.find(g => g.id === member.groupId);
+                    if (oldGroup) {
+                        const index = oldGroup.members.findIndex(m => m.id === memberId);
+                        if (index > -1) {
+                            oldGroup.members.splice(index, 1);
+                        }
+                    }
+                    
+                    // 娣诲姞鍒版柊缁?                    const newGroup = this.allGroupsForEdit.find(g => g.id === newGroupId);
+                    if (newGroup) {
+                        newGroup.members.push(member);
+                        member.groupId = newGroupId;
+                    }
+                },
+                
+                async saveMemberEdit() {
+                    // 淇濆瓨鎴愬憳璋冩暣缁撴灉鍒版湰鍦?                    this.allGroupsForEdit.forEach(group => {
+                        const originalGroup = this.groupingPreview.find(g => g.id === group.id);
+                        if (originalGroup) {
+                            originalGroup.memberCount = group.members.length;
+                            this.groupMembers[group.id] = [...group.members];
+                        }
+                    });
+                    // 璋冪敤鍚庣API鎸佷箙鍖?                    try {
+                        const conferenceId = this.getConferenceId();
+                        const groupsPayload = this.allGroupsForEdit.map(g => ({
+                            id: String(g.id),
+                            name: g.name,
+                            members: g.members.map(m => ({ id: String(m.id), name: m.name }))
+                        }));
+                        const resp = await fetch('http://localhost:8082/api/grouping/adjustMembers', {
+                            method: 'POST',
+                            headers: this.getApiHeaders(),
+                            body: JSON.stringify({ meetingId: conferenceId, groups: groupsPayload })
+                        });
+                        const result = await resp.json();
+                        if (resp.ok && result.code === 200) {
+                            this.$showToast('鎴愬憳璋冩暣宸蹭繚瀛?, 'success');
+                        } else {
+                            this.$showToast('淇濆瓨澶辫触: ' + (result.message || ''), 'error');
+                        }
+                    } catch (e) {
+                        console.error('鎴愬憳璋冩暣淇濆瓨澶辫触:', e);
+                        this.$showToast('鎴愬憳璋冩暣宸蹭繚瀛樺埌鏈湴', 'warning');
+                    }
+                    this.showMemberEditModal = false;
+                },
+                
+                async generateGroups() {
+                    // 鑷姩鐢熸垚鍚勭粍浜哄憳缇わ紙瀹為檯搴旂敤涓簲璇ヨ皟鐢ˋPI鍒涘缓缇ょ粍锛?                    if (this.groupingPreview.length === 0) {
+                        this.$showToast('璇峰厛鎵ц鏅鸿兘鍒嗙粍', 'warning');
+                        return;
+                    }
+                    
+                    const confirmed = await this.$showConfirm(
+                        `纭畾瑕佷负 ${this.groupingPreview.length} 涓粍鑷姩鐢熸垚浜哄憳缇ゅ悧锛焋,
+                        '鑷姩鐢熸垚缇ょ粍',
+                        'info'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('姝ｅ湪鐢熸垚缇ょ粍...');
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            this.$hideLoading();
+                            this.$showToast(`宸蹭负 ${this.groupingPreview.length} 涓粍鐢熸垚浜哄憳缇, 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('鐢熸垚缇ょ粍澶辫触锛岃閲嶈瘯', 'error');
+                        }
+                    }
+                },
+                
+                async loadGroupsFromBackend() {
+                    const conferenceId = this.getConferenceId();
+                    if (!conferenceId) return;
+                    try {
+                        const resp = await fetch(`http://localhost:8082/api/grouping/list?meetingId=${encodeURIComponent(String(conferenceId))}`, {
+                            method: 'GET',
+                            headers: this.getApiHeaders()
+                        });
+                        const result = await resp.json();
+                        if (resp.ok && result.code === 200 && result.data && result.data.groups && result.data.groups.length > 0) {
+                            const dbGroups = result.data.groups;
+                            this.groupingPreview = dbGroups.map(g => ({
+                                id: String(g.id),
+                                name: g.name || '',
+                                memberCount: g.memberCount || 0,
+                                leader: g.leader || '',
+                                staff: [],
+                                criteria: g.groupType ? this.getCriteriaTextByType(g.groupType) : '',
+                                members: g.members || []
+                            }));
+                            this.groupMembers = {};
+                            this.groupingPreview.forEach(g => {
+                                this.groupMembers[g.id] = g.members || [];
+                            });
+                            this.groupCount = dbGroups.length;
+                            this.groupingEnabled = true;
+                            console.log('[loadGroupsFromBackend] 宸插姞杞?, dbGroups.length, '涓垎缁?);
+                        } else {
+                            console.log('[loadGroupsFromBackend] 鏆傛棤鍒嗙粍鏁版嵁');
+                        }
+                    } catch (e) {
+                        console.warn('浠庡悗绔姞杞藉垎缁勬暟鎹け璐?', e);
+                    }
+                },
+
+                getCriteriaTextByType(type) {
+                    const map = {
+                        department: '鎸夐儴闂?,
+                        position: '鎸夎亴绾?,
+                        expertise: '鎸変笓涓?,
+                        mixed: '娣峰悎',
+                        random: '闅忔満'
+                    };
+                    return map[type] || type || '';
+                },
+
+                goToRosterGeneration() {
+                    // 淇濆瓨鍒嗙粍鏁版嵁鍒發ocalStorage渚涘悕鍐岀敓鎴愰〉闈娇鐢?                    this.saveGroupingData();
+                    
+                    // 璺宠浆鍒板悕鍐岀敓鎴愰〉闈?                    const conferenceId = this.conference.id || new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        window.location.href = `roster-generation.html?conferenceId=${conferenceId}`;
+                    } else {
+                        this.$showToast('浼氳淇℃伅缂哄け锛屾棤娉曡烦杞?, 'warning');
+                    }
+                },
+                
+                // 淇濆瓨鍒嗙粍鏁版嵁鍒發ocalStorage
+                saveGroupingData() {
+                    const groupingData = {
+                        enabled: this.groupingPreview.length > 0,
+                        criteria: this.groupingCriteria,
+                        groupSize: this.groupSize,
+                        groupCount: this.groupCount,
+                        groups: this.groupingPreview.map(g => ({
+                            id: g.id,
+                            name: g.name,
+                            leader: g.leader,
+                            staff: g.staff || [],
+                            memberCount: g.memberCount,
+                            members: this.groupMembers[g.id] || []
+                        })),
+                        timestamp: Date.now(),
+                        conferenceId: this.conference.id
+                    };
+                    localStorage.setItem('groupingData', JSON.stringify(groupingData));
+                    console.log('[saveGroupingData] 鍒嗙粍鏁版嵁宸蹭繚瀛?', groupingData);
+                },
+                
+                getCriteriaText() {
+                    const map = {
+                        department: '鎸夐儴闂?,
+                        position: '鎸夎亴绾?,
+                        expertise: '鎸変笓涓?,
+                        mixed: '娣峰悎',
+                        random: '闅忔満'
+                    };
+                    return map[this.groupingCriteria] || '鏈煡';
+                },
+                
+                // 鍒囨崲鍒嗙粍鍚敤鐘舵€?                toggleGrouping() {
+                    this.groupingEnabled = !this.groupingEnabled;
+                    if (this.groupingEnabled) {
+                        this.$showToast('宸插惎鐢ㄥ垎缁勫姛鑳?, 'success');
+                    } else {
+                        this.$showToast('宸茬鐢ㄥ垎缁勫姛鑳?, 'info');
+                        // 绂佺敤鏃舵竻绌哄垎缁勯瑙?                        // this.groupingPreview = [];
+                    }
+                },
+                
+                async autoGrouping() {
+                    try {
+                        this.$showLoading('姝ｅ湪鎵ц鏅鸿兘鍒嗙粍...');
+                        
+                        // 1. 鍓嶇绠楁硶鍒嗙粍
+                        this.updateGroupingPreview();
+                        
+                        if (this.groupingPreview.length === 0) {
+                            this.$hideLoading();
+                            this.$showToast('娌℃湁宸插鏍哥殑鎶ュ悕浜哄憳鍙互鍒嗙粍', 'warning');
+                            return;
+                        }
+                        
+                        // 2. 璋冪敤鍚庣API淇濆瓨鍒嗙粍鍒版暟鎹簱
+                        const conferenceId = this.getConferenceId();
+                        const groupsPayload = this.groupingPreview.map(g => ({
+                            name: g.name,
+                            leader: g.leader || '',
+                            staff: g.staff || [],
+                            members: (this.groupMembers[g.id] || []).map(m => ({
+                                id: String(m.id),
+                                name: m.name,
+                                unit: m.unit || m.department || '',
+                                department: m.department || m.unit || '',
+                                position: m.position || ''
+                            }))
+                        }));
+                        
+                        const resp = await fetch('http://localhost:8082/api/grouping/save', {
+                            method: 'POST',
+                            headers: this.getApiHeaders(),
+                            body: JSON.stringify({
+                                meetingId: conferenceId,
+                                criteria: this.groupingCriteria,
+                                groupSize: this.groupSize,
+                                groups: groupsPayload
+                            })
+                        });
+                        const result = await resp.json();
+                        if (resp.ok && result.code === 200) {
+                            // 3. 浠庡悗绔噸鏂板姞杞藉垎缁勶紙鑾峰彇鏁版嵁搴撶敓鎴愮殑鐪熷疄ID锛?                            await this.loadGroupsFromBackend();
+                            this.$hideLoading();
+                            this.$showToast(`鏅鸿兘鍒嗙粍瀹屾垚锛屽凡淇濆瓨${result.data.totalGroups}涓垎缁刞, 'success');
+                        } else {
+                            this.$hideLoading();
+                            this.$showToast('鍒嗙粍淇濆瓨澶辫触: ' + (result.message || '鏈煡閿欒'), 'error');
+                        }
+                    } catch (error) {
+                        this.$hideLoading();
+                        console.error('鏅鸿兘鍒嗙粍澶辫触:', error);
+                        this.$showToast('鍒嗙粍澶辫触锛岃閲嶈瘯', 'error');
+                    }
+                },
+                
+                viewGroup(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (group) {
+                        this.currentGroup = { ...group };
+                        this.currentGroupMembers = [...(this.groupMembers[groupId] || [])];
+                        this.showGroupDetailModal = true;
+                    }
+                },
+                
+                async saveGroupDetail() {
+                    // 淇濆瓨缁勮鎯呬慨鏀?                    const index = this.groupingPreview.findIndex(g => g.id === this.currentGroup.id);
+                    if (index > -1) {
+                        this.groupingPreview[index].name = this.currentGroup.name;
+                        this.groupingPreview[index].leader = this.currentGroup.leader;
+                        this.groupingPreview[index].memberCount = this.currentGroupMembers.length;
+                        // 鏇存柊鎴愬憳鍒楄〃
+                        this.groupMembers[this.currentGroup.id] = [...this.currentGroupMembers];
+                        
+                        // 璋冪敤鍚庣API淇濆瓨缁勫悕鍜岀粍闀?                        const groupId = this.currentGroup.id;
+                        try {
+                            await fetch(`http://localhost:8082/api/grouping/updateName?groupId=${groupId}&name=${encodeURIComponent(this.currentGroup.name)}`, {
+                                method: 'PUT', headers: this.getApiHeaders()
+                            });
+                            // 淇濆瓨缁勯暱
+                            const members = this.currentGroupMembers;
+                            const leaderMember = members.find(m => m.name === this.currentGroup.leader);
+                            const leaderId = leaderMember ? leaderMember.id : '';
+                            const leaderUrl = leaderId 
+                                ? `http://localhost:8082/api/grouping/updateLeader?groupId=${groupId}&leaderId=${leaderId}`
+                                : `http://localhost:8082/api/grouping/updateLeader?groupId=${groupId}`;
+                            await fetch(leaderUrl, { method: 'PUT', headers: this.getApiHeaders() });
+                        } catch (e) {
+                            console.error('淇濆瓨缁勮鎯呭埌鍚庣澶辫触:', e);
+                        }
+                        this.$showToast('缁勮鎯呭凡淇濆瓨', 'success');
+                    }
+                    this.showGroupDetailModal = false;
+                },
+                
+                editGroupMembers(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (group) {
+                        this.editingGroup = { ...group };
+                        // 鍑嗗鎵€鏈夌粍鍜屾垚鍛樻暟鎹敤浜庣紪杈?                        this.allGroupsForEdit = this.groupingPreview.map(g => ({
+                            id: g.id,
+                            name: g.name,
+                            members: [...(this.groupMembers[g.id] || [])]
+                        }));
+                        // 鏀堕泦鎵€鏈夋垚鍛?                        const allMembers = [];
+                        this.groupingPreview.forEach(g => {
+                            const members = this.groupMembers[g.id] || [];
+                            members.forEach(m => {
+                                allMembers.push({ ...m, groupId: g.id });
+                            });
+                        });
+                        this.allMembersForEdit = allMembers;
+                        this.memberEditMode = 'drag';
+                        this.showMemberEditModal = true;
+                    }
+                },
+                
+                handleDragStart(member, groupId) {
+                    this.draggedMember = member;
+                    this.draggedFromGroup = groupId;
+                },
+                
+                handleDrop(targetGroupId, event) {
+                    if (!this.draggedMember || !this.draggedFromGroup) return;
+                    
+                    // 浠庡師缁勭Щ闄?                    const fromGroup = this.allGroupsForEdit.find(g => g.id === this.draggedFromGroup);
+                    const toGroup = this.allGroupsForEdit.find(g => g.id === targetGroupId);
+                    
+                    if (fromGroup && toGroup && fromGroup.id !== toGroup.id) {
+                        const memberIndex = fromGroup.members.findIndex(m => m.id === this.draggedMember.id);
+                        if (memberIndex > -1) {
+                            fromGroup.members.splice(memberIndex, 1);
+                            toGroup.members.push(this.draggedMember);
+                            // 鏇存柊鎴愬憳鐨刧roupId
+                            const member = this.allMembersForEdit.find(m => m.id === this.draggedMember.id);
+                            if (member) {
+                                member.groupId = targetGroupId;
+                            }
+                        }
+                    }
+                    
+                    this.draggedMember = null;
+                    this.draggedFromGroup = null;
+                },
+                
+                applyNumberGrouping() {
+                    if (!this.numberGroupSize || this.numberGroupSize < 1) {
+                        this.$showToast('璇疯緭鍏ユ湁鏁堢殑姣忕粍浜烘暟', 'warning');
+                        return;
+                    }
+                    
+                    // 鎸夊簭鍙烽噸鏂板垎缁?                    const groupCount = Math.ceil(this.allMembersForEdit.length / this.numberGroupSize);
+                    this.allGroupsForEdit.forEach((group, index) => {
+                        const start = index * this.numberGroupSize;
+                        const end = Math.min(start + this.numberGroupSize, this.allMembersForEdit.length);
+                        const members = this.allMembersForEdit.slice(start, end);
+                        group.members = members;
+                        members.forEach(m => {
+                            m.groupId = group.id;
+                        });
+                    });
+                    
+                    this.$showToast('搴忓彿鍒嗙粍宸插簲鐢?, 'success');
+                },
+                
+                updateMemberGroup(memberId, newGroupId) {
+                    const member = this.allMembersForEdit.find(m => m.id === memberId);
+                    if (!member) return;
+                    
+                    // 浠庡師缁勭Щ闄?                    const oldGroup = this.allGroupsForEdit.find(g => g.id === member.groupId);
+                    if (oldGroup) {
+                        const index = oldGroup.members.findIndex(m => m.id === memberId);
+                        if (index > -1) {
+                            oldGroup.members.splice(index, 1);
+                        }
+                    }
+                    
+                    // 娣诲姞鍒版柊缁?                    const newGroup = this.allGroupsForEdit.find(g => g.id === newGroupId);
+                    if (newGroup) {
+                        newGroup.members.push(member);
+                        member.groupId = newGroupId;
+                    }
+                },
+                
+                async saveMemberEdit() {
+                    // 淇濆瓨鎴愬憳璋冩暣缁撴灉鍒版湰鍦?                    this.allGroupsForEdit.forEach(group => {
+                        const originalGroup = this.groupingPreview.find(g => g.id === group.id);
+                        if (originalGroup) {
+                            originalGroup.memberCount = group.members.length;
+                            this.groupMembers[group.id] = [...group.members];
+                        }
+                    });
+                    // 璋冪敤鍚庣API鎸佷箙鍖栨垚鍛樿皟鏁?                    try {
+                        const conferenceId = this.getConferenceId();
+                        const groupsPayload = this.allGroupsForEdit.map(g => ({
+                            id: String(g.id),
+                            name: g.name,
+                            members: g.members.map(m => ({ id: String(m.id), name: m.name }))
+                        }));
+                        const resp = await fetch('http://localhost:8082/api/grouping/adjustMembers', {
+                            method: 'POST',
+                            headers: this.getApiHeaders(),
+                            body: JSON.stringify({ meetingId: conferenceId, groups: groupsPayload })
+                        });
+                        const result = await resp.json();
+                        if (resp.ok && result.code === 200) {
+                            this.$showToast('鎴愬憳璋冩暣宸蹭繚瀛?, 'success');
+                        } else {
+                            this.$showToast('淇濆瓨澶辫触: ' + (result.message || ''), 'error');
+                        }
+                    } catch (e) {
+                        console.error('鎴愬憳璋冩暣淇濆瓨澶辫触:', e);
+                        this.$showToast('鎴愬憳璋冩暣宸蹭繚瀛樺埌鏈湴', 'warning');
+                    }
+                    this.showMemberEditModal = false;
+                },
+                
+                assignStaff(groupId) {
+                    const group = this.groupingPreview.find(g => g.id === groupId);
+                    if (group) {
+                        this.editingGroup = { 
+                            ...group, 
+                            staff: group.staff ? [...group.staff] : [] 
+                        };
+                        // 鍑嗗鍙€夊伐浣滀汉鍛樺垪琛紙宸叉姤鍚嶄汉鍛橈級
+                        this.availableStaff = this.registrations
+                            .filter(r => r.status === 'approved')
+                            .map(r => ({
+                                id: r.id,
+                                name: r.name,
+                                unit: r.unit,
+                                position: r.position
+                            }));
+                        this.showStaffModal = true;
+                    }
+                },
+                
+                toggleStaff(memberId) {
+                    if (!this.editingGroup) return;
+                    if (!this.editingGroup.staff) {
+                        this.editingGroup.staff = [];
+                    }
+                    const index = this.editingGroup.staff.indexOf(memberId);
+                    if (index > -1) {
+                        this.editingGroup.staff.splice(index, 1);
+                    } else {
+                        this.editingGroup.staff.push(memberId);
+                    }
+                },
+                
+                saveStaff() {
+                    if (this.editingGroup) {
+                        const index = this.groupingPreview.findIndex(g => g.id === this.editingGroup.id);
+                        if (index > -1) {
+                            this.groupingPreview[index].staff = [...(this.editingGroup.staff || [])];
+                            this.$showToast('宸ヤ綔浜哄憳宸蹭繚瀛?, 'success');
+                        }
+                    }
+                    this.showStaffModal = false;
+                },
+                
+                async removeMemberFromGroup(memberId) {
+                    const member = this.currentGroupMembers.find(m => m.id === memberId);
+                    if (member) {
+                        const index = this.currentGroupMembers.indexOf(member);
+                        if (index > -1) {
+                            this.currentGroupMembers.splice(index, 1);
+                            this.currentGroup.memberCount = this.currentGroupMembers.length;
+                            // 璋冪敤鍚庣API绉婚櫎
+                            try {
+                                const groupId = this.currentGroup.id;
+                                await fetch(`http://localhost:8082/api/grouping/removeMember?groupId=${groupId}&memberId=${memberId}`, {
+                                    method: 'DELETE',
+                                    headers: this.getApiHeaders()
+                                });
+                            } catch (e) {
+                                console.error('鍚庣绉婚櫎鎴愬憳澶辫触:', e);
+                            }
+                            this.$showToast('鎴愬憳宸茬Щ闄?, 'success');
+                        }
+                    }
+                },
+                
+                getReminderTemplateContent() {
+                    const templates = {
+                        gentle: '灏婃暚鐨勫悇浣嶉瀵硷紝2024骞村害鎶€鏈嘲浼氬嵆灏嗗紑濮嬶紝璇氶個璐靛崟浣嶅弬涓庢姤鍚?..',
+                        urgent: '銆愮揣鎬ユ彁閱掋€?024骞村害鎶€鏈嘲浼氭姤鍚嶅嵆灏嗘埅姝紝璇峰敖蹇畬鎴愭姤鍚嶏紒',
+                        final: '銆愭渶鍚庨€氱煡銆?024骞村害鎶€鏈嘲浼氭姤鍚嶄粖鏃ユ埅姝紝杩欐槸鏈€鍚庣殑鎶ュ悕鏈轰細锛?,
+                        custom: '璇峰湪姝ゅ缂栬緫鑷畾涔夊偓鎶ュ唴瀹?..'
+                    };
+                    return templates[this.reminderTemplate] || '';
+                },
+                
+                async sendReminder() {
+                    if (this.selectedUnits.length === 0) {
+                        this.$showToast('璇烽€夋嫨瑕佸偓鎶ョ殑鍗曚綅', 'warning');
+                        return;
+                    }
+                    
+                    if (this.reminderChannels.length === 0) {
+                        this.$showToast('璇烽€夋嫨鑷冲皯涓€涓偓鎶ユ笭閬?, 'warning');
+                        return;
+                    }
+                    
+                    const content = this.reminderTemplate === 'custom' 
+                        ? this.customTemplateContent 
+                        : this.getReminderTemplateContent();
+                    
+                    if (!content || !content.trim()) {
+                        this.$showToast('鍌姤鍐呭涓嶈兘涓虹┖', 'warning');
+                        return;
+                    }
+                    
+                    try {
+                        this.$showLoading(`姝ｅ湪鍙戦€佸偓鎶ラ€氱煡缁?${this.selectedUnits.length} 涓崟浣?..`);
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        this.reminderStats.sentReminders += this.selectedUnits.length;
+                        this.$hideLoading();
+                        this.$showToast(`宸插悜 ${this.selectedUnits.length} 涓崟浣嶅彂閫佸偓鎶ラ€氱煡`, 'success');
+                        this.showReminderModal = false;
+                        this.reminderStep = 1;
+                        this.selectedUnits = [];
+                        this.reminderChannels = ['sms'];
+                        this.reminderTemplate = 'gentle';
+                        this.customTemplateContent = '';
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('鍙戦€佸け璐ワ紝璇烽噸璇?, 'error');
+                    }
+                },
+                
+                async sendReminderToAll() {
+                    if (this.reminderStats.unregisteredUnits === 0) {
+                        this.$showToast('褰撳墠娌℃湁鏈姤鍚嶅崟浣?, 'info');
+                        return;
+                    }
+                    
+                    const confirmed = await this.$showConfirm(
+                        `纭畾瑕佸悜鎵€鏈?${this.reminderStats.unregisteredUnits} 涓湭鎶ュ悕鍗曚綅鍙戦€佸偓鎶ラ€氱煡鍚楋紵`,
+                        '涓€閿偓鎶?,
+                        'warning'
+                    );
+                    
+                    if (confirmed) {
+                        try {
+                            this.$showLoading(`姝ｅ湪鍙戦€佸偓鎶ラ€氱煡缁?${this.reminderStats.unregisteredUnits} 涓崟浣?..`);
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            this.reminderStats.sentReminders += this.reminderStats.unregisteredUnits;
+                            this.$hideLoading();
+                            this.$showToast(`宸插悜 ${this.reminderStats.unregisteredUnits} 涓崟浣嶅彂閫佸偓鎶ラ€氱煡`, 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast('鍙戦€佸け璐ワ紝璇烽噸璇?, 'error');
+                        }
+                    }
+                },
+                
+                selectiveReminder() {
+                    if (this.reminderStats.unregisteredUnits === 0) {
+                        this.$showToast('褰撳墠娌℃湁鏈姤鍚嶅崟浣?, 'info');
+                        return;
+                    }
+                    this.$showToast('璇峰湪涓嬫柟鐨勬湭鎶ュ悕鍗曚綅鍒楄〃涓€夋嫨闇€瑕佸偓鎶ョ殑鍗曚綅', 'info', 3000);
+                },
+                
+                filterData() {
+                    let filtered = [...this.registrations];
+                    
+                    if (this.searchQuery) {
+                        filtered = filtered.filter(r => 
+                            r.name.includes(this.searchQuery) ||
+                            r.unit.includes(this.searchQuery) ||
+                            r.department.includes(this.searchQuery)
+                        );
+                    }
+                    
+                    if (this.statusFilter) {
+                        filtered = filtered.filter(r => r.status === this.statusFilter);
+                    }
+                    
+                    if (this.channelFilter) {
+                        filtered = filtered.filter(r => r.channel === this.channelFilter);
+                    }
+                    
+                    this.filteredRegistrations = filtered;
+                    // totalPages 鐜板湪鏄绠楀睘鎬э紝涓嶉渶瑕佹墜鍔ㄨ缃?                    if (this.currentPage > Math.ceil(filtered.length / this.pageSize)) {
+                        this.currentPage = 1;
+                    }
+                    // 鏇存柊鍏ㄩ€夌姸鎬?                    this.updateSelectAllState();
+                },
+                
+                toggleSelectAll() {
+                    if (this.selectAll) {
+                        // 鍙€夋嫨褰撳墠椤甸潰鐨勮褰?                        const currentPageIds = this.paginatedRegistrations.map(r => r.id);
+                        currentPageIds.forEach(id => {
+                            if (!this.selectedRegistrations.includes(id)) {
+                                this.selectedRegistrations.push(id);
+                            }
+                        });
+                    } else {
+                        // 鍙彇娑堥€夋嫨褰撳墠椤甸潰鐨勮褰?                        const currentPageIds = this.paginatedRegistrations.map(r => r.id);
+                        this.selectedRegistrations = this.selectedRegistrations.filter(id => !currentPageIds.includes(id));
+                    }
+                },
+                
+                toggleRegistration(id) {
+                    const index = this.selectedRegistrations.indexOf(id);
+                    if (index > -1) {
+                        this.selectedRegistrations.splice(index, 1);
+                    } else {
+                        this.selectedRegistrations.push(id);
+                    }
+                    // 鏇存柊鍏ㄩ€夌姸鎬?                    this.updateSelectAllState();
+                },
+                
+                updateSelectAllState() {
+                    const currentPageIds = this.paginatedRegistrations.map(r => r.id);
+                    this.selectAll = currentPageIds.length > 0 && currentPageIds.every(id => this.selectedRegistrations.includes(id));
+                },
+                
+                // 鎵归噺鍒嗛厤鍒扮粍
+                batchAssignToGroup() {
+                    if (!this.batchTargetGroup || this.selectedRegistrations.length === 0) {
+                        this.$showToast('璇烽€夋嫨鐩爣缁勫拰浜哄憳', 'warning');
+                        return;
+                    }
+                    
+                    const targetGroup = this.groupingPreview.find(g => g.id === this.batchTargetGroup);
+                    if (!targetGroup) {
+                        this.$showToast('鐩爣缁勪笉瀛樺湪', 'error');
+                        return;
+                    }
+                    
+                    // 鑾峰彇閫変腑鐨勪汉鍛?                    const selectedMembers = this.registrations.filter(r => 
+                        this.selectedRegistrations.includes(r.id) && r.status === 'approved'
+                    );
+                    
+                    if (selectedMembers.length === 0) {
+                        this.$showToast('閫変腑鐨勪汉鍛樹腑娌℃湁宸查€氳繃瀹℃牳鐨?, 'warning');
+                        return;
+                    }
+                    
+                    // 浠庡叾浠栫粍涓Щ闄よ繖浜涙垚鍛?                    this.groupingPreview.forEach(group => {
+                        if (this.groupMembers[group.id]) {
+                            this.groupMembers[group.id] = this.groupMembers[group.id].filter(
+                                m => !selectedMembers.find(sm => sm.id === m.id)
+                            );
+                            group.memberCount = this.groupMembers[group.id].length;
+                        }
+                    });
+                    
+                    // 娣诲姞鍒扮洰鏍囩粍
+                    if (!this.groupMembers[this.batchTargetGroup]) {
+                        this.groupMembers[this.batchTargetGroup] = [];
+                    }
+                    selectedMembers.forEach(member => {
+                        if (!this.groupMembers[this.batchTargetGroup].find(m => m.id === member.id)) {
+                            this.groupMembers[this.batchTargetGroup].push(member);
+                        }
+                    });
+                    targetGroup.memberCount = this.groupMembers[this.batchTargetGroup].length;
+                    
+                    this.$showToast(`宸插皢 ${selectedMembers.length} 浜哄垎閰嶅埌 ${targetGroup.name}`, 'success');
+                    this.clearSelectedRegistrations();
+                },
+                
+                // 娓呴櫎閫夋嫨
+                clearSelectedRegistrations() {
+                    this.selectedRegistrations = [];
+                    this.selectAll = false;
+                    this.batchTargetGroup = '';
+                },
+                
+                formatDate(date) {
+                    if (!date) return '';
+                    if (date instanceof Date) {
+                        return date.toLocaleDateString('zh-CN');
+                    }
+                    // 濡傛灉鏄瓧绗︿覆鎴栨暟瀛楋紝灏濊瘯杞崲涓篋ate
+                    const dateObj = new Date(date);
+                    if (!isNaN(dateObj.getTime())) {
+                        return dateObj.toLocaleDateString('zh-CN');
+                    }
+                    return '';
+                },
+                
+                getStatusText(status) {
+                    const map = {
+                        approved: '宸查€氳繃',
+                        pending: '寰呭鏍?,
+                        rejected: '宸叉嫆缁?
+                    };
+                    return map[status] || status;
+                },
+                
+                getChannelText(channel) {
+                    const map = {
+                        web: '缃戦〉',
+                        miniprogram: '灏忕▼搴?,
+                        mobile: '绉诲姩绔?
+                    };
+                    return map[channel] || channel;
+                },
+                
+                getOCRStatusType(ocrResult) {
+                    if (!ocrResult) return 'secondary';
+                    if (ocrResult.status === 'success' || ocrResult.verified) return 'pass';
+                    if (ocrResult.status === 'warning') return 'warning';
+                    return 'fail';
+                },
+                
+                // 鎵归噺閫氳繃閫変腑椤?                async batchApproveSelected() {
+                    const pendingIds = this.selectedRegistrations.filter(id => {
+                        const reg = this.registrations.find(r => r.id === id);
+                        return reg && reg.status === 'pending';
+                    });
+
+                    if (pendingIds.length === 0) {
+                        this.$showToast('娌℃湁寰呭鏍哥殑閫変腑椤?, 'warning');
+                        return;
+                    }
+
+                    try {
+                        const payload = pendingIds.map(id => ({
+                            registrationId: id,
+                            auditResult: 'approved',
+                            remark: '鎵归噺瀹℃牳閫氳繃'
+                        }));
+                        const resp = await fetch('http://localhost:8082/api/registration/batchAudit', {
+                            method: 'POST',
+                            headers: this.getApiHeaders(),
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await resp.json();
+                        if (!resp.ok || result.code !== 200) {
+                            throw new Error(result.message || '鎵归噺瀹℃牳澶辫触');
+                        }
+                        await this.loadRegistrations();
+                        await this.loadRegistrationStats();
+                        this.$showToast(`鎴愬姛瀹℃牳閫氳繃 ${pendingIds.length} 鏉¤褰昤, 'success');
+                        this.clearSelectedRegistrations();
+                    } catch (e) {
+                        console.error('鎵归噺瀹℃牳澶辫触:', e);
+                        this.$showToast(`鎵归噺瀹℃牳澶辫触: ${e.message}`, 'error');
+                    }
+                },
+                
+                // 蹇€熸嫆缁?                async quickReject(id) {
+                    const remark = prompt('璇疯緭鍏ユ嫆缁濆師鍥狅細') || '瀹℃牳涓嶉€氳繃';
+                    try {
+                        const resp = await fetch('http://localhost:8082/api/registration/audit', {
+                            method: 'POST',
+                            headers: this.getApiHeaders(),
+                            body: JSON.stringify({
+                                registrationId: id,
+                                auditResult: 'rejected',
+                                remark
+                            })
+                        });
+                        const result = await resp.json();
+                        if (!resp.ok || result.code !== 200) {
+                            throw new Error(result.message || '鎷掔粷澶辫触');
+                        }
+                        await this.loadRegistrations();
+                        await this.loadRegistrationStats();
+                        this.$showToast('宸叉嫆缁濊鎶ュ悕', 'success');
+                    } catch (e) {
+                        this.$showToast(`鎷掔粷澶辫触: ${e.message}`, 'error');
+                    }
+                },
+                
+                // 瀵煎嚭鎶ュ悕鏁版嵁
+                exportRegistrationData() {
+                    this.$showToast('姝ｅ湪瀵煎嚭鎶ュ悕鏁版嵁...', 'info');
+                    setTimeout(() => {
+                        this.$showToast('鎶ュ悕鏁版嵁瀵煎嚭鎴愬姛锛?, 'success');
+                    }, 1000);
+                },
+                
+                // 鏇存柊缁熻鏁版嵁
+                updateStats() {
+                    this.registrationStats.total = this.registrations.length;
+                    this.registrationStats.approved = this.registrations.filter(r => r.status === 'approved').length;
+                    this.registrationStats.pending = this.registrations.filter(r => r.status === 'pending').length;
+                    this.registrationStats.rejected = this.registrations.filter(r => r.status === 'rejected').length;
+                },
+                
+                async viewDetails(id) {
+                    const registration = this.registrations.find(r => r.id === id);
+                    if (!registration) {
+                        this.$showToast('鏈壘鍒拌鎶ュ悕璁板綍', 'error');
+                        return;
+                    }
+                    // 鏄剧ず璇︽儏妯℃€佹锛堝寘鍚玂CR璇嗗埆缁撴灉锛?                    this.showRegistrationDetails(registration);
+                },
+                
+                showRegistrationDetails(registration) {
+                    // 鍒涘缓璇︽儏妯℃€佹
+                    const modal = document.createElement('div');
+                    modal.className = 'modal-overlay';
+                    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center;';
+                    
+                    const ocrSection = registration.ocrResult ? `
+                        <div class="detail-section" style="margin-top: var(--space-5);">
+                            <h4>鏅鸿兘璇佷欢璇嗗埆缁撴灉</h4>
+                            <div class="ocr-result-display">
+                                <div class="ocr-status-header">
+                                    <span class="ocr-status-badge ${this.getOCRStatusClass(registration.ocrResult)}">
+                                        <i class="${this.getOCRStatusIcon(registration.ocrResult)}"></i>
+                                        ${this.getOCRStatusText(registration.ocrResult)}
+                                    </span>
+                                    <span class="ocr-time">璇嗗埆鏃堕棿: ${this.formatDate(registration.ocrResult.recognizedAt)}</span>
+                                </div>
+                                <div class="ocr-details">
+                                    <div class="ocr-detail-item">
+                                        <span class="ocr-label">璇嗗埆绫诲瀷:</span>
+                                        <span class="ocr-value">${registration.ocrResult.type}</span>
+                                        <span class="ocr-confidence ${this.getConfidenceClass(registration.ocrResult.typeConfidence)}">
+                                            ${registration.ocrResult.typeConfidence}%
+                                        </span>
+                                    </div>
+                                    <div class="ocr-detail-item">
+                                        <span class="ocr-label">濮撳悕:</span>
+                                        <span class="ocr-value">${registration.ocrResult.name}</span>
+                                        <span class="ocr-confidence ${this.getConfidenceClass(registration.ocrResult.nameConfidence)}">
+                                            ${registration.ocrResult.nameConfidence}%
+                                        </span>
+                                    </div>
+                                    <div class="ocr-detail-item">
+                                        <span class="ocr-label">韬唤璇佸彿:</span>
+                                        <span class="ocr-value">${registration.ocrResult.idNumber}</span>
+                                        <span class="ocr-confidence ${this.getConfidenceClass(registration.ocrResult.idConfidence)}">
+                                            ${registration.ocrResult.idConfidence}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="detail-section" style="margin-top: var(--space-5);">
+                            <h4>鏅鸿兘璇佷欢璇嗗埆缁撴灉</h4>
+                            <div class="ocr-no-result">
+                                <i class="fas fa-info-circle"></i>
+                                <span>璇ユ姤鍚嶈褰曟湭杩涜璇佷欢璇嗗埆</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    modal.innerHTML = `
+                        <div class="modal-content glass-card" style="max-width: 800px; max-height: 90vh; overflow-y: auto; padding: var(--space-6);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5);">
+                                <h3>鎶ュ悕璇︽儏 - ${registration.name}</h3>
+                                <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="detail-section">
+                                <h4>鍩烘湰淇℃伅</h4>
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <span class="detail-label">濮撳悕:</span>
+                                        <span class="detail-value">${registration.name}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">鍗曚綅:</span>
+                                        <span class="detail-value">${registration.unit}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">閮ㄩ棬:</span>
+                                        <span class="detail-value">${registration.department}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">鑱岀骇:</span>
+                                        <span class="detail-value">${registration.position}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">鎶ュ悕娓犻亾:</span>
+                                        <span class="detail-value">${registration.channel}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">鎶ュ悕鏃堕棿:</span>
+                                        <span class="detail-value">${this.formatDate(registration.registeredAt)}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">瀹℃牳鐘舵€?</span>
+                                        <span class="detail-value">
+                                            <span class="status-badge status-${registration.status}">
+                                                ${this.getStatusText(registration.status)}
+                                            </span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            ${ocrSection}
+                            <div class="detail-actions" style="margin-top: var(--space-5); display: flex; gap: var(--space-3); justify-content: flex-end;">
+                                <button class="btn-outline" onclick="this.closest('.modal-overlay').remove()">鍏抽棴</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            modal.remove();
+                        }
+                    });
+                },
+                
+                getOCRStatusClass(ocrResult) {
+                    if (!ocrResult) return 'no-ocr';
+                    if (ocrResult.status === 'success') return 'ocr-success';
+                    if (ocrResult.status === 'low_confidence') return 'ocr-warning';
+                    if (ocrResult.status === 'failed') return 'ocr-error';
+                    return 'no-ocr';
+                },
+                
+                getOCRStatusIcon(ocrResult) {
+                    if (!ocrResult) return 'fas fa-minus-circle';
+                    if (ocrResult.status === 'success') return 'fas fa-check-circle';
+                    if (ocrResult.status === 'low_confidence') return 'fas fa-exclamation-triangle';
+                    if (ocrResult.status === 'failed') return 'fas fa-times-circle';
+                    return 'fas fa-minus-circle';
+                },
+                
+                getOCRStatusText(ocrResult) {
+                    if (!ocrResult) return '鏈瘑鍒?;
+                    if (ocrResult.status === 'success') return '璇嗗埆鎴愬姛';
+                    if (ocrResult.status === 'low_confidence') return '璇嗗埆寰呯‘璁?;
+                    if (ocrResult.status === 'failed') return '璇嗗埆澶辫触';
+                    return '鏈瘑鍒?;
+                },
+                
+                async quickApprove(id) {
+                    const confirmed = await this.$showConfirm(
+                        '纭畾蹇€熼€氳繃璇ユ姤鍚嶇敵璇峰悧锛?,
+                        '蹇€熼€氳繃',
+                        'info'
+                    );
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('澶勭悊涓?..');
+                            const resp = await fetch('http://localhost:8082/api/registration/audit', {
+                                method: 'POST',
+                                headers: this.getApiHeaders(),
+                                body: JSON.stringify({
+                                    registrationId: id,
+                                    auditResult: 'approved',
+                                    remark: '蹇€熼€氳繃'
+                                })
+                            });
+                            const result = await resp.json();
+                            if (!resp.ok || result.code !== 200) {
+                                throw new Error(result.message || '瀹℃牳澶辫触');
+                            }
+                            await this.loadRegistrations();
+                            await this.loadRegistrationStats();
+                            this.$hideLoading();
+                            this.$showToast('鎶ュ悕宸查€氳繃', 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            this.$showToast(`鎿嶄綔澶辫触: ${error.message}`, 'error');
+                        }
+                    }
+                },
+                
+                prevPage() {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                    }
+                },
+                
+                nextPage() {
+                    if (this.currentPage < this.totalPages) {
+                        this.currentPage++;
+                    }
+                },
+                
+                goBack() {
+                    window.history.back();
+                },
+                
+                
+                exportRoster() {
+                    this.goToRosterGeneration();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+    
+    <style>
+        /* ==================== CSS鍙橀噺瀹氫箟 ==================== */
+        :root {
+            --primary-color: #667eea;
+            --primary-dark: #5a67d8;
+        }
+        
+        /* ==================== 椤甸潰鏁翠綋甯冨眬 ==================== */
+        .page-with-nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-4);
+        }
+
+        /* ==================== 鍗＄墖鍐呰竟璺濇爣鍑?==================== */
+        .glass-card {
+            padding: var(--space-5);
+            margin-bottom: var(--space-5);
+        }
+
+        /* ==================== 鏅鸿兘鍒嗙粍鏍峰紡 ==================== */
+        .smart-grouping h3 {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-5);
+        }
+
+        .grouping-config {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-4);
+            align-items: flex-end;
+            padding: var(--space-4);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-5);
+        }
+
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .config-item label {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        /* ==================== 鏅鸿兘鍒嗙粍绠＄悊鍖哄潡澶撮儴 ==================== */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .section-header h3 {
+            margin: 0;
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--space-3);
+        }
+        
+        /* ==================== 椤甸潰搴曢儴鎿嶄綔鍖?==================== */
+        .page-bottom-actions {
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.98));
+            backdrop-filter: blur(10px);
+            border-top: 2px solid rgba(102, 126, 234, 0.2);
+            margin-top: var(--space-5);
+            padding: var(--space-4) var(--space-5);
+        }
+        
+        .bottom-actions-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--space-4);
+        }
+        
+        .bottom-actions-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
+        }
+        
+        .bottom-actions-info i {
+            color: var(--primary-color);
+            font-size: var(--font-size-lg);
+        }
+        
+        .btn-lg {
+            padding: var(--space-3) var(--space-6);
+            font-size: var(--font-size-lg);
+            font-weight: 700;
+            border-radius: var(--radius-lg);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-3);
+            box-shadow: var(--shadow-lg);
+            transition: all var(--transition-normal);
+        }
+        
+        .btn-lg:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .btn-lg i {
+            font-size: var(--font-size-xl);
+        }
+
+        .config-item select,
+        .config-item input {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            min-width: 150px;
+            font-size: var(--font-size-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .config-item select:focus,
+        .config-item input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* ==================== 鍒嗙粍鍚敤寮€鍏虫牱寮?==================== */
+        .grouping-toggle {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-right: var(--space-3);
+            padding-right: var(--space-3);
+            border-right: 1px solid var(--glass-border);
+        }
+        
+        .toggle-label {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-1) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: 20px;
+            background: var(--gray-100);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            min-width: 100px;
+        }
+        
+        .toggle-btn .toggle-slider {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--gray-400);
+            transition: all var(--transition-fast);
+        }
+        
+        .toggle-btn .toggle-text {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+        
+        .toggle-btn.active {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.2));
+            border-color: #22c55e;
+        }
+        
+        .toggle-btn.active .toggle-slider {
+            background: #22c55e;
+        }
+        
+        .toggle-btn.active .toggle-text {
+            color: #22c55e;
+        }
+        
+        .toggle-btn:hover {
+            transform: scale(1.02);
+        }
+        
+        /* 绂佺敤鐘舵€佹牱寮?*/
+        .grouping-config.disabled,
+        .grouping-preview.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .grouping-config.disabled select,
+        .grouping-config.disabled input,
+        .grouping-config.disabled button {
+            cursor: not-allowed;
+        }
+
+        .grouping-preview {
+            margin-top: var(--space-4);
+        }
+
+        .group-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .group-table th,
+        .group-table td {
+            padding: var(--space-3) var(--space-4);
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .group-table th {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .group-table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .group-name-input {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid transparent;
+            border-radius: var(--radius-md);
+            background: rgba(102, 126, 234, 0.05);
+            font-weight: 600;
+            width: 100%;
+            transition: all var(--transition-fast);
+        }
+
+        .group-name-input:focus {
+            border-color: var(--primary-color);
+            background: white;
+            outline: none;
+        }
+
+        .leader-select {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            min-width: 180px;
+            font-size: var(--font-size-sm);
+        }
+
+        /* ==================== 鏍囧噯鎸夐挳鏍峰紡 ==================== */
+        .btn-sm {
+            padding: var(--space-1) var(--space-3);
+            font-size: var(--font-size-sm);
+            min-width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+
+        .btn-sm:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* OCR璇嗗埆鐘舵€佹牱寮?*/
+        .ocr-status {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+        }
+        
+        .ocr-status.ocr-success {
+            background: var(--success-bg);
+            color: var(--success-color);
+        }
+        
+        .ocr-status.ocr-warning {
+            background: var(--warning-bg);
+            color: var(--warning-color);
+        }
+        
+        .ocr-status.ocr-error {
+            background: var(--error-bg);
+            color: var(--error-color);
+        }
+        
+        .ocr-status.no-ocr {
+            background: var(--gray-100);
+            color: var(--gray-500);
+        }
+        
+        /* 璇︽儏妯℃€佹鏍峰紡 */
+        .detail-section {
+            margin-bottom: var(--space-5);
+        }
+        
+        .detail-section h4 {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-2);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-4);
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+        
+        .detail-label {
+            font-size: var(--font-size-sm);
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            font-size: var(--font-size-base);
+            color: var(--gray-800);
+            font-weight: 500;
+        }
+        
+        /* OCR缁撴灉鏄剧ず鏍峰紡 */
+        .ocr-result-display {
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+        }
+        
+        .ocr-status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .ocr-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+        }
+        
+        .ocr-status-badge.ocr-success {
+            background: var(--success-bg);
+            color: var(--success-color);
+        }
+        
+        .ocr-status-badge.ocr-warning {
+            background: var(--warning-bg);
+            color: var(--warning-color);
+        }
+        
+        .ocr-status-badge.ocr-error {
+            background: var(--error-bg);
+            color: var(--error-color);
+        }
+        
+        .ocr-time {
+            font-size: var(--font-size-sm);
+            color: var(--gray-500);
+        }
+        
+        .ocr-details {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+        
+        .ocr-detail-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2) var(--space-3);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+        }
+        
+        .ocr-label {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            min-width: 80px;
+            font-weight: 500;
+        }
+        
+        .ocr-value {
+            flex: 1;
+            font-size: var(--font-size-base);
+            color: var(--gray-800);
+            font-weight: 500;
+        }
+        
+        .ocr-confidence {
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+        }
+        
+        .ocr-confidence.high {
+            background: var(--success-bg);
+            color: var(--success-color);
+        }
+        
+        .ocr-confidence.medium {
+            background: var(--warning-bg);
+            color: var(--warning-color);
+        }
+        
+        .ocr-confidence.low {
+            background: var(--error-bg);
+            color: var(--error-color);
+        }
+        
+        .ocr-no-result {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            color: var(--gray-500);
+            font-size: var(--font-size-sm);
+        }
+        
+        .ocr-no-result i {
+            font-size: var(--font-size-xl);
+        }
+        /* 寮圭獥鏍峰紡 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            background: var(--glass-bg);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            padding: var(--space-6);
+        }
+        
+        /* 鎴愬憳璋冩暣寮圭獥 - 澶у昂瀵?*/
+        .member-edit-modal {
+            width: 95vw;
+            max-width: 1400px;
+            height: 90vh;
+            max-height: 900px;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+        
+        .member-edit-modal .modal-body {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .member-edit-modal .drag-mode {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .member-edit-modal .groups-container {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: hidden;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-4);
+            padding: var(--space-2);
+        }
+        
+        .member-edit-modal .group-column {
+            min-height: 400px;
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .member-edit-modal .members-drag-list {
+            flex: 1;
+            min-height: 300px;
+            max-height: none;
+            overflow-y: auto;
+        }
+        
+        .member-edit-modal .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: var(--space-2);
+        }
+        
+        .member-edit-modal .member-drag-item {
+            padding: var(--space-2) var(--space-3);
+            font-size: var(--font-size-sm);
+        }
+        
+        .member-edit-modal .number-mode {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .member-edit-modal .members-number-list {
+            flex: 1;
+            max-height: none;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--glass-border);
+            flex-shrink: 0;
+        }
+        
+        .modal-header h3 {
+            font-size: var(--font-size-lg);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin: 0;
+        }
+        
+        .modal-body {
+            padding: var(--space-3) 0;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-3);
+            margin-top: var(--space-4);
+            padding-top: var(--space-3);
+            border-top: 2px solid var(--glass-border);
+            flex-shrink: 0;
+        }
+        
+        /* 鍌姤寮圭獥鏍峰紡 */
+        .reminder-step {
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .reminder-step h4 {
+            font-size: var(--font-size-lg);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--glass-border);
+        }
+        
+        .unit-selection {
+            margin-bottom: var(--space-5);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .selection-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+            padding: var(--space-2) 0;
+        }
+        
+        .selected-count {
+            color: var(--gray-600);
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+        }
+        
+        .unit-list {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2);
+            flex: 1;
+        }
+        
+        .unit-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .unit-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .unit-item.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .unit-info {
+            flex: 1;
+        }
+        
+        .unit-name {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-1);
+        }
+        
+        .unit-meta {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+        
+        .channel-selection {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+        }
+        
+        .channel-option {
+            padding: var(--space-3);
+        }
+        
+        .channel-option {
+            display: flex;
+            align-items: center;
+            padding: var(--space-4);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .channel-option:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .channel-option.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .channel-content {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            flex: 1;
+        }
+        
+        .channel-content i {
+            font-size: var(--font-size-2xl);
+            color: var(--primary-color);
+        }
+        
+        .channel-name {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        .channel-desc {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+        
+        .template-selection {
+            margin-bottom: var(--space-5);
+        }
+        
+        .template-select {
+            width: 100%;
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-3);
+            font-size: var(--font-size-sm);
+        }
+        
+        .template-preview {
+            padding: var(--space-3);
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--glass-border);
+        }
+        
+        .template-preview h5 {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-2);
+            font-size: var(--font-size-sm);
+        }
+        
+        .preview-content {
+            padding: var(--space-3);
+            background: var(--glass-bg);
+            border-radius: var(--radius-md);
+            color: var(--gray-800);
+            line-height: 1.6;
+            min-height: 80px;
+            font-size: var(--font-size-sm);
+        }
+        
+        .custom-template-editor {
+            margin-top: var(--space-4);
+        }
+        
+        .custom-template-editor textarea {
+            width: 100%;
+            padding: var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-base);
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        .send-summary {
+            padding: var(--space-4);
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--glass-border);
+            margin-bottom: var(--space-4);
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--space-2);
+            border-bottom: 1px solid var(--glass-border);
+            font-size: var(--font-size-sm);
+        }
+        
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        
+        .summary-item .label {
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .summary-item .value {
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+        
+        .step-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-3);
+            margin-top: auto;
+            padding-top: var(--space-4);
+            border-top: 2px solid var(--glass-border);
+        }
+        
+        /* 鏅鸿兘鍒嗙粍寮圭獥鏍峰紡 */
+        .group-info {
+            margin-bottom: var(--space-6);
+        }
+        
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-3);
+            margin-bottom: var(--space-2);
+        }
+        
+        .info-row .label {
+            min-width: 100px;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .group-name-input {
+            flex: 1;
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+        }
+        
+        .leader-select {
+            flex: 1;
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+        }
+        
+        .members-list {
+            margin-top: var(--space-6);
+        }
+        
+        .members-list h4 {
+            font-size: var(--font-size-lg);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-4);
+        }
+        
+        .members-table {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .members-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .members-table th,
+        .members-table td {
+            padding: var(--space-2) var(--space-3);
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .members-table th {
+            background: rgba(102, 126, 234, 0.05);
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        .edit-tabs {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-5);
+            border-bottom: 2px solid var(--glass-border);
+        }
+        
+        .tab-btn {
+            padding: var(--space-3) var(--space-5);
+            border: none;
+            background: transparent;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray-600);
+            transition: all var(--transition-fast);
+        }
+        
+        .tab-btn:hover {
+            color: var(--primary-color);
+        }
+        
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+        
+        .groups-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+        
+        .group-column {
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            background: rgba(102, 126, 234, 0.02);
+            max-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .group-column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+            padding-bottom: var(--space-2);
+            border-bottom: 2px solid var(--glass-border);
+        }
+        
+        .group-column-header h5 {
+            font-weight: 700;
+            color: var(--gray-900);
+            margin: 0;
+        }
+        
+        .member-count-badge {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+        }
+        
+        .group-column h5 {
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-3);
+            padding-bottom: var(--space-2);
+            border-bottom: 2px solid var(--glass-border);
+        }
+        
+        .members-drag-list {
+            flex: 1;
+            min-height: 150px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: var(--space-2);
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: var(--radius-md);
+        }
+        
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: var(--space-2);
+        }
+        
+        .member-drag-item {
+            padding: var(--space-2);
+            background: white;
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            cursor: move;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--font-size-sm);
+        }
+        
+        .member-drag-item .drag-handle {
+            color: var(--gray-400);
+            font-size: 10px;
+        }
+        
+        .member-drag-item .member-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+        
+        .member-drag-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .member-drag-item:active {
+            opacity: 0.7;
+            transform: scale(0.98);
+        }
+        
+        .number-edit-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+            padding: var(--space-4);
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: var(--radius-lg);
+        }
+        
+        .number-edit-controls label {
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .number-edit-controls input {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            width: 120px;
+        }
+        
+        .members-number-list {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-3);
+        }
+        
+        .member-number-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            margin-bottom: var(--space-2);
+            background: var(--glass-bg);
+            border-radius: var(--radius-md);
+        }
+        
+        .member-number {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .member-info {
+            flex: 1;
+            color: var(--gray-800);
+        }
+        
+        .member-number-item select {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            min-width: 150px;
+        }
+        
+        .staff-selection {
+            margin-bottom: var(--space-5);
+        }
+        
+        .staff-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-3);
+            margin-top: var(--space-4);
+        }
+        
+        .staff-option {
+            display: flex;
+            align-items: center;
+            padding: var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .staff-option:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .staff-option.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .staff-info {
+            flex: 1;
+            margin-left: var(--space-3);
+        }
+        
+        .staff-name {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        .staff-meta {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+        
+        .empty-preview {
+            text-align: center;
+            padding: var(--space-8);
+            color: var(--gray-600);
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+        
+        /* 鎵归噺鍒嗛厤鍒扮粍鏍峰紡 */
+        .batch-assign-group {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: var(--radius-lg);
+            margin-left: auto;
+        }
+        
+        .batch-count {
+            font-weight: 600;
+            color: var(--primary-color);
+            white-space: nowrap;
+        }
+        
+        .batch-group-select {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--primary-color);
+            border-radius: var(--radius-md);
+            min-width: 160px;
+            background: white;
+        }
+        
+        .data-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            align-items: center;
+        }
+        
+        /* ==================== 鎶ュ悕鏁版嵁琛ㄦ牸鏍峰紡 - 鍙傝€冧細璁鐞嗕腑蹇?==================== */
+        .table-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-3) var(--space-4);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-4);
+            flex-wrap: wrap;
+        }
+        
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+        }
+        
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+        }
+        
+        .filter-select {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            min-width: 120px;
+            font-size: var(--font-size-sm);
+            background: white;
+            transition: all var(--transition-fast);
+        }
+        
+        .filter-select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--space-4);
+        }
+        
+        .registration-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 900px;
+        }
+        
+        .registration-table th,
+        .registration-table td {
+            padding: var(--space-3) var(--space-4);
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: var(--font-size-sm);
+        }
+        
+        .registration-table th {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        
+        .registration-table tbody tr {
+            transition: background-color var(--transition-fast);
+        }
+        
+        .registration-table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .registration-table tbody tr.status-row-pending {
+            background: rgba(245, 158, 11, 0.05);
+        }
+        
+        .registration-table tbody tr.status-row-rejected {
+            background: rgba(239, 68, 68, 0.05);
+        }
+        
+        /* 鍒嗛〉 */
+        .table-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            margin-top: 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        .btn-pagination {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-pagination:hover:not(:disabled) {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .btn-pagination:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .page-indicator {
+            padding: 8px 16px;
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #1e40af;
+            font-weight: 500;
+        }
+
+        /* 娓犻亾寰界珷 */
+        .channel-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+        }
+        
+        .channel-badge.channel-web {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+        
+        .channel-badge.channel-miniprogram {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+        
+        .channel-badge.channel-mobile {
+            background: rgba(168, 85, 247, 0.1);
+            color: #a855f7;
+        }
+        
+        /* 瀹℃牳鐘舵€佸窘绔?*/
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+        }
+        
+        .badge-review-approved {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+        
+        .badge-review-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+        
+        .badge-review-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        
+        .badge-secondary {
+            background: rgba(100, 116, 139, 0.1);
+            color: #64748b;
+        }
+        
+        .badge-pass, .badge-success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+        
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+        
+        .badge-fail, .badge-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        
+        /* 鎿嶄綔鎸夐挳缁?*/
+        .action-buttons {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: nowrap;
+        }
+        
+        .btn-xs {
+            padding: var(--space-1) var(--space-2);
+            font-size: var(--font-size-xs);
+            border-radius: var(--radius-sm);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .btn-xs.btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+        }
+        
+        .btn-xs.btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-xs.btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+        }
+        
+        .btn-xs.btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-xs.btn-outline {
+            background: white;
+            color: var(--gray-700);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .btn-xs.btn-outline:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .data-count {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+    </style>
+</body>
+</html>
+

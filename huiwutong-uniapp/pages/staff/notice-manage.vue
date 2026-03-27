@@ -9,7 +9,7 @@
     </view>
 
     <!-- 统计卡片 -->
-    <view class="stats-section">
+    <view class="stats-section card">
       <view class="stat-card">
         <text class="stat-num">{{ stats.total }}</text>
         <text class="stat-label">全部通知</text>
@@ -70,7 +70,7 @@
 
         <view class="notice-footer">
           <view class="notice-target">
-            <text class="target-icon">👥</text>
+            <text class="target-icon"><text class="fa fa-users"></text></text>
             <text class="target-text">{{ notice.target }}</text>
           </view>
           <view class="notice-stats">
@@ -322,6 +322,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .notice-manage-container {
   min-height: 100vh;
@@ -447,7 +448,7 @@ export default {
 
 .notice-status.status-draft {
   background: rgba(148, 163, 184, 0.1);
-  color: #94a3b8;
+  color: $text-tertiary;
 }
 
 .notice-status.status-scheduled {

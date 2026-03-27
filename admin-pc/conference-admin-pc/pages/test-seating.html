@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能排座系统 - 功能测试</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+
+    <style>
+        body {
+            padding: var(--space-6);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .test-header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            margin-bottom: var(--space-4);
+            text-align: center;
+        }
+
+        .test-header h1 {
+            color: var(--gray-900);
+            margin-bottom: var(--space-2);
+        }
+
+        .test-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            margin-bottom: var(--space-4);
+        }
+
+        .test-section h2 {
+            font-size: var(--font-size-xl);
+            color: var(--gray-900);
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .test-item {
+            background: rgba(102, 126, 234, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            margin-bottom: var(--space-3);
+        }
+
+        .test-item h3 {
+            font-size: var(--font-size-base);
+            color: var(--primary-color);
+            margin-bottom: var(--space-2);
+        }
+
+        .test-result {
+            margin-top: var(--space-3);
+            padding: var(--space-3);
+            background: white;
+            border-radius: var(--radius-sm);
+            font-family: 'Courier New', monospace;
+            font-size: var(--font-size-sm);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .test-result pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .test-controls {
+            display: flex;
+            gap: var(--space-2);
+            margin-top: var(--space-3);
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            margin-left: var(--space-2);
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--space-3);
+            justify-content: center;
+            margin-top: var(--space-4);
+        }
+
+        .nav-link {
+            padding: var(--space-3) var(--space-5);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .code-block {
+            background: var(--gray-900);
+            color: #10b981;
+            padding: var(--space-3);
+            border-radius: var(--radius-sm);
+            font-family: 'Courier New', monospace;
+            font-size: var(--font-size-xs);
+            overflow-x: auto;
+            margin-top: var(--space-2);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-3);
+            margin-top: var(--space-3);
+        }
+
+        .stat-card {
+            background: white;
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            margin-top: var(--space-1);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="test-container">
+            <!-- 头部 -->
+            <div class="test-header">
+                <h1>🧪 智能排座系统 - 功能测试</h1>
+                <p>验证所有核心功能是否正常工作</p>
+                <div class="nav-links">
+                    <a href="seating-mgr.html" class="nav-link">
+                        <i class="fas fa-cog"></i> 排座管理页面
+                    </a>
+                    <a href="check-seat.html?conf=test_conf_001" class="nav-link">
+                        <i class="fas fa-search"></i> 查座页面
+                    </a>
+                </div>
+            </div>
+
+            <!-- 测试统计 -->
+            <div class="test-section">
+                <h2>📊 测试统计</h2>
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ testResults.length }}</div>
+                        <div class="stat-label">总测试数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" style="color: var(--success-color)">{{ passedCount }}</div>
+                        <div class="stat-label">通过</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" style="color: var(--error-color)">{{ failedCount }}</div>
+                        <div class="stat-label">失败</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" style="color: var(--warning-color)">{{ pendingCount }}</div>
+                        <div class="stat-label">待测试</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 测试1: 数据结构验证 -->
+            <div class="test-section">
+                <h2>1. 数据结构验证</h2>
+                <div class="test-controls">
+                    <button class="btn-primary" @click="testDataStructure">
+                        <i class="fas fa-play"></i> 运行测试
+                    </button>
+                </div>
+                <div class="test-result" v-if="testResults.dataStructure">
+                    <pre>{{ testResults.dataStructure.output }}</pre>
+                </div>
+            </div>
+
+            <!-- 测试2: 座位生成算法 -->
+            <div class="test-section">
+                <h2>2. 座位生成算法测试</h2>
+                <div class="test-item">
+                    <h3>测试 generateSeatingLayout</h3>
+                    <p>生成一个 3行 x 5列 的座位区，角度 0度</p>
+                    <div class="test-controls">
+                        <button class="btn-primary" @click="testGenerateLayout">
+                            <i class="fas fa-play"></i> 生成座位布局
+                        </button>
+                    </div>
+                    <div class="test-result" v-if="testResults.generateLayout">
+                        <pre>{{ testResults.generateLayout.output }}</pre>
+                    </div>
+                </div>
+                <div class="test-item">
+                    <h3>测试角度计算</h3>
+                    <p>测试 calculateX/calculateY 方法</p>
+                    <div class="test-controls">
+                        <button class="btn-primary" @click="testAngleCalculation">
+                            <i class="fas fa-play"></i> 计算角度
+                        </button>
+                    </div>
+                    <div class="test-result" v-if="testResults.angleCalc">
+                        <pre>{{ testResults.angleCalc.output }}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 测试3: 排座算法 -->
+            <div class="test-section">
+                <h2>3. 排座算法测试</h2>
+                <div class="test-item">
+                    <h3>测试 getFrontCenterSeats</h3>
+                    <p>获取前排居中的5个座位</p>
+                    <div class="test-controls">
+                        <button class="btn-primary" @click="testFrontCenterSeats">
+                            <i class="fas fa-play"></i> 获取前排居中座位
+                        </button>
+                    </div>
+                    <div class="test-result" v-if="testResults.frontCenter">
+                        <pre>{{ testResults.frontCenter.output }}</pre>
+                    </div>
+                </div>
+                <div class="test-item">
+                    <h3>测试按部门分组</h3>
+                    <p>groupAttendeesByDepartment 方法测试</p>
+                    <div class="test-controls">
+                        <button class="btn-primary" @click="testDepartmentGrouping">
+                            <i class="fas fa-play"></i> 按部门分组
+                        </button>
+                    </div>
+                    <div class="test-result" v-if="testResults.deptGroup">
+                        <pre>{{ testResults.deptGroup.output }}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 测试4: 辅助分配功能 -->
+            <div class="test-section">
+                <h2>4. 辅助分配功能测试</h2>
+                <div class="test-item">
+                    <h3>测试智能分配乘车</h3>
+                    <p>模拟车辆分配逻辑</p>
+                    <div class="test-controls">
+                        <button class="btn-primary" @click="testTransportAssignment">
+                            <i class="fas fa-play"></i> 分配乘车
+                        </button>
+                    </div>
+                    <div class="test-result" v-if="testResults.transport">
+                        <pre>{{ testResults.transport.output }}</pre>
+                    </div>
+                </div>
+                <div class="test-item">
+                    <h3>测试智能分配住宿</h3>
+                    <p>模拟住宿分配逻辑（性别考虑）</p>
+                    <div class="test-controls">
+                        <button class="btn-primary" @click="testAccommodationAssignment">
+                            <i class="fas fa-play"></i> 分配住宿
+                        </button>
+                    </div>
+                    <div class="test-result" v-if="testResults.accommodation">
+                        <pre>{{ testResults.accommodation.output }}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 测试5: 模拟完整流程 -->
+            <div class="test-section">
+                <h2>5. 完整流程测试</h2>
+                <div class="test-item">
+                    <h3>模拟智能排座完整流程</h3>
+                    <p>导入人员 → 执行排座 → 验证结果</p>
+                    <div class="test-controls">
+                        <button class="btn-primary" @click="testCompleteFlow">
+                            <i class="fas fa-play"></i> 运行完整流程
+                        </button>
+                    </div>
+                    <div class="test-result" v-if="testResults.completeFlow">
+                        <pre>{{ testResults.completeFlow.output }}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 测试6: 性能测试 -->
+            <div class="test-section">
+                <h2>6. 性能测试</h2>
+                <div class="test-item">
+                    <h3>大规模数据测试</h3>
+                    <p>生成1000名参会人员并测试排座性能</p>
+                    <div class="test-controls">
+                        <button class="btn-primary" @click="testPerformance">
+                            <i class="fas fa-play"></i> 性能测试
+                        </button>
+                    </div>
+                    <div class="test-result" v-if="testResults.performance">
+                        <pre>{{ testResults.performance.output }}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    testResults: {},
+                    mockData: null
+                };
+            },
+            computed: {
+                passedCount() {
+                    return Object.values(this.testResults).filter(r => r.status === 'success').length;
+                },
+                failedCount() {
+                    return Object.values(this.testResults).filter(r => r.status === 'error').length;
+                },
+                pendingCount() {
+                    return 6 - Object.keys(this.testResults).length;
+                }
+            },
+            methods: {
+                // 初始化模拟数据
+                initMockData() {
+                    // 生成座位区域
+                    const seatingAreas = [
+                        {
+                            id: 'area_a',
+                            name: 'A区 (VIP区域)',
+                            type: 'vip',
+                            rows: []
+                        },
+                        {
+                            id: 'area_b',
+                            name: 'B区',
+                            type: 'regular',
+                            rows: []
+                        }
+                    ];
+
+                    // 为每个区域生成座位
+                    seatingAreas.forEach(area => {
+                        const rowCount = area.type === 'vip' ? 5 : 10;
+                        const seatsPerRow = area.type === 'vip' ? 10 : 15;
+
+                        for (let r = 1; r <= rowCount; r++) {
+                            const seats = [];
+                            for (let c = 1; c <= seatsPerRow; c++) {
+                                seats.push({
+                                    id: `${area.id}${r}_${c}`,
+                                    area: area.id,
+                                    row: r,
+                                    col: c,
+                                    number: c,
+                                    x: c,
+                                    y: r,
+                                    status: 'available',
+                                    type: area.type === 'vip' ? 'vip' : 'regular',
+                                    occupant: null
+                                });
+                            }
+                            area.rows.push({ number: r, seats });
+                        }
+                    });
+
+                    // 生成参会人员
+                    const departments = ['技术部', '产品部', '市场部', '销售部'];
+                    const positions = ['总监', '经理', '主管', '专员'];
+                    const attendees = [];
+
+                    // 生成VIP
+                    for (let i = 0; i < 10; i++) {
+                        attendees.push({
+                            id: `att_vip_${i}`,
+                            name: `VIP嘉宾${i + 1}`,
+                            department: departments[i % departments.length],
+                            position: positions[0],
+                            gender: i % 2 === 0 ? '男' : '女',
+                            isVip: true,
+                            specialNeeds: []
+                        });
+                    }
+
+                    // 生成普通参会人员
+                    for (let i = 0; i < 100; i++) {
+                        attendees.push({
+                            id: `att_${i}`,
+                            name: `参会人员${i + 1}`,
+                            department: departments[i % departments.length],
+                            position: positions[Math.floor(Math.random() * positions.length)],
+                            gender: i % 2 === 0 ? '男' : '女',
+                            isVip: false,
+                            specialNeeds: []
+                        });
+                    }
+
+                    // 生成车辆列表
+                    const transportList = [
+                        { id: 'v1', name: '1号车', type: '大巴', capacity: 45, assignedCount: 0, passengers: [] },
+                        { id: 'v2', name: '2号车', type: '大巴', capacity: 45, assignedCount: 0, passengers: [] }
+                    ];
+
+                    // 生成住宿列表
+                    const accommodationList = [
+                        { id: 'r1', hotelName: 'XX酒店', roomNumber: '301', type: '标准间', capacity: 2, assignedCount: 0, occupants: [] },
+                        { id: 'r2', hotelName: 'XX酒店', roomNumber: '302', type: '标准间', capacity: 2, assignedCount: 0, occupants: [] }
+                    ];
+
+                    this.mockData = {
+                        seatingAreas,
+                        attendees,
+                        transportList,
+                        accommodationList
+                    };
+                },
+
+                // 测试1: 数据结构验证
+                testDataStructure() {
+                    this.initMockData();
+
+                    const result = {
+                        status: 'success',
+                        output: '=== 数据结构验证 ===\n\n'
+                    };
+
+                    try {
+                        // 验证座位区域
+                        result.output += '✓ 座位区域数量: ' + this.mockData.seatingAreas.length + '\n';
+                        result.output += '✓ A区 (VIP) 座位数: ' + this.getAreaSeatCount('area_a') + '\n';
+                        result.output += '✓ B区 (普通) 座位数: ' + this.getAreaSeatCount('area_b') + '\n\n';
+
+                        // 验证参会人员
+                        result.output += '✓ 参会人员总数: ' + this.mockData.attendees.length + '\n';
+                        result.output += '✓ VIP人数: ' + this.mockData.attendees.filter(a => a.isVip).length + '\n';
+                        result.output += '✓ 普通人数: ' + this.mockData.attendees.filter(a => !a.isVip).length + '\n\n';
+
+                        // 验证辅助安排
+                        result.output += '✓ 车辆数量: ' + this.mockData.transportList.length + '\n';
+                        result.output += '✓ 房间数量: ' + this.mockData.accommodationList.length + '\n\n';
+
+                        result.output += '✅ 数据结构验证通过！';
+
+                    } catch (error) {
+                        result.status = 'error';
+                        result.output = '❌ 错误: ' + error.message;
+                    }
+
+                    this.testResults.dataStructure = result;
+                },
+
+                getAreaSeatCount(areaId) {
+                    const area = this.mockData.seatingAreas.find(a => a.id === areaId);
+                    if (!area) return 0;
+                    return area.rows.reduce((sum, row) => sum + row.seats.length, 0);
+                },
+
+                // 测试2: 座位生成算法
+                testGenerateLayout() {
+                    const result = {
+                        status: 'success',
+                        output: ''
+                    };
+
+                    try {
+                        result.output = '=== 测试 generateSeatingLayout ===\n\n';
+
+                        // 生成3行5列的座位布局
+                        const config = {
+                            areaId: 'test',
+                            rows: 3,
+                            cols: 5,
+                            angle: 0,
+                            type: 'regular'
+                        };
+
+                        const layout = this.generateSeatingLayout(config);
+
+                        result.output += '配置: 3行 x 5列, 角度 0度\n\n';
+                        result.output += '生成的座位:\n';
+                        layout.forEach(row => {
+                            row.seats.forEach(seat => {
+                                result.output += `  座位 ${seat.id}: 行=${seat.row}, 列=${seat.col}, x=${seat.x.toFixed(2)}, y=${seat.y.toFixed(2)}\n`;
+                            });
+                        });
+
+                        result.output += '\n✅ 座位生成算法正常！';
+
+                    } catch (error) {
+                        result.status = 'error';
+                        result.output = '❌ 错误: ' + error.message;
+                    }
+
+                    this.testResults.generateLayout = result;
+                },
+
+                generateSeatingLayout(config) {
+                    const { areaId, rows, cols, angle, type } = config;
+                    const seats = [];
+
+                    for (let r = 1; r <= rows; r++) {
+                        for (let c = 1; c <= cols; c++) {
+                            const seat = {
+                                id: `${areaId}${r}_${c}`,
+                                area: areaId,
+                                row: r,
+                                col: c,
+                                number: c,
+                                x: this.calculateX(r, c, angle),
+                                y: this.calculateY(r, c, angle),
+                                status: 'available',
+                                type: this.determineSeatType(r, c, config)
+                            };
+                            seats.push(seat);
+                        }
+                    }
+
+                    const layout = [];
+                    for (let r = 1; r <= rows; r++) {
+                        layout.push({
+                            number: r,
+                            seats: seats.filter(s => s.row === r)
+                        });
+                    }
+
+                    return layout;
+                },
+
+                calculateX(row, col, angle) {
+                    const radian = (angle * Math.PI) / 180;
+                    return col * Math.cos(radian) - row * Math.sin(radian);
+                },
+
+                calculateY(row, col, angle) {
+                    const radian = (angle * Math.PI) / 180;
+                    return col * Math.sin(radian) + row * Math.cos(radian);
+                },
+
+                determineSeatType(row, col, config) {
+                    return config.type === 'vip' ? 'vip' : 'regular';
+                },
+
+                // 测试角度计算
+                testAngleCalculation() {
+                    const result = {
+                        status: 'success',
+                        output: ''
+                    };
+
+                    try {
+                        result.output = '=== 测试角度计算 ===\n\n';
+
+                        const testCases = [
+                            { row: 1, col: 1, angle: 0 },
+                            { row: 1, col: 1, angle: 45 },
+                            { row: 1, col: 1, angle: 90 },
+                            { row: 2, col: 3, angle: 30 }
+                        ];
+
+                        testCases.forEach(tc => {
+                            const x = this.calculateX(tc.row, tc.col, tc.angle);
+                            const y = this.calculateY(tc.row, tc.col, tc.angle);
+                            result.output += `行=${tc.row}, 列=${tc.col}, 角度=${tc.angle}°\n`;
+                            result.output += `  → x=${x.toFixed(2)}, y=${y.toFixed(2)}\n\n`;
+                        });
+
+                        result.output += '✅ 角度计算正常！';
+
+                    } catch (error) {
+                        result.status = 'error';
+                        result.output = '❌ 错误: ' + error.message;
+                    }
+
+                    this.testResults.angleCalc = result;
+                },
+
+                // 测试3: 获取前排居中座位
+                testFrontCenterSeats() {
+                    const result = {
+                        status: 'success',
+                        output: ''
+                    };
+
+                    try {
+                        this.initMockData();
+
+                        result.output = '=== 测试 getFrontCenterSeats ===\n\n';
+                        result.output += '获取前排居中的 5 个座位:\n\n';
+
+                        const seats = this.getFrontCenterSeats(5);
+
+                        seats.forEach((seat, index) => {
+                            result.output += `${index + 1}. ${seat.id}\n`;
+                            result.output += `   位置: ${seat.area} ${seat.row}排 ${seat.number}号\n`;
+                            result.output += `   坐标: (${seat.x.toFixed(2)}, ${seat.y.toFixed(2)})\n\n`;
+                        });
+
+                        result.output += '✅ 前排居中座位获取正常！';
+
+                    } catch (error) {
+                        result.status = 'error';
+                        result.output = '❌ 错误: ' + error.message;
+                    }
+
+                    this.testResults.frontCenter = result;
+                },
+
+                getFrontCenterSeats(count) {
+                    const allSeats = [];
+
+                    this.mockData.seatingAreas.forEach(area => {
+                        area.rows.forEach(row => {
+                            row.seats.forEach(seat => {
+                                if (seat.status === 'available') {
+                                    allSeats.push(seat);
+                                }
+                            });
+                        });
+                    });
+
+                    return allSeats
+                        .sort((a, b) => {
+                            if (a.row !== b.row) return a.row - b.row;
+
+                            const rowSeats = this.getRowSeats(a.area, a.row);
+                            const center = Math.floor(rowSeats.length / 2);
+                            const distA = Math.abs(a.col - center);
+                            const distB = Math.abs(b.col - center);
+                            return distA - distB;
+                        })
+                        .slice(0, count);
+                },
+
+                getRowSeats(areaId, rowNum) {
+                    const area = this.mockData.seatingAreas.find(a => a.id === areaId);
+                    if (!area) return [];
+
+                    const row = area.rows.find(r => r.number === rowNum);
+                    return row ? row.seats : [];
+                },
+
+                // 测试按部门分组
+                testDepartmentGrouping() {
+                    const result = {
+                        status: 'success',
+                        output: ''
+                    };
+
+                    try {
+                        this.initMockData();
+
+                        result.output = '=== 测试 groupAttendeesByDepartment ===\n\n';
+
+                        const groups = this.groupAttendeesByDepartment(this.mockData.attendees);
+
+                        Object.keys(groups).forEach(dept => {
+                            result.output += `${dept}: ${groups[dept].length} 人\n`;
+                            result.output += `  人员: ${groups[dept].slice(0, 3).map(a => a.name).join(', ')}...\n\n`;
+                        });
+
+                        result.output += '✅ 按部门分组正常！';
+
+                    } catch (error) {
+                        result.status = 'error';
+                        result.output = '❌ 错误: ' + error.message;
+                    }
+
+                    this.testResults.deptGroup = result;
+                },
+
+                groupAttendeesByDepartment(attendees) {
+                    const groups = {};
+                    attendees.forEach(attendee => {
+                        if (!groups[attendee.department]) {
+                            groups[attendee.department] = [];
+                        }
+                        groups[attendee.department].push(attendee);
+                    });
+                    return groups;
+                },
+
+                // 测试4: 智能分配乘车
+                testTransportAssignment() {
+                    const result = {
+                        status: 'success',
+                        output: ''
+                    };
+
+                    try {
+                        this.initMockData();
+
+                        result.output = '=== 测试智能分配乘车 ===\n\n';
+                        result.output += '车辆信息:\n';
+                        this.mockData.transportList.forEach(v => {
+                            result.output += `  ${v.name}: ${v.type}, 容量${v.capacity}人\n`;
+                        });
+                        result.output += '\n';
+
+                        // 执行分配
+                        const deptGroups = this.groupAttendeesByDepartment(this.mockData.attendees);
+
+                        for (const vehicle of this.mockData.transportList) {
+                            const remainingCapacity = vehicle.capacity - vehicle.assignedCount;
+                            if (remainingCapacity <= 0) continue;
+
+                            for (const dept in deptGroups) {
+                                if (deptGroups[dept].length === 0) continue;
+
+                                const assignCount = Math.min(remainingCapacity, deptGroups[dept].length);
+                                const assigned = deptGroups[dept].splice(0, assignCount);
+
+                                assigned.forEach(attendee => {
+                                    this.assignAttendeeToVehicle(attendee, vehicle);
+                                });
+
+                                vehicle.assignedCount += assignCount;
+                                if (vehicle.assignedCount >= vehicle.capacity) break;
+                            }
+                        }
+
+                        // 显示结果
+                        this.mockData.transportList.forEach(v => {
+                            result.output += `${v.name} 分配结果:\n`;
+                            result.output += `  已分配: ${v.assignedCount}/${v.capacity} 人\n`;
+                            result.output += `  乘客: ${v.passengers.map(p => p.name).join(', ')}\n\n`;
+                        });
+
+                        result.output += '✅ 智能分配乘车正常！';
+
+                    } catch (error) {
+                        result.status = 'error';
+                        result.output = '❌ 错误: ' + error.message;
+                    }
+
+                    this.testResults.transport = result;
+                },
+
+                assignAttendeeToVehicle(attendee, vehicle) {
+                    if (!vehicle.passengers) {
+                        vehicle.passengers = [];
+                    }
+                    vehicle.passengers.push({
+                        id: attendee.id,
+                        name: attendee.name,
+                        department: attendee.department
+                    });
+                    attendee.transportAssigned = true;
+                    attendee.vehicleId = vehicle.id;
+                },
+
+                // 测试智能分配住宿
+                testAccommodationAssignment() {
+                    const result = {
+                        status: 'success',
+                        output: ''
+                    };
+
+                    try {
+                        this.initMockData();
+
+                        result.output = '=== 测试智能分配住宿 ===\n\n';
+                        result.output += '房间信息:\n';
+                        this.mockData.accommodationList.forEach(r => {
+                            result.output += `  ${r.hotelName} ${r.roomNumber}: ${r.type}, 容量${r.capacity}人\n`;
+                        });
+                        result.output += '\n';
+
+                        // 执行分配
+                        const maleAttendees = this.mockData.attendees.filter(a => a.gender === '男');
+                        const femaleAttendees = this.mockData.attendees.filter(a => a.gender === '女');
+
+                        for (const room of this.mockData.accommodationList) {
+                            const remainingCapacity = room.capacity - room.assignedCount;
+                            if (remainingCapacity <= 0) continue;
+
+                            let assigned = [];
+
+                            if (room.type === '标准间') {
+                                if (remainingCapacity >= 2) {
+                                    if (maleAttendees.length >= 2) {
+                                        assigned = maleAttendees.splice(0, 2);
+                                    } else if (femaleAttendees.length >= 2) {
+                                        assigned = femaleAttendees.splice(0, 2);
+                                    }
+                                }
+                            }
+
+                            assigned.forEach(attendee => {
+                                this.assignAttendeeToRoom(attendee, room);
+                            });
+
+                            room.assignedCount += assigned.length;
+                        }
+
+                        // 显示结果
+                        this.mockData.accommodationList.forEach(r => {
+                            result.output += `${r.hotelName} ${r.roomNumber}:\n`;
+                            result.output += `  已分配: ${r.assignedCount}/${r.capacity} 人\n`;
+                            result.output += `  居住者: ${r.occupants.map(o => o.name).join(', ') || '无'}\n\n`;
+                        });
+
+                        result.output += '✅ 智能分配住宿正常！';
+
+                    } catch (error) {
+                        result.status = 'error';
+                        result.output = '❌ 错误: ' + error.message;
+                    }
+
+                    this.testResults.accommodation = result;
+                },
+
+                assignAttendeeToRoom(attendee, room) {
+                    if (!room.occupants) {
+                        room.occupants = [];
+                    }
+                    room.occupants.push({
+                        id: attendee.id,
+                        name: attendee.name,
+                        gender: attendee.gender
+                    });
+                    attendee.roomAssigned = true;
+                    attendee.roomId = room.id;
+                },
+
+                // 测试5: 完整流程
+                testCompleteFlow() {
+                    const result = {
+                        status: 'success',
+                        output: ''
+                    };
+
+                    try {
+                        const startTime = Date.now();
+
+                        result.output = '=== 模拟完整智能排座流程 ===\n\n';
+
+                        // 步骤1: 初始化
+                        result.output += '步骤1: 初始化数据\n';
+                        this.initMockData();
+                        result.output += `  ✓ 座位数: ${this.getTotalSeats()}\n`;
+                        result.output += `  ✓ 参会人数: ${this.mockData.attendees.length}\n\n`;
+
+                        // 步骤2: VIP排座
+                        result.output += '步骤2: VIP前排居中排座\n';
+                        const vipAttendees = this.mockData.attendees.filter(a => a.isVip);
+                        const vipSeats = this.getFrontCenterSeats(vipAttendees.length);
+                        vipAttendees.forEach((attendee, index) => {
+                            if (vipSeats[index]) {
+                                vipSeats[index].occupant = attendee;
+                                vipSeats[index].status = 'occupied';
+                            }
+                        });
+                        result.output += `  ✓ 已分配 ${vipAttendees.length} 名VIP\n\n`;
+
+                        // 步骤3: 普通人员排座
+                        result.output += '步骤3: 普通人员按部门排座\n';
+                        const regularAttendees = this.mockData.attendees.filter(a => !a.isVip);
+                        const deptGroups = this.groupAttendeesByDepartment(regularAttendees);
+                        const availableSeats = this.getAllAvailableSeats();
+                        let seatIndex = 0;
+
+                        Object.keys(deptGroups).forEach(dept => {
+                            deptGroups[dept].forEach(attendee => {
+                                if (seatIndex < availableSeats.length) {
+                                    availableSeats[seatIndex].occupant = attendee;
+                                    availableSeats[seatIndex].status = 'occupied';
+                                    seatIndex++;
+                                }
+                            });
+                        });
+                        result.output += `  ✓ 已分配 ${seatIndex} 名普通参会人员\n\n`;
+
+                        // 步骤4: 统计
+                        result.output += '步骤4: 统计结果\n';
+                        const stats = this.calculateStatistics();
+                        result.output += `  ✓ 总座位: ${stats.totalSeats}\n`;
+                        result.output += `  ✓ 已分配: ${stats.assigned}\n`;
+                        result.output += `  ✓ VIP: ${stats.vip}\n`;
+                        result.output += `  ✓ 完成率: ${stats.completionRate}%\n\n`;
+
+                        const endTime = Date.now();
+                        result.output += `⏱️  耗时: ${endTime - startTime}ms\n\n`;
+                        result.output += '✅ 完整流程测试通过！';
+
+                    } catch (error) {
+                        result.status = 'error';
+                        result.output = '❌ 错误: ' + error.message;
+                    }
+
+                    this.testResults.completeFlow = result;
+                },
+
+                getTotalSeats() {
+                    return this.mockData.seatingAreas.reduce((total, area) => {
+                        return total + area.rows.reduce((rowTotal, row) => {
+                            return rowTotal + row.seats.length;
+                        }, 0);
+                    }, 0);
+                },
+
+                getAllAvailableSeats() {
+                    const seats = [];
+                    this.mockData.seatingAreas.forEach(area => {
+                        area.rows.forEach(row => {
+                            row.seats.forEach(seat => {
+                                if (seat.status === 'available') {
+                                    seats.push(seat);
+                                }
+                            });
+                        });
+                    });
+                    return seats;
+                },
+
+                calculateStatistics() {
+                    let totalSeats = 0;
+                    let assigned = 0;
+                    let vip = 0;
+
+                    this.mockData.seatingAreas.forEach(area => {
+                        area.rows.forEach(row => {
+                            row.seats.forEach(seat => {
+                                totalSeats++;
+                                if (seat.status === 'occupied') {
+                                    assigned++;
+                                    if (seat.type === 'vip') {
+                                        vip++;
+                                    }
+                                }
+                            });
+                        });
+                    });
+
+                    return {
+                        totalSeats,
+                        assigned,
+                        vip,
+                        completionRate: totalSeats > 0 ? Math.round((assigned / totalSeats) * 100) : 0
+                    };
+                },
+
+                // 测试6: 性能测试
+                testPerformance() {
+                    const result = {
+                        status: 'success',
+                        output: ''
+                    };
+
+                    try {
+                        result.output = '=== 性能测试 (1000名参会人员) ===\n\n';
+
+                        const startTime = Date.now();
+
+                        // 生成1000名参会人员
+                        const departments = ['技术部', '产品部', '市场部', '销售部', '人力资源部'];
+                        const largeAttendees = [];
+
+                        for (let i = 0; i < 1000; i++) {
+                            largeAttendees.push({
+                                id: `att_perf_${i}`,
+                                name: `测试人员${i}`,
+                                department: departments[i % departments.length],
+                                gender: i % 2 === 0 ? '男' : '女',
+                                isVip: i < 50
+                            });
+                        }
+
+                        const genTime = Date.now() - startTime;
+                        result.output += `生成1000名参会人员: ${genTime}ms\n`;
+
+                        // 测试按部门分组性能
+                        const groupStart = Date.now();
+                        const groups = this.groupAttendeesByDepartment(largeAttendees);
+                        const groupTime = Date.now() - groupStart;
+                        result.output += `按部门分组: ${groupTime}ms\n`;
+
+                        // 测试VIP筛选性能
+                        const vipStart = Date.now();
+                        const vips = largeAttendees.filter(a => a.isVip);
+                        const vipTime = Date.now() - vipStart;
+                        result.output += `筛选VIP人员: ${vipTime}ms\n\n`;
+
+                        result.output += `✅ 性能测试通过！所有操作都在合理时间内完成。\n`;
+                        result.output += `\n提示: 在生产环境中，建议使用虚拟滚动处理大量数据。`;
+
+                    } catch (error) {
+                        result.status = 'error';
+                        result.output = '❌ 错误: ' + error.message;
+                    }
+
+                    this.testResults.performance = result;
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

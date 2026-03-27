@@ -23,7 +23,7 @@
     </view>
 
     <!-- 统计信息 -->
-    <view class="stats-section">
+    <view class="stats-section card">
       <view class="stat-item">
         <text class="stat-icon">📄</text>
         <text class="stat-num">{{ stats.total }}</text>
@@ -261,6 +261,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .materials-container {
   min-height: 100vh;

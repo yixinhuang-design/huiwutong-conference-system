@@ -10,7 +10,7 @@
     <!-- 搜索框 -->
     <view class="search-bar card">
       <view class="search-input-wrapper">
-        <text class="search-icon">🔍</text>
+        <text class="search-icon"><text class="fa fa-search"></text></text>
         <input
           v-model="searchKeyword"
           class="search-input"
@@ -51,7 +51,7 @@
           class="link-item"
           @click="handleLink(link.action)"
         >
-          <view class="link-icon">{{ link.icon }}</view>
+          <view class="link-icon"><text :class="link.icon"></text></view>
           <view class="link-title">{{ link.title }}</view>
         </view>
       </view>
@@ -62,21 +62,21 @@
       <view class="section-title">联系我们</view>
       <view class="contact-list">
         <view class="contact-item">
-          <text class="contact-icon">📞</text>
+          <text class="contact-icon"><text class="fa fa-phone"></text></text>
           <view class="contact-info">
             <text class="contact-label">客服热线</text>
             <text class="contact-value">400-888-8888</text>
           </view>
         </view>
         <view class="contact-item">
-          <text class="contact-icon">✉️</text>
+          <text class="contact-icon"><text class="fa fa-envelope"></text></text>
           <view class="contact-info">
             <text class="contact-label">客服邮箱</text>
             <text class="contact-value">support@huiwutong.com</text>
           </view>
         </view>
         <view class="contact-item">
-          <text class="contact-icon">💬</text>
+          <text class="contact-icon"><text class="fa fa-comments"></text></text>
           <view class="contact-info">
             <text class="contact-label">在线客服</text>
             <text class="contact-value">工作日 9:00-18:00</text>
@@ -123,9 +123,9 @@ export default {
         }
       ],
       quickLinks: [
-        { icon: '📖', title: '使用指南', action: 'guide' },
-        { icon: '🎬', title: '视频教程', action: 'video' },
-        { icon: '📝', title: '意见反馈', action: 'feedback' }
+        { icon: 'fa-book', title: '使用指南', action: 'guide' },
+        { icon: 'fa-film', title: '视频教程', action: 'video' },
+        { icon: 'fa-edit', title: '意见反馈', action: 'feedback' }
       ]
     }
   },
@@ -180,6 +180,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .help-container {
   min-height: 100vh;

@@ -1,0 +1,14 @@
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\config\MybatisPlusConfig.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\constant\Constants.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\entity\BaseEntity.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\exception\BusinessException.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\exception\GlobalExceptionHandler.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\monitor\ApiAccessLogAutoConfig.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\monitor\ApiAccessLogFilter.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\result\Result.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\result\ResultCode.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\tenant\TenantContextHolder.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\tenant\TenantFilter.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\tenant\TenantInterceptor.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\util\JwtUtils.java
+G:\huiwutong新版合集\backend\conference-backend\conference-common\src\main\java\com\conference\common\utils\JwtUtils.java

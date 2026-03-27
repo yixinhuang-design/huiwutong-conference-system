@@ -1,0 +1,39 @@
+server:
+  port: 8089
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: conference-collaboration
+  
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3308/conference_collaboration?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: Hnhx@123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  flyway:
+    enabled: false
+
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    root: info
+    com.conference: debug

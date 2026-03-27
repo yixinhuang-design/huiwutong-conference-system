@@ -12,7 +12,7 @@
     <!-- 工具栏 -->
     <view class="toolbar card">
       <view class="tool-item" @click="toggleEditMode">
-        <text class="tool-icon">{{ editMode ? '✓' : '✏️' }}</text>
+        <text class="tool-icon">{{ editMode ? '✓' : '<text class="fa fa-pen"></text>' }}</text>
         <text class="tool-text">{{ editMode ? '完成' : '编辑' }}</text>
       </view>
       <view class="tool-item" @click="autoAssign">
@@ -397,6 +397,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .seat-manage-container {
   min-height: 100vh;

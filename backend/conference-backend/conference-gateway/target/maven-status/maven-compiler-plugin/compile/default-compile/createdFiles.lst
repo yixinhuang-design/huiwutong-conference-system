@@ -1,0 +1,2 @@
+com\conference\gateway\GatewayApplication.class
+com\conference\gateway\filter\AuthGlobalFilter.class

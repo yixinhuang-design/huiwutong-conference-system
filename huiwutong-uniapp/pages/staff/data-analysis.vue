@@ -25,7 +25,7 @@
         </view>
         <view class="date-range" @click="showDatePicker">
           <text class="date-text">{{ dateRangeText }}</text>
-          <text class="date-icon">📅</text>
+          <text class="date-icon"><text class="fa fa-calendar-alt"></text></text>
         </view>
       </view>
 
@@ -34,7 +34,7 @@
         <view class="section-title">核心指标</view>
         <view class="metrics-grid">
           <view class="metric-card" v-for="(metric, index) in coreMetrics" :key="index">
-            <text class="metric-icon">{{ metric.icon }}</text>
+            <text class="metric-icon"><text :class="metric.icon"></text></text>
             <view class="metric-info">
               <text class="metric-value">{{ metric.value }}</text>
               <text class="metric-label">{{ metric.label }}</text>
@@ -229,10 +229,10 @@ export default {
         { label: '本年', value: 'year' }
       ],
       coreMetrics: [
-        { icon: '👥', label: '总报名数', value: '1,234', trend: 15.6 },
-        { icon: '✅', label: '审核通过', value: '1,180', trend: 12.3 },
-        { icon: '📍', label: '签到人数', value: '1,156', trend: 8.9 },
-        { icon: '⭐', label: '满意度', value: '96.8%', trend: 2.1 }
+        { icon: 'fa-users', label: '总报名数', value: '1,234', trend: 15.6 },
+        { icon: 'fa-check', label: '审核通过', value: '1,180', trend: 12.3 },
+        { icon: 'fa-map-marker-alt', label: '签到人数', value: '1,156', trend: 8.9 },
+        { icon: 'fa-star', label: '满意度', value: '96.8%', trend: 2.1 }
       ],
       registrationTrend: [
         { date: '周一', registrations: 85, approved: 78 },
@@ -312,6 +312,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .data-analysis-container {
   min-height: 100vh;
@@ -719,7 +720,7 @@ export default {
 }
 
 .ranking-index.rank-2 {
-  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  background: linear-gradient(135deg, $text-tertiary 0%, $text-secondary 100%);
   color: $text-white;
 }
 

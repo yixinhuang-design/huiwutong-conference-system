@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="conference-notification" />
+        <module name="conference-seating" />
+        <module name="conference-ai" />
+        <module name="conference-collaboration" />
+        <module name="conference-gateway" />
+        <module name="conference-auth" />
+        <module name="conference-meeting" />
+        <module name="conference-registration" />
+        <module name="conference-common" />
+        <module name="conference-data" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="conference-navigation" target="21" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="conference-ai" options="-parameters" />
+      <module name="conference-auth" options="-parameters" />
+      <module name="conference-collaboration" options="-parameters" />
+      <module name="conference-common" options="-parameters" />
+      <module name="conference-data" options="-parameters" />
+      <module name="conference-gateway" options="-parameters" />
+      <module name="conference-meeting" options="-parameters" />
+      <module name="conference-navigation" options="-parameters" />
+      <module name="conference-notification" options="-parameters" />
+      <module name="conference-registration" options="-parameters" />
+      <module name="conference-seating" options="-parameters" />
+    </option>
+  </component>
+</project>

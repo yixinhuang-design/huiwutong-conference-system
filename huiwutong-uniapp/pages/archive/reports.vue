@@ -207,11 +207,11 @@ export default {
 
     getReportIcon(type) {
       const iconMap = {
-        summary: '📋',
+        summary: '<text class="fa fa-clipboard"></text>',
         grades: '📊',
-        attendance: '✅',
-        satisfaction: '⭐',
-        photos: '📸',
+        attendance: '<text class="fa fa-check"></text>',
+        satisfaction: '<text class="fa fa-star"></text>',
+        photos: '<text class="fa fa-camera"></text>',
         finance: '💰'
       }
       return iconMap[type] || '📄'
@@ -295,6 +295,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .reports-container {
   min-height: 100vh;

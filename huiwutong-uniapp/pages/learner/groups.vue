@@ -20,8 +20,8 @@
             <view class="group-info">
               <view class="group-name">{{ group.name }}</view>
               <view class="group-meta">
-                <text class="meta-item">👥 {{ group.memberCount }}人</text>
-                <text class="meta-item">💬 {{ group.messageCount }}条消息</text>
+                <text class="meta-item"><text class="fa fa-users"></text> {{ group.memberCount }}人</text>
+                <text class="meta-item"><text class="fa fa-comments"></text> {{ group.messageCount }}条消息</text>
               </view>
             </view>
             <view
@@ -51,7 +51,7 @@
       </view>
 
       <view v-else class="empty-state">
-        <text class="empty-icon">👥</text>
+        <text class="empty-icon"><text class="fa fa-users"></text></text>
         <text class="empty-text">暂无群组</text>
         <button class="empty-btn btn btn-primary" @click="createGroup">
           创建群组
@@ -61,7 +61,7 @@
 
     <!-- 创建群组按钮 -->
     <view class="fab-btn" @click="createGroup">
-      <text class="fab-icon">➕</text>
+      <text class="fab-icon"><text class="fa fa-plus"></text></text>
     </view>
   </view>
 </template>
@@ -152,6 +152,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .groups-container {
   min-height: 100vh;

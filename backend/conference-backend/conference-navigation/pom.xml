@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.conference</groupId>
+        <artifactId>conference-backend</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    <artifactId>conference-navigation</artifactId>
+    <packaging>jar</packaging>
+    <name>导航服务</name>
+    <description>室内外导航、AR导航、位置定位</description>
+    <dependencies>
+        <dependency><groupId>com.conference</groupId><artifactId>conference-common</artifactId></dependency>
+        <dependency><groupId>com.alibaba.cloud</groupId><artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId></dependency>
+        <dependency><groupId>com.alibaba.cloud</groupId><artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId></dependency>
+        <dependency><groupId>com.mysql</groupId><artifactId>mysql-connector-j</artifactId></dependency>
+        <dependency><groupId>com.alibaba</groupId><artifactId>druid-spring-boot-3-starter</artifactId></dependency>
+    </dependencies>
+    <build><plugins><plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin></plugins></build>
+</project>

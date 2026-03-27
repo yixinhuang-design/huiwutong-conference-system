@@ -10,7 +10,7 @@
     </view>
 
     <!-- 备份统计 -->
-    <view class="stats-section">
+    <view class="stats-section card">
       <view class="stat-box">
         <text class="stat-value">{{ stats.totalBackups }}</text>
         <text class="stat-label">总备份数</text>
@@ -136,7 +136,7 @@
                 </view>
               </view>
               <view class="backup-status">
-                <text class="status-badge" :class="backup.status">
+                <text class="status-badge status-chip" :class="backup.status">
                   {{ getStatusLabel(backup.status) }}
                 </text>
               </view>
@@ -202,7 +202,7 @@
 
         <view class="modal-body">
           <view class="warning-box">
-            <text class="warning-icon">⚠️</text>
+            <text class="warning-icon"><text class="fa fa-exclamation-triangle"></text></text>
             <view class="warning-content">
               <text class="warning-title">危险操作</text>
               <text class="warning-text">恢复备份将覆盖当前数据，此操作不可撤销！请确保已做好当前数据备份。</text>
@@ -478,6 +478,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .database-backup-container {
   min-height: 100vh;

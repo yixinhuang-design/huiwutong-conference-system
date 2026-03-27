@@ -5,7 +5,7 @@
       <view class="header-content">
         <text class="back-btn" @click="goBack">‹</text>
         <text class="header-title">留言赠言</text>
-        <text class="header-action" @click="writeMessage">✏️ 写留言</text>
+        <text class="header-action" @click="writeMessage"><text class="fa fa-pen"></text> 写留言</text>
       </view>
     </view>
 
@@ -67,7 +67,7 @@
             <view class="message-actions">
               <view class="action-item" @click="likeMessage(message)">
                 <text class="action-icon" :class="{ liked: message.isLiked }">
-                  {{ message.isLiked ? '❤️' : '🤍' }}
+                  {{ message.isLiked ? '<text class="fa fa-heart"></text>' : '🤍' }}
                 </text>
                 <text class="action-text">{{ message.likeCount }}</text>
               </view>
@@ -329,6 +329,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .messages-container {
   min-height: 100vh;

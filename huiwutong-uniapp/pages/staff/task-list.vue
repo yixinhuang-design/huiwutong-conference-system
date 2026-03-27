@@ -31,7 +31,7 @@
     <!-- 任务列表 -->
     <scroll-view class="task-scroll" scroll-y @scrolltolower="loadMore">
       <view v-if="filteredTasks.length === 0" class="empty-state">
-        <text class="empty-icon">📋</text>
+        <text class="empty-icon"><text class="fa fa-clipboard"></text></text>
         <text class="empty-text">暂无任务</text>
       </view>
 
@@ -44,8 +44,8 @@
             </view>
           </view>
           <view class="task-meta">
-            <text class="task-time">📅 {{ task.deadline }}</text>
-            <text class="task-assignee">👤 {{ task.assignee }}</text>
+            <text class="task-time"><text class="fa fa-calendar-alt"></text> {{ task.deadline }}</text>
+            <text class="task-assignee"><text class="fa fa-user"></text> {{ task.assignee }}</text>
           </view>
         </view>
 
@@ -256,6 +256,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .task-list-container {
   min-height: 100vh;

@@ -10,7 +10,7 @@
     </view>
 
     <!-- 统计卡片 -->
-    <view class="stats-section">
+    <view class="stats-section card">
       <view class="stat-card">
         <text class="stat-num">{{ stats.total }}</text>
         <text class="stat-label">全部预警</text>
@@ -62,7 +62,7 @@
 
           <view class="config-status" v-if="config.triggered">
             <view class="status-badge triggered">
-              <text class="status-icon">⚠️</text>
+              <text class="status-icon"><text class="fa fa-exclamation-triangle"></text></text>
               <text class="status-text">已触发</text>
             </view>
             <text class="trigger-time">{{ config.triggerTime }}</text>
@@ -86,7 +86,7 @@
       </view>
 
       <view v-if="configList.length === 0" class="empty-state">
-        <text class="empty-icon">🔔</text>
+        <text class="empty-icon"><text class="fa fa-bell"></text></text>
         <text class="empty-text">暂无预警配置</text>
         <button class="btn btn-primary" @click="addConfig">
           + 添加预警配置
@@ -392,6 +392,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .alert-config-container {
   min-height: 100vh;

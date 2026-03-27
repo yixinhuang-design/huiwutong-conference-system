@@ -41,7 +41,7 @@
     <!-- 搜索栏 -->
     <view class="search-section">
       <view class="search-bar">
-        <text class="search-icon">🔍</text>
+        <text class="search-icon"><text class="fa fa-search"></text></text>
         <input
           v-model="searchKeyword"
           class="search-input"
@@ -584,6 +584,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../styles/variables.scss';
 @import '../../styles/common.scss';
+@import '../../styles/global-patch.scss';
 
 .user-manage-container {
   min-height: 100vh;

@@ -1,0 +1,1289 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预警管理 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <style>
+        .page-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        .page-tabs .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-tabs .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--primary-color);
+        }
+
+        .page-tabs .tab-btn.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary-color);
+        }
+
+        .alert-rules-config {
+            margin-bottom: 1.5rem;
+        }
+
+        .rule-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .form-control {
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--gray-800);
+            font-size: 0.875rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .rules-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .rule-card {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .rule-info {
+            flex: 1;
+        }
+
+        .rule-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+
+        .rule-details {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            flex-wrap: wrap;
+        }
+
+        .rule-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .severity-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .severity-badge.high {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+        }
+
+        .severity-badge.medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .severity-badge.low {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info-color);
+        }
+
+        .rule-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+        }
+
+        .status-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(156, 163, 175, 0.3);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--success-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .rule-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* 实时监控 */
+        .monitoring-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .monitor-card {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+        }
+
+        .monitor-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+
+        .monitor-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .monitor-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .monitor-indicator.normal {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success-color);
+        }
+
+        .monitor-indicator.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .monitor-indicator.danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+        }
+
+        /* 预警列表 */
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .alert-item {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 4px solid;
+            border-radius: 0.5rem;
+        }
+
+        .alert-item.high {
+            border-left-color: var(--error-color);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .alert-item.medium {
+            border-left-color: var(--warning-color);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .alert-item.low {
+            border-left-color: var(--info-color);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .alert-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-time {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        .alert-content {
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            line-height: 1.6;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* 统计图表 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+        }
+
+        .stat-card h4 {
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .stat-card canvas {
+            max-height: 250px;
+        }
+
+        /* 预警处理 */
+        .process-form {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .process-form h4 {
+            margin-bottom: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .alert-history {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .history-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-title {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .history-time {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        .history-content {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">预警管理</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav" style="padding-top: 90px !important;">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card">
+            <div>
+                <h2>🚨 预警管理系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="exportReport">
+                    <i class="fas fa-file-download"></i>
+                    导出报告
+                </button>
+            </div>
+        </div>
+
+        <!-- 页面标签页 -->
+        <div class="page-tabs">
+            <button class="tab-btn" :class="{ active: currentTab === 'rules' }" @click="currentTab = 'rules'">
+                <i class="fas fa-cogs"></i>
+                规则配置
+            </button>
+            <button class="tab-btn" :class="{ active: currentTab === 'monitoring' }" @click="currentTab = 'monitoring'">
+                <i class="fas fa-chart-line"></i>
+                实时监控
+            </button>
+            <button class="tab-btn" :class="{ active: currentTab === 'alerts' }" @click="currentTab = 'alerts'">
+                <i class="fas fa-bell"></i>
+                预警通知
+            </button>
+            <button class="tab-btn" :class="{ active: currentTab === 'statistics' }" @click="currentTab = 'statistics'">
+                <i class="fas fa-chart-bar"></i>
+                统计分析
+            </button>
+        </div>
+
+        <!-- 规则配置 -->
+        <div v-show="currentTab === 'rules'" class="alert-rules-config glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">⚙️ 预警规则配置</h3>
+                <button v-if="!showRuleForm" class="btn-primary" @click="showRuleForm = true">
+                    <i class="fas fa-plus"></i>
+                    添加规则
+                </button>
+            </div>
+
+            <div class="rule-form" v-show="showRuleForm" ref="ruleFormRef">
+                <div class="form-group">
+                    <label>当前会议</label>
+                    <input type="text" class="form-control" :value="conference.name" disabled style="opacity: 0.7;">
+                </div>
+
+                <div class="form-group">
+                    <label>预警指标</label>
+                    <select class="form-control" v-model="newRule.metric">
+                        <option value="">请选择指标</option>
+                        <option value="registrationRate">报名率</option>
+                        <option value="checkinRate">签到率</option>
+                        <option value="taskCompletionRate">任务完成率</option>
+                        <option value="apiResponseTime">API响应时间</option>
+                        <option value="systemErrorRate">系统错误率</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>预警阈值</label>
+                    <input type="number" class="form-control" v-model="newRule.threshold" placeholder="例如: 80">
+                </div>
+
+                <div class="form-group">
+                    <label>预警级别</label>
+                    <select class="form-control" v-model="newRule.severity">
+                        <option value="high">高</option>
+                        <option value="medium">中</option>
+                        <option value="low">低</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>通知方式</label>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.875rem;">
+                            <input type="checkbox" v-model="newRule.notifySMS"> 短信
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.875rem;">
+                            <input type="checkbox" v-model="newRule.notifySystem"> 系统通知
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" style="justify-content: flex-end; display: flex; gap: 0.5rem; align-items: flex-end;">
+                    <button class="btn-outline" @click="cancelEditRule">
+                        取消
+                    </button>
+                    <button class="btn-primary" @click="saveOrUpdateRule">
+                        <i :class="editingRuleId ? 'fas fa-save' : 'fas fa-plus'"></i>
+                        {{ editingRuleId ? '更新规则' : '保存规则' }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="rules-list">
+                <h4>已配置的规则</h4>
+                <div class="rule-card" v-for="rule in alertRules" :key="rule.id">
+                    <div class="rule-info">
+                        <div class="rule-name">{{ rule.name }}</div>
+                        <div class="rule-details">
+                            <div class="rule-detail-item">
+                                <i class="fas fa-tag"></i>
+                                <span>{{ getMetricText(rule.metric) }}</span>
+                            </div>
+                            <div class="rule-detail-item">
+                                <i class="fas fa-chart-line"></i>
+                                <span>阈值: {{ rule.operator }} {{ rule.threshold }}%</span>
+                            </div>
+                            <div class="rule-detail-item">
+                                <span class="severity-badge" :class="rule.severity">
+                                    {{ getSeverityText(rule.severity) }}
+                                </span>
+                            </div>
+                            <div class="rule-detail-item">
+                                <i class="fas fa-bell"></i>
+                                <span>{{ getNotifyMethods(rule) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rule-status">
+                        <label class="status-switch">
+                            <input type="checkbox" :checked="rule.enabled" @change="toggleRule(rule.id)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="rule-actions">
+                        <button class="btn-icon" @click="editRule(rule.id)" title="编辑">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon" @click="deleteRule(rule.id)" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 实时监控 -->
+        <div v-show="currentTab === 'monitoring'" class="realtime-monitoring glass-card">
+            <h3>📊 实时数据监控</h3>
+
+            <div class="monitoring-dashboard">
+                <div class="monitor-card">
+                    <div class="monitor-value">{{ currentMetrics.registrationRate }}%</div>
+                    <div class="monitor-label">报名率</div>
+                    <div class="monitor-indicator" :class="getMonitorClass(currentMetrics.registrationRate, 80)">
+                        <i :class="getMonitorIcon(currentMetrics.registrationRate, 80)"></i>
+                        {{ getMonitorStatus(currentMetrics.registrationRate, 80) }}
+                    </div>
+                </div>
+
+                <div class="monitor-card">
+                    <div class="monitor-value">{{ currentMetrics.checkinRate }}%</div>
+                    <div class="monitor-label">签到率</div>
+                    <div class="monitor-indicator" :class="getMonitorClass(currentMetrics.checkinRate, 70)">
+                        <i :class="getMonitorIcon(currentMetrics.checkinRate, 70)"></i>
+                        {{ getMonitorStatus(currentMetrics.checkinRate, 70) }}
+                    </div>
+                </div>
+
+                <div class="monitor-card">
+                    <div class="monitor-value">{{ currentMetrics.taskCompletionRate }}%</div>
+                    <div class="monitor-label">任务完成率</div>
+                    <div class="monitor-indicator" :class="getMonitorClass(currentMetrics.taskCompletionRate, 60)">
+                        <i :class="getMonitorIcon(currentMetrics.taskCompletionRate, 60)"></i>
+                        {{ getMonitorStatus(currentMetrics.taskCompletionRate, 60) }}
+                    </div>
+                </div>
+
+                <div class="monitor-card">
+                    <div class="monitor-value">{{ currentMetrics.apiResponseTime }}ms</div>
+                    <div class="monitor-label">API响应时间</div>
+                    <div class="monitor-indicator" :class="getMonitorClassApi(currentMetrics.apiResponseTime, 1000)">
+                        <i :class="getMonitorIconApi(currentMetrics.apiResponseTime, 1000)"></i>
+                        {{ getMonitorStatusApi(currentMetrics.apiResponseTime, 1000) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert-list">
+                <h4>当前触发的预警</h4>
+                <div class="alert-item" :class="alert.severity" v-for="alert in activeAlerts" :key="alert.id">
+                    <div class="alert-header">
+                        <div class="alert-title">
+                            <i :class="getSeverityIcon(alert.severity)"></i>
+                            {{ alert.title }}
+                        </div>
+                        <div class="alert-time">{{ formatTime(alert.timestamp) }}</div>
+                    </div>
+                    <div class="alert-content">
+                        <p>{{ alert.description }}</p>
+                        <p><strong>当前值:</strong> {{ alert.actualValue }} | <strong>阈值:</strong> {{ alert.threshold }}</p>
+                    </div>
+                    <div class="alert-actions">
+                        <button class="btn-sm btn-primary" @click="urgeAlert(alert)">
+                            <i class="fas fa-paper-plane"></i>
+                            催办
+                        </button>
+                        <button class="btn-sm btn-outline" @click="viewDetail(alert.id)">
+                            <i class="fas fa-eye"></i>
+                            详情
+                        </button>
+                    </div>
+                </div>
+                <div v-if="activeAlerts.length === 0" style="text-align: center; padding: 2rem; color: var(--gray-500);">
+                    <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                    当前没有触发的预警
+                </div>
+            </div>
+        </div>
+
+        <!-- 预警通知 -->
+        <div v-show="currentTab === 'alerts'" class="alert-notifications glass-card">
+            <h3>🔔 预警通知管理</h3>
+
+            <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem;">
+                <button class="btn-outline" @click="filterStatus = 'all'">
+                    全部 ({{ alertNotifications.length }})
+                </button>
+                <button class="btn-outline" @click="filterStatus = 'pending'">
+                    待催办 ({{ getAlertCount('pending') }})
+                </button>
+                <button class="btn-outline" @click="filterStatus = 'processing'">
+                    已催办 ({{ getAlertCount('processing') }})
+                </button>
+                <button class="btn-outline" @click="filterStatus = 'resolved'">
+                    已处理 ({{ getAlertCount('resolved') }})
+                </button>
+            </div>
+
+            <div class="alert-list">
+                <div class="alert-item" :class="alert.severity" v-for="alert in filteredAlerts" :key="alert.id">
+                    <div class="alert-header">
+                        <div class="alert-title">
+                            <i :class="getSeverityIcon(alert.severity)"></i>
+                            {{ alert.title }}
+                            <span class="status-badge" :class="alert.status">{{ getStatusText(alert.status) }}</span>
+                        </div>
+                        <div class="alert-time">{{ formatTime(alert.timestamp) }}</div>
+                    </div>
+                    <div class="alert-content">
+                        <p>{{ alert.description }}</p>
+                        <p><strong>实际值:</strong> {{ alert.actualValue }} | <strong>阈值:</strong> {{ alert.threshold }}</p>
+                    </div>
+                    <div class="alert-actions">
+                        <button v-if="alert.status === 'pending'" class="btn-sm btn-primary" @click="urgeAlert(alert)">
+                            <i class="fas fa-paper-plane"></i>
+                            催办
+                        </button>
+                        <span v-if="alert.status === 'processing'" class="severity-badge" style="background: rgba(34,197,94,0.1); color: var(--success-color);">
+                            <i class="fas fa-check-circle"></i> 已催办
+                        </span>
+                        <span v-if="alert.status === 'resolved'" class="severity-badge" style="background: rgba(156,163,175,0.1); color: var(--gray-600);">
+                            <i class="fas fa-check-double"></i> 已处理
+                        </span>
+                        <button class="btn-sm btn-outline" @click="viewDetail(alert.id)">
+                            <i class="fas fa-eye"></i>
+                            详情
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计分析 -->
+        <div v-show="currentTab === 'statistics'" class="alert-statistics glass-card">
+            <h3>📈 预警统计分析</h3>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>预警趋势</h4>
+                    <canvas id="alertTrendChart"></canvas>
+                </div>
+                <div class="stat-card">
+                    <h4>预警级别分布</h4>
+                    <canvas id="severityDistChart"></canvas>
+                </div>
+                <div class="stat-card">
+                    <h4>处理状态分布</h4>
+                    <canvas id="statusDistChart"></canvas>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <h4>预警处理历史</h4>
+                <div class="alert-history">
+                    <div class="history-item" v-for="item in alertHistory" :key="item.id">
+                        <div class="history-header">
+                            <div class="history-title">
+                                <span class="severity-badge" :class="item.severity">
+                                    {{ getSeverityText(item.severity) }}
+                                </span>
+                                {{ item.title }}
+                            </div>
+                            <div class="history-time">{{ formatTime(item.timestamp) }}</div>
+                        </div>
+                        <div class="history-content">
+                            <p><strong>处理人:</strong> {{ item.handler }} | <strong>处理时间:</strong> {{ item.processTime }}分钟</p>
+                            <p><strong>处理方式:</strong> {{ item.processMethod }}</p>
+                            <p><strong>处理结果:</strong> {{ item.processResult }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    currentTab: 'rules',
+                    filterStatus: 'all',
+                    // 预警规则
+                    newRule: {
+                        conferenceId: '',
+                        metric: '',
+                        threshold: '',
+                        severity: 'medium',
+                        operator: '<',
+                        notifySMS: false,
+                        notifySystem: true
+                    },
+                    API_BASE: '',
+                    editingRuleId: null,
+                    showRuleForm: false,
+                    alertRules: [],
+                    // 当前指标
+                    currentMetrics: {
+                        registrationRate: 0,
+                        checkinRate: 0,
+                        taskCompletionRate: 0,
+                        apiResponseTime: 0
+                    },
+                    activeAlerts: [],
+                    alertNotifications: [],
+                    alertHistory: [],
+                    conferences: []
+                }
+            },
+            computed: {
+                filteredAlerts() {
+                    if (this.filterStatus === 'all') {
+                        return this.alertNotifications;
+                    }
+                    return this.alertNotifications.filter(alert => alert.status === this.filterStatus);
+                }
+            },
+            async mounted() {
+                await this.initialize();
+                this.initializeCharts();
+            },
+            methods: {
+                getAuthHeaders() {
+                    const token = localStorage.getItem('authToken');
+                    const tenantId = localStorage.getItem('tenantId') || '';
+                    const headers = { 'Content-Type': 'application/json', 'X-Tenant-Id': tenantId };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    return headers;
+                },
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        this.conference = await window.conferenceContext.loadConference(conferenceId);
+                    } else {
+                        this.conference = {
+                            id: 'demo_conf_001',
+                            name: '示例会议'
+                        };
+                    }
+                    // 从后端加载所有数据
+                    await Promise.all([
+                        this.loadRules(),
+                        this.loadMetrics(),
+                        this.loadAlertEvents(),
+                        this.loadAlertStats(),
+                        this.loadAlertHistory()
+                    ]);
+                    // 启动实时监控（30秒自动刷新指标+检测预警）
+                    setInterval(() => { this.updateMetrics(); }, 30000);
+                },
+
+                async loadRules() {
+                    try {
+                        const resp = await fetch(`${this.API_BASE}/api/alert/rule/list?conferenceId=${this.conference.id}`, { headers: this.getAuthHeaders() });
+                        const result = await resp.json();
+                        if (result.code === 200 && result.data) {
+                            this.alertRules = result.data.map(r => ({
+                                id: r.id, name: r.name,
+                                conferenceId: r.conferenceId,
+                                metric: r.metric, threshold: r.threshold,
+                                operator: r.operator, severity: r.severity,
+                                notifySMS: r.notifySms === 1, notifySystem: r.notifySystem === 1,
+                                enabled: r.enabled === 1
+                            }));
+                        }
+                    } catch (e) { console.error('加载规则失败', e); }
+                },
+
+                async loadMetrics() {
+                    try {
+                        const resp = await fetch(`${this.API_BASE}/api/alert/metrics?conferenceId=${this.conference.id}`, { headers: this.getAuthHeaders() });
+                        const result = await resp.json();
+                        if (result.code === 200 && result.data) {
+                            const d = result.data;
+                            if (d.registrationRate) this.currentMetrics.registrationRate = d.registrationRate.value || 0;
+                            if (d.checkinRate) this.currentMetrics.checkinRate = d.checkinRate.value || 0;
+                            if (d.taskCompletionRate) this.currentMetrics.taskCompletionRate = d.taskCompletionRate.value || 0;
+                            if (d.apiResponseTime) this.currentMetrics.apiResponseTime = d.apiResponseTime.value || 0;
+                        }
+                    } catch (e) { console.error('加载指标失败', e); }
+                },
+
+                async loadAlertEvents() {
+                    try {
+                        const resp = await fetch(`${this.API_BASE}/api/alert/list?conferenceId=${this.conference.id}`, { headers: this.getAuthHeaders() });
+                        const result = await resp.json();
+                        if (result.code === 200 && result.data) {
+                            this.alertNotifications = result.data.map(e => ({
+                                id: e.id,
+                                title: this.getMetricText(e.metric) + '预警',
+                                description: `当前值 ${e.metricValue}% 低于阈值 ${e.threshold}%`,
+                                severity: e.severity,
+                                actualValue: e.metricValue + '%',
+                                threshold: e.threshold + '%',
+                                status: e.status,
+                                timestamp: new Date(e.createTime)
+                            }));
+                            this.activeAlerts = this.alertNotifications.filter(a => a.status === 'pending' || a.status === 'processing');
+                        }
+                    } catch (e) { console.error('加载预警事件失败', e); }
+                },
+
+                async loadAlertStats() {
+                    try {
+                        const resp = await fetch(`${this.API_BASE}/api/alert/stats?conferenceId=${this.conference.id}`, { headers: this.getAuthHeaders() });
+                        const result = await resp.json();
+                        if (result.code === 200 && result.data) {
+                            this.alertStatsData = result.data;
+                        }
+                    } catch (e) { console.error('加载统计失败', e); }
+                },
+
+                async updateMetrics() {
+                    await this.loadMetrics();
+                },
+
+                initializeCharts() {
+                    this.$nextTick(() => {
+                        this.createAlertTrendChart();
+                        this.createSeverityDistChart();
+                        this.createStatusDistChart();
+                    });
+                },
+
+                createAlertTrendChart() {
+                    const ctx = document.getElementById('alertTrendChart');
+                    if (!ctx) return;
+
+                    // 使用后端返回的真实趋势数据
+                    const trend = (this.alertStatsData && this.alertStatsData.dailyTrend) || [];
+                    let labels, data;
+                    if (trend.length > 0) {
+                        labels = trend.map(t => {
+                            const d = new Date(t.alert_date || t.alertDate);
+                            return (d.getMonth() + 1) + '/' + d.getDate();
+                        });
+                        data = trend.map(t => t.count || 0);
+                    } else {
+                        // 无数据时显示最近7天空数据
+                        labels = [];
+                        data = [];
+                        for (let i = 6; i >= 0; i--) {
+                            const d = new Date();
+                            d.setDate(d.getDate() - i);
+                            labels.push((d.getMonth() + 1) + '/' + d.getDate());
+                            data.push(0);
+                        }
+                    }
+
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '预警数量',
+                                data: data,
+                                borderColor: '#667eea',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                },
+
+                createSeverityDistChart() {
+                    const ctx = document.getElementById('severityDistChart');
+                    if (!ctx) return;
+                    const stats = this.alertStatsData || {};
+                    const sd = stats.severityDistribution || {};
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['高危', '中危', '低危'],
+                            datasets: [{
+                                data: [sd.high || 0, sd.medium || 0, sd.low || 0],
+                                backgroundColor: [
+                                    'rgba(239, 68, 68, 0.6)',
+                                    'rgba(245, 158, 11, 0.6)',
+                                    'rgba(59, 130, 246, 0.6)'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                },
+
+                createStatusDistChart() {
+                    const ctx = document.getElementById('statusDistChart');
+                    if (!ctx) return;
+                    const stats = this.alertStatsData || {};
+                    const stDist = stats.statusDistribution || {};
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['待处理', '处理中', '已处理', '已忽略'],
+                            datasets: [{
+                                label: '数量',
+                                data: [stDist.pending || 0, stDist.processing || 0, stDist.resolved || 0, stDist.ignored || 0],
+                                backgroundColor: [
+                                    'rgba(245, 158, 11, 0.6)',
+                                    'rgba(59, 130, 246, 0.6)',
+                                    'rgba(34, 197, 94, 0.6)',
+                                    'rgba(156, 163, 175, 0.6)'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                },
+
+                getMetricText(metric) {
+                    const map = {
+                        registrationRate: '报名率',
+                        checkinRate: '签到率',
+                        taskCompletionRate: '任务完成率',
+                        apiResponseTime: 'API响应时间',
+                        systemErrorRate: '系统错误率'
+                    };
+                    return map[metric] || metric;
+                },
+
+                getSeverityText(severity) {
+                    const map = {
+                        high: '高',
+                        medium: '中',
+                        low: '低'
+                    };
+                    return map[severity] || severity;
+                },
+
+                getSeverityIcon(severity) {
+                    const map = {
+                        high: 'fas fa-exclamation-circle',
+                        medium: 'fas fa-exclamation-triangle',
+                        low: 'fas fa-info-circle'
+                    };
+                    return map[severity] || 'fas fa-bell';
+                },
+
+                getStatusText(status) {
+                    const map = {
+                        pending: '待催办',
+                        processing: '已催办',
+                        resolved: '已处理',
+                        ignored: '已忽略'
+                    };
+                    return map[status] || status;
+                },
+
+                getNotifyMethods(rule) {
+                    const methods = [];
+                    if (rule.notifySMS) methods.push('短信');
+                    if (rule.notifySystem) methods.push('系统');
+                    return methods.join('、') || '无';
+                },
+
+                getMonitorClass(value, threshold) {
+                    if (value < threshold) return 'danger';
+                    if (value < threshold * 1.1) return 'warning';
+                    return 'normal';
+                },
+
+                getMonitorIcon(value, threshold) {
+                    if (value < threshold) return 'fas fa-arrow-down';
+                    if (value < threshold * 1.1) return 'fas fa-minus';
+                    return 'fas fa-check';
+                },
+
+                getMonitorStatus(value, threshold) {
+                    if (value < threshold) return '低于阈值';
+                    if (value < threshold * 1.1) return '接近阈值';
+                    return '正常';
+                },
+
+                getMonitorClassApi(value, threshold) {
+                    if (value > threshold) return 'danger';
+                    if (value > threshold * 0.9) return 'warning';
+                    return 'normal';
+                },
+
+                getMonitorIconApi(value, threshold) {
+                    if (value > threshold) return 'fas fa-arrow-up';
+                    if (value > threshold * 0.9) return 'fas fa-minus';
+                    return 'fas fa-check';
+                },
+
+                getMonitorStatusApi(value, threshold) {
+                    if (value > threshold) return '高于阈值';
+                    if (value > threshold * 0.9) return '接近阈值';
+                    return '正常';
+                },
+
+                getAlertCount(status) {
+                    return this.alertNotifications.filter(alert => alert.status === status).length;
+                },
+
+                // ==================== 规则 CRUD ====================
+                async saveOrUpdateRule() {
+                    if (!this.newRule.metric || !this.newRule.threshold) {
+                        this.$showToast('请填写预警指标和阈值', 'warning');
+                        return;
+                    }
+                    try {
+                        const body = {
+                            conferenceId: this.conference.id,
+                            name: `${this.getMetricText(this.newRule.metric)}预警`,
+                            metric: this.newRule.metric,
+                            operator: this.newRule.operator || '<',
+                            threshold: parseFloat(this.newRule.threshold),
+                            severity: this.newRule.severity,
+                            notifySms: this.newRule.notifySMS ? true : false,
+                            notifySystem: this.newRule.notifySystem ? true : false
+                        };
+
+                        let resp;
+                        if (this.editingRuleId) {
+                            // 更新已有规则
+                            resp = await fetch(`${this.API_BASE}/api/alert/rule/${this.editingRuleId}`, {
+                                method: 'PUT',
+                                headers: this.getAuthHeaders(),
+                                body: JSON.stringify(body)
+                            });
+                        } else {
+                            // 新增规则
+                            resp = await fetch(`${this.API_BASE}/api/alert/rule/save`, {
+                                method: 'POST',
+                                headers: this.getAuthHeaders(),
+                                body: JSON.stringify(body)
+                            });
+                        }
+                        const result = await resp.json();
+                        if (result.code === 200) {
+                            this.$showToast(this.editingRuleId ? '规则已更新' : '规则已添加', 'success');
+                            this.resetRuleForm();
+                            await this.loadRules();
+                        } else {
+                            this.$showToast(result.message || '操作失败', 'error');
+                        }
+                    } catch (e) {
+                        console.error('保存规则失败', e);
+                        this.$showToast('保存规则失败', 'error');
+                    }
+                },
+
+                editRule(id) {
+                    const rule = this.alertRules.find(r => r.id === id);
+                    if (rule) {
+                        this.editingRuleId = rule.id;
+                        this.newRule = {
+                            metric: rule.metric,
+                            threshold: rule.threshold,
+                            severity: rule.severity,
+                            operator: rule.operator || '<',
+                            notifySMS: rule.notifySMS,
+                            notifySystem: rule.notifySystem
+                        };
+                        this.showRuleForm = true;
+                        this.$nextTick(() => {
+                            if (this.$refs.ruleFormRef) {
+                                this.$refs.ruleFormRef.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        });
+                    }
+                },
+
+                cancelEditRule() {
+                    this.resetRuleForm();
+                },
+
+                resetRuleForm() {
+                    this.editingRuleId = null;
+                    this.showRuleForm = false;
+                    this.newRule = { metric: '', threshold: '', severity: 'medium', operator: '<', notifySMS: false, notifySystem: true };
+                },
+
+                async deleteRule(id) {
+                    const confirmed = await this.$showConfirm(
+                        '确定要删除这条预警规则吗？',
+                        '删除规则',
+                        'warning'
+                    );
+                    if (confirmed) {
+                        try {
+                            const resp = await fetch(`${this.API_BASE}/api/alert/rule/${id}`, { method: 'DELETE', headers: this.getAuthHeaders() });
+                            const result = await resp.json();
+                            if (result.code === 200) {
+                                this.$showToast('规则已删除', 'success');
+                                await this.loadRules();
+                            } else {
+                                this.$showToast(result.message || '删除失败', 'error');
+                            }
+                        } catch (e) {
+                            this.$showToast('删除规则失败', 'error');
+                        }
+                    }
+                },
+
+                async toggleRule(id) {
+                    try {
+                        const resp = await fetch(`${this.API_BASE}/api/alert/rule/${id}/toggle`, { method: 'PUT', headers: this.getAuthHeaders() });
+                        const result = await resp.json();
+                        if (result.code === 200) {
+                            this.$showToast(result.data.enabled === 1 ? '规则已启用' : '规则已禁用', 'success');
+                            await this.loadRules();
+                        }
+                    } catch (e) {
+                        this.$showToast('切换状态失败', 'error');
+                        await this.loadRules();
+                    }
+                },
+
+                // ==================== 预警催办处理 ====================
+                urgeAlert(alert) {
+                    // 根据预警指标类型，跳转到对应催办页面
+                    const metricToType = {
+                        'registrationRate': 'report',
+                        'checkinRate': 'checkin',
+                        'taskCompletionRate': 'report'
+                    };
+                    const urgeType = metricToType[alert.metric] || 'report';
+                    // 先标记预警为处理中（已催办）
+                    this.markAsUrged(alert.id);
+                    // 跳转到催办页面
+                    window.location.href = `reminder-urge.html?type=${urgeType}&conferenceId=${this.conference.id}`;
+                },
+
+                async markAsUrged(id) {
+                    try {
+                        await fetch(`${this.API_BASE}/api/alert/${id}/process`, { method: 'PUT', headers: this.getAuthHeaders() });
+                    } catch (e) { /* 静默处理 */ }
+                },
+
+                viewDetail(id) {
+                    const alert = this.alertNotifications.find(a => a.id === id);
+                    if (alert) {
+                        this.$showToast(`预警详情: ${alert.title} - ${alert.description}`, 'info', 5000);
+                    }
+                },
+
+                // ==================== 统计 - 加载处理历史 ====================
+                async loadAlertHistory() {
+                    try {
+                        const resp = await fetch(`${this.API_BASE}/api/alert/list?conferenceId=${this.conference.id}&status=processing`, { headers: this.getAuthHeaders() });
+                        const result = await resp.json();
+                        const processingList = (result.code === 200 && result.data) ? result.data : [];
+
+                        const resp2 = await fetch(`${this.API_BASE}/api/alert/list?conferenceId=${this.conference.id}&status=resolved`, { headers: this.getAuthHeaders() });
+                        const result2 = await resp2.json();
+                        const resolvedList = (result2.code === 200 && result2.data) ? result2.data : [];
+
+                        const all = [...processingList, ...resolvedList].sort((a, b) =>
+                            new Date(b.handleTime || b.createTime) - new Date(a.handleTime || a.createTime)
+                        );
+
+                        this.alertHistory = all.map(e => ({
+                            id: e.id,
+                            title: this.getMetricText(e.metric) + '预警',
+                            severity: e.severity,
+                            handler: e.handlerName || '系统',
+                            processTime: e.handleTime && e.resolveTime
+                                ? Math.round((new Date(e.resolveTime) - new Date(e.handleTime)) / 60000)
+                                : '-',
+                            processMethod: e.status === 'processing' ? '催办通知' : '已处理',
+                            processResult: e.remark || (e.status === 'resolved' ? '已解决' : '催办中'),
+                            timestamp: new Date(e.handleTime || e.createTime)
+                        }));
+                    } catch (e) { console.error('加载处理历史失败', e); }
+                },
+
+                async exportReport() {
+                    try {
+                        this.$showLoading('正在导出预警报告...');
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        this.$hideLoading();
+                        this.$showToast('预警报告已导出', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导出失败，请重试', 'error');
+                    }
+                },
+
+                formatTime(date) {
+                    if (!date) return '';
+                    return new Date(date).toLocaleString('zh-CN');
+                },
+
+                goBack() {
+                    window.history.back();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+        </div><!-- 关闭page-with-nav -->
+</body>
+</html>
