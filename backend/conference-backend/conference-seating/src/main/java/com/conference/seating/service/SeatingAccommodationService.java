@@ -3,14 +3,10 @@ package com.conference.seating.service;
 import com.conference.seating.dto.AccommodationCreateRequest;
 import com.conference.seating.dto.AccommodationDetailResponse;
 import com.conference.seating.dto.AccommodationUpdateRequest;
+import com.conference.seating.dto.AssignedAttendeeResponse;
 
 import java.util.List;
 
-/**
- * 住宿安排服务接口
- * @author AI Assistant
- * @date 2026-03-12
- */
 public interface SeatingAccommodationService {
     
     List<AccommodationDetailResponse> getAccommodationsByConference(Long conferenceId);
@@ -23,9 +19,11 @@ public interface SeatingAccommodationService {
     
     void deleteAccommodation(Long accommodationId);
     
-    void assignAttendeeToAccommodation(Long accommodationId, Long attendeeId);
+    void assignAttendeeToAccommodation(Long accommodationId, Long attendeeId, String attendeeName, String department);
     
     void unassignAttendeeFromAccommodation(Long accommodationId, Long attendeeId);
     
     List<AccommodationDetailResponse> getAvailableAccommodations(Long conferenceId);
+
+    List<AssignedAttendeeResponse> getAssignedAttendees(Long accommodationId);
 }

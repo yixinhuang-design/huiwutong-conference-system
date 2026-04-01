@@ -75,7 +75,7 @@ spring:
         - id: conference-registration
           uri: http://localhost:8082
           predicates:
-            - Path=/api/registration/**,/api/conference/**,/api/grouping/**
+            - Path=/api/registration/**,/api/conference/**,/api/grouping/**,/api/handbook/**
 
         # ===== 通知服务 =====
         - id: conference-notification-v1
@@ -184,6 +184,9 @@ logging:
 
 # 网关自定义配置
 gateway:
+  # JWT认证密钥（与Auth服务保持一致）
+  jwt:
+    secret: ${JWT_SECRET:ConferenceSystemJwtSecretKey2026ForSmartMeetingSystem}
   # 白名单路径（不需要认证）
   white-list:
     - /api/v1/auth/login
@@ -191,10 +194,13 @@ gateway:
     - /api/v1/auth/captcha
     - /api/v1/auth/sms-code
     - /api/auth/login
+    - /api/auth/refresh
+    - /api/auth/logout
     - /api/auth/register
     - /api/auth/captcha
     - /api/auth/sms-code
     - /api/tenant/list
+    - /api/tenant/public-list
     - /api/registration/submit
     - /api/registration/query
     - /api/registration/upload

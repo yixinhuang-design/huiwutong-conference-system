@@ -9,10 +9,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 /**
  * 住宿安排创建请求 DTO
- * @author AI Assistant
- * @date 2026-03-12
  */
 @Data
 @NoArgsConstructor
@@ -20,26 +20,29 @@ import lombok.NoArgsConstructor;
 @Builder
 @Schema(description = "住宿安排创建请求")
 public class AccommodationCreateRequest {
-    
+
     @NotNull(message = "会议ID不能为空")
     @Schema(description = "会议ID", example = "1")
     private Long conferenceId;
-    
+
+    @Schema(description = "酒店名称", example = "国际大酒店")
+    private String hotelName;
+
     @NotBlank(message = "房间号不能为空")
     @Schema(description = "房间号", example = "101")
     private String roomNumber;
-    
+
     @Schema(description = "房间类型(SINGLE, DOUBLE, SUITE)", example = "DOUBLE")
     private String roomType;
-    
+
     @NotNull(message = "房间容量不能为空")
     @Min(value = 1, message = "房间容量最少为1")
     @Schema(description = "房间容量", example = "2")
     private Integer capacity;
-    
-    @Schema(description = "房间地址", example = "五楼西侧")
-    private String address;
-    
-    @Schema(description = "联系电话", example = "0571-28888888")
-    private String phone;
+
+    @Schema(description = "入住时间", example = "2026-03-12T14:00:00")
+    private LocalDateTime checkInTime;
+
+    @Schema(description = "退房时间", example = "2026-03-14T12:00:00")
+    private LocalDateTime checkOutTime;
 }

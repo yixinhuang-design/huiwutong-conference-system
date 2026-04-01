@@ -30,7 +30,6 @@ public class TransportCreateRequest {
     @Schema(description = "车辆名称", example = "1号大巴")
     private String vehicleName;
     
-    @NotBlank(message = "车牌号不能为空")
     @Schema(description = "车牌号", example = "浙A·12345")
     private String licensePlate;
     

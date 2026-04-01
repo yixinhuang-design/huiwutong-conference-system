@@ -44,24 +44,54 @@ const mockList = () => ([
 
 const loadList = async () => {
   try {
+    // 通过网关代理访问通知服务
     const res = await uni.request({
-      url: 'http://localhost:8082/api/learner/notifications',
-      method: 'GET'
+      url: 'http://localhost:8080/api/notification/list',
+      method: 'GET',
+      data: { page: 1, pageSize: 50 }
     })
-    const rows = res?.data?.data || res?.data?.rows
-    notifications.value = Array.isArray(rows) && rows.length ? rows : mockList()
+    const body = res?.data || {}
+    const records = body.data?.records || body.data || body.rows || []
+    if (Array.isArray(records) && records.length > 0) {
+      notifications.value = records.map(n => ({
+        id: n.id,
+        title: n.title,
+        time: n.sentTime || n.createTime || '',
+        desc: n.content || '',
+        read: false,
+        type: n.type || 'system'
+      }))
+    } else {
+      notifications.value = mockList()
+    }
   } catch (e) {
     notifications.value = mockList()
   }
 }
 
-const markAllRead = () => {
+const markAllRead = async () => {
+  // 调用后端标记全部已读
+  try {
+    await uni.request({
+      url: 'http://localhost:8080/api/notification/read-all',
+      method: 'PUT',
+      header: { 'Content-Type': 'application/json' },
+      data: JSON.stringify({ conferenceId: 0, userId: 0 })
+    })
+  } catch (e) { /* ignore */ }
   notifications.value = notifications.value.map((x) => ({ ...x, read: true }))
   uni.showToast({ title: '已全部标记已读', icon: 'none' })
 }
 
 const open = (item) => {
   item.read = true
+  // 调用后端标记单条已读
+  try {
+    uni.request({
+      url: `http://localhost:8080/api/notification/${item.id}/read`,
+      method: 'PUT'
+    })
+  } catch (e) { /* ignore */ }
   if (item.type === 'seat') {
     uni.navigateTo({ url: '/pages/learner/seat/seat' })
     return

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../css/components.css">
     <link rel="stylesheet" href="../css/browser-compatibility.css">
     <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="../css/modal-styles.css">
     <link rel="stylesheet" href="../css/stat-cards-standard.css">
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
@@ -19,6 +20,21 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 var(--space-4);
+        }
+
+        /* ==================== 模态弹窗内容区 ==================== */
+        .modal-dialog {
+            width: 90%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 1px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(-20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         /* ==================== 自动组群触发条件 ==================== */
@@ -1870,6 +1886,8 @@
             min-height: 80px;
         }
     </style>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
 </head>
 <body>
     <div id="app">
@@ -2663,6 +2681,167 @@
             </div>
         </div>
     </div>
+
+    <!-- 创建群组表单弹窗 -->
+    <div v-if="showCreateGroupForm" class="modal-overlay" @click.self="showCreateGroupForm = false">
+        <div class="modal-dialog glass-card" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>创建新群组</h3>
+                <button class="btn-icon" @click="showCreateGroupForm = false"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-content" style="padding: 1.5rem;">
+                <div class="setting-item">
+                    <label>群组名称 <span style="color:#f5576c;">*</span></label>
+                    <input type="text" v-model="createGroupForm.name" class="input" placeholder="请输入群组名称">
+                </div>
+                <div class="setting-item">
+                    <label>群组类型</label>
+                    <select v-model="createGroupForm.type" class="select">
+                        <option value="manager">协管员群</option>
+                        <option value="attendee">学员群</option>
+                        <option value="study">学习小组</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label>群组描述</label>
+                    <textarea v-model="createGroupForm.description" class="input" rows="3" placeholder="请输入群组描述（可选）"></textarea>
+                </div>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button class="btn-outline" @click="showCreateGroupForm = false">取消</button>
+                    <button class="btn-primary" @click="submitCreateGroup">创建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 发送消息输入弹窗 -->
+    <div v-if="showMessageInput" class="modal-overlay" @click.self="showMessageInput = false">
+        <div class="modal-dialog glass-card" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>发送消息</h3>
+                <button class="btn-icon" @click="showMessageInput = false"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-content" style="padding: 1.5rem;">
+                <div class="setting-item">
+                    <label>消息内容</label>
+                    <textarea v-model="messageInput" class="input" rows="4" placeholder="请输入要发送的消息..." @keydown.enter.ctrl="submitSendMessage"></textarea>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Ctrl+Enter 快速发送</div>
+                </div>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button class="btn-outline" @click="showMessageInput = false">取消</button>
+                    <button class="btn-primary" @click="submitSendMessage">
+                        <i class="fas fa-paper-plane"></i> 发送
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量发送消息输入弹窗 -->
+    <div v-if="showBulkMessageInput" class="modal-overlay" @click.self="showBulkMessageInput = false">
+        <div class="modal-dialog glass-card" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>批量发送消息</h3>
+                <button class="btn-icon" @click="showBulkMessageInput = false"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-content" style="padding: 1.5rem;">
+                <p style="margin-bottom: 1rem; color: var(--text-secondary);">
+                    将向全部 <strong>{{ groups.length }}</strong> 个群组发送同一条消息
+                </p>
+                <div class="setting-item">
+                    <label>消息内容</label>
+                    <textarea v-model="bulkMessageContent" class="input" rows="5" placeholder="请输入要群发的消息内容..."></textarea>
+                </div>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button class="btn-outline" @click="showBulkMessageInput = false">取消</button>
+                    <button class="btn-primary" @click="submitBulkSendMessage">
+                        <i class="fas fa-bullhorn"></i> 群发
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成员选择器弹窗 -->
+    <div v-if="showMemberPicker" class="modal-overlay" @click.self="showMemberPicker = false">
+        <div class="modal-dialog glass-card" style="max-width: 640px; max-height: 80vh; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h3>选择成员 <span style="font-size: 14px; color: var(--text-secondary);">(已选 {{ selectedAttendeeIds.length }} 人)</span></h3>
+                <button class="btn-icon" @click="showMemberPicker = false"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="padding: 0.75rem 1.5rem; display: flex; gap: 0.5rem; align-items: center;">
+                <input type="text" v-model="attendeeSearchQuery" class="input" placeholder="搜索姓名/手机/部门..." style="flex: 1;">
+                <button class="btn-sm btn-outline" @click="selectAllAttendees">
+                    {{ selectedAttendeeIds.length === filteredAvailableAttendees.length ? '取消全选' : '全选' }}
+                </button>
+            </div>
+            <div class="modal-content" style="padding: 0 1.5rem; overflow-y: auto; flex: 1;">
+                <div v-if="filteredAvailableAttendees.length === 0" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    暂无可选人员
+                </div>
+                <div v-for="attendee in filteredAvailableAttendees" :key="attendee.userId"
+                     class="member-item" style="cursor: pointer;"
+                     @click="toggleAttendeeSelection(attendee.userId)"
+                     :style="{ background: selectedAttendeeIds.includes(String(attendee.userId)) ? 'rgba(102, 126, 234, 0.1)' : 'transparent' }">
+                    <div style="width: 20px; text-align: center; flex-shrink: 0;">
+                        <i :class="selectedAttendeeIds.includes(String(attendee.userId)) ? 'fas fa-check-square' : 'far fa-square'"
+                           :style="{ color: selectedAttendeeIds.includes(String(attendee.userId)) ? '#667eea' : '#aaa' }"></i>
+                    </div>
+                    <div class="member-avatar" style="flex-shrink: 0;">{{ attendee.realName ? attendee.realName[0] : '?' }}</div>
+                    <div class="member-info" style="flex: 1;">
+                        <div class="member-name">{{ attendee.realName }}</div>
+                        <div class="member-role">{{ attendee.department }} {{ attendee.phone ? '• ' + attendee.phone : '' }}</div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 1rem 1.5rem; display: flex; gap: 0.75rem; justify-content: flex-end; border-top: 1px solid rgba(0,0,0,0.1);">
+                <button class="btn-outline" @click="showMemberPicker = false">取消</button>
+                <button class="btn-primary" @click="confirmAddMembers" :disabled="selectedAttendeeIds.length === 0">
+                    <i class="fas fa-user-plus"></i> 添加 {{ selectedAttendeeIds.length }} 人
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务进度弹窗 -->
+    <div v-if="showTaskProgress && taskProgressData" class="modal-overlay" @click.self="showTaskProgress = false">
+        <div class="modal-dialog glass-card" style="max-width: 560px;">
+            <div class="modal-header">
+                <h3>{{ taskProgressData.taskName }}</h3>
+                <button class="btn-icon" @click="showTaskProgress = false"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-content" style="padding: 1.5rem;">
+                <div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #667eea;">{{ taskProgressData.progress }}%</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">完成进度</div>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="margin-bottom: 0.5rem;">状态: <strong>{{ taskProgressData.status }}</strong></div>
+                        <div>完成: <strong>{{ taskProgressData.completed }}/{{ taskProgressData.total }}</strong> 人</div>
+                    </div>
+                </div>
+                <div v-if="taskProgressData.assignees.length > 0" style="margin-bottom: 1rem;">
+                    <h4 style="margin-bottom: 0.5rem; font-size: 14px;">执行人</h4>
+                    <div v-for="a in taskProgressData.assignees" :key="a.name" style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                        <span>{{ a.name }}</span>
+                        <span style="font-size: 12px; color: var(--text-secondary);">{{ a.status }}</span>
+                    </div>
+                </div>
+                <div v-else style="color: var(--text-secondary); font-size: 14px; margin-bottom: 1rem;">暂无执行人</div>
+                <div v-if="taskProgressData.logs.length > 0">
+                    <h4 style="margin-bottom: 0.5rem; font-size: 14px;">最近操作</h4>
+                    <div v-for="l in taskProgressData.logs" :key="l.operator + l.action" style="font-size: 13px; padding: 4px 0; color: var(--text-secondary);">
+                        • {{ l.operator }} {{ l.action }}
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button class="btn-outline" @click="showTaskProgress = false">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     </div><!-- 关闭#app -->
 
     <script src="../js/conference-context.js"></script>
@@ -2719,7 +2898,29 @@
                         { id: 'manager', name: '协管员群' },
                         { id: 'attendee', name: '学员群' },
                         { id: 'study', name: '学习小组' }
-                    ]
+                    ],
+                    // 成员选择器
+                    showMemberPicker: false,
+                    availableAttendees: [],
+                    selectedAttendeeIds: [],
+                    attendeeSearchQuery: '',
+                    // 创建群组表单
+                    showCreateGroupForm: false,
+                    createGroupForm: {
+                        name: '',
+                        type: 'study',
+                        description: ''
+                    },
+                    // 消息输入
+                    messageInput: '',
+                    messageTargetGroupId: null,
+                    showMessageInput: false,
+                    // 任务进度弹窗
+                    showTaskProgress: false,
+                    taskProgressData: null,
+                    // 批量消息输入
+                    showBulkMessageInput: false,
+                    bulkMessageContent: ''
                 }
             },
             computed: {
@@ -2740,7 +2941,7 @@
                     return groups;
                 },
                 canAutoGroup() {
-                    return this.autoGroupConditions.auditCompleted && this.autoGroupConditions.rosterGenerated;
+                    return this.autoGroupConditions.managerGroupCreated && this.autoGroupConditions.rosterGenerated;
                 },
 
                 // 是否可以创建学员群组（需要手册生成完毕）
@@ -2757,6 +2958,15 @@
                                msg.sender.toLowerCase().includes(keyword) ||
                                (msg.role && msg.role.toLowerCase().includes(keyword));
                     });
+                },
+                filteredAvailableAttendees() {
+                    if (!this.attendeeSearchQuery) return this.availableAttendees;
+                    const q = this.attendeeSearchQuery.toLowerCase();
+                    return this.availableAttendees.filter(a =>
+                        (a.realName && a.realName.toLowerCase().includes(q)) ||
+                        (a.phone && a.phone.includes(q)) ||
+                        (a.department && a.department.toLowerCase().includes(q))
+                    );
                 }
             },
             async mounted() {
@@ -2771,14 +2981,16 @@
                             await initializeGroupSystem(conferenceId);
                         }
                     } else {
-                        this.conference = { id: '2030309010523144194', name: '示例会议' };
+                        this.$showToast('未找到会议ID，请从会议管理中心进入', 'error');
+                        window.history.back();
+                        return;
                     }
                     // 从后端加载群组数据
                     await this.loadGroupsFromAPI();
                     await this.loadGroupStatsFromAPI();
                     await this.loadGroupTasksFromAPI();
                     // 根据实际群组数据更新自动组群状态
-                    this.syncAutoGroupConditions();
+                    await this.syncAutoGroupConditions();
                 },
                 async loadGroupsFromAPI() {
                     try {
@@ -2821,34 +3033,48 @@
                             id: t.id, title: t.taskName, description: t.description,
                             status: t.status, deadline: t.deadline ? new Date(t.deadline) : null,
                             assignee: t.ownerName || '', priority: t.priority || 'medium',
-                            progress: t.progress || 0, totalAssignees: 0, completedCount: 0
+                            progress: t.progress || 0, totalAssignees: t.totalAssignees || 0,
+                            completedCount: t.completedAssignees || 0
                         }));
-                        // 异步加载每个任务的执行人进度
-                        for (const task of this.groupTasks) {
-                            try {
-                                const detail = await TaskAPI.getTaskDetail(task.id);
-                                if (detail) {
-                                    task.progress = detail.progress ?? task.progress;
-                                    task.totalAssignees = detail.totalAssignees || (detail.assignees || []).length;
-                                    task.completedCount = detail.completedAssignees || (detail.assignees || []).filter(a => a.status === 'completed').length;
+                        // 并行加载任务详情（避免串行N+1）, 限制并发数
+                        if (this.groupTasks.length > 0) {
+                            const detailPromises = this.groupTasks.map(task =>
+                                TaskAPI.getTaskDetail(task.id).catch(() => null)
+                            );
+                            const details = await Promise.all(detailPromises);
+                            details.forEach((detail, idx) => {
+                                if (detail && this.groupTasks[idx]) {
+                                    const t = this.groupTasks[idx];
+                                    t.progress = detail.progress ?? t.progress;
+                                    t.totalAssignees = detail.totalAssignees || (detail.assignees || []).length;
+                                    t.completedCount = detail.completedAssignees || (detail.assignees || []).filter(a => a.status === 'completed').length;
                                 }
-                            } catch(e) { /* 忽略单个任务详情加载失败 */ }
+                            });
                         }
                     } catch (e) { console.error('加载任务失败:', e); }
                 },
                 
                 async createGroup() {
-                    const name = prompt('请输入群组名称:');
-                    if (!name || !name.trim()) return;
-                    const type = prompt('请输入群组类型(manager/attendee/study):', 'study');
+                    this.createGroupForm = { name: '', type: 'study', description: '' };
+                    this.showCreateGroupForm = true;
+                },
+
+                async submitCreateGroup() {
+                    if (!this.createGroupForm.name || !this.createGroupForm.name.trim()) {
+                        this.$showToast('请输入群组名称', 'warning');
+                        return;
+                    }
                     try {
                         if (this.$showLoading) this.$showLoading('正在创建群组...');
                         await GroupAPI.createGroup({
-                            conferenceId: this.conference.id, groupName: name.trim(),
-                            groupType: type || 'study', description: name.trim() + ' 群组',
+                            conferenceId: this.conference.id,
+                            groupName: this.createGroupForm.name.trim(),
+                            groupType: this.createGroupForm.type || 'study',
+                            description: this.createGroupForm.description.trim() || (this.createGroupForm.name.trim() + ' 群组'),
                             ownerId: '1'
                         });
                         if (this.$hideLoading) this.$hideLoading();
+                        this.showCreateGroupForm = false;
                         this.$showToast('群组创建成功', 'success');
                         await this.loadGroupsFromAPI();
                         await this.loadGroupStatsFromAPI();
@@ -2922,8 +3148,8 @@
                     this.messageSearchKeyword = '';
                 },
 
-                resetWelcomeSettings() {
-                    const confirmed = confirm('确定要重置欢迎消息设置吗？');
+                async resetWelcomeSettings() {
+                    const confirmed = await this.$showConfirm('确定要重置欢迎消息设置吗？', '重置设置', 'warning');
                     if (confirmed) {
                         this.welcomeTemplate = 'standard';
                         this.customWelcomeMessage = '';
@@ -2935,21 +3161,30 @@
                 },
                 
                 async sendMessage(groupId) {
-                    const message = prompt('请输入要发送的消息:');
-                    if (message && message.trim()) {
-                        try {
-                            if (this.$showLoading) this.$showLoading('正在发送消息...');
-                            await ChatAPI.sendMessage({
-                                groupId: groupId, senderId: 1, senderName: '管理员',
-                                msgType: 'text', content: message.trim()
-                            });
-                            if (this.$hideLoading) this.$hideLoading();
-                            this.$showToast('消息发送成功', 'success');
-                            this.loadGroupMessages(groupId);
-                        } catch (error) {
-                            if (this.$hideLoading) this.$hideLoading();
-                            this.$showToast('发送失败: ' + error.message, 'error');
-                        }
+                    this.messageTargetGroupId = groupId;
+                    this.messageInput = '';
+                    this.showMessageInput = true;
+                },
+
+                async submitSendMessage() {
+                    if (!this.messageInput || !this.messageInput.trim()) {
+                        this.$showToast('请输入消息内容', 'warning');
+                        return;
+                    }
+                    try {
+                        if (this.$showLoading) this.$showLoading('正在发送消息...');
+                        await ChatAPI.sendMessage({
+                            groupId: this.messageTargetGroupId, senderId: 1, senderName: '管理员',
+                            msgType: 'text', content: this.messageInput.trim()
+                        });
+                        if (this.$hideLoading) this.$hideLoading();
+                        this.showMessageInput = false;
+                        this.messageInput = '';
+                        this.$showToast('消息发送成功', 'success');
+                        this.loadGroupMessages(this.messageTargetGroupId);
+                    } catch (error) {
+                        if (this.$hideLoading) this.$hideLoading();
+                        this.$showToast('发送失败: ' + error.message, 'error');
                     }
                 },
                 
@@ -2959,23 +3194,108 @@
                     this.activeTab = 'members';
                 },
                 
-                groupSettings(groupId) {
-                    const group = this.groups.find(g => g.id === groupId);
-                    this.selectedGroup = group;
+                async groupSettings(groupId) {
+                    // 先加载群组详情（含成员列表），再切到设置页签
+                    await this.viewGroup(groupId);
                     this.activeTab = 'settings';
                 },
                 
                 async addMembers() {
                     if (!this.selectedGroup) return;
-                    const name = prompt('请输入要添加的成员姓名:');
-                    if (!name || !name.trim()) return;
+                    // 加载已审核通过的报名人员列表
                     try {
-                        await GroupAPI.addMember(this.selectedGroup.id, {
-                            userId: Date.now(), userName: name.trim(), memberRole: 'member'
+                        if (this.$showLoading) this.$showLoading('正在加载可选人员...');
+                        await this.loadAvailableAttendees();
+                        if (this.$hideLoading) this.$hideLoading();
+                        // 过滤掉已在群组中的人员
+                        const existingIds = (this.selectedGroup.members || []).map(m => String(m.id));
+                        this.availableAttendees = this.availableAttendees.filter(a => !existingIds.includes(String(a.userId)));
+                        if (this.availableAttendees.length === 0) {
+                            this.$showToast('没有可添加的人员（所有已通过审核的参会人员均已在群内）', 'info');
+                            return;
+                        }
+                        this.selectedAttendeeIds = [];
+                        this.attendeeSearchQuery = '';
+                        this.showMemberPicker = true;
+                    } catch (e) {
+                        if (this.$hideLoading) this.$hideLoading();
+                        this.$showToast('加载人员列表失败: ' + e.message, 'error');
+                    }
+                },
+
+                async loadAvailableAttendees() {
+                    const token = localStorage.getItem('authToken') || '';
+                    const tenantId = localStorage.getItem('tenantId') || '';
+                    const headers = {};
+                    if (token) headers['Authorization'] = 'Bearer ' + token;
+                    if (tenantId) headers['X-Tenant-Id'] = tenantId;
+                    const resp = await fetch(`/api/registration/list?conferenceId=${this.conference.id}&page=1&pageSize=5000`, { headers });
+                    const result = await resp.json();
+                    if (result.code === 200) {
+                        const records = result.data?.records || result.data || [];
+                        // 只取已审核通过的参会人员
+                        this.availableAttendees = records
+                            .filter(r => r.status === 1 || r.status === '1')
+                            .map(r => ({
+                                userId: r.userId,
+                                realName: r.realName || r.name || '',
+                                phone: r.phone || '',
+                                department: r.department || r.organization || '',
+                                position: r.position || ''
+                            }));
+                    } else {
+                        throw new Error(result.message || '获取参会人员列表失败');
+                    }
+                },
+
+                async confirmAddMembers() {
+                    if (!this.selectedGroup || this.selectedAttendeeIds.length === 0) {
+                        this.$showToast('请至少选择一个人员', 'warning');
+                        return;
+                    }
+                    try {
+                        if (this.$showLoading) this.$showLoading(`正在添加 ${this.selectedAttendeeIds.length} 个成员...`);
+                        const members = this.selectedAttendeeIds.map(uid => {
+                            const attendee = this.availableAttendees.find(a => String(a.userId) === String(uid));
+                            return {
+                                userId: uid,
+                                userName: attendee ? attendee.realName : '',
+                                department: attendee ? attendee.department : '',
+                                memberRole: 'member'
+                            };
                         });
-                        this.$showToast('成员添加成功', 'success');
+                        if (members.length === 1) {
+                            await GroupAPI.addMember(this.selectedGroup.id, members[0]);
+                        } else {
+                            await GroupAPI.batchAddMembers(this.selectedGroup.id, members);
+                        }
+                        if (this.$hideLoading) this.$hideLoading();
+                        this.showMemberPicker = false;
+                        this.$showToast(`成功添加 ${members.length} 个成员`, 'success');
                         await this.viewGroup(this.selectedGroup.id);
-                    } catch (e) { this.$showToast('添加失败: ' + e.message, 'error'); }
+                    } catch (e) {
+                        if (this.$hideLoading) this.$hideLoading();
+                        this.$showToast('添加失败: ' + e.message, 'error');
+                    }
+                },
+
+                toggleAttendeeSelection(userId) {
+                    const id = String(userId);
+                    const idx = this.selectedAttendeeIds.indexOf(id);
+                    if (idx >= 0) {
+                        this.selectedAttendeeIds.splice(idx, 1);
+                    } else {
+                        this.selectedAttendeeIds.push(id);
+                    }
+                },
+
+                selectAllAttendees() {
+                    const filtered = this.filteredAvailableAttendees;
+                    if (this.selectedAttendeeIds.length === filtered.length) {
+                        this.selectedAttendeeIds = [];
+                    } else {
+                        this.selectedAttendeeIds = filtered.map(a => String(a.userId));
+                    }
                 },
                 
                 async importMembers() {
@@ -2987,22 +3307,41 @@
                         const file = e.target.files[0];
                         if (!file) return;
                         try {
+                            if (this.$showLoading) this.$showLoading('正在解析并匹配人员...');
+                            // 先确保加载了参会人员数据
+                            if (this.availableAttendees.length === 0) {
+                                await this.loadAvailableAttendees();
+                            }
                             const text = await file.text();
                             const lines = text.split('\n').filter(l => l.trim());
                             const members = [];
+                            const unmatchedNames = [];
                             for (const line of lines) {
                                 const parts = line.split(',').map(s => s.trim());
                                 if (parts[0]) {
-                                    members.push({
-                                        userId: Date.now() + members.length,
-                                        userName: parts[0],
-                                        department: parts[1] || '',
-                                        memberRole: 'member'
-                                    });
+                                    const name = parts[0];
+                                    // 按姓名 或 手机号 匹配真实用户
+                                    const matched = this.availableAttendees.find(a =>
+                                        a.realName === name || a.phone === name
+                                    );
+                                    if (matched) {
+                                        members.push({
+                                            userId: matched.userId,
+                                            userName: matched.realName,
+                                            department: matched.department || parts[1] || '',
+                                            memberRole: 'member'
+                                        });
+                                    } else {
+                                        unmatchedNames.push(name);
+                                    }
                                 }
                             }
+                            if (this.$hideLoading) this.$hideLoading();
+                            if (unmatchedNames.length > 0) {
+                                this.$showToast(`${unmatchedNames.length} 人未匹配到: ${unmatchedNames.slice(0, 5).join(', ')}${unmatchedNames.length > 5 ? '...' : ''}`, 'warning');
+                            }
                             if (members.length === 0) {
-                                this.$showToast('文件中未找到有效成员数据', 'warning');
+                                this.$showToast('文件中未找到可匹配的有效成员数据', 'warning');
                                 return;
                             }
                             if (this.$showLoading) this.$showLoading(`正在导入 ${members.length} 个成员...`);
@@ -3109,7 +3448,7 @@
                 },
 
                 // 根据已加载的真实群组数据，同步自动组群状态
-                syncAutoGroupConditions() {
+                async syncAutoGroupConditions() {
                     // 检查是否已存在 manager 类型群组
                     const hasManagerGroup = this.groups.some(g => g.type === 'manager');
                     this.autoGroupConditions.managerGroupCreated = hasManagerGroup;
@@ -3119,9 +3458,37 @@
                     const hasStudyGroup = this.groups.some(g => g.type === 'study');
                     this.autoGroupConditions.studentGroupsCreated = hasAttendeeGroup || hasStudyGroup;
 
-                    // 如果学员群组已创建，说明手册已生成过（逻辑推导）
-                    if (this.autoGroupConditions.studentGroupsCreated) {
-                        this.autoGroupConditions.rosterGenerated = true;
+                    // 通过分组/报名接口检查花名册条件（避免调用当前环境不存在的handbook接口）
+                    try {
+                        const token = localStorage.getItem('authToken') || '';
+                        const tenantId = localStorage.getItem('tenantId') || '';
+                        const headers = {};
+                        if (token) headers['Authorization'] = 'Bearer ' + token;
+                        if (tenantId) headers['X-Tenant-Id'] = tenantId;
+
+                        // 优先依据智能分组结果判断
+                        const groupingResp = await fetch(`/api/grouping/list?meetingId=${this.conference.id}`, { headers });
+                        if (groupingResp.ok) {
+                            const groupingResult = await groupingResp.json();
+                            const groups = groupingResult?.data?.groups || [];
+                            if (Array.isArray(groups) && groups.length > 0) {
+                                this.autoGroupConditions.rosterGenerated = true;
+                                return;
+                            }
+                        }
+
+                        // 次级依据：有已报名人员也可认为具备花名册基础数据
+                        const regResp = await fetch(`/api/registration/list?conferenceId=${this.conference.id}&page=1&pageSize=1`, { headers });
+                        if (regResp.ok) {
+                            const regResult = await regResp.json();
+                            const hasRegistration = Array.isArray(regResult?.data?.records) && regResult.data.records.length > 0;
+                            this.autoGroupConditions.rosterGenerated = hasRegistration;
+                        }
+                    } catch (e) {
+                        // 回退逻辑：如果API不可用，通过已有群组推断
+                        if (this.autoGroupConditions.studentGroupsCreated) {
+                            this.autoGroupConditions.rosterGenerated = true;
+                        }
                     }
                 },
 
@@ -3160,10 +3527,17 @@
                         this.$showToast('无可发送的群组', 'warning');
                         return;
                     }
-                    const message = prompt('请输入要向所有群组发送的消息:');
-                    if (!message || !message.trim()) return;
+                    this.bulkMessageContent = '';
+                    this.showBulkMessageInput = true;
+                },
+
+                async submitBulkSendMessage() {
+                    if (!this.bulkMessageContent || !this.bulkMessageContent.trim()) {
+                        this.$showToast('请输入消息内容', 'warning');
+                        return;
+                    }
                     const confirmed = await this.$showConfirm(
-                        `确定要向全部 ${this.groups.length} 个群组发送消息吗？\n\n消息内容: ${message.trim()}`,
+                        `确定要向全部 ${this.groups.length} 个群组发送消息吗？\n\n消息内容: ${this.bulkMessageContent.trim()}`,
                         '批量发送消息',
                         'warning'
                     );
@@ -3175,12 +3549,14 @@
                             try {
                                 await ChatAPI.sendMessage({
                                     groupId: group.id, senderId: 1, senderName: '系统管理员',
-                                    msgType: 'text', content: message.trim()
+                                    msgType: 'text', content: this.bulkMessageContent.trim()
                                 });
                                 successCount++;
                             } catch (e) { console.error(`发送到群组${group.name}失败:`, e); }
                         }
                         if (this.$hideLoading) this.$hideLoading();
+                        this.showBulkMessageInput = false;
+                        this.bulkMessageContent = '';
                         this.$showToast(`批量发送完成，成功 ${successCount}/${this.groups.length} 个群组`, 'success');
                     } catch (e) {
                         if (this.$hideLoading) this.$hideLoading();
@@ -3200,22 +3576,40 @@
                         const file = e.target.files[0];
                         if (!file) return;
                         try {
+                            if (this.$showLoading) this.$showLoading('正在解析并匹配人员...');
+                            // 确保加载了参会人员数据
+                            if (this.availableAttendees.length === 0) {
+                                await this.loadAvailableAttendees();
+                            }
                             const text = await file.text();
                             const lines = text.split('\n').filter(l => l.trim());
                             const members = [];
+                            const unmatchedNames = [];
                             for (const line of lines) {
                                 const parts = line.split(',').map(s => s.trim());
                                 if (parts[0]) {
-                                    members.push({
-                                        userId: Date.now() + members.length,
-                                        userName: parts[0],
-                                        department: parts[1] || '',
-                                        memberRole: 'member'
-                                    });
+                                    const name = parts[0];
+                                    const matched = this.availableAttendees.find(a =>
+                                        a.realName === name || a.phone === name
+                                    );
+                                    if (matched) {
+                                        members.push({
+                                            userId: matched.userId,
+                                            userName: matched.realName,
+                                            department: matched.department || parts[1] || '',
+                                            memberRole: 'member'
+                                        });
+                                    } else {
+                                        unmatchedNames.push(name);
+                                    }
                                 }
                             }
+                            if (this.$hideLoading) this.$hideLoading();
+                            if (unmatchedNames.length > 0) {
+                                this.$showToast(`${unmatchedNames.length} 人未匹配到: ${unmatchedNames.slice(0, 5).join(', ')}${unmatchedNames.length > 5 ? '...' : ''}`, 'warning');
+                            }
                             if (members.length === 0) {
-                                this.$showToast('文件中未找到有效成员数据', 'warning');
+                                this.$showToast('文件中未找到可匹配的有效成员数据', 'warning');
                                 return;
                             }
                             const confirmed = await this.$showConfirm(
@@ -3276,7 +3670,7 @@
                         await this.loadGroupsFromAPI();
                         await this.loadGroupStatsFromAPI();
                         await this.loadGroupTasksFromAPI();
-                        this.syncAutoGroupConditions();
+                        await this.syncAutoGroupConditions();
                         if (this.$hideLoading) this.$hideLoading();
                         this.$showToast('群组数据已同步', 'success');
                     } catch (error) {
@@ -3372,32 +3766,94 @@
                     }
 
                     const confirmed = await this.$showConfirm(
-                        '确定要创建学员群组吗？\n\n系统将自动创建：\n• 1个全体学员群\n• N个学习小组群（根据学员手册分组）',
+                        '确定要创建学员群组吗？\n\n系统将自动创建：\n• 1个全体学员群\n• N个学习小组群（根据学员手册分组）\n并自动把学员拉入对应群组',
                         '创建学员群组',
                         'info'
                     );
 
                     if (confirmed) {
                         try {
-                            this.$showLoading('正在创建学员群组...');
-                            const groupNames = [
-                                { groupName: '学员全员群', description: '全体参会学员交流群', groupType: 'attendee' },
-                                { groupName: '第一学习小组', description: '小组学习讨论群', groupType: 'study' },
-                                { groupName: '第二学习小组', description: '小组学习讨论群', groupType: 'study' },
-                                { groupName: '第三学习小组', description: '小组学习讨论群', groupType: 'study' }
-                            ];
-                            let createdCount = 0;
-                            for (const g of groupNames) {
-                                await GroupAPI.createGroup({
-                                    ...g,
-                                    conferenceId: this.conference?.id,
-                                    tenantId: this.conference?.tenantId,
-                                    ownerId: '1',
-                                    maxMembers: 500,
-                                    announcement: g.groupName + ' - 用于学习和讨论'
-                                });
-                                createdCount++;
+                            this.$showLoading('正在读取手册分组并创建学员群组...');
+                            const conferenceId = this.conference?.id;
+                            const token = localStorage.getItem('authToken') || '';
+                            const tenantId = localStorage.getItem('tenantId') || '';
+                            const headers = {};
+                            if (token) headers['Authorization'] = 'Bearer ' + token;
+                            if (tenantId) headers['X-Tenant-Id'] = tenantId;
+
+                            // 从分组API获取手册中的分组和成员
+                            let rosterGroups = [];
+                            try {
+                                const groupResp = await fetch(`/api/grouping/list?meetingId=${conferenceId}`, { headers });
+                                const groupResult = await groupResp.json();
+                                if (groupResult.code === 200 && groupResult.data) {
+                                    rosterGroups = groupResult.data.groups || groupResult.data || [];
+                                }
+                            } catch (e) { console.warn('获取手册分组失败:', e); }
+
+                            // 1. 先创建全体学员群
+                            const allGroupResult = await GroupAPI.createGroup({
+                                groupName: '学员全员群', description: '全体参会学员交流群', groupType: 'attendee',
+                                conferenceId: conferenceId, tenantId: tenantId, ownerId: '1',
+                                maxMembers: 2000, announcement: '欢迎加入学员全员群！请在此群交流学习心得'
+                            });
+                            const allGroupId = allGroupResult?.id;
+                            let createdCount = 1;
+
+                            // 加载所有已审核通过的参会人员
+                            if (this.availableAttendees.length === 0) {
+                                await this.loadAvailableAttendees();
                             }
+
+                            // 把所有学员拉入全员群
+                            if (allGroupId && this.availableAttendees.length > 0) {
+                                try {
+                                    const allMembers = this.availableAttendees.map(a => ({
+                                        userId: a.userId, userName: a.realName,
+                                        department: a.department, memberRole: 'member'
+                                    }));
+                                    await GroupAPI.batchAddMembers(allGroupId, allMembers);
+                                } catch (e) { console.warn('批量拉入全员群失败:', e); }
+                            }
+
+                            // 2. 根据手册分组动态创建学习小组群，并自动拉入对应成员
+                            if (rosterGroups.length > 0) {
+                                for (const rg of rosterGroups) {
+                                    const groupName = rg.name || `第${createdCount}学习小组`;
+                                    const studyGroupResult = await GroupAPI.createGroup({
+                                        groupName: groupName, description: '小组学习讨论群', groupType: 'study',
+                                        conferenceId: conferenceId, tenantId: tenantId, ownerId: '1',
+                                        maxMembers: 200, announcement: groupName + ' - 用于学习和讨论'
+                                    });
+                                    const studyGroupId = studyGroupResult?.id;
+                                    createdCount++;
+
+                                    // 把该组的成员拉入对应小组群
+                                    if (studyGroupId && rg.members && rg.members.length > 0) {
+                                        try {
+                                            const sgMembers = rg.members.map(m => ({
+                                                userId: m.id || m.userId,
+                                                userName: m.name || m.realName || '',
+                                                department: m.unit || m.department || '',
+                                                memberRole: m.isLeader ? 'admin' : 'member'
+                                            }));
+                                            await GroupAPI.batchAddMembers(studyGroupId, sgMembers);
+                                        } catch (e) { console.warn(`拉入小组成员失败(${groupName}):`, e); }
+                                    }
+                                }
+                            } else {
+                                // 未找到手册分组，创建3个默认小组（兼容旧逻辑）
+                                const defaultNames = ['第一学习小组', '第二学习小组', '第三学习小组'];
+                                for (const gName of defaultNames) {
+                                    await GroupAPI.createGroup({
+                                        groupName: gName, description: '小组学习讨论群', groupType: 'study',
+                                        conferenceId: conferenceId, tenantId: tenantId, ownerId: '1',
+                                        maxMembers: 200, announcement: gName + ' - 用于学习和讨论'
+                                    });
+                                    createdCount++;
+                                }
+                            }
+
                             this.autoGroupConditions.studentGroupsCreated = true;
                             await this.loadGroupsFromAPI();
                             await this.loadGroupStatsFromAPI();
@@ -3505,26 +3961,32 @@
 
                 async viewTaskProgress(taskId) {
                     try {
+                        if (this.$showLoading) this.$showLoading('正在加载任务进度...');
                         const detail = await TaskAPI.getTaskDetail(taskId);
+                        if (this.$hideLoading) this.$hideLoading();
                         if (!detail) { this.$showToast('任务不存在', 'error'); return; }
-                        const task = detail.task || {};
-                        const assignees = detail.assignees || [];
-                        const logs = detail.logs || [];
-                        const completed = assignees.filter(a => a.status === 'completed').length;
-                        const total = assignees.length;
-                        const progress = detail.progress ?? 0;
 
-                        let assigneeInfo = assignees.length > 0
-                            ? assignees.map(a => `  • ${a.userName || '未知'} - ${{'pending':'待开始','in_progress':'进行中','completed':'已完成','submitted':'已提交'}[a.status] || a.status}`).join('\n')
-                            : '  暂无执行人';
+                        const statusTextMap = { 'pending': '待开始', 'in_progress': '进行中', 'completed': '已完成', 'submitted': '已提交', 'cancelled': '已取消' };
+                        const actionTextMap = { 'created': '创建任务', 'assigned': '分配执行人', 'submitted': '提交任务', 'completed': '完成任务', 'cancelled': '取消任务', 'urged': '催办任务' };
 
-                        let logInfo = logs.length > 0
-                            ? logs.slice(0, 5).map(l => `  • ${l.operatorName || ''} ${{'created':'创建任务','assigned':'分配执行人','submitted':'提交任务','completed':'完成任务','cancelled':'取消任务','urged':'催办任务'}[l.action] || l.action}`).join('\n')
-                            : '  暂无操作日志';
-
-                        const msg = `任务: ${task.taskName || '未命名'}\n状态: ${{'pending':'待开始','in_progress':'进行中','completed':'已完成','cancelled':'已取消'}[task.status] || task.status}\n进度: ${progress}% (${completed}/${total}人完成)\n\n执行人:\n${assigneeInfo}\n\n最近操作:\n${logInfo}`;
-                        alert(msg);
+                        this.taskProgressData = {
+                            taskName: (detail.task || {}).taskName || '未命名',
+                            status: statusTextMap[(detail.task || {}).status] || (detail.task || {}).status || '未知',
+                            progress: detail.progress ?? 0,
+                            completed: (detail.assignees || []).filter(a => a.status === 'completed').length,
+                            total: (detail.assignees || []).length,
+                            assignees: (detail.assignees || []).map(a => ({
+                                name: a.userName || '未知',
+                                status: statusTextMap[a.status] || a.status
+                            })),
+                            logs: (detail.logs || []).slice(0, 5).map(l => ({
+                                operator: l.operatorName || '',
+                                action: actionTextMap[l.action] || l.action
+                            }))
+                        };
+                        this.showTaskProgress = true;
                     } catch(e) {
+                        if (this.$hideLoading) this.$hideLoading();
                         this.$showToast('获取任务进度失败: ' + e.message, 'error');
                     }
                 },
@@ -3645,7 +4107,5 @@
             mixins: [window.InteractionMixin]
         }).mount('#app');
     </script>
-
-        </div><!-- 关闭page-with-nav -->
 </body>
 </html>

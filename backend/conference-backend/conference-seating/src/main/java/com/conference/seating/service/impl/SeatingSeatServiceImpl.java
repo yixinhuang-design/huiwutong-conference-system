@@ -130,6 +130,7 @@ public class SeatingSeatServiceImpl implements SeatingSeatService {
     /**
      * 整体保存座位布局
      * 策略：删除该会议+日程的旧数据，全量插入新数据
+     * 优化：批量插入座位、精确删除assignment、记录occupantId
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -163,12 +164,14 @@ public class SeatingSeatServiceImpl implements SeatingSeatService {
             }
         }
 
-        // 4. 删除旧分配记录
+        // 4. 删除旧分配记录（精确匹配 scheduleId，null 也要精确匹配）
         LambdaQueryWrapper<SeatingAssignment> assignDelWrapper = new LambdaQueryWrapper<>();
         assignDelWrapper.eq(SeatingAssignment::getConferenceId, conferenceId)
                 .eq(SeatingAssignment::getTenantId, tenantId);
         if (scheduleId != null) {
             assignDelWrapper.eq(SeatingAssignment::getScheduleId, scheduleId);
+        } else {
+            assignDelWrapper.isNull(SeatingAssignment::getScheduleId);
         }
         assignmentMapper.delete(assignDelWrapper);
 
@@ -176,6 +179,16 @@ public class SeatingSeatServiceImpl implements SeatingSeatService {
         if (request.getAreas() == null || request.getAreas().isEmpty()) {
             log.info("[租户{}] 无座位区数据，仅清除旧数据", tenantId);
             return;
+        }
+
+        // 构建参会人员ID→名称映射（用于将前端att_xxx与名称关联）
+        Map<String, String> attendeeIdToName = new HashMap<>();
+        if (request.getAttendees() != null) {
+            for (LayoutSaveRequest.AttendeeData att : request.getAttendees()) {
+                if (att.getAttendeeId() != null && att.getName() != null) {
+                    attendeeIdToName.put(att.getAttendeeId(), att.getName());
+                }
+            }
         }
 
         for (LayoutSaveRequest.AreaData area : request.getAreas()) {
@@ -197,14 +210,23 @@ public class SeatingSeatServiceImpl implements SeatingSeatService {
             venueMapper.insert(venue);
             Long venueId = venue.getId();
 
-            // 创建座位记录
-            if (area.getSeats() != null) {
+            // 创建座位记录（批量收集后一次性插入）
+            if (area.getSeats() != null && !area.getSeats().isEmpty()) {
                 int assignedCount = 0;
+                List<SeatingSeat> seatBatch = new ArrayList<>();
                 for (LayoutSaveRequest.SeatData seatData : area.getSeats()) {
                     String status = seatData.getStatus();
                     if ("occupied".equals(status)) {
                         status = "assigned";
                     }
+
+                    // 尝试获取occupantName：优先用seatData自带的，其次从attendees映射查
+                    String occupantName = seatData.getOccupantName();
+                    String occupantId = seatData.getOccupantId();
+                    if (occupantName == null && occupantId != null) {
+                        occupantName = attendeeIdToName.get(occupantId);
+                    }
+
                     SeatingSeat seat = SeatingSeat.builder()
                             .conferenceId(conferenceId)
                             .venueId(venueId)
@@ -215,22 +237,34 @@ public class SeatingSeatServiceImpl implements SeatingSeatService {
                             .seatType(seatData.getSeatType() != null ? seatData.getSeatType() : "normal")
                             .status(status != null ? status : "available")
                             .assignedUserId(null)
-                            .assignedUserName(seatData.getOccupantName())
+                            .assignedUserName(occupantName)
                             .createdAt(LocalDateTime.now())
                             .build();
-                    seatMapper.insert(seat);
+                    seatBatch.add(seat);
 
-                    // 统计已分配座位数（通过座位状态判断，不再插入assignment记录）
-                    // 原因：前端 occupantId 来自报名服务(att_xxx)，不是 conf_seating_attendee 表的ID，
-                    // 而 conf_seating_attendee 表目前无数据，插入 assignment 会触发外键约束失败。
-                    // 分配人名已记录在 conf_seating_seat.assigned_user_name 中，可完整还原。
-                    if ("assigned".equals(status) || seatData.getOccupantName() != null) {
+                    if ("assigned".equals(status) || occupantName != null) {
                         assignedCount++;
                     }
                 }
+
+                // 批量插入座位（每500条一批）
+                int batchSize = 500;
+                for (int i = 0; i < seatBatch.size(); i += batchSize) {
+                    List<SeatingSeat> subList = seatBatch.subList(i, Math.min(i + batchSize, seatBatch.size()));
+                    for (SeatingSeat s : subList) {
+                        seatMapper.insert(s);
+                    }
+                }
+
                 // 更新会场的已分配数
                 venue.setAssignedCount(assignedCount);
                 venueMapper.updateById(venue);
+
+                // 注意：不在 saveLayout 中写入 conf_seating_assignment 表
+                // 原因：该表 attendee_id 有 NOT NULL + FK 约束指向 conf_seating_attendee 表，
+                // 而前端参会人员来自报名服务（att_xxx格式ID），conf_seating_attendee 表无对应记录。
+                // 座位分配信息已完整保存在 conf_seating_seat.assigned_user_name 字段中，
+                // loadLayout 可正确还原。assignment 表仅由 assignSeat/autoAssign 等精确分配接口写入。
             }
         }
 
@@ -241,6 +275,7 @@ public class SeatingSeatServiceImpl implements SeatingSeatService {
     /**
      * 整体加载座位布局
      * 优先从 layoutData JSON 还原完整区域结构
+     * 同时返回 occupantId 和 attendees 列表
      */
     @Override
     public LayoutLoadResponse loadLayout(Long conferenceId, Long scheduleId) {
@@ -253,6 +288,9 @@ public class SeatingSeatServiceImpl implements SeatingSeatService {
                 tenantId, conferenceId, scheduleId, venues.size());
 
         List<LayoutSaveRequest.AreaData> areas = new ArrayList<>();
+        // 收集所有已分配座位的人员信息用于构建attendees列表
+        Map<String, LayoutSaveRequest.AttendeeData> attendeeMap = new LinkedHashMap<>();
+
         for (SeatingVenue venue : venues) {
             // 优先使用 layoutData（前端原始JSON）来还原区域
             LayoutSaveRequest.AreaData areaData = LayoutSaveRequest.AreaData.builder()
@@ -273,6 +311,24 @@ public class SeatingSeatServiceImpl implements SeatingSeatService {
                 if ("assigned".equals(status)) {
                     status = "occupied";
                 }
+
+                // 构建 occupantId：如果有 assignedUserName，生成前端兼容的 att_ 格式ID
+                String occupantId = null;
+                String occupantName = seat.getAssignedUserName();
+                if (occupantName != null && !occupantName.isEmpty()) {
+                    occupantId = "att_db_" + seat.getId();
+                    // 收集到 attendees 列表
+                    attendeeMap.putIfAbsent(occupantId, LayoutSaveRequest.AttendeeData.builder()
+                            .attendeeId(occupantId)
+                            .name(occupantName)
+                            .department("")
+                            .position("")
+                            .company("")
+                            .isVip("vip".equals(seat.getSeatType()))
+                            .phone("")
+                            .build());
+                }
+
                 return LayoutSaveRequest.SeatData.builder()
                         .seatId(String.valueOf(seat.getId()))
                         .row(seat.getRowNum())
@@ -280,7 +336,8 @@ public class SeatingSeatServiceImpl implements SeatingSeatService {
                         .seatNumber(seat.getSeatNumber())
                         .seatType(seat.getSeatType())
                         .status(status)
-                        .occupantName(seat.getAssignedUserName())
+                        .occupantId(occupantId)
+                        .occupantName(occupantName)
                         .build();
             }).collect(Collectors.toList());
             areaData.setSeats(seatDataList);
@@ -300,6 +357,7 @@ public class SeatingSeatServiceImpl implements SeatingSeatService {
                 .conferenceId(conferenceId)
                 .scheduleId(scheduleId)
                 .areas(areas)
+                .attendees(new ArrayList<>(attendeeMap.values()))
                 .savedAt(savedAt)
                 .build();
     }
@@ -311,5 +369,26 @@ public class SeatingSeatServiceImpl implements SeatingSeatService {
             case "vip": return "vip";
             default: return "regular";
         }
+    }
+
+    @Override
+    public List<SeatingSeat> getAvailableSeatsByConference(Long conferenceId) {
+        Long tenantId = TenantContextHolder.getTenantId();
+        // 获取会议下所有会场
+        LambdaQueryWrapper<SeatingVenue> venueWrapper = new LambdaQueryWrapper<>();
+        venueWrapper.eq(SeatingVenue::getConferenceId, conferenceId);
+        if (tenantId != null) {
+            venueWrapper.eq(SeatingVenue::getTenantId, tenantId);
+        }
+        List<SeatingVenue> venues = venueMapper.selectList(venueWrapper);
+        if (venues.isEmpty()) return Collections.emptyList();
+
+        List<Long> venueIds = venues.stream().map(SeatingVenue::getId).collect(Collectors.toList());
+        
+        // 获取所有未分配的座位
+        LambdaQueryWrapper<SeatingSeat> seatWrapper = new LambdaQueryWrapper<>();
+        seatWrapper.in(SeatingSeat::getVenueId, venueIds)
+                   .isNull(SeatingSeat::getAssignedUserId);
+        return seatMapper.selectList(seatWrapper);
     }
 }

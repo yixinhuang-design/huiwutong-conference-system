@@ -392,6 +392,97 @@
             color: var(--primary);
         }
 
+        /* 辅助安排类型卡片样式 */
+        .arrangement-type-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .arrangement-type-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .arrangement-type-header .badge {
+            background: var(--primary);
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .arrangement-type-actions {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .arrangement-item-list {
+            max-height: 160px;
+            overflow-y: auto;
+        }
+        .arrangement-mini-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .arrangement-mini-item > div {
+            display: flex;
+            gap: 4px;
+        }
+        .btn-xs {
+            padding: 3px 8px;
+            font-size: 11px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            color: #ccc;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-xs:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-xs.btn-danger { border-color: rgba(239,68,68,0.3); }
+        .btn-xs.btn-danger:hover { background: #ef4444; border-color: #ef4444; color: #fff; }
+
+        /* 列表弹窗项样式 */
+        .list-modal-item {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .list-modal-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .list-modal-item-info {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 6px;
+        }
+        .list-modal-item-people {
+            font-size: 12px;
+            color: #8bb4f0;
+            margin-bottom: 8px;
+        }
+        .list-modal-item-actions {
+            display: flex;
+            gap: 6px;
+        }
+
         /* ===== 手动座位调整功能样式 ===== */
 
         /* 搜索定位工具栏 */
@@ -3377,6 +3468,8 @@
             border-radius: var(--radius-sm);
         }
     </style>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
 </head>
 <body>
     <div id="app">
@@ -4574,42 +4667,78 @@
                         />
                     </div>
 
-                    <!-- 辅助安排 - 简化入口 -->
+                    <!-- 辅助安排管理（状态概览） -->
                     <div class="glass-card arrangement-section">
-                        <h3>
-                            <i class="fas fa-concierge-bell"></i>
-                            🛎️ 辅助安排管理
-                        </h3>
-                        <div class="section-description">
-                            智能分配会议相关的交通、住宿、用餐等辅助事项
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2);">
+                            <h3 style="margin: 0;">
+                                <i class="fas fa-concierge-bell"></i>
+                                🛎️ 辅助安排管理
+                            </h3>
+                            <button class="btn-sm btn-primary" @click="openAuxiliaryPage" title="前往独立页面管理辅助安排" style="white-space: nowrap;">
+                                <i class="fas fa-external-link-alt"></i> 前往管理
+                            </button>
                         </div>
-                        <div class="arrangement-summary">
-                            <div class="summary-item">
-                                <i class="fas fa-bus"></i>
-                                <span>乘车: {{ transportList.length }}辆</span>
-                            </div>
-                            <div class="summary-item">
-                                <i class="fas fa-hotel"></i>
-                                <span>住宿: {{ accommodationList.length }}间</span>
-                            </div>
-                            <div class="summary-item">
-                                <i class="fas fa-comments"></i>
-                                <span>讨论室: {{ discussionList.length }}间</span>
-                            </div>
-                            <div class="summary-item">
-                                <i class="fas fa-utensils"></i>
-                                <span>用餐: {{ diningList.length }}桌</span>
-                            </div>
-                            <div class="summary-item">
-                                <i class="fas fa-plane"></i>
-                                <span>接送机: {{ airportTransferList.length }}班</span>
-                            </div>
+                        <div class="section-description" style="margin-bottom: 12px;">
+                            交通、住宿、用餐、讨论室等辅助事项概览，点击「前往管理」进入独立页面操作
                         </div>
-                        <div class="arrangement-bulk-actions">
-                            <a :href="'auxiliary-arrangement.html?conferenceId=' + (conference?.id || '')" class="btn-primary" style="flex: 1; text-decoration: none; text-align: center;">
-                                <i class="fas fa-external-link-alt"></i>
-                                <span>打开辅助安排管理</span>
-                            </a>
+
+                        <!-- 4类安排状态卡片 -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <!-- 🚌 乘车 -->
+                            <div class="arrangement-type-card" style="margin-bottom: 0; cursor: pointer;" @click="openAuxiliaryPage">
+                                <div class="arrangement-type-header" style="margin-bottom: 4px;">
+                                    <span><i class="fas fa-bus"></i> 乘车安排</span>
+                                    <span class="badge" :style="{ background: transportList.length > 0 ? 'var(--primary)' : '#666' }">{{ transportList.length }}辆</span>
+                                </div>
+                                <div style="font-size: 12px; color: #aaa;">
+                                    <template v-if="transportList.length > 0">
+                                        已分配 {{ transportList.reduce((s,v) => s + (v.assignedCount||0), 0) }} / {{ transportList.reduce((s,v) => s + (v.capacity||0), 0) }} 人
+                                    </template>
+                                    <template v-else>暂未安排</template>
+                                </div>
+                            </div>
+
+                            <!-- 🏨 住宿 -->
+                            <div class="arrangement-type-card" style="margin-bottom: 0; cursor: pointer;" @click="openAuxiliaryPage">
+                                <div class="arrangement-type-header" style="margin-bottom: 4px;">
+                                    <span><i class="fas fa-hotel"></i> 住宿安排</span>
+                                    <span class="badge" :style="{ background: accommodationList.length > 0 ? 'var(--primary)' : '#666' }">{{ accommodationList.length }}间</span>
+                                </div>
+                                <div style="font-size: 12px; color: #aaa;">
+                                    <template v-if="accommodationList.length > 0">
+                                        已分配 {{ accommodationList.reduce((s,r) => s + (r.assignedCount||0), 0) }} / {{ accommodationList.reduce((s,r) => s + (r.capacity||0), 0) }} 人
+                                    </template>
+                                    <template v-else>暂未安排</template>
+                                </div>
+                            </div>
+
+                            <!-- 💬 讨论室 -->
+                            <div class="arrangement-type-card" style="margin-bottom: 0; cursor: pointer;" @click="openAuxiliaryPage">
+                                <div class="arrangement-type-header" style="margin-bottom: 4px;">
+                                    <span><i class="fas fa-comments"></i> 讨论室安排</span>
+                                    <span class="badge" :style="{ background: discussionList.length > 0 ? 'var(--primary)' : '#666' }">{{ discussionList.length }}间</span>
+                                </div>
+                                <div style="font-size: 12px; color: #aaa;">
+                                    <template v-if="discussionList.length > 0">
+                                        已分配 {{ discussionList.reduce((s,d) => s + (d.assignedCount||0), 0) }} / {{ discussionList.reduce((s,d) => s + (d.capacity||0), 0) }} 人
+                                    </template>
+                                    <template v-else>暂未安排</template>
+                                </div>
+                            </div>
+
+                            <!-- 🍽️ 用餐 -->
+                            <div class="arrangement-type-card" style="margin-bottom: 0; cursor: pointer;" @click="openAuxiliaryPage">
+                                <div class="arrangement-type-header" style="margin-bottom: 4px;">
+                                    <span><i class="fas fa-utensils"></i> 用餐安排</span>
+                                    <span class="badge" :style="{ background: diningList.length > 0 ? 'var(--primary)' : '#666' }">{{ diningList.length }}桌</span>
+                                </div>
+                                <div style="font-size: 12px; color: #aaa;">
+                                    <template v-if="diningList.length > 0">
+                                        已分配 {{ diningList.reduce((s,d) => s + (d.assignedCount||0), 0) }} / {{ diningList.reduce((s,d) => s + (d.capacity||0), 0) }} 人
+                                    </template>
+                                    <template v-else>暂未安排</template>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -5080,15 +5209,13 @@
 
     <script type="module">
         // ===== 导入优化模块 =====
-        // 优先级1：核心模块
+        // 核心模块
         import { generateOptimizedSeatNumber, getNumberingModeLabel } from '../modules/seating-numbering-system.js';
         import seatingLayoutGrid from '../modules/seating-layout-grid.js';
         import { useScheduleManager } from '../modules/seating-schedule-manager.js';
 
-        // 优先级2：参会人员和交互模块
-        import { SeatingImportAttendeesModule } from '../modules/seating-import-attendees.js';
-        import { SeatingInteractionsModule } from '../modules/seating-interactions.js';
-        import { SeatingArrangementsModule } from '../modules/seating-arrangements.js';
+        // 注：seating-import-attendees / seating-interactions / seating-arrangements 模块已开发
+        // 但当前页面内联实现了相同功能，暂未启用模块版本
 
         const { createApp, ref, reactive, computed, onMounted, watch, nextTick } = Vue;
 
@@ -5201,7 +5328,87 @@
                 const accommodationList = ref([]);
                 const discussionList = ref([]);
                 const diningList = ref([]);  // 用餐安排
-                const airportTransferList = ref([]);  // 接送机安排
+
+                // ===== 辅助安排 API 工具方法 =====
+                const getApiHeaders = () => {
+                    const headers = { 'Content-Type': 'application/json' };
+                    const token = localStorage.getItem('authToken');
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    const tenantId = localStorage.getItem('tenantId');
+                    if (tenantId) headers['X-Tenant-Id'] = tenantId;
+                    return headers;
+                };
+
+                const apiCall = async (url, method = 'GET', body = null) => {
+                    const opts = { method, headers: getApiHeaders() };
+                    if (body) opts.body = JSON.stringify(body);
+                    const resp = await fetch(url, opts);
+                    if (!resp.ok) {
+                        const text = await resp.text();
+                        throw new Error(`API ${method} ${url} 失败: ${resp.status} ${text}`);
+                    }
+                    if (resp.status === 204 || resp.headers.get('content-length') === '0') return null;
+                    const ct = resp.headers.get('content-type');
+                    if (ct && ct.includes('application/json')) {
+                        const result = await resp.json();
+                        // 后端返回格式: { code, message, data, timestamp }
+                        if (result && result.code !== undefined) {
+                            if (result.code !== 200) {
+                                throw new Error(result.message || '请求失败');
+                            }
+                            return result.data;
+                        }
+                        return result; // 非标准格式直接返回
+                    }
+                    return null;
+                };
+
+                // 从后端加载全部辅助安排数据
+                const loadAuxiliaryArrangements = async () => {
+                    const confId = conference.value?.id;
+                    if (!confId) return;
+                    try {
+                        const [transports, accommodations, discussions, dinings] = await Promise.all([
+                            apiCall(`/api/seating/transports/${confId}`),
+                            apiCall(`/api/seating/accommodations/${confId}`),
+                            apiCall(`/api/seating/discussions/${confId}`),
+                            apiCall(`/api/seating/dinings/${confId}`)
+                        ]);
+                        transportList.value = (transports || []).map(t => ({
+                            id: t.id, name: t.vehicleName, type: t.vehicleType, plateNumber: t.licensePlate,
+                            departure: t.departure, destination: t.destination, departureTime: t.departureTime,
+                            capacity: t.capacity, assignedCount: t.assignedCount, availableSeats: t.availableSeats,
+                            driver: t.driver, driverPhone: t.driverPhone,
+                            passengers: (t.assignees || []).map(a => ({ id: a.attendeeId, name: a.attendeeName, department: a.department, assignId: a.assignId }))
+                        }));
+                        accommodationList.value = (accommodations || []).map(a => ({
+                            id: a.id, hotelName: a.hotelName, roomNumber: a.roomNumber, type: a.roomType,
+                            capacity: a.capacity, assignedCount: a.assignedCount, availableBeds: a.availableBeds,
+                            checkInTime: a.checkInTime, checkOutTime: a.checkOutTime,
+                            occupants: (a.assignees || []).map(p => ({ id: p.attendeeId, name: p.attendeeName, department: p.department, assignId: p.assignId }))
+                        }));
+                        discussionList.value = (discussions || []).map(d => ({
+                            id: d.id, name: d.roomName, location: d.location, capacity: d.capacity,
+                            assignedCount: d.assignedCount, availableSeats: d.availableSeats,
+                            startTime: d.startTime, endTime: d.endTime, description: d.description,
+                            groups: (d.assignees || []).map(p => ({ id: p.attendeeId, name: p.attendeeName, department: p.department, assignId: p.assignId }))
+                        }));
+                        diningList.value = (dinings || []).map(d => ({
+                            id: d.id, name: d.restaurantName, type: d.mealType, capacity: d.capacity,
+                            assignedCount: d.assignedCount, availableSeats: d.availableSeats,
+                            time: d.mealTime, location: d.location, diningDate: d.diningDate, diningTime: d.diningTime,
+                            diners: (d.assignees || []).map(p => ({ id: p.attendeeId, name: p.attendeeName, department: p.department, assignId: p.assignId }))
+                        }));
+                        console.log('[loadAuxiliaryArrangements] 成功加载辅助安排数据', {
+                            transports: transportList.value.length,
+                            accommodations: accommodationList.value.length,
+                            discussions: discussionList.value.length,
+                            dinings: diningList.value.length
+                        });
+                    } catch (err) {
+                        console.warn('[loadAuxiliaryArrangements] 加载失败, 回退到本地:', err.message);
+                    }
+                };
 
                 // 座位变更历史记录
                 const seatChangeHistory = ref([]);
@@ -5226,66 +5433,8 @@
                 // 座位缩放相关
                 const seatingChartContainer = ref(null);
 
-                // 辅助安排弹窗状态
-                const showTransportModalFlag = ref(false);
-                const showAccommodationModalFlag = ref(false);
-                const showDiscussionModalFlag = ref(false);
-                const showDiningModalFlag = ref(false);
-                const showAirportTransferModalFlag = ref(false);
-
-                // 辅助安排列表管理弹窗状态
-                const showTransportListModalFlag = ref(false);
-                const showAccommodationListModalFlag = ref(false);
-                const showDiscussionListModalFlag = ref(false);
-                const showDiningListModalFlag = ref(false);
-                const showAirportTransferListModalFlag = ref(false);
-
-                // 分配结果弹窗状态
-                const showArrangementResultModalFlag = ref(false);
-
-                // 人员分配弹窗状态
-                const showPersonAssignModalFlag = ref(false);
-                const assignModalTitle = ref('');
-                const currentAssignType = ref(''); // 'transport', 'accommodation', 'discussion'
-                const currentArrangementItem = ref(null);
-                console.log('[DEBUG-30] 辅助安排模态框变量初始化完成');
-
-                // 新建辅助安排对象
-                console.log('[DEBUG-31] 初始化newTransport');
-                const newTransport = reactive({
-                    name: '',
-                    type: '大巴',
-                    plateNumber: '',
-                    departure: '',
-                    destination: '',
-                    departureTime: '',
-                    capacity: 45,
-                    assignedCount: 0,
-                    passengers: []
-                });
-                console.log('[DEBUG-32] 初始化newAccommodation');
-
-                const newAccommodation = reactive({
-                    hotelName: '',
-                    roomNumber: '',
-                    type: '标准间',
-                    capacity: 2,
-                    assignedCount: 0,
-                    occupants: [],
-                    checkInTime: '',
-                    checkOutTime: ''
-                });
-                console.log('[DEBUG-33] 初始化newDiscussion');
-
-                const newDiscussion = reactive({
-                    name: '',
-                    location: '',
-                    capacity: 15,
-                    assignedCount: 0,
-                    groups: [],
-                    startTime: '',
-                    endTime: ''
-                });
+                // （辅助安排弹窗状态已移除 — 所有操作在独立页面进行）
+                console.log('[DEBUG-30] 辅助安排模块简化为状态概览');
 
                 // 座位区配置对象
                 const areaConfig = reactive({
@@ -5412,10 +5561,11 @@
                                 conferenceId = localStorage.getItem('currentConferenceId');
                             }
 
-                            // 如果还是没有，使用默认会议ID
+                            // 如果还是没有，提示用户从会议管理中心进入
                             if (!conferenceId) {
-                                conferenceId = 'conf_20240615_001';
-                                console.warn('未找到会议ID，使用默认ID:', conferenceId);
+                                alert('未找到会议ID，请从会议管理中心进入');
+                                window.history.back();
+                                return;
                             }
 
                             // 如果会议ID与当前加载的不同，重新加载
@@ -5439,22 +5589,24 @@
                             console.log('会议数据加载成功:', conference.value);
                         } else {
                             console.warn('会议上下文未初始化，创建默认会议数据');
-                            // 创建默认会议数据
+                            // 创建默认会议数据（使用URL参数中的conferenceId）
+                            const urlConfId = new URLSearchParams(window.location.search).get('conferenceId');
                             conference.value = {
-                                id: 'conf_20240615_001',
-                                name: '2024年度技术峰会',
+                                id: urlConfId || '',
+                                name: '会议',
                                 status: 'preparing',
-                                location: { venue: '北京国际会议中心' }
+                                location: { venue: '' }
                             };
                         }
                     } catch (error) {
                         console.error('初始化会议失败:', error);
-                        // 使用默认会议数据
+                        // 使用URL参数中的conferenceId创建基本数据
+                        const urlConfId = new URLSearchParams(window.location.search).get('conferenceId');
                         conference.value = {
-                            id: 'conf_20240615_001',
-                            name: '2024年度技术峰会',
+                            id: urlConfId || '',
+                            name: '会议',
                             status: 'preparing',
-                            location: { venue: '北京国际会议中心' }
+                            location: { venue: '' }
                         };
                     } finally {
                         loading.value = false;
@@ -5469,6 +5621,10 @@
                         const token = localStorage.getItem('authToken');
                         if (token) {
                             seatingHeaders['Authorization'] = `Bearer ${token}`;
+                        }
+                        const tenantId = localStorage.getItem('tenantId');
+                        if (tenantId) {
+                            seatingHeaders['X-Tenant-Id'] = tenantId;
                         }
 
                         // 首先尝试从API加载会场和座位数据
@@ -5541,6 +5697,11 @@
                                                             if (dbSeat.occupantName) {
                                                                 targetSeat.occupant = { name: dbSeat.occupantName };
                                                                 targetSeat.occupantName = dbSeat.occupantName;
+                                                                // 利用后端返回的 occupantId 建立精确关联
+                                                                if (dbSeat.occupantId) {
+                                                                    targetSeat.occupantId = dbSeat.occupantId;
+                                                                    targetSeat.occupant.id = dbSeat.occupantId;
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -5619,6 +5780,10 @@
                                 if (regToken) {
                                     regHeaders['Authorization'] = `Bearer ${regToken}`;
                                 }
+                                const regTenantId = localStorage.getItem('tenantId');
+                                if (regTenantId) {
+                                    regHeaders['X-Tenant-Id'] = regTenantId;
+                                }
                                 // 从报名服务获取该会议的报名列表（取足够大的pageSize以获取全部）
                                 const regResponse = await fetch(
                                     `/api/registration/list?conferenceId=${conference.value.id}&page=1&pageSize=1000`,
@@ -5632,7 +5797,7 @@
                                     const approvedList = records.filter(r => r.status === 1 || r.status === '1');
                                     if (approvedList.length > 0) {
                                         attendees.value = approvedList.map((r, idx) => ({
-                                            id: `att_${r.id || idx + 1}`,
+                                            id: r.id,
                                             name: r.name || r.realName || r.userName || `参会者${idx + 1}`,
                                             department: r.department || r.organization || '',
                                             position: r.position || r.title || '',
@@ -5709,12 +5874,8 @@
                         seatingAreas.value = data.seatingAreas || [];
                         // 不从localStorage加载参会人员（参会人员始终从报名服务获取）
 
-                        // 加载辅助安排数据
-                        if (data.arrangements) {
-                            transportList.value = data.arrangements.transport || [];
-                            accommodationList.value = data.arrangements.accommodation || [];
-                            discussionList.value = data.arrangements.discussion || [];
-                        }
+                        // 辅助安排数据从后端API加载（不再从localStorage）
+                        await loadAuxiliaryArrangements();
 
                         // 确保每个区域都有columnAisles属性（兼容旧版本）
                         seatingAreas.value.forEach(area => {
@@ -5755,6 +5916,8 @@
                         const regHeaders = { 'Content-Type': 'application/json' };
                         const regToken = localStorage.getItem('authToken');
                         if (regToken) regHeaders['Authorization'] = `Bearer ${regToken}`;
+                        const regTenantId = localStorage.getItem('tenantId');
+                        if (regTenantId) regHeaders['X-Tenant-Id'] = regTenantId;
 
                         const regResponse = await fetch(
                             `/api/registration/list?conferenceId=${conference.value.id}&page=1&pageSize=1000`,
@@ -5767,7 +5930,7 @@
                             const approvedList = records.filter(r => r.status === 1 || r.status === '1');
                             if (approvedList.length > 0) {
                                 attendees.value = approvedList.map((r, idx) => ({
-                                    id: `att_${r.id || idx + 1}`,
+                                    id: r.id,
                                     name: r.name || r.realName || r.userName || `参会者${idx + 1}`,
                                     department: r.department || r.organization || '',
                                     position: r.position || r.title || '',
@@ -6253,6 +6416,53 @@
                         console.error('导入参会人员失败:', error);
                         alert('❌ 导入失败，请重试');
                     }
+                };
+
+                // 从其他日程复制参会人员
+                const handleCopyFromSchedule = () => {
+                    if (!scheduleManager || !scheduleManager.schedules.value || scheduleManager.schedules.value.length < 2) {
+                        alert('暂无其他日程可供复制');
+                        return;
+                    }
+                    // 让用户选择要复制的源日程
+                    const scheduleNames = scheduleManager.schedules.value
+                        .filter(s => s.id !== currentScheduleId.value)
+                        .map((s, i) => `${i + 1}. ${s.name || s.title || '日程' + s.id}`)
+                        .join('\n');
+                    const choice = prompt(`请选择要复制参会人员的源日程序号：\n${scheduleNames}`);
+                    if (!choice) return;
+                    const idx = parseInt(choice) - 1;
+                    const otherSchedules = scheduleManager.schedules.value.filter(s => s.id !== currentScheduleId.value);
+                    if (idx >= 0 && idx < otherSchedules.length) {
+                        const sourceScheduleId = otherSchedules[idx].id;
+                        loadScheduleSeatingData(sourceScheduleId);
+                        closeImportModal();
+                        console.log(`已从日程 ${sourceScheduleId} 复制参会人员`);
+                    } else {
+                        alert('无效的选择');
+                    }
+                };
+
+                // 手工逐个添加参会人员
+                const handleManualAdd = () => {
+                    const name = prompt('请输入参会人员姓名：');
+                    if (!name || !name.trim()) return;
+                    const department = prompt('请输入部门/单位（可选）：') || '';
+                    const position = prompt('请输入职位（可选）：') || '';
+                    const phone = prompt('请输入手机号（可选）：') || '';
+                    const newAttendee = {
+                        id: `att_manual_${Date.now()}`,
+                        name: name.trim(),
+                        department: department.trim(),
+                        position: position.trim(),
+                        isVip: false,
+                        company: department.trim(),
+                        phone: phone.trim()
+                    };
+                    attendees.value.push(newAttendee);
+                    updateStatistics();
+                    closeImportModal();
+                    console.log(`已手动添加参会人员: ${name.trim()}`);
                 };
 
                 // 计算座位Y坐标（考虑角度）
@@ -9658,16 +9868,20 @@
                 const getPositionLevel = (position) => {
                     if (!position) return 0;
 
+                    // 注意：JS对象字面量中重复键只保留最后一个值
+                    // 修复：合并重复键，使用职级合理的等级值
                     const levels = {
                         '书记': 100, '市长': 100, '主席': 100,
-                        '副主席': 90, '副主任': 90, '副部长': 90,
+                        '副主席': 95, '副市长': 95,
+                        '副部长': 90, '副主任': 88,
                         '秘书长': 85, '副秘书长': 80,
-                        '局长': 75, '部长': 75,
-                        '处长': 60, '部长': 60,
-                        '副处长': 50, '副部长': 50,
-                        '科长': 40, '主任': 40,
-                        '副科长': 30, '副主任': 30,
-                        '经理': 35, '主管': 25,
+                        '部长': 75, '局长': 75,
+                        '处长': 60, '主任': 55,
+                        '副处长': 50,
+                        '科长': 40,
+                        '经理': 35,
+                        '副科长': 30,
+                        '主管': 25,
                         '专员': 10, '职员': 5
                     };
 
@@ -10075,7 +10289,6 @@
 
                     } catch (error) {
                         console.error('生成导示图失败:', error);
-                        console.error('生成导示图失败:', error);
                     } finally {
                         loading.value = false;
                     }
@@ -10123,20 +10336,19 @@
                                 for (const seat of row.seats) {
                                     if (!seat || seat.isAisle) continue;
 
-                                    const rowData = {
-                                        '区域': area.name,
-                                        '排号': row.number,
-                                        '座位号': seat.number,
-                                        '姓名': seat.occupant ? seat.occupant.name : '',
-                                        '单位': seat.occupant ? seat.occupant.department : '',
-                                        '职位': seat.occupant ? seat.occupant.position : '',
-                                        '手机号': seat.occupant ? seat.occupant.phone || '' : '',
-                                        '座位类型': seat.type === 'vip' ? 'VIP' : '普通'
-                                    };
-
                                     // 只导出有人的座位
+                                    // 修复：aoa_to_sheet 需要数组行，不能用对象
                                     if (seat.occupant) {
-                                        excelData.push(rowData);
+                                        excelData.push([
+                                            area.name,
+                                            row.number,
+                                            seat.number,
+                                            seat.occupant.name || '',
+                                            seat.occupant.department || '',
+                                            seat.occupant.position || '',
+                                            seat.occupant.phone || '',
+                                            seat.type === 'vip' ? 'VIP' : '普通'
+                                        ]);
                                     }
                                 }
                             }
@@ -10174,7 +10386,6 @@
 
                         console.log('Excel座位表导出成功！');
                     } catch (error) {
-                        console.error('导出Excel失败:', error);
                         console.error('导出Excel失败:', error);
                     }
                 };
@@ -10287,861 +10498,39 @@
                         console.log('PDF座位表导出成功！');
                     } catch (error) {
                         console.error('导出PDF失败:', error);
-                        console.error('导出PDF失败:', error);
                     }
                 };
 
                 // ===== 辅助安排管理 =====
 
-                // 1. 乘车安排管理
-                const showTransportModal = () => {
-                    Object.assign(newTransport, {
-                        name: '',
-                        type: '大巴',
-                        plateNumber: '',
-                        departure: '',
-                        destination: '',
-                        departureTime: '',
-                        capacity: 45,
-                        assignedCount: 0,
-                        passengers: []
-                    });
-                    showTransportModalFlag.value = true;
-                };
-
-                const closeTransportModal = () => {
-                    showTransportModalFlag.value = false;
-                    // 清除编辑状态
-                    newTransport.id = '';
-                    Object.assign(newTransport, {
-                        name: '',
-                        type: '大巴',
-                        plateNumber: '',
-                        departure: '',
-                        destination: '',
-                        departureTime: '',
-                        capacity: 45,
-                        assignedCount: 0,
-                        passengers: []
-                    });
-                };
-
-                const saveTransport = () => {
-                    if (!newTransport.name) {
-                        console.warn('请输入车辆名称');
-                        return;
-                    }
-
-                    const capacityMap = {
-                        '小车': 4,
-                        '中巴': 15,
-                        '大巴': 45
-                    };
-                    newTransport.capacity = capacityMap[newTransport.type] || 45;
-
-                    // 检查是否是编辑模式
-                    if (newTransport.id) {
-                        const index = transportList.value.findIndex(v => v.id === newTransport.id);
-                        if (index > -1) {
-                            // 保留原有的passengers数据
-                            const existingPassengers = transportList.value[index].passengers || [];
-                            transportList.value[index] = {
-                                ...JSON.parse(JSON.stringify(newTransport)),
-                                passengers: existingPassengers
-                            };
-                        }
-                    } else {
-                        // 新增模式
-                        transportList.value.push({
-                            id: `transport_${Date.now()}`,
-                            ...JSON.parse(JSON.stringify(newTransport))
-                        });
-                    }
-
-                    saveData();
-                    closeTransportModal();
-                    console.log('车辆保存成功');
-                };
-
-                // 2. 住宿安排管理
-                const showAccommodationModal = () => {
-                    Object.assign(newAccommodation, {
-                        hotelName: '',
-                        roomNumber: '',
-                        type: '标准间',
-                        capacity: 2,
-                        assignedCount: 0,
-                        occupants: [],
-                        checkInTime: '',
-                        checkOutTime: ''
-                    });
-                    showAccommodationModalFlag.value = true;
-                };
-
-                const closeAccommodationModal = () => {
-                    showAccommodationModalFlag.value = false;
-                    // 清除编辑状态
-                    newAccommodation.id = '';
-                    Object.assign(newAccommodation, {
-                        hotelName: '',
-                        roomNumber: '',
-                        type: '标准间',
-                        capacity: 2,
-                        assignedCount: 0,
-                        occupants: [],
-                        checkInTime: '',
-                        checkOutTime: ''
-                    });
-                };
-
-                const saveAccommodation = () => {
-                    if (!newAccommodation.hotelName || !newAccommodation.roomNumber) {
-                        console.warn('请填写完整信息');
-                        return;
-                    }
-
-                    // 检查是否是编辑模式
-                    if (newAccommodation.id) {
-                        const index = accommodationList.value.findIndex(r => r.id === newAccommodation.id);
-                        if (index > -1) {
-                            // 保留原有的occupants数据
-                            const existingOccupants = accommodationList.value[index].occupants || [];
-                            accommodationList.value[index] = {
-                                ...JSON.parse(JSON.stringify(newAccommodation)),
-                                occupants: existingOccupants
-                            };
-                        }
-                    } else {
-                        // 新增模式
-                        accommodationList.value.push({
-                            id: `accommodation_${Date.now()}`,
-                            ...JSON.parse(JSON.stringify(newAccommodation))
-                        });
-                    }
-
-                    saveData();
-                    closeAccommodationModal();
-                    console.log('房间保存成功');
-                };
-
-                // 3. 讨论室安排管理
-                const showDiscussionModal = () => {
-                    Object.assign(newDiscussion, {
-                        name: '',
-                        location: '',
-                        capacity: 15,
-                        assignedCount: 0,
-                        groups: [],
-                        startTime: '',
-                        endTime: ''
-                    });
-                    showDiscussionModalFlag.value = true;
-                };
-
-                const closeDiscussionModal = () => {
-                    showDiscussionModalFlag.value = false;
-                    // 清除编辑状态
-                    newDiscussion.id = '';
-                    Object.assign(newDiscussion, {
-                        name: '',
-                        location: '',
-                        capacity: 15,
-                        assignedCount: 0,
-                        groups: [],
-                        startTime: '',
-                        endTime: ''
-                    });
-                };
-
-                const saveDiscussion = () => {
-                    if (!newDiscussion.name || !newDiscussion.location) {
-                        console.warn('请填写完整信息');
-                        return;
-                    }
-
-                    // 检查是否是编辑模式
-                    if (newDiscussion.id) {
-                        const index = discussionList.value.findIndex(d => d.id === newDiscussion.id);
-                        if (index > -1) {
-                            // 保留原有的groups数据
-                            const existingGroups = discussionList.value[index].groups || [];
-                            discussionList.value[index] = {
-                                ...JSON.parse(JSON.stringify(newDiscussion)),
-                                groups: existingGroups
-                            };
-                        }
-                    } else {
-                        // 新增模式
-                        discussionList.value.push({
-                            id: `discussion_${Date.now()}`,
-                            ...JSON.parse(JSON.stringify(newDiscussion))
-                        });
-                    }
-
-                    saveData();
-                    closeDiscussionModal();
-                    console.log('讨论室保存成功');
-                };
-
-                // ===== 用餐安排相关方法 =====
-                const newDining = reactive({
-                    name: '',
-                    type: '午餐',
-                    capacity: 10,
-                    assignedCount: 0,
-                    groups: [],
-                    time: '',
-                    location: ''
-                });
-
-                const showDiningModal = () => {
-                    Object.assign(newDining, {
-                        name: '',
-                        type: '午餐',
-                        capacity: 10,
-                        assignedCount: 0,
-                        groups: [],
-                        time: '',
-                        location: ''
-                    });
-                    showDiningModalFlag.value = true;
-                };
-
-                const closeDiningModal = () => {
-                    showDiningModalFlag.value = false;
-                };
-
-                const saveDining = () => {
-                    if (!newDining.name || !newDining.location) {
-                        console.warn('请填写完整信息');
-                        return;
-                    }
-
-                    diningList.value.push({
-                        id: `dining_${Date.now()}`,
-                        ...JSON.parse(JSON.stringify(newDining))
-                    });
-
-                    saveData();
-                    closeDiningModal();
-                    console.log('用餐安排添加成功');
-                };
-
-                const autoAssignDining = async () => {
-                    if (diningList.value.length === 0) return;
-
-                    const unassigned = attendees.value.filter(a => !a.diningAssigned);
-                    // 简单的平均分配逻辑
-                    let tableIndex = 0;
-                    unassigned.forEach(att => {
-                        if (tableIndex < diningList.value.length) {
-                            diningList.value[tableIndex].assignedCount++;
-                            att.diningAssigned = true;
-                            att.diningTableId = diningList.value[tableIndex].id;
-                            tableIndex = (tableIndex + 1) % diningList.value.length;
-                        }
-                    });
-                };
-
-                // ===== 接送机安排相关方法 =====
-                const newAirportTransfer = reactive({
-                    name: '',
-                    type: '接机',
-                    flightNumber: '',
-                    capacity: 4,
-                    assignedCount: 0,
-                    passengers: [],
-                    time: '',
-                    fromAirport: '',
-                    toDestination: ''
-                });
-
-                const showAirportTransferModal = () => {
-                    Object.assign(newAirportTransfer, {
-                        name: '',
-                        type: '接机',
-                        flightNumber: '',
-                        capacity: 4,
-                        assignedCount: 0,
-                        passengers: [],
-                        time: '',
-                        fromAirport: '',
-                        toDestination: ''
-                    });
-                    showAirportTransferModalFlag.value = true;
-                };
-
-                const closeAirportTransferModal = () => {
-                    showAirportTransferModalFlag.value = false;
-                };
-
-                const saveAirportTransfer = () => {
-                    if (!newAirportTransfer.name || !newAirportTransfer.flightNumber) {
-                        console.warn('请填写完整信息');
-                        return;
-                    }
-
-                    airportTransferList.value.push({
-                        id: `transfer_${Date.now()}`,
-                        ...JSON.parse(JSON.stringify(newAirportTransfer))
-                    });
-
-                    saveData();
-                    closeAirportTransferModal();
-                    console.log('接送机安排添加成功');
-                };
-
-                const autoAssignAirportTransfer = async () => {
-                    if (airportTransferList.value.length === 0) return;
-
-                    const unassigned = attendees.value.filter(a => !a.airportTransferAssigned);
-                    // 按航班号分配
-                    unassigned.forEach(att => {
-                        const transfer = airportTransferList.value.find(t =>
-                            t.flightNumber === att.flightNumber && t.assignedCount < t.capacity
-                        );
-                        if (transfer) {
-                            transfer.assignedCount++;
-                            att.airportTransferAssigned = true;
-                            att.transferId = transfer.id;
-                        }
-                    });
-                };
-
-                // 用餐和接送机列表管理方法（简化版，仅占位）
-                const showDiningListModal = () => {
-                    alert('用餐安排列表管理功能开发中');
-                };
-                const showAirportTransferListModal = () => {
-                    alert('接送机安排列表管理功能开发中');
-                };
-
-                // 4. 智能分配所有辅助安排
-                const autoAssignAllArrangements = async () => {
-                    if (attendees.value.length === 0) {
-                        console.warn('请先导入参会人员');
-                        return;
-                    }
-
-                    try {
-                        loading.value = true;
-                        console.log('正在智能分配...');
-
-                        await autoAssignTransport();
-                        await autoAssignAccommodation();
-                        await autoAssignDiscussions();
-                        await autoAssignDining();
-                        await autoAssignAirportTransfer();
-
-                        saveData();
-                        console.log('智能分配完成！');
-                    } catch (error) {
-                        console.error('智能分配失败:', error);
-                    } finally {
-                        loading.value = false;
-                    }
-                };
-
-                const autoAssignTransport = async () => {
-                    if (transportList.value.length === 0) return;
-
-                    const unassigned = attendees.value.filter(a => !a.transportAssigned);
-                    const deptGroups = {};
-                    unassigned.forEach(att => {
-                        const dept = att.department || '未知单位';
-                        if (!deptGroups[dept]) deptGroups[dept] = [];
-                        deptGroups[dept].push(att);
-                    });
-
-                    for (const vehicle of transportList.value) {
-                        const remainingCapacity = vehicle.capacity - vehicle.assignedCount;
-                        if (remainingCapacity <= 0) continue;
-
-                        let assignedCount = 0;
-                        for (const dept in deptGroups) {
-                            if (deptGroups[dept].length === 0) continue;
-
-                            const canAssign = Math.min(remainingCapacity - assignedCount, deptGroups[dept].length);
-                            const assigned = deptGroups[dept].splice(0, canAssign);
-
-                            assigned.forEach(attendee => {
-                                attendee.transportAssigned = true;
-                                attendee.vehicleId = vehicle.id;
-                                vehicle.passengers.push(attendee);
-                            });
-
-                            assignedCount += canAssign;
-                            vehicle.assignedCount += canAssign;
-
-                            if (assignedCount >= remainingCapacity) break;
-                        }
-                    }
-                };
-
-                const autoAssignAccommodation = async () => {
-                    if (accommodationList.value.length === 0) return;
-
-                    const unassigned = attendees.value.filter(a => !a.roomAssigned);
-                    const maleAttendees = unassigned.filter(a => a.gender === '男');
-                    const femaleAttendees = unassigned.filter(a => a.gender === '女');
-                    const unknownAttendees = unassigned.filter(a => !a.gender || a.gender === '未知');
-
-                    for (const room of accommodationList.value) {
-                        const remainingCapacity = room.capacity - room.assignedCount;
-                        if (remainingCapacity <= 0) continue;
-
-                        let attendeesToAssign = [];
-
-                        if (room.type === '单人间') {
-                            if (unknownAttendees.length > 0) {
-                                attendeesToAssign = [unknownAttendees.shift()];
-                            } else if (maleAttendees.length > 0) {
-                                attendeesToAssign = [maleAttendees.shift()];
-                            } else if (femaleAttendees.length > 0) {
-                                attendeesToAssign = [femaleAttendees.shift()];
-                            }
+                // 打开独立辅助安排管理页面
+                const openAuxiliaryPage = () => {
+                    const confId = conference.value?.id;
+                    if (!confId) {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const urlConfId = urlParams.get('conferenceId');
+                        if (urlConfId) {
+                            window.location.href = `auxiliary-arrangement.html?conferenceId=${urlConfId}`;
                         } else {
-                            if (room.capacity === 2) {
-                                if (maleAttendees.length >= 2) {
-                                    attendeesToAssign = maleAttendees.splice(0, 2);
-                                } else if (femaleAttendees.length >= 2) {
-                                    attendeesToAssign = femaleAttendees.splice(0, 2);
-                                } else {
-                                    attendeesToAssign = unknownAttendees.splice(0, 2);
-                                }
-                            } else {
-                                attendeesToAssign = unknownAttendees.splice(0, remainingCapacity);
-                            }
+                            alert('未找到会议ID，无法跳转');
                         }
-
-                        attendeesToAssign.forEach(attendee => {
-                            if (attendee) {
-                                attendee.roomAssigned = true;
-                                attendee.roomId = room.id;
-                                room.occupants.push(attendee);
-                                room.assignedCount++;
-                            }
-                        });
-                    }
-                };
-
-                const autoAssignDiscussions = async () => {
-                    if (discussionList.value.length === 0) return;
-
-                    const unassigned = attendees.value.filter(a => !a.discussionAssigned);
-
-                    const deptGroups = {};
-                    unassigned.forEach(att => {
-                        const dept = att.department || '未知单位';
-                        if (!deptGroups[dept]) deptGroups[dept] = [];
-                        deptGroups[dept].push(att);
-                    });
-
-                    for (const discussion of discussionList.value) {
-                        const remainingCapacity = discussion.capacity - discussion.assignedCount;
-                        if (remainingCapacity <= 0) continue;
-
-                        for (const dept in deptGroups) {
-                            if (deptGroups[dept].length <= remainingCapacity && deptGroups[dept].length > 0) {
-                                const group = deptGroups[dept];
-
-                                group.forEach(attendee => {
-                                    attendee.discussionAssigned = true;
-                                    attendee.discussionId = discussion.id;
-                                    discussion.groups.push({
-                                        department: dept,
-                                        attendees: group
-                                    });
-                                    discussion.assignedCount++;
-                                });
-
-                                delete deptGroups[dept];
-                                break;
-                            }
-                        }
-                    }
-
-                    const remainingAttendees = Object.values(deptGroups).flat();
-                    for (const attendee of remainingAttendees) {
-                        for (const discussion of discussionList.value) {
-                            if (discussion.assignedCount < discussion.capacity) {
-                                attendee.discussionAssigned = true;
-                                attendee.discussionId = discussion.id;
-                                discussion.assignedCount++;
-                                break;
-                            }
-                        }
-                    }
-                };
-
-                const viewArrangements = () => {
-                    // 打开分配结果查看弹窗
-                    showArrangementResultModalFlag.value = true;
-                };
-
-                // ===== 辅助安排列表管理方法 =====
-
-                // 1. 乘车安排列表管理
-                const showTransportListModal = () => {
-                    showTransportListModalFlag.value = true;
-                };
-
-                const closeTransportListModal = () => {
-                    showTransportListModalFlag.value = false;
-                };
-
-                const editTransport = (vehicle) => {
-                    // 填充表单
-                    Object.assign(newTransport, {
-                        id: vehicle.id,
-                        name: vehicle.name,
-                        type: vehicle.type,
-                        plateNumber: vehicle.plateNumber,
-                        departure: vehicle.departure,
-                        destination: vehicle.destination,
-                        departureTime: vehicle.departureTime,
-                        capacity: vehicle.capacity,
-                        assignedCount: vehicle.assignedCount,
-                        passengers: vehicle.passengers || []
-                    });
-                    closeTransportListModal();
-                    showTransportModalFlag.value = true;
-                };
-
-                const deleteTransport = (id) => {
-                    if (confirm('确定要删除这辆车吗？')) {
-                        const index = transportList.value.findIndex(v => v.id === id);
-                        if (index > -1) {
-                            // 清除人员分配
-                            transportList.value[index].passengers?.forEach(p => {
-                                p.transportAssigned = false;
-                                p.transportId = null;
-                            });
-                            transportList.value.splice(index, 1);
-                            saveData();
-                        }
-                    }
-                };
-
-                const removePassenger = (vehicleId, passengerId) => {
-                    const vehicle = transportList.value.find(v => v.id === vehicleId);
-                    if (vehicle) {
-                        vehicle.passengers = vehicle.passengers.filter(p => p.id !== passengerId);
-                        vehicle.assignedCount = vehicle.passengers.length;
-
-                        // 更新参会者状态
-                        const attendee = attendees.value.find(a => a.id === passengerId);
-                        if (attendee) {
-                            attendee.transportAssigned = false;
-                            attendee.transportId = null;
-                        }
-                        saveData();
-                    }
-                };
-
-                // 2. 住宿安排列表管理
-                const showAccommodationListModal = () => {
-                    showAccommodationListModalFlag.value = true;
-                };
-
-                const closeAccommodationListModal = () => {
-                    showAccommodationListModalFlag.value = false;
-                };
-
-                const editAccommodation = (room) => {
-                    Object.assign(newAccommodation, {
-                        id: room.id,
-                        hotelName: room.hotelName,
-                        roomNumber: room.roomNumber,
-                        type: room.type,
-                        capacity: room.capacity,
-                        assignedCount: room.assignedCount,
-                        occupants: room.occupants || [],
-                        checkInTime: room.checkInTime,
-                        checkOutTime: room.checkOutTime
-                    });
-                    closeAccommodationListModal();
-                    showAccommodationModalFlag.value = true;
-                };
-
-                const deleteAccommodation = (id) => {
-                    if (confirm('确定要删除这个房间吗？')) {
-                        const index = accommodationList.value.findIndex(r => r.id === id);
-                        if (index > -1) {
-                            // 清除人员分配
-                            accommodationList.value[index].occupants?.forEach(o => {
-                                o.accommodationAssigned = false;
-                                o.accommodationId = null;
-                            });
-                            accommodationList.value.splice(index, 1);
-                            saveData();
-                        }
-                    }
-                };
-
-                const removeOccupant = (roomId, occupantId) => {
-                    const room = accommodationList.value.find(r => r.id === roomId);
-                    if (room) {
-                        room.occupants = room.occupants.filter(o => o.id !== occupantId);
-                        room.assignedCount = room.occupants.length;
-
-                        // 更新参会者状态
-                        const attendee = attendees.value.find(a => a.id === occupantId);
-                        if (attendee) {
-                            attendee.accommodationAssigned = false;
-                            attendee.accommodationId = null;
-                        }
-                        saveData();
-                    }
-                };
-
-                // 3. 讨论室列表管理
-                const showDiscussionListModal = () => {
-                    showDiscussionListModalFlag.value = true;
-                };
-
-                const closeDiscussionListModal = () => {
-                    showDiscussionListModalFlag.value = false;
-                };
-
-                const editDiscussion = (discussion) => {
-                    Object.assign(newDiscussion, {
-                        id: discussion.id,
-                        name: discussion.name,
-                        location: discussion.location,
-                        capacity: discussion.capacity,
-                        assignedCount: discussion.assignedCount,
-                        groups: discussion.groups || [],
-                        startTime: discussion.startTime,
-                        endTime: discussion.endTime
-                    });
-                    closeDiscussionListModal();
-                    showDiscussionModalFlag.value = true;
-                };
-
-                const deleteDiscussion = (id) => {
-                    if (confirm('确定要删除这个讨论室吗？')) {
-                        const index = discussionList.value.findIndex(d => d.id === id);
-                        if (index > -1) {
-                            // 清除人员分配
-                            discussionList.value[index].groups?.forEach(group => {
-                                group.attendees?.forEach(a => {
-                                    a.discussionAssigned = false;
-                                    a.discussionId = null;
-                                });
-                            });
-                            discussionList.value.splice(index, 1);
-                            saveData();
-                        }
-                    }
-                };
-
-                // 4. 分配结果弹窗管理
-                const closeArrangementResultModal = () => {
-                    showArrangementResultModalFlag.value = false;
-                };
-
-                const exportArrangementResults = () => {
-                    let result = '辅助安排分配结果\n\n';
-
-                    result += '=== 乘车安排 ===\n';
-                    if (transportList.value.length === 0) {
-                        result += '暂无车辆\n';
-                    } else {
-                        transportList.value.forEach(vehicle => {
-                            result += `${vehicle.name} (${vehicle.type})\n`;
-                            result += `  路线: ${vehicle.departure} → ${vehicle.destination}\n`;
-                            result += `  时间: ${vehicle.departureTime || '未设置'}\n`;
-                            result += `  已分配: ${vehicle.assignedCount}/${vehicle.capacity}人\n`;
-                            if (vehicle.passengers.length > 0) {
-                                result += `  乘车人员: ${vehicle.passengers.map(p => p.name).join(', ')}\n`;
-                            }
-                            result += '\n';
-                        });
-                    }
-
-                    result += '\n=== 住宿安排 ===\n';
-                    if (accommodationList.value.length === 0) {
-                        result += '暂无房间\n';
-                    } else {
-                        accommodationList.value.forEach(room => {
-                            result += `${room.hotelName} - ${room.roomNumber} (${room.type})\n`;
-                            result += `  入住时间: ${room.checkInTime || '未设置'}\n`;
-                            result += `  已分配: ${room.assignedCount}/${room.capacity}人\n`;
-                            if (room.occupants.length > 0) {
-                                result += `  入住人员: ${room.occupants.map(o => o.name).join(', ')}\n`;
-                            }
-                            result += '\n';
-                        });
-                    }
-
-                    result += '\n=== 讨论室安排 ===\n';
-                    if (discussionList.value.length === 0) {
-                        result += '暂无讨论室\n';
-                    } else {
-                        discussionList.value.forEach(discussion => {
-                            result += `${discussion.name} - ${discussion.location}\n`;
-                            result += `  时间: ${discussion.startTime || '未设置'} - ${discussion.endTime || '未设置'}\n`;
-                            result += `  已分配: ${discussion.assignedCount}/${discussion.capacity}人\n`;
-                            if (discussion.groups.length > 0) {
-                                discussion.groups.forEach(group => {
-                                    result += `  ${group.department}: ${group.attendees.map(a => a.name).join(', ')}\n`;
-                                });
-                            }
-                            result += '\n';
-                        });
-                    }
-
-                    // 创建下载链接
-                    const blob = new Blob([result], { type: 'text/plain;charset=utf-8' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `辅助安排分配结果_${conference.value.name}_${Date.now()}.txt`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                };
-
-                // 5. 人员分配弹窗管理
-                const assignPassengers = (vehicle) => {
-                    currentAssignType.value = 'transport';
-                    assignModalTitle.value = `分配人员 - ${vehicle.name}`;
-                    currentArrangementItem.value = {
-                        ...vehicle,
-                        assignedPeople: vehicle.passengers || []
-                    };
-                    showPersonAssignModalFlag.value = true;
-                };
-
-                const assignOccupants = (room) => {
-                    currentAssignType.value = 'accommodation';
-                    assignModalTitle.value = `分配人员 - ${room.hotelName} ${room.roomNumber}`;
-                    currentArrangementItem.value = {
-                        ...room,
-                        assignedPeople: room.occupants || []
-                    };
-                    showPersonAssignModalFlag.value = true;
-                };
-
-                const assignDiscussionGroups = (discussion) => {
-                    // 讨论室按分组分配，这里简化处理
-                    alert('讨论室按分组自动分配，请在智能分配时设置分组规则');
-                };
-
-                const closePersonAssignModal = () => {
-                    showPersonAssignModalFlag.value = false;
-                    currentArrangementItem.value = null;
-                };
-
-                const addPersonToArrangement = (attendee) => {
-                    if (!currentArrangementItem.value) return;
-
-                    const capacity = currentArrangementItem.value.capacity;
-                    const currentCount = currentArrangementItem.value.assignedPeople.length;
-
-                    if (currentCount >= capacity) {
-                        alert('已达到容量上限');
                         return;
                     }
-
-                    // 添加人员
-                    currentArrangementItem.value.assignedPeople.push(attendee);
-
-                    // 更新原始数据
-                    if (currentAssignType.value === 'transport') {
-                        const vehicle = transportList.value.find(v => v.id === currentArrangementItem.value.id);
-                        if (vehicle) {
-                            if (!vehicle.passengers) vehicle.passengers = [];
-                            vehicle.passengers.push(attendee);
-                            vehicle.assignedCount = vehicle.passengers.length;
-
-                            // 更新参会者状态
-                            attendee.transportAssigned = true;
-                            attendee.transportId = vehicle.id;
-                        }
-                    } else if (currentAssignType.value === 'accommodation') {
-                        const room = accommodationList.value.find(r => r.id === currentArrangementItem.value.id);
-                        if (room) {
-                            if (!room.occupants) room.occupants = [];
-                            room.occupants.push(attendee);
-                            room.assignedCount = room.occupants.length;
-
-                            // 更新参会者状态
-                            attendee.accommodationAssigned = true;
-                            attendee.accommodationId = room.id;
-                        }
-                    }
-
-                    saveData();
+                    window.location.href = `auxiliary-arrangement.html?conferenceId=${confId}`;
                 };
-
-                const removePersonFromArrangement = (personId) => {
-                    if (!currentArrangementItem.value) return;
-
-                    // 从弹窗列表中移除
-                    currentArrangementItem.value.assignedPeople = currentArrangementItem.value.assignedPeople.filter(p => p.id !== personId);
-
-                    // 更新原始数据
-                    if (currentAssignType.value === 'transport') {
-                        const vehicle = transportList.value.find(v => v.id === currentArrangementItem.value.id);
-                        if (vehicle) {
-                            vehicle.passengers = vehicle.passengers.filter(p => p.id !== personId);
-                            vehicle.assignedCount = vehicle.passengers.length;
-
-                            // 更新参会者状态
-                            const attendee = attendees.value.find(a => a.id === personId);
-                            if (attendee) {
-                                attendee.transportAssigned = false;
-                                attendee.transportId = null;
-                            }
-                        }
-                    } else if (currentAssignType.value === 'accommodation') {
-                        const room = accommodationList.value.find(r => r.id === currentArrangementItem.value.id);
-                        if (room) {
-                            room.occupants = room.occupants.filter(o => o.id !== personId);
-                            room.assignedCount = room.occupants.length;
-
-                            // 更新参会者状态
-                            const attendee = attendees.value.find(a => a.id === personId);
-                            if (attendee) {
-                                attendee.accommodationAssigned = false;
-                                attendee.accommodationId = null;
-                            }
-                        }
-                    }
-
-                    saveData();
-                };
-
-                // 计算属性：未分配的人员列表
-                const unassignedAttendees = computed(() => {
-                    if (!currentArrangementItem.value) return [];
-
-                    return attendees.value.filter(a => {
-                        if (currentAssignType.value === 'transport') {
-                            return !a.transportAssigned && a.id !== currentArrangementItem.value.assignedPeople.find(p => p.id === a.id)?.id;
-                        } else if (currentAssignType.value === 'accommodation') {
-                            return !a.accommodationAssigned && a.id !== currentArrangementItem.value.assignedPeople.find(p => p.id === a.id)?.id;
-                        }
-                        return false;
-                    });
-                });
 
                 // ===== 数据持久化 =====
                 const saveData = () => {
                     try {
                         const confId = conference.value.id;
                         const schedId = currentScheduleId.value;
+                        // 辅助安排数据(transport/accommodation/discussion/dining)已通过API持久化到后端
+                        // localStorage仅保存座位布局和参会者数据
                         const data = {
                             version: '2.0',
                             timestamp: Date.now(),
                             seatingAreas: seatingAreas.value,
-                            attendees: attendees.value,
-                            arrangements: {
-                                transport: transportList.value,
-                                accommodation: accommodationList.value,
-                                discussion: discussionList.value
-                            }
+                            attendees: attendees.value
                         };
 
                         // 始终保存到会议级别 key（兼容旧逻辑）
@@ -11179,6 +10568,10 @@
                         const headers = { 'Content-Type': 'application/json' };
                         if (token) {
                             headers['Authorization'] = `Bearer ${token}`;
+                        }
+                        const tenantId = localStorage.getItem('tenantId');
+                        if (tenantId) {
+                            headers['X-Tenant-Id'] = tenantId;
                         }
 
                         // 将前端 seatingAreas 转为后端 LayoutSaveRequest 格式
@@ -11348,7 +10741,7 @@
                         }, 100);
                     });
 
-                    // 🔧 初始化优化功能
+                    // 🔧 初始化优化功能（撤销/重做、快捷键等统一在此处理）
                     setTimeout(() => {
                         if (typeof initializeOptimizations === 'function') {
                             initializeOptimizations();
@@ -11356,61 +10749,6 @@
                             console.warn('initializeOptimizations 函数未定义');
                         }
                     }, 100);
-
-                    // 初始化撤销/重做管理器和快捷键支持
-                    try {
-                        // 加载"不再提示"的配置
-                        const savedConfirmActions = localStorage.getItem('seating-confirmed-actions');
-                        if (savedConfirmActions) {
-                            if (window.SeatingOptimization?.config) {
-                                window.SeatingOptimization.config.confirmedActions = new Set(JSON.parse(savedConfirmActions));
-                            }
-                        }
-
-                        // 初始化撤销/重做管理器
-                        if (window.SeatingOptimization?.UndoRedoManager) {
-                            window.undoRedoManager = new window.SeatingOptimization.UndoRedoManager({
-                                seatingAreas: seatingAreas,
-                                attendees: attendees
-                            });
-                        }
-
-                        // 初始化快捷键支持
-                        if (window.SeatingOptimization?.KeyboardShortcuts) {
-                            const undoChange = () => {
-                                if (window.undoRedoManager) {
-                                    window.undoRedoManager.undo();
-                                }
-                            };
-
-                            const appInstance = {
-                                undo: undoChange,
-                                redo: () => {
-                                    if (window.undoRedoManager) {
-                                        window.undoRedoManager.redo();
-                                    }
-                                },
-                                saveData: saveData,
-                                selectedSeats: selectedSeats,
-                                clearSelection: () => {
-                                    selectedSeats.value = [];
-                                }
-                            };
-                            new window.SeatingOptimization.KeyboardShortcuts(appInstance);
-                        }
-
-                        // 显示快捷键提示
-                        const shortcuts = [
-                            'Ctrl+Z: 撤销',
-                            'Ctrl+Y: 重做',
-                            'Ctrl+S: 保存',
-                            'Delete: 删除选中',
-                            'ESC: 取消选择'
-                        ];
-                        console.log('📋 快捷键已启用:', shortcuts.join(' | '));
-                    } catch (e) {
-                        console.warn('优化功能初始化失败:', e);
-                    }
 
                     // 注册自定义键盘快捷键处理
                     document.addEventListener('keydown', handleKeyboardShortcuts);
@@ -11440,11 +10778,16 @@
                     return discussionList.value.some(d => d.assignedCount > 0);
                 });
 
+                const hasDiningAssignments = computed(() => {
+                    return diningList.value.some(t => t.assignedCount > 0);
+                });
+
                 const hasAnyAssignments = computed(() => {
                     return hasSeatAssignments.value ||
                            hasTransportAssignments.value ||
                            hasAccommodationAssignments.value ||
-                           hasDiscussionAssignments.value;
+                           hasDiscussionAssignments.value ||
+                           hasDiningAssignments.value;
                 });
 
                 // ===== 发送APP推送通知方法 =====
@@ -11610,21 +10953,20 @@
                     discussionList.value.forEach(discussion => {
                         if (discussion.groups && discussion.groups.length > 0) {
                             discussion.groups.forEach(group => {
-                                if (group.members && group.members.length > 0) {
-                                    group.members.forEach(member => {
+                                if (group.attendees && group.attendees.length > 0) {
+                                    group.attendees.forEach(member => {
                                         notifications.push({
                                             userId: member.id,
                                             userName: member.name,
                                             userPhone: member.phone,
                                             title: '讨论安排通知',
-                                            content: `${member.name}（${member.department || ''}${member.position || ''}）您好，您的讨论安排：${discussion.name}，讨论室位置：${discussion.location}，开始时间：${discussion.startTime}`,
+                                            content: `${member.name}（${member.department || ''}）您好，您的讨论安排：${discussion.name}，讨论室位置：${discussion.location}，开始时间：${discussion.startTime}`,
                                             type: 'discussion',
                                             data: {
                                                 discussionName: discussion.name,
                                                 discussionLocation: discussion.location,
                                                 startTime: discussion.startTime,
-                                                endTime: discussion.endTime,
-                                                groupId: group.id
+                                                endTime: discussion.endTime
                                             }
                                         });
                                     });
@@ -11662,6 +11004,58 @@
                     }, 3000);
                 };
 
+                const sendDiningNotifications = async () => {
+                    const notifications = [];
+                    diningList.value.forEach(table => {
+                        if (table.diners && table.diners.length > 0) {
+                            table.diners.forEach(diner => {
+                                notifications.push({
+                                    userId: diner.id,
+                                    userName: diner.name,
+                                    userPhone: diner.phone,
+                                    title: '用餐安排通知',
+                                    content: `${diner.name}您好，您的用餐安排：${table.name}（${table.type}），地点：${table.location}，时间：${table.time || '待定'}`,
+                                    type: 'dining',
+                                    data: {
+                                        tableName: table.name,
+                                        tableType: table.type,
+                                        location: table.location,
+                                        time: table.time
+                                    }
+                                });
+                            });
+                        }
+                    });
+
+                    if (notifications.length === 0) {
+                        notificationStatus.value = {
+                            type: 'warning',
+                            icon: 'exclamation-triangle',
+                            message: '暂无已分配用餐的人员'
+                        };
+                        return;
+                    }
+
+                    notificationStatus.value = {
+                        type: 'info',
+                        icon: 'spinner fa-spin',
+                        message: '正在发送用餐通知...'
+                    };
+
+                    console.log('发送用餐通知:', notifications);
+                    console.log('通知渠道：APP推送、短信、微信小程序');
+
+                    notificationStatus.value = {
+                        type: 'success',
+                        icon: 'check-circle',
+                        message: `已发送${notifications.length}条用餐通知`
+                    };
+
+                    setTimeout(() => {
+                        notificationStatus.value = null;
+                    }, 3000);
+                };
+
                 const sendAllArrangementNotifications = async () => {
                     notificationStatus.value = {
                         type: 'info',
@@ -11685,6 +11079,10 @@
                     }
                     if (hasDiscussionAssignments.value) {
                         await sendDiscussionNotifications();
+                        totalSent++;
+                    }
+                    if (hasDiningAssignments.value) {
+                        await sendDiningNotifications();
                         totalSent++;
                     }
 
@@ -11729,22 +11127,11 @@
                     excelImportMode,
                     getAlgorithmName,
 
-                    // 辅助安排
+                    // 辅助安排（仅状态概览）
                     transportList,
                     accommodationList,
                     discussionList,
                     diningList,
-                    airportTransferList,
-                    showTransportModalFlag,
-                    showAccommodationModalFlag,
-                    showDiscussionModalFlag,
-                    showDiningModalFlag,
-                    showAirportTransferModalFlag,
-                    newTransport,
-                    newAccommodation,
-                    newDiscussion,
-                    newDining,
-                    newAirportTransfer,
 
                     // 变更历史
                     seatChangeHistory,
@@ -11894,72 +11281,8 @@
                     // 排座
                     executeAutoArrange,
 
-                    // 辅助安排管理
-                    showTransportModal,
-                    closeTransportModal,
-                    saveTransport,
-                    autoAssignTransport,
-                    showAccommodationModal,
-                    closeAccommodationModal,
-                    saveAccommodation,
-                    autoAssignAccommodation,
-                    showDiscussionModal,
-                    closeDiscussionModal,
-                    saveDiscussion,
-                    autoAssignDiscussions,
-                    showDiningModal,
-                    closeDiningModal,
-                    saveDining,
-                    autoAssignDining,
-                    showAirportTransferModal,
-                    closeAirportTransferModal,
-                    saveAirportTransfer,
-                    autoAssignAirportTransfer,
-                    autoAssignAllArrangements,
-                    viewArrangements,
-
-                    // 辅助安排列表管理
-                    showTransportListModal,
-                    closeTransportListModal,
-                    editTransport,
-                    deleteTransport,
-                    removePassenger,
-                    showAccommodationListModal,
-                    closeAccommodationListModal,
-                    editAccommodation,
-                    deleteAccommodation,
-                    removeOccupant,
-                    showDiscussionListModal,
-                    closeDiscussionListModal,
-                    editDiscussion,
-                    deleteDiscussion,
-                    showDiningListModal,
-                    showAirportTransferListModal,
-
-                    // 分配结果弹窗
-                    closeArrangementResultModal,
-                    exportArrangementResults,
-
-                    // 人员分配弹窗
-                    assignPassengers,
-                    assignOccupants,
-                    assignDiscussionGroups,
-                    closePersonAssignModal,
-                    addPersonToArrangement,
-                    removePersonFromArrangement,
-
-                    // 辅助安排列表弹窗状态
-                    showTransportListModalFlag,
-                    showAccommodationListModalFlag,
-                    showDiscussionListModalFlag,
-                    showDiningListModalFlag,
-                    showAirportTransferListModalFlag,
-                    showArrangementResultModalFlag,
-                    showPersonAssignModalFlag,
-                    assignModalTitle,
-                    currentAssignType,
-                    currentArrangementItem,
-                    unassignedAttendees,
+                    // 辅助安排管理（跳转独立页面）
+                    openAuxiliaryPage,
 
                     // 通知
                     notificationStatus,
@@ -11967,11 +11290,13 @@
                     hasTransportAssignments,
                     hasAccommodationAssignments,
                     hasDiscussionAssignments,
+                    hasDiningAssignments,
                     hasAnyAssignments,
                     sendSeatNotifications,
                     sendTransportNotifications,
                     sendAccommodationNotifications,
                     sendDiscussionNotifications,
+                    sendDiningNotifications,
                     sendAllArrangementNotifications,
 
                     // 辅助功能

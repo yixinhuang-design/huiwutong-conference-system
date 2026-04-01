@@ -87,6 +87,8 @@
 
     <!-- 交互工具库 -->
     <script src="../js/interaction-utils.js"></script>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
 </head>
 <body>
     <div id="app">
@@ -1124,28 +1126,26 @@
                             { id: 'basic-info', title: '会议基本信息配置', type: 'required', status: 'not-started', details: [], action: 'basic-info', actionText: '编辑基本信息' },
                             { id: 'registration-type', title: '报名方式配置', type: 'required', status: 'not-started', details: [], action: 'registration-type', actionText: '编辑报名方式' },
                             { id: 'checkin-type', title: '报到方式配置', type: 'required', status: 'not-started', details: [], action: 'checkin-type', actionText: '编辑报到方式' },
-                            { id: 'venue', title: '会场信息配置', type: 'optional', status: 'not-started', details: [], action: 'venue', actionText: '编辑会场信息' },
                             { id: 'staff', title: '工作人员添加', type: 'required', status: 'not-started', details: [], action: 'staff', actionText: '管理工作人员' },
-                            { id: 'staff-group-auto', title: '工作人员群自动创建', type: 'auto', status: 'not-started', details: [] },
+                            { id: 'staff-group-auto', title: '工作人员群自动创建', type: 'auto', status: 'not-started', details: ['会议创建成功后自动创建'] },
                             { id: 'prep-tasks', title: '筹备任务分派', type: 'optional', status: 'not-started', details: [], action: 'task-management', actionText: '分派筹备任务' }
                         ],
                         // 第二阶段：报名与审核管理（由 updateChecklistFromData 动态更新状态）
                         phase2: [
                             { id: 'registration-summary', title: '报名信息汇总', type: 'required', status: 'not-started', details: [], action: 'registration', actionText: '查看报名信息' },
-                            { id: 'ai-review', title: '智能资格审核', type: 'optional', status: 'not-started', details: [], action: 'ai-review', actionText: '进入审核管理' },
-                            { id: 'roster', title: '参会名册生成', type: 'required', status: 'not-started', details: [], action: 'roster', actionText: '查看参会名册' }
+                            { id: 'ai-review', title: '智能资格审核', type: 'optional', status: 'not-started', details: ['功能建设中'], action: 'ai-review-pending', actionText: '功能建设中' }
                         ],
                         // 第三阶段：会前准备与规划
                         phase3: [
                             { id: 'schedule', title: '日程配置', type: 'optional', status: 'not-started', details: [], action: 'schedule', actionText: '编辑日程' },
                             { id: 'grouping', title: '分组设置', type: 'optional', status: 'not-started', details: [], action: 'grouping', actionText: '管理分组' },
                             { id: 'sorting', title: '排序规则设置', type: 'optional', status: 'not-started', details: [], action: 'sorting', actionText: '设置排序规则' },
+                            { id: 'roster', title: '参会名册生成', type: 'required', status: 'not-started', details: ['分组排序后导出名册'], action: 'roster-export', actionText: '导出参会名册' },
                             { id: 'seating', title: '智能排座', type: 'optional', status: 'not-started', details: [], action: 'seating', actionText: '进入排座管理' },
-                            { id: 'auxiliary', title: '辅助功能配置', type: 'optional', status: 'not-started', details: ['位置导航', '语音识别', '资料上传'], action: 'auxiliary', actionText: '配置辅助功能' },
+                            { id: 'auxiliary', title: '辅助安排配置', type: 'optional', status: 'not-started', details: ['复制功能设置', '座位辅助安排'], action: 'auxiliary', actionText: '配置辅助安排' },
                             { id: 'alert-rules', title: '预警规则设置', type: 'optional', status: 'not-started', details: [], action: 'alert-config', actionText: '设置预警规则' },
                             { id: 'seat-adjust', title: '中途座位调整', type: 'optional', status: 'not-started', details: ['排座后可进行调整'], action: 'seat-adjust', actionText: '调整座位' },
-                            { id: 'handbook', title: '学员手册生成', type: 'optional', status: 'not-started', details: [], action: 'handbook', actionText: '生成学员手册' },
-                            { id: 'auto-groups', title: '自动组群', type: 'auto', status: 'not-started', details: ['手册生成后自动创建', '学员全员群+分组群'] }
+                            { id: 'auto-groups', title: '自动组群', type: 'auto', status: 'not-started', details: ['分组完成后自动创建', '学员全员群+分组群'] }
                         ],
                         // 第四阶段：通知发送
                         phase4: [
@@ -1161,7 +1161,6 @@
                         ],
                         // 第六阶段：会议总结归档
                         phase6: [
-                            { id: 'minutes', title: '会议纪要上传', type: 'optional', status: 'not-started', details: ['管理员手动上传'], action: 'minutes', actionText: '上传会议纪要' },
                             { id: 'analysis', title: '数据分析报告', type: 'optional', status: 'not-started', details: [], action: 'analysis', actionText: '查看数据分析' },
                             { id: 'archive', title: '会议归档', type: 'required', status: 'not-started', details: [], action: 'archive', actionText: '进入会议归档' }
                         ]
@@ -1743,21 +1742,60 @@
                 },
 
                 handleChecklistAction(action) {
-                    const actionMap = {
-                        'schedule': 'schedule',
-                        'groups': 'group',
-                        'seating': 'seating',
-                        'materials': 'registration',
-                        'tasks': 'task-management',
-                        'checkin': 'registration',
-                        'communication': 'group',
-                        'support': 'monitor',
-                        'minutes': 'voice',
-                        'analysis': 'business',
-                        'archive': 'archive'
+                    // 将 checklist 中的 action 值映射为 goToManagement 路由 key
+                    const conferenceId = this.conference ? this.conference.id : new URLSearchParams(window.location.search).get('conferenceId');
+                    
+                    // 跳转到 conference-create.html 编辑模式的指定步骤
+                    const editStepMap = {
+                        'basic-info': 1,           // 步骤1：基本信息
+                        'registration-type': 2,    // 步骤2：报名设置
+                        'checkin-type': 3,          // 步骤3：报到设置
+                        'staff': 5                  // 步骤5：工作人员
                     };
                     
-                    this.goToManagement(actionMap[action] || 'registration');
+                    if (editStepMap[action] && conferenceId) {
+                        window.location.href = `conference-create.html?conferenceId=${conferenceId}&mode=edit&step=${editStepMap[action]}`;
+                        return;
+                    }
+                    
+                    // "功能建设中"的action直接提示
+                    if (action === 'ai-review-pending') {
+                        alert('智能资格审核功能建设中，敬请期待');
+                        return;
+                    }
+                    
+                    // 分组设置 → 跳转到报名汇总页的分组部分
+                    if (action === 'grouping' && conferenceId) {
+                        window.location.href = `registration-mgr.html?conferenceId=${conferenceId}&section=grouping`;
+                        return;
+                    }
+                    
+                    // 排序规则 → 跳转到报名汇总页的分组部分（排序也在分组里设置）
+                    if (action === 'sorting' && conferenceId) {
+                        window.location.href = `registration-mgr.html?conferenceId=${conferenceId}&section=grouping`;
+                        return;
+                    }
+                    
+                    // 参会名册导出 → 跳转到报名汇总页的分组部分（执行分组排序后导出）
+                    if (action === 'roster-export' && conferenceId) {
+                        window.location.href = `registration-mgr.html?conferenceId=${conferenceId}&section=grouping`;
+                        return;
+                    }
+                    
+                    const actionMap = {
+                        // Phase 3: 配置阶段
+                        'auxiliary': 'auxiliary',
+                        'seat-adjust': 'seating',
+                        // Phase 5: 执行阶段
+                        'checkin': 'business',
+                        'learner-tasks': 'task-management',
+                        'communication': 'group',
+                        'task-execution': 'task-management',
+                        // Phase 6: 收尾阶段
+                        'analysis': 'business',
+                    };
+                    // 优先用映射值，否则直接用 action 本身作为路由key
+                    this.goToManagement(actionMap[action] || action);
                 },
 
                 toggleDataMonitorSubmenu() {
@@ -1801,7 +1839,8 @@
                         'alert-handle': 'alert-management.html',
                         'ai': 'ai-assistant-console.html',
                         'business': 'business-data.html',
-                        'archive': 'archive-management.html'
+                        'archive': 'archive-management.html',
+                        'auxiliary': 'auxiliary-arrangement.html'
                     };
 
                     const route = routes[type];
@@ -1832,7 +1871,8 @@
                 // 通用API请求工具方法
                 async apiRequest(url) {
                     const token = localStorage.getItem('authToken');
-                    const headers = { 'Content-Type': 'application/json' };
+                    const tenantId = localStorage.getItem('tenantId') || '';
+                    const headers = { 'Content-Type': 'application/json', 'X-Tenant-Id': tenantId };
                     if (token) headers['Authorization'] = `Bearer ${token}`;
                     const resp = await fetch(url, { method: 'GET', headers });
                     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -2002,13 +2042,6 @@
                         }
                     }
 
-                    // 会场信息：有地点即为已完成
-                    const venue = p1.find(i => i.id === 'venue');
-                    if (venue && conf.location && conf.location.venue && conf.location.venue !== '待定' && conf.location.venue !== '') {
-                        venue.status = 'completed';
-                        venue.details = [`已配置：${conf.location.venue}`, `容量：${conf.capacity.total || '未设置'}人`];
-                    }
-
                     // 筹备任务：根据任务统计更新
                     const prepTasks = p1.find(i => i.id === 'prep-tasks');
                     if (prepTasks && this.taskStats.total > 0) {
@@ -2016,6 +2049,13 @@
                         prepTasks.status = this.taskStats.completed >= this.taskStats.total ? 'completed' :
                             (this.taskStats.inProgress > 0 || this.taskStats.completed > 0 ? 'in-progress' : 'not-started');
                         prepTasks.details = [`已完成：${this.taskStats.completed}项`, `进行中：${this.taskStats.inProgress}项`];
+                    }
+
+                    // 工作人员群自动创建：根据群组统计判断
+                    const staffGroupAuto = p1.find(i => i.id === 'staff-group-auto');
+                    if (staffGroupAuto && this.groupStats.total > 0) {
+                        staffGroupAuto.status = 'completed';
+                        staffGroupAuto.details = ['工作人员群已自动创建'];
                     }
 
                     // ---- 第二阶段：报名与审核管理 ----
@@ -2040,13 +2080,6 @@
                         aiReview.details = [`已通过：${approved}人`, `待审核：${pending}人`];
                     }
 
-                    const roster = p2.find(i => i.id === 'roster');
-                    if (roster && regStats) {
-                        const approved = regStats.approvedCount || 0;
-                        roster.status = approved > 0 ? 'completed' : 'not-started';
-                        roster.details = approved > 0 ? [`包含${approved}人`] : [];
-                    }
-
                     // ---- 第三阶段：会前准备与规划 ----
                     const p3 = this.checklistItems.phase3;
 
@@ -2069,6 +2102,13 @@
                     if (alertRules && alertStats.total > 0) {
                         alertRules.status = 'completed';
                         alertRules.details = [`已配置预警规则`];
+                    }
+
+                    // 自动组群：根据群组统计判断（至少有2个群才说明学员群已创建）
+                    const autoGroups = p3.find(i => i.id === 'auto-groups');
+                    if (autoGroups && this.groupStats.total >= 2) {
+                        autoGroups.status = 'completed';
+                        autoGroups.details = [`已创建${this.groupStats.total}个群组`, '学员全员群+分组群'];
                     }
 
                     // ---- 第四阶段：通知发送 ----
@@ -2372,6 +2412,7 @@
         window.onVueReady = initializeApp;
     </script>
     <script src="../js/conference-context.js"></script>
+    <script src="../js/api/collaboration-api.js"></script>
     <script>
         // 创建并挂载 Vue 应用（确保Vue和conferenceContext都已加载）
         // appConfig 已在上面的 script 块中定义，直接使用

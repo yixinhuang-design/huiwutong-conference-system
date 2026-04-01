@@ -407,6 +407,8 @@
             color: var(--gray-600);
         }
     </style>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
 </head>
 <body>
     <div id="app">
@@ -797,6 +799,13 @@
                 this.initializeCharts();
             },
             methods: {
+                getAuthHeaders() {
+                    const token = localStorage.getItem('authToken');
+                    const tenantId = localStorage.getItem('tenantId') || '';
+                    const headers = { 'Content-Type': 'application/json', 'X-Tenant-Id': tenantId };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    return headers;
+                },
                 async initialize() {
                     const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
                     if (conferenceId) {
@@ -821,7 +830,7 @@
 
                 async loadRules() {
                     try {
-                        const resp = await fetch(`${this.API_BASE}/api/alert/rule/list?conferenceId=${this.conference.id}`);
+                        const resp = await fetch(`${this.API_BASE}/api/alert/rule/list?conferenceId=${this.conference.id}`, { headers: this.getAuthHeaders() });
                         const result = await resp.json();
                         if (result.code === 200 && result.data) {
                             this.alertRules = result.data.map(r => ({
@@ -838,7 +847,7 @@
 
                 async loadMetrics() {
                     try {
-                        const resp = await fetch(`${this.API_BASE}/api/alert/metrics?conferenceId=${this.conference.id}`);
+                        const resp = await fetch(`${this.API_BASE}/api/alert/metrics?conferenceId=${this.conference.id}`, { headers: this.getAuthHeaders() });
                         const result = await resp.json();
                         if (result.code === 200 && result.data) {
                             const d = result.data;
@@ -852,7 +861,7 @@
 
                 async loadAlertEvents() {
                     try {
-                        const resp = await fetch(`${this.API_BASE}/api/alert/list?conferenceId=${this.conference.id}`);
+                        const resp = await fetch(`${this.API_BASE}/api/alert/list?conferenceId=${this.conference.id}`, { headers: this.getAuthHeaders() });
                         const result = await resp.json();
                         if (result.code === 200 && result.data) {
                             this.alertNotifications = result.data.map(e => ({
@@ -872,7 +881,7 @@
 
                 async loadAlertStats() {
                     try {
-                        const resp = await fetch(`${this.API_BASE}/api/alert/stats?conferenceId=${this.conference.id}`);
+                        const resp = await fetch(`${this.API_BASE}/api/alert/stats?conferenceId=${this.conference.id}`, { headers: this.getAuthHeaders() });
                         const result = await resp.json();
                         if (result.code === 200 && result.data) {
                             this.alertStatsData = result.data;
@@ -1103,14 +1112,14 @@
                             // 更新已有规则
                             resp = await fetch(`${this.API_BASE}/api/alert/rule/${this.editingRuleId}`, {
                                 method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: this.getAuthHeaders(),
                                 body: JSON.stringify(body)
                             });
                         } else {
                             // 新增规则
                             resp = await fetch(`${this.API_BASE}/api/alert/rule/save`, {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: this.getAuthHeaders(),
                                 body: JSON.stringify(body)
                             });
                         }
@@ -1167,7 +1176,7 @@
                     );
                     if (confirmed) {
                         try {
-                            const resp = await fetch(`${this.API_BASE}/api/alert/rule/${id}`, { method: 'DELETE' });
+                            const resp = await fetch(`${this.API_BASE}/api/alert/rule/${id}`, { method: 'DELETE', headers: this.getAuthHeaders() });
                             const result = await resp.json();
                             if (result.code === 200) {
                                 this.$showToast('规则已删除', 'success');
@@ -1183,7 +1192,7 @@
 
                 async toggleRule(id) {
                     try {
-                        const resp = await fetch(`${this.API_BASE}/api/alert/rule/${id}/toggle`, { method: 'PUT' });
+                        const resp = await fetch(`${this.API_BASE}/api/alert/rule/${id}/toggle`, { method: 'PUT', headers: this.getAuthHeaders() });
                         const result = await resp.json();
                         if (result.code === 200) {
                             this.$showToast(result.data.enabled === 1 ? '规则已启用' : '规则已禁用', 'success');
@@ -1212,7 +1221,7 @@
 
                 async markAsUrged(id) {
                     try {
-                        await fetch(`${this.API_BASE}/api/alert/${id}/process`, { method: 'PUT' });
+                        await fetch(`${this.API_BASE}/api/alert/${id}/process`, { method: 'PUT', headers: this.getAuthHeaders() });
                     } catch (e) { /* 静默处理 */ }
                 },
 
@@ -1226,11 +1235,11 @@
                 // ==================== 统计 - 加载处理历史 ====================
                 async loadAlertHistory() {
                     try {
-                        const resp = await fetch(`${this.API_BASE}/api/alert/list?conferenceId=${this.conference.id}&status=processing`);
+                        const resp = await fetch(`${this.API_BASE}/api/alert/list?conferenceId=${this.conference.id}&status=processing`, { headers: this.getAuthHeaders() });
                         const result = await resp.json();
                         const processingList = (result.code === 200 && result.data) ? result.data : [];
 
-                        const resp2 = await fetch(`${this.API_BASE}/api/alert/list?conferenceId=${this.conference.id}&status=resolved`);
+                        const resp2 = await fetch(`${this.API_BASE}/api/alert/list?conferenceId=${this.conference.id}&status=resolved`, { headers: this.getAuthHeaders() });
                         const result2 = await resp2.json();
                         const resolvedList = (result2.code === 200 && result2.data) ? result2.data : [];
 

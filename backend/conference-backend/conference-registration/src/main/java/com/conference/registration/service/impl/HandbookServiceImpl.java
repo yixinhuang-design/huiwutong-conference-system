@@ -427,12 +427,39 @@ public class HandbookServiceImpl implements HandbookService {
         // 更新状态为已生成
         handbook.setStatus(1);
         handbook.setUpdateTime(LocalDateTime.now());
+
+        // 生成预览链接作为 pdfUrl（真正的 PDF 生成由前端浏览器 Print-to-PDF 完成）
+        String previewUrl = String.format("/pages/roster-generation.html?conferenceId=%d&preview=1", meetingId);
+        handbook.setPdfUrl(previewUrl);
+
         handbookMapper.updateById(handbook);
+
+        // 汇总数据统计
+        Map<String, Object> stats = new LinkedHashMap<>();
+        try {
+            Long rosterCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM conf_registration WHERE meeting_id = ? AND tenant_id = ? AND status = 1 AND deleted = 0",
+                    Long.class, meetingId, tenantId);
+            stats.put("rosterCount", rosterCount != null ? rosterCount : 0);
+        } catch (Exception e) {
+            stats.put("rosterCount", 0);
+        }
+        try {
+            Long scheduleCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM conf_schedule WHERE meeting_id = ? AND tenant_id = ? AND deleted = 0",
+                    Long.class, meetingId, tenantId);
+            stats.put("scheduleCount", scheduleCount != null ? scheduleCount : 0);
+        } catch (Exception e) {
+            stats.put("scheduleCount", 0);
+        }
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("success", true);
         result.put("id", handbook.getId());
         result.put("status", 1);
+        result.put("pdfUrl", previewUrl);
+        result.put("stats", stats);
+        result.put("generateTime", LocalDateTime.now().toString());
         result.put("message", "手册生成成功");
         return result;
     }

@@ -77,29 +77,6 @@
 </head>
 <body>
     <div id="app">
-        <!-- 全局会议上下文管理 -->
-        <div class="global-conference-context" v-if="currentConference">
-            <div class="context-header">
-                <div class="conference-info">
-                    <h2>{{ currentConference.name }}</h2>
-                    <span class="conference-id">ID: {{ currentConference.id }}</span>
-                    <span class="conference-status" :class="'status-' + currentConference.status">
-                        {{ getStatusText(currentConference.status) }}
-                    </span>
-                </div>
-                <div class="context-actions">
-                    <button class="btn-outline" @click="switchConference">
-                        <i class="fas fa-exchange-alt"></i>
-                        切换会议
-                    </button>
-                    <button class="btn-primary" @click="createNewConference">
-                        <i class="fas fa-plus"></i>
-                        创建会议
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <!-- 主导航 -->
         <nav class="main-navigation">
             <div class="nav-container">
@@ -191,15 +168,15 @@
                             <span>会议归档</span>
                         </a>
                     </li>
-                    <!-- 系统级：客户管理 -->
-                    <li class="nav-item" :class="{ active: currentPage === 'tenant' }">
+                    <!-- 系统级：客户管理（仅超级管理员可见） -->
+                    <li class="nav-item" :class="{ active: currentPage === 'tenant' }" v-if="isSuperAdmin">
                         <a :href="getPageUrl('pages/tenant-management.html')">
                             <i class="fas fa-building"></i>
                             <span>客户管理</span>
                         </a>
                     </li>
-                    <!-- 系统级：系统监测 -->
-                    <li class="nav-item" :class="{ active: currentPage === 'system-monitor' }">
+                    <!-- 系统级：系统监测（仅管理员可见） -->
+                    <li class="nav-item" :class="{ active: currentPage === 'system-monitor' }" v-if="isTenantAdmin">
                         <a :href="getPageUrl('pages/system-monitor.html')">
                             <i class="fas fa-server"></i>
                             <span>系统监测</span>
@@ -209,17 +186,17 @@
                 </div>
                 <div class="nav-user" style="position:relative;">
                     <div class="user-info" @click="showUserMenu" style="cursor:pointer;">
-                        <img :src="userInfo.avatar" alt="用户头像">
+                        <img :src="displayAvatar" alt="用户头像">
                         <span>{{ userInfo.name }}</span>
                         <i class="fas fa-chevron-down" style="font-size:12px;color:#999;transition:transform 0.2s;" :style="{transform: userMenuOpen ? 'rotate(180deg)' : ''}"></i>
                     </div>
                     <!-- 用户下拉菜单 -->
                     <div v-if="userMenuOpen" class="user-dropdown-menu" @click.stop>
                         <div class="user-dropdown-header">
-                            <img :src="userInfo.avatar" alt="头像">
+                            <img :src="displayAvatar" alt="头像">
                             <div>
                                 <div style="font-weight:600;font-size:14px;">{{ userInfo.name }}</div>
-                                <div style="font-size:12px;color:#999;">管理员</div>
+                                <div style="font-size:12px;color:#999;">{{ displayRole }}<span v-if="userInfo.tenantName"> · {{ userInfo.tenantName }}</span></div>
                             </div>
                         </div>
                         <div class="user-dropdown-divider"></div>
@@ -242,10 +219,6 @@
                         <button class="btn-primary" @click="createNewConference">
                             <i class="fas fa-plus"></i>
                             创建新会议
-                        </button>
-                        <button class="btn-outline" @click="exportAllData">
-                            <i class="fas fa-download"></i>
-                            导出数据
                         </button>
                     </div>
                 </div>
@@ -315,7 +288,8 @@
                             <div class="conference-stats">
                                 <div class="stat-item">
                                     <span class="stat-label">报名进度</span>
-                                    <span class="stat-value">{{ conference.capacity.registered }}/{{ conference.capacity.total }}</span>
+                                    <span class="stat-value" v-if="conference.registrationStats && conference.registrationStats.loading">加载中...</span>
+                                    <span class="stat-value" v-else>{{ conference.capacity.registered }}/{{ conference.capacity.total }}</span>
                                     <div class="progress-bar">
                                         <div class="progress-fill" 
                                              :style="{ width: getRegistrationProgress(conference) + '%' }"></div>
@@ -323,7 +297,8 @@
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label">任务完成</span>
-                                    <span class="stat-value">{{ conference.taskStats.completed }}/{{ conference.taskStats.total }}</span>
+                                    <span class="stat-value" v-if="conference.taskStats.loading">加载中...</span>
+                                    <span class="stat-value" v-else>{{ conference.taskStats.completed }}/{{ conference.taskStats.total }}</span>
                                     <div class="progress-bar">
                                         <div class="progress-fill" 
                                              :style="{ width: getTaskProgress(conference) + '%' }"></div>
@@ -331,8 +306,9 @@
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label">群组活跃</span>
-                                    <span class="stat-value">{{ conference.groups.attendeeGroups.length }}个群组</span>
-                                    <div class="active-indicator" :class="{ active: conference.groups.active }"></div>
+                                    <span class="stat-value" v-if="conference.groups.loading">加载中...</span>
+                                    <span class="stat-value" v-else>{{ conference.groups.activeGroups }}/{{ conference.groups.totalGroups }}个群组</span>
+                                    <div class="active-indicator" :class="{ active: conference.groups.activeGroups > 0 }"></div>
                                 </div>
                             </div>
                             
@@ -358,10 +334,7 @@
                                         title="发送通知">
                                     <i class="fas fa-bell"></i>
                                 </button>
-                                <button class="btn-icon" @click.stop="exportConferenceData(conference.id)" 
-                                        title="导出数据">
-                                    <i class="fas fa-download"></i>
-                                </button>
+
                                 <button class="btn-icon" @click.stop="manageConferenceGroups(conference.id)" 
                                         title="管理群组">
                                     <i class="fas fa-users"></i>
@@ -429,11 +402,31 @@
                     dataMonitorDropdownOpen: false,
                     userMenuOpen: false,
                     userInfo: {
-                        name: '管理员',
-                        avatar: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%234A90E2%22/%3E%3Ctext x=%2250%22 y=%2265%22 text-anchor=%22middle%22 font-size=%2240%22 fill=%22%23fff%22%3E管%3C/text%3E%3C/svg%3E',
-                        role: 'conference_manager'
+                        name: localStorage.getItem('realName') || localStorage.getItem('username') || '管理员',
+                        avatar: localStorage.getItem('avatar') || '',
+                        role: localStorage.getItem('userType') || 'staff',
+                        userId: localStorage.getItem('userId') || '',
+                        tenantName: localStorage.getItem('tenantName') || ''
                     },
                     notifications: []
+                }
+            },
+            computed: {
+                displayAvatar() {
+                    if (this.userInfo.avatar) return this.userInfo.avatar;
+                    const name = this.userInfo.name || '管';
+                    const char = name.charAt(0);
+                    return `data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%234A90E2%22/%3E%3Ctext x=%2250%22 y=%2265%22 text-anchor=%22middle%22 font-size=%2240%22 fill=%22%23fff%22%3E${encodeURIComponent(char)}%3C/text%3E%3C/svg%3E`;
+                },
+                displayRole() {
+                    const roleMap = { 'super_admin': '超级管理员', 'tenant_admin': '租户管理员', 'admin': '租户管理员', 'staff': '工作人员' };
+                    return roleMap[this.userInfo.role] || '工作人员';
+                },
+                isSuperAdmin() {
+                    return this.userInfo.role === 'super_admin';
+                },
+                isTenantAdmin() {
+                    return this.userInfo.role === 'admin' || this.userInfo.role === 'tenant_admin' || this.userInfo.role === 'super_admin';
                 }
             },
             mounted() {
@@ -515,14 +508,18 @@
                                     available: (meeting.maxParticipants || 100) - (meeting.currentParticipants || 0)
                                 },
                                 taskStats: {
-                                    total: meeting.totalTasks || 0,
-                                    completed: meeting.completedTasks || 0,
-                                    pending: (meeting.totalTasks || 0) - (meeting.completedTasks || 0)
+                                    total: 0,
+                                    completed: 0,
+                                    pending: 0,
+                                    loading: true
                                 },
                                 groups: {
-                                    attendeeGroups: meeting.groups || [],
-                                    active: true
+                                    totalGroups: 0,
+                                    activeGroups: 0,
+                                    totalMembers: 0,
+                                    loading: true
                                 },
+                                registrationStats: { loading: true },
                                 systems: {
                                     registration: true,
                                     notification: true,
@@ -533,6 +530,8 @@
                             }));
                             // 更新过滤后的会议列表
                             this.filteredConferences = [...this.conferences];
+                            // 异步加载各会议的真实统计数据
+                            this.enrichConferencesWithStats();
                         } else if (response.status === 401) {
                             // Token过期或无效
                             console.warn('认证失败，请重新登录');
@@ -553,6 +552,87 @@
                     }
                 },
                 
+                async enrichConferencesWithStats() {
+                    const token = localStorage.getItem('authToken');
+                    const tenantId = localStorage.getItem('tenantId') || '';
+                    const headers = {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'X-Tenant-Id': tenantId
+                    };
+
+                    const fetchJson = async (url) => {
+                        try {
+                            const resp = await fetch(url, { method: 'GET', headers });
+                            if (resp.ok) {
+                                const json = await resp.json();
+                                return json.data || json;
+                            }
+                        } catch (e) {
+                            console.warn('Stats fetch failed:', url, e.message);
+                        }
+                        return null;
+                    };
+
+                    // 对每个会议并行请求三项统计
+                    const enrichPromises = this.conferences.map(async (conf) => {
+                        const [regStats, taskStats, groupStats] = await Promise.all([
+                            fetchJson(`/api/registration/stats?conferenceId=${conf.id}`),
+                            fetchJson(`/api/task/stats?conferenceId=${conf.id}`),
+                            fetchJson(`/api/group/stats?conferenceId=${conf.id}`)
+                        ]);
+
+                        // 更新报名进度：approved + checkedin 为已确认报名人数
+                        if (regStats) {
+                            const confirmed = (regStats.approved || 0) + (regStats.checkedin || 0);
+                            conf.capacity.registered = confirmed;
+                            conf.capacity.available = conf.capacity.total - confirmed;
+                            conf.registrationStats = {
+                                pending: regStats.pending || 0,
+                                approved: regStats.approved || 0,
+                                rejected: regStats.rejected || 0,
+                                cancelled: regStats.cancelled || 0,
+                                checkedin: regStats.checkedin || 0,
+                                loading: false
+                            };
+                        } else {
+                            conf.registrationStats.loading = false;
+                        }
+
+                        // 更新任务统计
+                        if (taskStats) {
+                            conf.taskStats = {
+                                total: taskStats.total || 0,
+                                completed: taskStats.completed || 0,
+                                pending: taskStats.pending || 0,
+                                inProgress: taskStats.inProgress || 0,
+                                overdue: taskStats.overdue || 0,
+                                loading: false
+                            };
+                        } else {
+                            conf.taskStats.loading = false;
+                        }
+
+                        // 更新群组统计
+                        if (groupStats) {
+                            conf.groups = {
+                                totalGroups: groupStats.totalGroups || 0,
+                                activeGroups: groupStats.activeGroups || 0,
+                                totalMembers: groupStats.totalMembers || 0,
+                                todayMessages: groupStats.todayMessages || 0,
+                                loading: false
+                            };
+                        } else {
+                            conf.groups.loading = false;
+                        }
+                    });
+
+                    await Promise.all(enrichPromises);
+                    // 触发视图刷新
+                    this.filteredConferences = [...this.filteredConferences];
+                    console.log('会议统计数据加载完成');
+                },
+
                 filterConferences() {
                     let filtered = [...this.conferences];
                     
@@ -584,14 +664,6 @@
                     }
                     
                     this.filteredConferences = filtered;
-                },
-                
-                exportAllData() {
-                    this.showNotification('正在导出所有会议数据...', 'info');
-                    // 实现导出逻辑
-                    setTimeout(() => {
-                        this.showNotification('数据导出成功', 'success');
-                    }, 2000);
                 },
                 
                 enterConferenceDashboard(conferenceId) {
@@ -676,11 +748,6 @@
                     window.location.href = `pages/notification-mgr.html?conferenceId=${conferenceId}`;
                 },
                 
-                exportConferenceData(conferenceId) {
-                    this.showNotification('正在导出数据...', 'info');
-                    // 实现数据导出逻辑
-                },
-                
                 manageConferenceGroups(conferenceId) {
                     window.location.href = `pages/group-management.html?conferenceId=${conferenceId}`;
                 },
@@ -729,10 +796,12 @@
                 },
                 
                 getRegistrationProgress(conference) {
+                    if (!conference.capacity || conference.capacity.total === 0) return 0;
                     return Math.round((conference.capacity.registered / conference.capacity.total) * 100);
                 },
                 
                 getTaskProgress(conference) {
+                    if (!conference.taskStats || conference.taskStats.total === 0) return 0;
                     return Math.round((conference.taskStats.completed / conference.taskStats.total) * 100);
                 },
                 
@@ -788,13 +857,11 @@
                     }
                 },
                 
-                logout() {
+                async logout() {
                     if (window.AuthService) {
-                        window.AuthService.logout();
-                        window.location.href = 'pages/login.html';
-                    } else {
-                        window.location.href = 'pages/login.html';
+                        await window.AuthService.logout();
                     }
+                    window.location.href = 'pages/login.html';
                 }
             }
         };

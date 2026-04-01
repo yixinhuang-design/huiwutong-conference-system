@@ -14,7 +14,7 @@ const GroupAPI = {
     createGroup(groupData) {
         return fetch(`${this.baseURL}/create`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(groupData)
         }).then(r => this.handleResponse(r));
     },
@@ -23,7 +23,7 @@ const GroupAPI = {
     listGroups(conferenceId) {
         const params = conferenceId ? `?conferenceId=${conferenceId}` : '';
         return fetch(`${this.baseURL}/list${params}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -33,21 +33,21 @@ const GroupAPI = {
         if (userId) params.append('userId', userId);
         if (conferenceId) params.append('conferenceId', conferenceId);
         return fetch(`${this.baseURL}/my-groups?${params}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
     /** 获取群组详情 */
     getGroupDetail(groupId) {
         return fetch(`${this.baseURL}/${groupId}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
     /** 获取群成员列表 */
     getMembers(groupId) {
         return fetch(`${this.baseURL}/${groupId}/members`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -55,7 +55,7 @@ const GroupAPI = {
     addMember(groupId, memberData) {
         return fetch(`${this.baseURL}/${groupId}/members`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(memberData)
         }).then(r => this.handleResponse(r));
     },
@@ -64,7 +64,7 @@ const GroupAPI = {
     batchAddMembers(groupId, members) {
         return fetch(`${this.baseURL}/${groupId}/members/batch`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(members)
         }).then(r => this.handleResponse(r));
     },
@@ -73,7 +73,7 @@ const GroupAPI = {
     removeMember(groupId, userId) {
         return fetch(`${this.baseURL}/${groupId}/members/${userId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -81,7 +81,7 @@ const GroupAPI = {
     updateSettings(groupId, settings) {
         return fetch(`${this.baseURL}/${groupId}/settings`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(settings)
         }).then(r => this.handleResponse(r));
     },
@@ -90,7 +90,7 @@ const GroupAPI = {
     deleteGroup(groupId) {
         return fetch(`${this.baseURL}/${groupId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -98,7 +98,7 @@ const GroupAPI = {
     updateMemberRole(groupId, userId, role) {
         return fetch(`${this.baseURL}/${groupId}/members/${userId}/role`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify({ role })
         }).then(r => this.handleResponse(r));
     },
@@ -107,7 +107,7 @@ const GroupAPI = {
     getStats(conferenceId) {
         const params = conferenceId ? `?conferenceId=${conferenceId}` : '';
         return fetch(`${this.baseURL}/stats${params}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -122,6 +122,16 @@ const GroupAPI = {
     getAuthToken() {
         const token = localStorage.getItem('authToken') || '';
         return token ? `Bearer ${token}` : '';
+    },
+
+    getAuthHeaders(withContentType = true) {
+        const headers = {};
+        if (withContentType) headers['Content-Type'] = 'application/json';
+        const token = localStorage.getItem('authToken') || '';
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const tenantId = localStorage.getItem('tenantId') || '';
+        if (tenantId) headers['X-Tenant-Id'] = tenantId;
+        return headers;
     }
 };
 
@@ -135,7 +145,7 @@ const ChatAPI = {
     sendMessage(messageData) {
         return fetch(`${this.baseURL}/send`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(messageData)
         }).then(r => this.handleResponse(r));
     },
@@ -143,28 +153,28 @@ const ChatAPI = {
     /** 获取群组聊天记录 */
     getGroupMessages(groupId, page = 1, size = 50) {
         return fetch(`${this.baseURL}/group/${groupId}/messages?page=${page}&size=${size}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
     /** 获取私聊记录 */
     getPrivateMessages(userId, targetId, page = 1, size = 50) {
         return fetch(`${this.baseURL}/private/messages?userId=${userId}&targetId=${targetId}&page=${page}&size=${size}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
     /** 搜索消息 */
     searchMessages(groupId, keyword) {
         return fetch(`${this.baseURL}/group/${groupId}/search?keyword=${encodeURIComponent(keyword)}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
     /** 获取消息统计 */
     getMessageStats(groupId) {
         return fetch(`${this.baseURL}/group/${groupId}/stats`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -179,6 +189,16 @@ const ChatAPI = {
     getAuthToken() {
         const token = localStorage.getItem('authToken') || '';
         return token ? `Bearer ${token}` : '';
+    },
+
+    getAuthHeaders(withContentType = true) {
+        const headers = {};
+        if (withContentType) headers['Content-Type'] = 'application/json';
+        const token = localStorage.getItem('authToken') || '';
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const tenantId = localStorage.getItem('tenantId') || '';
+        if (tenantId) headers['X-Tenant-Id'] = tenantId;
+        return headers;
     }
 };
 
@@ -192,7 +212,7 @@ const TaskAPI = {
     createTask(taskData) {
         return fetch(`${this.baseURL}/create`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(taskData)
         }).then(r => this.handleResponse(r));
     },
@@ -201,7 +221,7 @@ const TaskAPI = {
     deleteTask(taskId) {
         return fetch(`${this.baseURL}/${taskId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -209,7 +229,7 @@ const TaskAPI = {
     updateTask(taskId, taskData) {
         return fetch(`${this.baseURL}/${taskId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(taskData)
         }).then(r => this.handleResponse(r));
     },
@@ -217,7 +237,7 @@ const TaskAPI = {
     /** 获取任务详情 */
     getTaskDetail(taskId) {
         return fetch(`${this.baseURL}/${taskId}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -230,7 +250,7 @@ const TaskAPI = {
         params.append('page', page);
         params.append('size', size);
         return fetch(`${this.baseURL}/list?${params}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -239,7 +259,7 @@ const TaskAPI = {
         const params = new URLSearchParams({ userId, page, size });
         if (status) params.append('status', status);
         return fetch(`${this.baseURL}/my-tasks?${params}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -247,7 +267,7 @@ const TaskAPI = {
     assignTask(taskId, assignees) {
         return fetch(`${this.baseURL}/${taskId}/assign`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(assignees)
         }).then(r => this.handleResponse(r));
     },
@@ -255,7 +275,7 @@ const TaskAPI = {
     /** 获取执行人列表 */
     getAssignees(taskId) {
         return fetch(`${this.baseURL}/${taskId}/assignees`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -263,7 +283,7 @@ const TaskAPI = {
     submitTask(taskId, submitData) {
         return fetch(`${this.baseURL}/${taskId}/submit`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(submitData)
         }).then(r => this.handleResponse(r));
     },
@@ -272,7 +292,7 @@ const TaskAPI = {
     completeTask(taskId, data) {
         return fetch(`${this.baseURL}/${taskId}/complete`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(data)
         }).then(r => this.handleResponse(r));
     },
@@ -281,7 +301,7 @@ const TaskAPI = {
     cancelTask(taskId, data) {
         return fetch(`${this.baseURL}/${taskId}/cancel`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(data)
         }).then(r => this.handleResponse(r));
     },
@@ -290,7 +310,7 @@ const TaskAPI = {
     urgeTask(taskId, data) {
         return fetch(`${this.baseURL}/${taskId}/urge`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(data)
         }).then(r => this.handleResponse(r));
     },
@@ -298,7 +318,7 @@ const TaskAPI = {
     /** 获取任务日志 */
     getTaskLogs(taskId) {
         return fetch(`${this.baseURL}/${taskId}/logs`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -306,7 +326,7 @@ const TaskAPI = {
     getStats(conferenceId) {
         const params = conferenceId ? `?conferenceId=${conferenceId}` : '';
         return fetch(`${this.baseURL}/stats${params}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -321,6 +341,16 @@ const TaskAPI = {
     getAuthToken() {
         const token = localStorage.getItem('authToken') || '';
         return token ? `Bearer ${token}` : '';
+    },
+
+    getAuthHeaders(withContentType = true) {
+        const headers = {};
+        if (withContentType) headers['Content-Type'] = 'application/json';
+        const token = localStorage.getItem('authToken') || '';
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const tenantId = localStorage.getItem('tenantId') || '';
+        if (tenantId) headers['X-Tenant-Id'] = tenantId;
+        return headers;
     }
 };
 
@@ -334,7 +364,7 @@ const MaterialAPI = {
     uploadMaterial(materialData) {
         return fetch(`${this.baseURL}/upload`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthToken() },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(materialData)
         }).then(r => this.handleResponse(r));
     },
@@ -344,7 +374,7 @@ const MaterialAPI = {
         const params = new URLSearchParams({ page, size });
         if (category) params.append('category', category);
         return fetch(`${this.baseURL}/group/${groupId}?${params}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -354,14 +384,14 @@ const MaterialAPI = {
         if (conferenceId) params.append('conferenceId', conferenceId);
         if (category) params.append('category', category);
         return fetch(`${this.baseURL}/list?${params}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
     /** 获取资料详情 */
     getMaterialDetail(materialId) {
         return fetch(`${this.baseURL}/${materialId}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -369,7 +399,7 @@ const MaterialAPI = {
     deleteMaterial(materialId) {
         return fetch(`${this.baseURL}/${materialId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -377,7 +407,7 @@ const MaterialAPI = {
     downloadMaterial(materialId) {
         return fetch(`${this.baseURL}/${materialId}/download`, {
             method: 'POST',
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -386,7 +416,7 @@ const MaterialAPI = {
         const params = new URLSearchParams({ keyword: keyword });
         if (conferenceId) params.append('conferenceId', conferenceId);
         return fetch(`${this.baseURL}/search?${params}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -394,7 +424,7 @@ const MaterialAPI = {
     getStats(conferenceId) {
         const params = conferenceId ? `?conferenceId=${conferenceId}` : '';
         return fetch(`${this.baseURL}/stats${params}`, {
-            headers: { 'Authorization': this.getAuthToken() }
+            headers: this.getAuthHeaders(false)
         }).then(r => this.handleResponse(r));
     },
 
@@ -409,6 +439,16 @@ const MaterialAPI = {
     getAuthToken() {
         const token = localStorage.getItem('authToken') || '';
         return token ? `Bearer ${token}` : '';
+    },
+
+    getAuthHeaders(withContentType = true) {
+        const headers = {};
+        if (withContentType) headers['Content-Type'] = 'application/json';
+        const token = localStorage.getItem('authToken') || '';
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const tenantId = localStorage.getItem('tenantId') || '';
+        if (tenantId) headers['X-Tenant-Id'] = tenantId;
+        return headers;
     }
 };
 

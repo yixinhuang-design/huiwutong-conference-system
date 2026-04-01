@@ -480,50 +480,70 @@ body {
 /* 会议筛选器 */
 .conference-filters {
   display: flex;
+  align-items: flex-end;
   gap: var(--space-4);
-  padding: var(--space-4);
+  padding: var(--space-4) var(--space-5);
   flex-shrink: 0;
   flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin-bottom: var(--space-3);
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  min-width: 180px;
+  gap: 6px;
+  min-width: 160px;
   flex: 1;
-  max-width: 300px;
+  max-width: 280px;
 }
 
 .filter-group.filter-search {
   flex: 2;
-  max-width: 400px;
+  max-width: 360px;
 }
 
 .filter-group label {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--gray-700);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500, #9ca3af);
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .filter-group select,
 .filter-group input[type="date"],
 .filter-group input[type="text"] {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 12px;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: var(--radius-md, 8px);
+  background: #fff;
   color: var(--gray-800);
   font-size: var(--font-size-sm);
-  transition: all var(--transition-fast);
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.filter-group select:hover,
+.filter-group input[type="date"]:hover,
+.filter-group input[type="text"]:hover {
+  border-color: var(--gray-300, #d1d5db);
 }
 
 .filter-group select:focus,
 .filter-group input:focus {
   outline: none;
   border-color: var(--primary-color);
-  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.12);
+  background: #fff;
 }
 
 .date-range-inputs {
@@ -532,9 +552,15 @@ body {
   gap: var(--space-2);
 }
 
+.date-range-inputs input[type="date"] {
+  flex: 1;
+  min-width: 0;
+}
+
 .date-separator {
-  color: var(--gray-500);
+  color: var(--gray-400, #9ca3af);
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .search-input-wrapper {
@@ -545,14 +571,15 @@ body {
 
 .search-input-wrapper i {
   position: absolute;
-  left: var(--space-3);
-  color: var(--gray-500);
+  left: 12px;
+  color: var(--gray-400, #9ca3af);
   pointer-events: none;
+  font-size: 13px;
 }
 
 .search-input-wrapper input {
   width: 100%;
-  padding-left: calc(var(--space-3) + 20px);
+  padding-left: 34px;
 }
 
 /* 会议列表页面 */

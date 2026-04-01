@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.conference.common.exception.BusinessException;
 import com.conference.common.tenant.TenantContextHolder;
 import com.conference.meeting.dto.ScheduleCreateRequest;
+import com.conference.meeting.dto.ScheduleAttachmentResponse;
 import com.conference.meeting.dto.ScheduleResponse;
 import com.conference.meeting.dto.ScheduleSettingsResponse;
 import com.conference.meeting.dto.ScheduleUpdateRequest;
@@ -515,6 +516,24 @@ public class ScheduleServiceImpl extends ServiceImpl<ScheduleMapper, Schedule> i
                     .build();
         }
 
+        // 转换附件列表
+        List<ScheduleAttachmentResponse> attachmentResponses = null;
+        if (attachments != null && !attachments.isEmpty()) {
+            attachmentResponses = attachments.stream()
+                    .map(att -> ScheduleAttachmentResponse.builder()
+                            .id(att.getId())
+                            .fileName(att.getFileName())
+                            .fileSize(att.getFileSize())
+                            .fileType(att.getFileType())
+                            .fileUrl(att.getFileUrl())
+                            .description(att.getDescription())
+                            .uploadBy(att.getUploadBy())
+                            .uploadTime(att.getUploadTime())
+                            .downloadCount(att.getDownloadCount() != null ? att.getDownloadCount() : 0)
+                            .build())
+                    .collect(java.util.stream.Collectors.toList());
+        }
+
         return ScheduleResponse.builder()
                 .id(schedule.getId())
                 .meetingId(schedule.getMeetingId())
@@ -534,6 +553,7 @@ public class ScheduleServiceImpl extends ServiceImpl<ScheduleMapper, Schedule> i
                 .createdTime(schedule.getCreatedTime())
                 .updatedTime(schedule.getUpdatedTime())
                 .settings(settingsResponse)
+                .attachments(attachmentResponses)
                 .build();
     }
 

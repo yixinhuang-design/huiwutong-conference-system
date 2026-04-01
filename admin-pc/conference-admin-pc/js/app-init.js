@@ -31,18 +31,21 @@
             return;
         }
 
+        // 计算登录页相对路径（兼容index.html和pages/子页面）
+        const loginUrl = currentPath.includes('/pages/') ? 'login.html' : 'pages/login.html';
+
         // 如果没有token，重定向到登录页
         if (!token) {
             console.warn('未检测到有效的认证Token，正在重定向到登录页...');
-            window.location.href = 'pages/login.html';
+            window.location.href = loginUrl;
             return;
         }
 
         // 检查token是否过期
         if (window.AuthService.isTokenExpired()) {
             console.warn('认证Token已过期，正在重定向到登录页...');
-            localStorage.removeItem('authToken');
-            window.location.href = 'pages/login.html';
+            window.AuthService.clearAuth();
+            window.location.href = loginUrl;
             return;
         }
 
@@ -74,8 +77,10 @@
         } catch (error) {
             console.warn('Token自动刷新失败:', error.message);
             // Token刷新失败，需要重新登录
-            localStorage.removeItem('authToken');
-            window.location.href = 'pages/login.html';
+            window.AuthService.clearAuth();
+            const currentPath = window.location.pathname;
+            const loginUrl = currentPath.includes('/pages/') ? 'login.html' : 'pages/login.html';
+            window.location.href = loginUrl;
         }
     }
 

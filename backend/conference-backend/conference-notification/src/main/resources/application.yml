@@ -49,3 +49,24 @@ logging:
     root: INFO
     com.conference: DEBUG
     com.baomidou: DEBUG
+
+# ===== 阿里云短信配置 =====
+aliyun:
+  sms:
+    access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET:}
+    sign-name: ${ALIYUN_SMS_SIGN_NAME:会通}
+    template-code: ${ALIYUN_SMS_TEMPLATE_CODE:SMS_000000}
+    # 是否启用真实短信发送（false时仅打印日志不调用接口）
+    enabled: ${ALIYUN_SMS_ENABLED:false}
+
+# ===== UniPush 系统消息配置 =====
+unipush:
+  app-id: ${UNIPUSH_APP_ID:}
+  app-key: ${UNIPUSH_APP_KEY:}
+  master-secret: ${UNIPUSH_MASTER_SECRET:}
+
+# ===== 报名服务地址（用于查询收件人信息）=====
+service:
+  registration:
+    base-url: http://localhost:8082

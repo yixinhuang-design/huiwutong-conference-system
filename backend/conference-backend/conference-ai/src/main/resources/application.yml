@@ -64,6 +64,20 @@ ai:
   upload:
     dir: ${AI_UPLOAD_DIR:./ai-uploads}
 
+# 微服务地址配置（部署时通过环境变量覆盖）
+service:
+  meeting:
+    url: ${SERVICE_MEETING_URL:http://localhost:8084}
+  registration:
+    url: ${SERVICE_REGISTRATION_URL:http://localhost:8082}
+  seating:
+    url: ${SERVICE_SEATING_URL:http://localhost:8086}
+  collaboration:
+    url: ${SERVICE_COLLABORATION_URL:http://localhost:8089}
+  auth:
+    url: ${SERVICE_AUTH_URL:http://localhost:8081}
+  default-tenant-id: ${DEFAULT_TENANT_ID:2027317834622709762}
+
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
   global-config:

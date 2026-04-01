@@ -47,13 +47,40 @@ public class NotificationController {
     }
 
     /**
-     * 催报通知
+     * 催报通知（支持自定义标题和内容）
      */
     @PostMapping("/urge")
     public Result<Map<String, Object>> sendUrge(@RequestBody Map<String, Object> body) {
         Long conferenceId = Long.valueOf(body.getOrDefault("conferenceId", "0").toString());
-        Map<String, Object> result = notificationService.sendUrge(conferenceId);
+        String customTitle = body.get("title") != null ? body.get("title").toString() : null;
+        String customContent = body.get("content") != null ? body.get("content").toString() : null;
+        Map<String, Object> result = notificationService.sendUrge(conferenceId, customTitle, customContent);
         return Result.ok("催报通知已发送", result);
+    }
+
+    // ==================== 已读跟踪 ====================
+
+    /**
+     * 标记单条通知已读
+     */
+    @PutMapping("/{id}/read")
+    public Result<Void> markRead(@PathVariable Long id,
+                                 @RequestParam(required = false) Long userId) {
+        // 如果未传userId，使用默认值0（实际应从token中获取）
+        Long uid = userId != null ? userId : 0L;
+        notificationService.markRead(id, uid);
+        return Result.ok("已标记为已读", null);
+    }
+
+    /**
+     * 标记会议下所有通知已读
+     */
+    @PutMapping("/read-all")
+    public Result<Void> markAllRead(@RequestBody Map<String, Object> body) {
+        Long conferenceId = Long.valueOf(body.getOrDefault("conferenceId", "0").toString());
+        Long userId = body.get("userId") != null ? Long.valueOf(body.get("userId").toString()) : 0L;
+        notificationService.markAllRead(conferenceId, userId);
+        return Result.ok("已全部标记为已读", null);
     }
 
     // ==================== 通知查询 ====================

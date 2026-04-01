@@ -5,8 +5,8 @@
 
 import { get, post, put, del } from './request'
 
-// 通知服务基础地址
-const NOTI_BASE = { baseUrl: 'http://localhost:8083' }
+// 通知服务基础地址（通过Node代理/网关转发，不直连后端端口）
+const NOTI_BASE = { baseUrl: '' }
 
 export default {
   // ============ 通知发送 ============
@@ -39,6 +39,16 @@ export default {
   /** 发送统计 */
   getStats(conferenceId) {
     return get('/api/notification/stats', { conferenceId }, NOTI_BASE)
+  },
+
+  // ============ 已读跟踪 ============
+  /** 标记单条通知已读 */
+  markRead(id, userId) {
+    return put(`/api/notification/${id}/read`, {}, { ...NOTI_BASE, params: { userId } })
+  },
+  /** 标记会议下所有通知已读 */
+  markAllRead(conferenceId, userId) {
+    return put('/api/notification/read-all', { conferenceId, userId }, NOTI_BASE)
   },
 
   // ============ 模板管理 ============

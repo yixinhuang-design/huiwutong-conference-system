@@ -19,6 +19,9 @@
     <script type="text/javascript">
         window.AMAP_SECURITY_JS_CODE = window.AMAP_SECURITY_JS_CODE || '';
     </script>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
+    <script src="../js/api/collaboration-api.js"></script>
 </head>
 <body>
     <!-- 调试面板 -->
@@ -2067,8 +2070,13 @@
                             console.warn('加载工作人员列表失败:', staffErr);
                         }
                         
-                        // 编辑模式默认跳到第1步让用户确认
-                        this.currentStep = 1;
+                        // 编辑模式：跳转到目标步骤（URL step 参数）或默认第1步
+                        if (this._editTargetStep && this._editTargetStep >= 1 && this._editTargetStep <= 6) {
+                            this.currentStep = this._editTargetStep;
+                            console.log('编辑模式跳转到步骤:', this._editTargetStep);
+                        } else {
+                            this.currentStep = 1;
+                        }
                         
                         console.log('会议数据加载完成，编辑模式就绪');
                     } catch (error) {
@@ -2279,6 +2287,9 @@
                                         body: JSON.stringify(staffPayload)
                                     });
                                     console.log('工作人员已同步保存');
+                                    
+                                    // 同步工作人员群成员
+                                    await this.syncStaffGroupMembers(this.editConferenceId, this.staffList);
                                 } catch (staffError) {
                                     console.warn('保存工作人员失败:', staffError);
                                 }
@@ -2319,6 +2330,27 @@
                                         body: JSON.stringify(staffPayload)
                                     });
                                     console.log('工作人员已保存到数据库');
+                                    
+                                    // 自动创建工作人员群
+                                    try {
+                                        if (typeof GroupAPI !== 'undefined') {
+                                            const staffGroupData = {
+                                                groupName: `${this.form.name}-工作人员群`,
+                                                groupType: 'staff',
+                                                conferenceId: createdMeeting.id,
+                                                description: `会议"${this.form.name}"的工作人员沟通群`,
+                                                members: this.staffList.map(s => ({
+                                                    userId: s.id,
+                                                    userName: s.name,
+                                                    role: 'member'
+                                                }))
+                                            };
+                                            await GroupAPI.createGroup(staffGroupData);
+                                            console.log('工作人员群已自动创建');
+                                        }
+                                    } catch (groupErr) {
+                                        console.warn('自动创建工作人员群失败:', groupErr);
+                                    }
                                 } catch (staffError) {
                                     console.warn('保存工作人员失败:', staffError);
                                     // 不中断主流程，继续跳转
@@ -2350,6 +2382,64 @@
                     const [hour, minute] = timeStr.split(':');
                     return `${year}-${month}-${day}T${hour}:${minute}:00`;
                 },
+                
+                /**
+                 * 同步工作人员群成员：查找该会议的工作人员群，全量替换成员
+                 */
+                async syncStaffGroupMembers(conferenceId, staffList) {
+                    try {
+                        if (typeof GroupAPI === 'undefined') return;
+                        
+                        // 查找已有的工作人员群
+                        const groups = await GroupAPI.listGroups(conferenceId);
+                        const staffGroup = (Array.isArray(groups) ? groups : []).find(
+                            g => g.groupType === 'staff' || (g.groupName && g.groupName.includes('工作人员群'))
+                        );
+                        
+                        if (!staffGroup) {
+                            // 群不存在则创建
+                            if (staffList && staffList.length > 0) {
+                                await GroupAPI.createGroup({
+                                    groupName: `${this.form.name || '会议'}-工作人员群`,
+                                    groupType: 'staff',
+                                    conferenceId: conferenceId,
+                                    description: `会议"${this.form.name}"的工作人员沟通群`,
+                                    members: staffList.map(s => ({
+                                        userId: s.id, userName: s.name, role: 'member'
+                                    }))
+                                });
+                                console.log('[SyncGroup] 工作人员群已新建');
+                            }
+                            return;
+                        }
+                        
+                        // 群已存在，获取当前成员并做差量同步
+                        const currentMembers = await GroupAPI.getMembers(staffGroup.id);
+                        const currentIds = new Set((Array.isArray(currentMembers) ? currentMembers : []).map(m => String(m.userId || m.id)));
+                        const newIds = new Set((staffList || []).map(s => String(s.id)));
+                        
+                        // 移除不再需要的成员
+                        for (const cm of (Array.isArray(currentMembers) ? currentMembers : [])) {
+                            const cmId = String(cm.userId || cm.id);
+                            if (!newIds.has(cmId)) {
+                                await GroupAPI.removeMember(staffGroup.id, cmId);
+                            }
+                        }
+                        
+                        // 添加新成员
+                        const toAdd = (staffList || []).filter(s => !currentIds.has(String(s.id)));
+                        if (toAdd.length > 0) {
+                            await GroupAPI.batchAddMembers(staffGroup.id, toAdd.map(s => ({
+                                userId: s.id, userName: s.name, role: 'member'
+                            })));
+                        }
+                        
+                        console.log(`[SyncGroup] 工作人员群已同步: 移除${[...currentIds].filter(id => !newIds.has(id)).length}人, 新增${toAdd.length}人`);
+                    } catch (err) {
+                        console.warn('[SyncGroup] 同步工作人员群失败:', err);
+                    }
+                },
+                
                 generateConferenceId() {
                     const now = new Date();
                     const year = now.getFullYear();
@@ -2719,6 +2809,11 @@
                     // 编辑模式：从后端加载会议数据
                     this.isEditMode = true;
                     this.editConferenceId = conferenceId;
+                    // 支持 step 参数：跳转到指定步骤
+                    const step = parseInt(urlParams.get('step'));
+                    if (step >= 1 && step <= 6) {
+                        this._editTargetStep = step;
+                    }
                     this.loadConferenceForEdit(conferenceId);
                     return;
                 }

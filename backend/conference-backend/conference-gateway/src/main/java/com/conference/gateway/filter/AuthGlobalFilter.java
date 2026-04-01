@@ -37,16 +37,19 @@ import java.util.Map;
 public class AuthGlobalFilter implements GlobalFilter, Ordered {
     
     private static final String TOKEN_PREFIX = "Bearer ";
-    private static final String SECRET = "ConferenceSystemJwtSecretKey2026ForSmartMeetingSystem";
     
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     private final List<String> whiteList;
+    private final String jwtSecret;
 
     public AuthGlobalFilter(Environment environment) {
         this.whiteList = Binder.get(environment)
                 .bind("gateway.white-list", Bindable.listOf(String.class))
                 .orElse(Collections.emptyList());
+        this.jwtSecret = Binder.get(environment)
+                .bind("gateway.jwt.secret", Bindable.of(String.class))
+                .orElse("ConferenceSystemJwtSecretKey2026ForSmartMeetingSystem");
     }
     
     @Override
@@ -117,7 +120,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      * 解析Token
      */
     private Claims parseToken(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         return Jwts.parser()
                 .verifyWith(key)
                 .build()

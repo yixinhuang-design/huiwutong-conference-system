@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
     <script src="../js/interaction-utils.js"></script>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
 </head>
 <body>
     <div id="app">
@@ -174,24 +176,22 @@
                         <div class="filter-group">
                             <label>车次筛选:</label>
                             <select multiple v-model="filters.bus">
-                                <option value="bus1">1号车</option>
-                                <option value="bus2">2号车</option>
-                                <option value="bus3">3号车</option>
+                                <option v-if="dynamicBusOptions.length === 0" disabled>加载中...</option>
+                                <option v-for="bus in dynamicBusOptions" :key="bus.id" :value="bus.id">{{ bus.name }}</option>
                             </select>
                         </div>
                         <div class="filter-group">
                             <label>住宿筛选:</label>
                             <select multiple v-model="filters.accommodation">
-                                <option value="hotel1">酒店A</option>
-                                <option value="hotel2">酒店B</option>
+                                <option v-if="dynamicAccommodationOptions.length === 0" disabled>加载中...</option>
+                                <option v-for="hotel in dynamicAccommodationOptions" :key="hotel.id" :value="hotel.id">{{ hotel.name }}</option>
                             </select>
                         </div>
                         <div class="filter-group">
                             <label>座位区域筛选:</label>
                             <select multiple v-model="filters.seatArea">
-                                <option value="area_a">A区</option>
-                                <option value="area_b">B区</option>
-                                <option value="area_c">C区</option>
+                                <option v-if="dynamicSeatAreaOptions.length === 0" disabled>加载中...</option>
+                                <option v-for="area in dynamicSeatAreaOptions" :key="area.id" :value="area.id">{{ area.name }}</option>
                             </select>
                         </div>
                     </div>
@@ -340,78 +340,6 @@
                             <p><strong>座位:</strong> A区3排12座</p>
                             <p><strong>分组:</strong> 第三学习小组</p>
                             <p><strong>乘车:</strong> 2号车15座</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 二维码查询渠道配置 -->
-        <div v-if="selectedChannels.includes('qrcode')" class="qrcode-channel-config glass-card">
-            <h3>二维码查询渠道配置</h3>
-            
-            <div class="qrcode-settings">
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" v-model="qrcodeConfig.enabled" checked>
-                        <span>启用二维码查询渠道</span>
-                    </label>
-                    <p class="form-hint">为每个通知对象生成唯一二维码，扫码后可查看个性化通知内容</p>
-                </div>
-                
-                <div v-if="qrcodeConfig.enabled" class="qrcode-options">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>二维码有效期</label>
-                            <select v-model="qrcodeConfig.expiryDays">
-                                <option value="1">1天</option>
-                                <option value="3">3天</option>
-                                <option value="7" selected>7天</option>
-                                <option value="30">30天</option>
-                                <option value="90">90天</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" v-model="qrcodeConfig.allowAnonymous">
-                                <span>允许匿名访问</span>
-                            </label>
-                            <p class="form-hint">非注册用户也可扫码查看</p>
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" v-model="qrcodeConfig.trackScan">
-                                <span>跟踪扫码记录</span>
-                            </label>
-                            <p class="form-hint">记录扫码时间和位置信息</p>
-                        </div>
-                    </div>
-                    
-                    <div class="qrcode-preview-section">
-                        <h4>二维码预览</h4>
-                        <div class="qrcode-preview-area">
-                            <div v-if="qrcodeConfig.previewQRCode" class="qrcode-image">
-                                <img :src="qrcodeConfig.previewQRCode" alt="二维码预览">
-                                <p class="qrcode-hint">扫码查看示例通知</p>
-                            </div>
-                            <div v-else class="qrcode-placeholder">
-                                <i class="fas fa-qrcode"></i>
-                                <p>发送通知后将自动生成二维码</p>
-                            </div>
-                        </div>
-                        <div class="qrcode-actions">
-                            <button class="btn-outline" @click="generatePreviewQRCode">
-                                <i class="fas fa-qrcode"></i>
-                                生成预览二维码
-                            </button>
-                            <button class="btn-outline" @click="downloadQRCodeBatch">
-                                <i class="fas fa-download"></i>
-                                批量下载二维码
-                            </button>
-                            <button class="btn-outline" @click="manageQRCodes">
-                                <i class="fas fa-cog"></i>
-                                管理二维码
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -796,7 +724,7 @@
                         // { id: 'wechat', name: '微信通知', icon: 'fas fa-comment', online: false, sent: 0 },
                         // 企业微信 - 暂未配置，隐藏
                         // { id: 'enterprise', name: '企业微信', icon: 'fas fa-building', online: false, sent: 0 },
-                        { id: 'qrcode', name: '二维码查询', icon: 'fas fa-qrcode', online: true, sent: 0 }
+                        // { id: 'qrcode', ...} 已移除，仅保留短信和系统消息两个渠道
                     ],
                     selectedChannels: ['sms'],
                     reminderRules: [
@@ -880,13 +808,10 @@
                         failed: 0
                     },
                     API_BASE: '',
-                    qrcodeConfig: {
-                        enabled: true,
-                        expiryDays: 7,
-                        allowAnonymous: true,
-                        trackScan: true,
-                        previewQRCode: null
-                    },
+                    // 动态筛选选项（从排座服务加载）
+                    dynamicBusOptions: [],
+                    dynamicAccommodationOptions: [],
+                    dynamicSeatAreaOptions: [],
                     shareLink: ''
                 }
             },
@@ -894,22 +819,29 @@
                 await this.initialize();
             },
             methods: {
+                getAuthHeaders() {
+                    const token = localStorage.getItem('authToken');
+                    const tenantId = localStorage.getItem('tenantId') || '';
+                    const headers = { 'Content-Type': 'application/json', 'X-Tenant-Id': tenantId };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    return headers;
+                },
                 async initialize() {
                     const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
                     if (conferenceId) {
                         this.conference = await window.conferenceContext.loadConference(conferenceId);
                     } else {
-                        this.conference = {
-                            id: 'demo_conf_001',
-                            name: '示例会议'
-                        };
+                        alert('未找到会议ID，请从会议管理中心进入');
+                        window.history.back();
+                        return;
                     }
                     // 并行加载所有数据
                     await Promise.all([
                         this.loadTemplates(),
                         this.loadStats(),
                         this.loadParticipants(),
-                        this.loadGroups()
+                        this.loadGroups(),
+                        this.loadDynamicFilterOptions()
                     ]);
                     // 加载完统计后更新渠道发送数
                     this.updateChannelStats();
@@ -917,7 +849,7 @@
                 async loadParticipants() {
                     try {
                         const resp = await fetch(`${this.REG_API_BASE}/api/registration/list?conferenceId=${this.conference.id}&page=1&pageSize=9999`, {
-                            headers: { 'X-Tenant-Id': localStorage.getItem('tenantId') || '' }
+                            headers: this.getAuthHeaders()
                         });
                         const result = await resp.json();
                         if (result.code === 200) {
@@ -966,7 +898,7 @@
                 async loadGroups() {
                     try {
                         const resp = await fetch(`${this.GROUP_API_BASE}/api/group/list?conferenceId=${this.conference.id}`, {
-                            headers: { 'X-Tenant-Id': localStorage.getItem('tenantId') || '' }
+                            headers: this.getAuthHeaders()
                         });
                         const result = await resp.json();
                         if (result.code === 200 && result.data) {
@@ -1037,7 +969,7 @@
                 },
                 async loadTemplates() {
                     try {
-                        const resp = await fetch(`${this.API_BASE}/api/notification/template/list?conferenceId=${this.conference.id}`);
+                        const resp = await fetch(`${this.API_BASE}/api/notification/template/list?conferenceId=${this.conference.id}`, { headers: this.getAuthHeaders() });
                         const result = await resp.json();
                         if (result.code === 200 && result.data) {
                             this.notificationTemplates = result.data.map(t => ({
@@ -1050,7 +982,7 @@
                 },
                 async loadStats() {
                     try {
-                        const resp = await fetch(`${this.API_BASE}/api/notification/stats?conferenceId=${this.conference.id}`);
+                        const resp = await fetch(`${this.API_BASE}/api/notification/stats?conferenceId=${this.conference.id}`, { headers: this.getAuthHeaders() });
                         const result = await resp.json();
                         if (result.code === 200 && result.data) {
                             this.statistics.totalSent = result.data.totalSent || 0;
@@ -1156,7 +1088,7 @@
                         };
                         const resp = await fetch(`${this.API_BASE}/api/notification/draft`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: this.getAuthHeaders(),
                             body: JSON.stringify(body)
                         });
                         const result = await resp.json();
@@ -1300,11 +1232,11 @@
                                     content: this.notification.content,
                                     channels: this.selectedChannels,
                                     sendTiming: 'now',
-                                    options: '{"sendTest":true}'
+                                    options: { sendTest: true }
                                 };
                                 const testResp = await fetch(`${this.API_BASE}/api/notification/send`, {
                                     method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
+                                    headers: this.getAuthHeaders(),
                                     body: JSON.stringify(testBody)
                                 });
                                 const testResult = await testResp.json();
@@ -1358,7 +1290,7 @@
                             };
                             const sendResp = await fetch(`${this.API_BASE}/api/notification/send`, {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: this.getAuthHeaders(),
                                 body: JSON.stringify(sendBody)
                             });
                             const sendResult = await sendResp.json();
@@ -1391,7 +1323,7 @@
                 async viewHistory() {
                     try {
                         this.$showLoading('正在加载历史记录...');
-                        const resp = await fetch(`${this.API_BASE}/api/notification/list?conferenceId=${this.conference.id}&page=1&pageSize=50`);
+                        const resp = await fetch(`${this.API_BASE}/api/notification/list?conferenceId=${this.conference.id}&page=1&pageSize=50`, { headers: this.getAuthHeaders() });
                         const result = await resp.json();
                         this.$hideLoading();
                         if (result.code === 200) {
@@ -1425,7 +1357,7 @@
                     const confirmed = await this.$showConfirm('确定删除此通知记录？', '确认删除', 'warning');
                     if (!confirmed) return;
                     try {
-                        const resp = await fetch(`${this.API_BASE}/api/notification/${id}`, { method: 'DELETE' });
+                        const resp = await fetch(`${this.API_BASE}/api/notification/${id}`, { method: 'DELETE', headers: this.getAuthHeaders() });
                         const result = await resp.json();
                         if (result.code === 200) {
                             this.historyRecords = this.historyRecords.filter(r => r.id !== id);
@@ -1467,7 +1399,7 @@
                     const confirmed = await this.$showConfirm('确定删除此模板？', '确认删除', 'warning');
                     if (!confirmed) return;
                     try {
-                        const resp = await fetch(`${this.API_BASE}/api/notification/template/${this.selectedTemplateId}`, { method: 'DELETE' });
+                        const resp = await fetch(`${this.API_BASE}/api/notification/template/${this.selectedTemplateId}`, { method: 'DELETE', headers: this.getAuthHeaders() });
                         const result = await resp.json();
                         if (result.code === 200) {
                             this.$showToast('模板已删除', 'success');
@@ -1576,7 +1508,7 @@
                         };
                         const resp = await fetch(`${this.API_BASE}/api/notification/template/save`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: this.getAuthHeaders(),
                             body: JSON.stringify(body)
                         });
                         const result = await resp.json();
@@ -1592,59 +1524,54 @@
                 },
                 
                 async generatePreviewQRCode() {
-                    try {
-                        this.$showLoading('正在生成预览二维码...');
-                        await new Promise(resolve => setTimeout(resolve, 800));
-                        
-                        // 生成预览二维码
-                        const previewLink = `https://conference.example.com/notification/view/preview?token=${Date.now()}`;
-                        this.shareLink = previewLink;
-                        
-                        // 模拟生成二维码（实际需要集成qrcode.js库）
-                        // 这里使用在线API生成二维码
-                        const qrcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(previewLink)}`;
-                        this.qrcodeConfig.previewQRCode = qrcodeUrl;
-                        
-                        this.$hideLoading();
-                        this.$showToast('预览二维码已生成', 'success');
-                    } catch (error) {
-                        this.$hideLoading();
-                        this.$showToast('生成失败，请重试', 'error');
-                    }
+                    // 已移除二维码功能
+                    this.$showToast('二维码功能已停用，请使用短信或系统消息渠道', 'info');
                 },
                 
                 async downloadQRCodeBatch() {
-                    if (!this.qrcodeConfig.enabled) {
-                        this.$showToast('请先启用二维码查询渠道', 'warning');
-                        return;
-                    }
-                    
-                    if (this.matchedCount === 0) {
-                        this.$showToast('当前没有通知对象', 'warning');
-                        return;
-                    }
-                    
-                    const confirmed = await this.$showConfirm(
-                        `确定要批量下载 ${this.matchedCount} 个二维码吗？将生成ZIP压缩包。`,
-                        '批量下载二维码',
-                        'info'
-                    );
-                    
-                    if (confirmed) {
-                        try {
-                            this.$showLoading(`正在生成 ${this.matchedCount} 个二维码...`);
-                            await new Promise(resolve => setTimeout(resolve, 2000));
-                            this.$hideLoading();
-                            this.$showToast('二维码ZIP文件已开始下载', 'success');
-                        } catch (error) {
-                            this.$hideLoading();
-                            this.$showToast('下载失败，请重试', 'error');
-                        }
-                    }
+                    // 已移除二维码功能
+                    this.$showToast('二维码功能已停用', 'info');
                 },
                 
                 manageQRCodes() {
-                    this.$showToast('二维码管理功能：查看所有已生成的二维码、设置二维码有效期、查看扫码统计、批量操作', 'info', 5000);
+                    // 已移除二维码功能
+                    this.$showToast('二维码功能已停用', 'info');
+                },
+
+                /**
+                 * 从排座服务动态加载车次/住宿/座位区域筛选选项
+                 */
+                async loadDynamicFilterOptions() {
+                    const confId = this.conferenceId;
+                    if (!confId) return;
+                    const SEATING_BASE = this.API_BASE || '';
+                    try {
+                        // 加载车次选项
+                        const busRes = await fetch(`${SEATING_BASE}/api/seating/transports/${confId}`, { headers: this.getAuthHeaders() });
+                        if (busRes.ok) {
+                            const busData = await busRes.json();
+                            const buses = busData.data || busData || [];
+                            this.dynamicBusOptions = buses.map(b => ({ id: b.id || b.busId, name: b.busName || b.name || ('车次' + b.id) }));
+                        }
+                    } catch (e) { console.warn('加载车次选项失败:', e); }
+                    try {
+                        // 加载住宿选项
+                        const hotelRes = await fetch(`${SEATING_BASE}/api/seating/accommodations/${confId}`, { headers: this.getAuthHeaders() });
+                        if (hotelRes.ok) {
+                            const hotelData = await hotelRes.json();
+                            const hotels = hotelData.data || hotelData || [];
+                            this.dynamicAccommodationOptions = hotels.map(h => ({ id: h.id || h.hotelId, name: h.hotelName || h.name || ('酒店' + h.id) }));
+                        }
+                    } catch (e) { console.warn('加载住宿选项失败:', e); }
+                    try {
+                        // 加载座位区域选项（从讨论分组中提取区域信息）
+                        const seatRes = await fetch(`${SEATING_BASE}/api/seating/discussions/${confId}`, { headers: this.getAuthHeaders() });
+                        if (seatRes.ok) {
+                            const seatData = await seatRes.json();
+                            const areas = seatData.data || seatData || [];
+                            this.dynamicSeatAreaOptions = areas.map(a => ({ id: a.id || a.areaId, name: a.areaName || a.name || ('区域' + a.id) }));
+                        }
+                    } catch (e) { console.warn('加载座位区域选项失败:', e); }
                 }
             },
             watch: {

@@ -1,5 +1,7 @@
 package com.conference.seating.service;
 
+import com.conference.seating.entity.SeatingAttendee;
+
 import java.util.List;
 
 /**
@@ -12,15 +14,27 @@ public interface SeatingAttendeeService {
     /**
      * 获取会议参会人员列表
      */
-    List<?> getAttendeesByConference(Long conferenceId);
+    List<SeatingAttendee> getAttendeesByConference(Long conferenceId);
     
     /**
      * 获取参会人员详情
      */
-    Object getAttendeeDetail(Long attendeeId);
+    SeatingAttendee getAttendeeDetail(Long attendeeId);
     
     /**
      * 创建参会人员
      */
-    Object createAttendee(Object request);
+    SeatingAttendee createAttendee(SeatingAttendee attendee);
+
+    /**
+     * 分配座位给参会人员
+     */
+    void assignSeatToAttendee(Long attendeeId, Long seatId);
+
+    /**
+     * 从报名服务同步参会人员数据
+     * @param conferenceId 会议ID
+     * @return 同步的人数
+     */
+    int syncFromRegistration(Long conferenceId);
 }

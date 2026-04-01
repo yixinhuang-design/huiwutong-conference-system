@@ -117,7 +117,7 @@ public class RegistrationController {
         
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, 
-                    "attachment; filename=\"registration_\" + conferenceId + \".xlsx\"")
+                    "attachment; filename=registration_" + conferenceId + ".xlsx")
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(excelBytes);
     }

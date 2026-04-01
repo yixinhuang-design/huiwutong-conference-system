@@ -508,6 +508,8 @@
             transform: none;
         }
     </style>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
 </head>
 <body>
     <div id="app">
@@ -918,7 +920,7 @@
             methods: {
                 // ===== API 通用方法 =====
                 getAuthHeaders() {
-                    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+                    const token = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('auth_token');
                     const headers = { 'Content-Type': 'application/json', 'X-Tenant-Id': localStorage.getItem('tenantId') || '' };
                     if (token) headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
                     return headers;

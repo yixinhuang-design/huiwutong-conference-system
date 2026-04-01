@@ -7,11 +7,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 车辆运输详情响应 DTO
- * @author AI Assistant
- * @date 2026-03-12
  */
 @Data
 @NoArgsConstructor
@@ -58,7 +57,10 @@ public class TransportDetailResponse {
     
     @Schema(description = "驾驶员电话", example = "13800138000")
     private String driverPhone;
-    
+
+    @Schema(description = "已分配人员列表")
+    private List<AssignedAttendeeResponse> assignees;
+
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     

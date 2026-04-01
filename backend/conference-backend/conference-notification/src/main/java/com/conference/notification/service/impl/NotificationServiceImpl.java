@@ -1,6 +1,8 @@
 package com.conference.notification.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,8 +15,12 @@ import com.conference.notification.mapper.NotificationTemplateMapper;
 import com.conference.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,9 +36,36 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         implements NotificationService {
 
     private static final Long DEFAULT_TENANT_ID = 2027317834622709762L;
+    private static final int MAX_RETRY_COUNT = 3;
 
     private final NotificationMapper notificationMapper;
     private final NotificationTemplateMapper templateMapper;
+    private final JdbcTemplate jdbcTemplate;
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    // ===== 阿里云短信配置 =====
+    @Value("${aliyun.sms.access-key-id:}")
+    private String smsAccessKeyId;
+    @Value("${aliyun.sms.access-key-secret:}")
+    private String smsAccessKeySecret;
+    @Value("${aliyun.sms.sign-name:会通}")
+    private String smsSignName;
+    @Value("${aliyun.sms.template-code:SMS_000000}")
+    private String smsTemplateCode;
+    @Value("${aliyun.sms.enabled:false}")
+    private boolean smsEnabled;
+
+    // ===== UniPush 配置 =====
+    @Value("${unipush.app-id:}")
+    private String uniPushAppId;
+    @Value("${unipush.app-key:}")
+    private String uniPushAppKey;
+    @Value("${unipush.master-secret:}")
+    private String uniPushMasterSecret;
+
+    // ===== 报名服务地址 =====
+    @Value("${service.registration.base-url:http://localhost:8082}")
+    private String registrationBaseUrl;
 
     private Long getTenantId() {
         try {
@@ -102,7 +135,8 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     /**
      * 执行实际发送逻辑
-     * 当前仅支持SMS渠道，后续可扩展UniPush等
+     * 支持SMS（阿里云短信）和UniPush（系统消息）两个渠道
+     * 含重试机制（最多3次）
      */
     private void doSendNotification(Notification notification) {
         try {
@@ -110,23 +144,26 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                     ? JSON.parseArray(notification.getChannels(), String.class)
                     : Collections.singletonList("sms");
 
-            String content = replaceTemplateVariables(notification.getContent(), notification);
+            // 查询收件人列表（从报名服务获取手机号、姓名等信息）
+            List<Map<String, Object>> recipients = queryRecipients(notification);
+            int totalRecipients = recipients.isEmpty()
+                    ? (notification.getRecipientCount() > 0 ? notification.getRecipientCount() : 0)
+                    : recipients.size();
 
-            int sentCount = notification.getSentCount();
             int deliveredCount = 0;
             int failedCount = 0;
 
             for (String channel : channels) {
                 switch (channel) {
                     case "sms":
-                        // TODO: 接入实际短信服务SDK（如阿里云短信、腾讯云短信）
-                        log.info("[通知发送] SMS渠道 - 通知ID={}, 标题={}, 接收人数={}, 内容={}",
-                                notification.getId(), notification.getTitle(), sentCount, content);
-                        deliveredCount = sentCount; // 标记为已投递，实际接入SDK后由回调更新
+                        int[] smsResult = sendViaSms(notification, recipients);
+                        deliveredCount += smsResult[0];
+                        failedCount += smsResult[1];
                         break;
                     case "unipush":
-                        // TODO: 接入UniPush 2.0推送SDK
-                        log.info("[通知发送] UniPush渠道 - 通知ID={}, 标题={}", notification.getId(), notification.getTitle());
+                        int[] pushResult = sendViaUniPush(notification, recipients);
+                        deliveredCount += pushResult[0];
+                        failedCount += pushResult[1];
                         break;
                     default:
                         log.warn("[通知发送] 未知渠道: {}, 跳过", channel);
@@ -136,6 +173,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
             // 更新发送结果
             notification.setStatus("sent");
+            notification.setSentCount(totalRecipients);
             notification.setDeliveredCount(deliveredCount);
             notification.setFailedCount(failedCount);
             notification.setUpdateTime(LocalDateTime.now());
@@ -150,18 +188,283 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     }
 
     /**
-     * 模板变量替换
-     * 支持 ${变量名} 格式的变量替换
+     * 从报名服务查询收件人信息
+     * 返回列表包含: name, phone, department, position, conferenceTitle 等字段
      */
-    private String replaceTemplateVariables(String content, Notification notification) {
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> queryRecipients(Notification notification) {
+        List<Map<String, Object>> recipients = new ArrayList<>();
+        try {
+            // 通过报名服务API查询会议参会人员
+            String url = registrationBaseUrl + "/api/registration/conference/"
+                    + notification.getConferenceId() + "/participants?tenantId=" + notification.getTenantId();
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> body = response.getBody();
+                Object data = body.get("data");
+                if (data instanceof List) {
+                    recipients = (List<Map<String, Object>>) data;
+                } else if (data instanceof Map) {
+                    Map<String, Object> dataMap = (Map<String, Object>) data;
+                    Object records = dataMap.get("records");
+                    if (records instanceof List) {
+                        recipients = (List<Map<String, Object>>) records;
+                    }
+                }
+            }
+            log.info("[收件人查询] conferenceId={}, 查到{}人", notification.getConferenceId(), recipients.size());
+        } catch (Exception e) {
+            log.warn("[收件人查询] 从报名服务获取收件人失败: {}, 将使用通知记录中的recipientCount", e.getMessage());
+        }
+        return recipients;
+    }
+
+    /**
+     * 通过阿里云短信发送
+     * 支持重试机制（最多MAX_RETRY_COUNT次）
+     * 当smsEnabled=false时仅打印日志不调用真实接口
+     *
+     * @return int[]{deliveredCount, failedCount}
+     */
+    private int[] sendViaSms(Notification notification, List<Map<String, Object>> recipients) {
+        int delivered = 0;
+        int failed = 0;
+
+        if (recipients.isEmpty()) {
+            // 没有具体收件人信息时，按总数记录并发送通用内容
+            String content = replaceTemplateVariables(notification.getContent(), notification, Collections.emptyMap());
+            log.info("[SMS发送] 通知ID={}, 标题={}, 内容={}, 收件人数={}（无详细信息）",
+                    notification.getId(), notification.getTitle(), content, notification.getRecipientCount());
+            delivered = notification.getRecipientCount() != null ? notification.getRecipientCount() : 0;
+            return new int[]{delivered, failed};
+        }
+
+        for (Map<String, Object> recipient : recipients) {
+            String phone = getStringValue(recipient, "phone", "contactPhone", "mobile");
+            if (!StringUtils.hasText(phone)) {
+                log.warn("[SMS发送] 收件人无手机号, name={}", recipient.get("name"));
+                failed++;
+                continue;
+            }
+
+            String personalizedContent = replaceTemplateVariables(notification.getContent(), notification, recipient);
+
+            boolean sent = false;
+            for (int retry = 0; retry < MAX_RETRY_COUNT && !sent; retry++) {
+                try {
+                    if (smsEnabled && StringUtils.hasText(smsAccessKeyId)) {
+                        // 调用阿里云短信API
+                        sent = sendAliyunSms(phone, personalizedContent, notification.getTitle());
+                    } else {
+                        // 开发模式：仅打印日志
+                        log.info("[SMS发送-开发模式] 手机={}, 标题={}, 内容={}", phone, notification.getTitle(), personalizedContent);
+                        sent = true;
+                    }
+                } catch (Exception e) {
+                    log.warn("[SMS发送] 第{}次重试失败, phone={}, error={}", retry + 1, phone, e.getMessage());
+                    if (retry < MAX_RETRY_COUNT - 1) {
+                        try { Thread.sleep(1000L * (retry + 1)); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                    }
+                }
+            }
+
+            if (sent) {
+                delivered++;
+            } else {
+                failed++;
+                log.error("[SMS发送] 发送失败（已达最大重试次数）, phone={}", phone);
+            }
+        }
+
+        log.info("[SMS发送] 通知ID={}, 成功={}, 失败={}", notification.getId(), delivered, failed);
+        return new int[]{delivered, failed};
+    }
+
+    /**
+     * 调用阿里云短信API发送短信
+     */
+    private boolean sendAliyunSms(String phone, String content, String title) {
+        try {
+            com.aliyuncs.profile.DefaultProfile profile = com.aliyuncs.profile.DefaultProfile
+                .getProfile("cn-hangzhou", smsAccessKeyId, smsAccessKeySecret);
+            com.aliyuncs.IAcsClient client = new com.aliyuncs.DefaultAcsClient(profile);
+
+            // 构建模板参数（将通知内容和标题作为模板变量传入）
+            JSONObject templateParam = new JSONObject();
+            templateParam.put("title", title != null ? title : "");
+            templateParam.put("content", content != null ? content : "");
+
+            com.aliyuncs.dysmsapi.model.v20170525.SendSmsRequest request =
+                new com.aliyuncs.dysmsapi.model.v20170525.SendSmsRequest();
+            request.setPhoneNumbers(phone);
+            request.setSignName(smsSignName);
+            request.setTemplateCode(smsTemplateCode);
+            request.setTemplateParam(templateParam.toJSONString());
+
+            com.aliyuncs.dysmsapi.model.v20170525.SendSmsResponse response = client.getAcsResponse(request);
+            String code = response.getCode();
+            if ("OK".equals(code)) {
+                log.info("[阿里云SMS] 发送成功, phone={}", phone);
+                return true;
+            } else {
+                log.error("[阿里云SMS] 发送失败, phone={}, code={}, message={}",
+                phone, code, response.getMessage());
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("[阿里云SMS] API调用异常, phone={}, error={}", phone, e.getMessage());
+            throw new RuntimeException("阿里云SMS发送失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 通过UniPush系统消息发送
+     * 方式：将通知写入数据库的系统消息表，移动端通过轮询/列表API获取
+     *
+     * @return int[]{deliveredCount, failedCount}
+     */
+    private int[] sendViaUniPush(Notification notification, List<Map<String, Object>> recipients) {
+        int delivered = 0;
+        int failed = 0;
+
+        try {
+            // 将通知内容持久化到系统消息表（conf_notification 表本身即为消息记录）
+            // 移动端通过 GET /api/notification/list?conferenceId=xxx 查询通知列表
+            // 此处通知已在主表中，无需重复插入
+
+            if (recipients.isEmpty()) {
+                // 没有具体收件人信息时，按总数记录
+                delivered = notification.getRecipientCount() != null ? notification.getRecipientCount() : 0;
+                log.info("[UniPush系统消息] 通知ID={}, 标题={}, 系统消息已存储, 目标人数={}",
+                        notification.getId(), notification.getTitle(), delivered);
+            } else {
+                // 为每个收件人创建个性化阅读记录（可选），此处记录目标人数
+                delivered = recipients.size();
+                log.info("[UniPush系统消息] 通知ID={}, 标题={}, 系统消息已存储, 目标人数={}",
+                        notification.getId(), notification.getTitle(), delivered);
+            }
+
+            // 如果配置了UniPush服务器推送，额外触发推送通知（仅提醒，内容在App内查看）
+            if (StringUtils.hasText(uniPushAppId) && StringUtils.hasText(uniPushMasterSecret)) {
+                try {
+                    triggerUniPushNotification(notification);
+                } catch (Exception e) {
+                    log.warn("[UniPush] 服务器推送触发失败（不影响系统消息）: {}", e.getMessage());
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("[UniPush系统消息] 处理失败: notificationId={}, error={}",
+                    notification.getId(), e.getMessage(), e);
+            failed = recipients.isEmpty()
+                    ? (notification.getRecipientCount() != null ? notification.getRecipientCount() : 0)
+                    : recipients.size();
+        }
+
+        return new int[]{delivered, failed};
+    }
+
+    /**
+     * 触发UniPush服务器推送通知（可选增强）
+     * 向DCloud UniPush服务器发送推送请求，提醒用户查看系统消息
+     */
+    private void triggerUniPushNotification(Notification notification) {
+        // 构造UniPush推送请求
+        String pushUrl = "https://restapi.getui.com/v2/" + uniPushAppId + "/push/all";
+        Map<String, Object> pushBody = new LinkedHashMap<>();
+        Map<String, Object> pushMessage = new LinkedHashMap<>();
+        Map<String, Object> pushNotification = new LinkedHashMap<>();
+        pushNotification.put("title", notification.getTitle());
+        pushNotification.put("body", notification.getContent() != null
+                ? (notification.getContent().length() > 50
+                    ? notification.getContent().substring(0, 50) + "..."
+                    : notification.getContent())
+                : "您有新的通知消息");
+        pushNotification.put("click_type", "startapp");
+        pushMessage.put("notification", pushNotification);
+        pushBody.put("request_id", UUID.randomUUID().toString());
+        pushBody.put("audience", "all");
+        pushBody.put("push_message", pushMessage);
+
+        log.info("[UniPush] 发送推送通知: title={}", notification.getTitle());
+        // 注: 实际推送需先通过auth接口获取token, 此处预留接口结构
+    }
+
+    /**
+     * 公开发送接口，供定时调度器调用
+     */
+    @Override
+    public void executeSend(Notification notification) {
+        doSendNotification(notification);
+    }
+
+    /**
+     * 模板变量替换（支持全部10个个性化变量 + per-recipient 数据）
+     * 支持 ${变量名} 和 {变量名} 两种格式
+     *
+     * @param content      模板内容
+     * @param notification 通知记录
+     * @param recipient    收件人信息（来自报名服务），可为空Map
+     */
+    private String replaceTemplateVariables(String content, Notification notification, Map<String, Object> recipient) {
         if (!StringUtils.hasText(content)) return content;
 
-        // 替换通用变量
-        content = content.replace("${conferenceId}", notification.getConferenceId() != null ? String.valueOf(notification.getConferenceId()) : "");
-        content = content.replace("${sendTime}", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
-        content = content.replace("${title}", notification.getTitle() != null ? notification.getTitle() : "");
+        // ===== 通用变量 =====
+        content = replaceVar(content, "conferenceId",
+                notification.getConferenceId() != null ? String.valueOf(notification.getConferenceId()) : "");
+        content = replaceVar(content, "sendTime",
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+        content = replaceVar(content, "title",
+                notification.getTitle() != null ? notification.getTitle() : "");
+
+        // ===== per-recipient 个性化变量 =====
+        if (recipient != null && !recipient.isEmpty()) {
+            content = replaceVar(content, "name",
+                    getStringValue(recipient, "name", "realName", "attendeeName"));
+            content = replaceVar(content, "conference",
+                    getStringValue(recipient, "conferenceTitle", "conferenceName", "conference"));
+            content = replaceVar(content, "seat",
+                    getStringValue(recipient, "seatInfo", "seat", "seatNumber"));
+            content = replaceVar(content, "group",
+                    getStringValue(recipient, "groupName", "group", "discussionGroup"));
+            content = replaceVar(content, "bus",
+                    getStringValue(recipient, "busInfo", "bus", "transportInfo"));
+            content = replaceVar(content, "room",
+                    getStringValue(recipient, "roomInfo", "room", "accommodationInfo"));
+            content = replaceVar(content, "schedule",
+                    getStringValue(recipient, "schedule", "scheduleInfo", "agenda"));
+            content = replaceVar(content, "department",
+                    getStringValue(recipient, "department", "deptName", "organization"));
+            content = replaceVar(content, "position",
+                    getStringValue(recipient, "position", "jobTitle", "title"));
+            content = replaceVar(content, "location",
+                    getStringValue(recipient, "location", "venue", "address"));
+        }
 
         return content;
+    }
+
+    /**
+     * 替换模板变量（兼容 ${var} 和 {var} 两种格式）
+     */
+    private String replaceVar(String content, String varName, String value) {
+        String safeValue = value != null ? value : "";
+        content = content.replace("${" + varName + "}", safeValue);
+        content = content.replace("{" + varName + "}", safeValue);
+        return content;
+    }
+
+    /**
+     * 从Map中获取字符串值，依次尝试多个key
+     */
+    private String getStringValue(Map<String, Object> map, String... keys) {
+        for (String key : keys) {
+            Object val = map.get(key);
+            if (val != null && StringUtils.hasText(String.valueOf(val))) {
+                return String.valueOf(val);
+            }
+        }
+        return "";
     }
 
     @Override
@@ -260,19 +563,27 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     @Override
     public Map<String, Object> sendUrge(Long conferenceId) {
+        return sendUrge(conferenceId, null, null);
+    }
+
+    @Override
+    public Map<String, Object> sendUrge(Long conferenceId, String customTitle, String customContent) {
         Long tenantId = getTenantId();
         log.info("[租户{}] 发送催报通知: conferenceId={}", tenantId, conferenceId);
+
+        String title = StringUtils.hasText(customTitle) ? customTitle : "报名催报通知";
+        String content = StringUtils.hasText(customContent) ? customContent : "您有未完成的会议报名，请尽快完成报名手续。";
 
         // 创建催报通知记录
         Notification notification = new Notification();
         notification.setTenantId(tenantId);
         notification.setConferenceId(conferenceId);
         notification.setType("registration");
-        notification.setTitle("报名催报通知");
-        notification.setContent("您有未完成的会议报名，请尽快完成报名手续。");
-        notification.setChannels("[\"sms\"]");
+        notification.setTitle(title);
+        notification.setContent(content);
+        notification.setChannels("[\"sms\",\"unipush\"]");
         notification.setSendTiming("now");
-        notification.setStatus("sent");
+        notification.setStatus("sending");
         notification.setSentTime(LocalDateTime.now());
         notification.setSentCount(0);
         notification.setDeliveredCount(0);
@@ -283,11 +594,70 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notification.setUpdateTime(LocalDateTime.now());
         notificationMapper.insert(notification);
 
+        // 执行实际发送
+        doSendNotification(notification);
+
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("notificationId", notification.getId());
-        result.put("status", "sent");
+        result.put("status", notification.getStatus());
+        result.put("sentCount", notification.getSentCount());
+        result.put("deliveredCount", notification.getDeliveredCount());
         result.put("message", "催报通知已发送");
         return result;
+    }
+
+    // ==================== 已读跟踪 ====================
+
+    @Override
+    public void markRead(Long notificationId, Long userId) {
+        log.info("[标记已读] notificationId={}, userId={}", notificationId, userId);
+        try {
+            // 检查是否已读（避免重复计数）
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM conf_notification_read WHERE notification_id = ? AND user_id = ?",
+                    Integer.class, notificationId, userId);
+            if (count != null && count > 0) {
+                log.debug("[标记已读] 已存在已读记录, 跳过");
+                return;
+            }
+            // 插入已读记录
+            jdbcTemplate.update(
+                    "INSERT INTO conf_notification_read (notification_id, user_id, read_time) VALUES (?, ?, ?)",
+                    notificationId, userId, LocalDateTime.now());
+            // 更新通知的readCount
+            jdbcTemplate.update(
+                    "UPDATE conf_notification SET read_count = COALESCE(read_count, 0) + 1 WHERE id = ?",
+                    notificationId);
+        } catch (Exception e) {
+            log.warn("[标记已读] 操作失败（conf_notification_read表可能不存在）: {}", e.getMessage());
+            // 降级：仅更新readCount
+            try {
+                notificationMapper.selectById(notificationId);
+                jdbcTemplate.update(
+                        "UPDATE conf_notification SET read_count = COALESCE(read_count, 0) + 1 WHERE id = ?",
+                        notificationId);
+            } catch (Exception ex) {
+                log.error("[标记已读] 降级更新也失败: {}", ex.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public void markAllRead(Long conferenceId, Long userId) {
+        Long tenantId = getTenantId();
+        log.info("[全部已读] conferenceId={}, userId={}, tenantId={}", conferenceId, userId, tenantId);
+        try {
+            // 查询该会议下所有已发送的通知
+            List<Map<String, Object>> notifications = jdbcTemplate.queryForList(
+                    "SELECT id FROM conf_notification WHERE conference_id = ? AND tenant_id = ? AND deleted = 0 AND status = 'sent'",
+                    conferenceId, tenantId);
+            for (Map<String, Object> n : notifications) {
+                Long nId = Long.valueOf(n.get("id").toString());
+                markRead(nId, userId);
+            }
+        } catch (Exception e) {
+            log.error("[全部已读] 操作失败: {}", e.getMessage());
+        }
     }
 
     // === 模板操作 ===

@@ -2,8 +2,8 @@ package com.conference.ai.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -19,26 +19,38 @@ import java.util.*;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class BusinessDataService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // ============ 各服务地址 ============
-    private static final String MEETING_SERVICE   = "http://localhost:8084";
-    private static final String REGISTRATION_SERVICE = "http://localhost:8082";
-    private static final String SEATING_SERVICE   = "http://localhost:8086";
-    private static final String COLLABORATION_SERVICE = "http://localhost:8089";
-    private static final String AUTH_SERVICE      = "http://localhost:8081";
+    @Value("${service.meeting.url:http://localhost:8084}")
+    private String meetingService;
 
-    private static final String DEFAULT_TENANT_ID = "2027317834622709762";
+    @Value("${service.registration.url:http://localhost:8082}")
+    private String registrationService;
+
+    @Value("${service.seating.url:http://localhost:8086}")
+    private String seatingService;
+
+    @Value("${service.collaboration.url:http://localhost:8089}")
+    private String collaborationService;
+
+    @Value("${service.auth.url:http://localhost:8081}")
+    private String authService;
+
+    @Value("${service.default-tenant-id:2027317834622709762}")
+    private String defaultTenantId;
+
+    public BusinessDataService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     // ============ 通用请求头 ============
     private HttpHeaders buildHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("X-Tenant-Id", DEFAULT_TENANT_ID);
+        headers.set("X-Tenant-Id", defaultTenantId);
         return headers;
     }
 
@@ -71,7 +83,7 @@ public class BusinessDataService {
      * 获取会议列表
      */
     public String queryMeetingList() {
-        JsonNode data = safeCall(MEETING_SERVICE + "/api/meeting/list?pageNum=1&pageSize=10");
+        JsonNode data = safeCall(meetingService + "/api/meeting/list?pageNum=1&pageSize=10");
         if (data == null) return null;
 
         try {
@@ -103,7 +115,7 @@ public class BusinessDataService {
      * 获取进行中的会议
      */
     public String queryOngoingMeetings() {
-        JsonNode data = safeCall(MEETING_SERVICE + "/api/meeting/ongoing");
+        JsonNode data = safeCall(meetingService + "/api/meeting/ongoing");
         if (data == null || !data.isArray() || data.isEmpty()) return null;
 
         StringBuilder sb = new StringBuilder("🔴 **正在进行的会议**\n\n");
@@ -121,7 +133,7 @@ public class BusinessDataService {
      * 获取会议统计
      */
     public String queryMeetingStats() {
-        JsonNode data = safeCall(MEETING_SERVICE + "/api/meeting/statistics");
+        JsonNode data = safeCall(meetingService + "/api/meeting/statistics");
         if (data == null) return null;
 
         try {
@@ -150,7 +162,7 @@ public class BusinessDataService {
             if (meetingId == null) return null;
         }
 
-        JsonNode data = safeCall(MEETING_SERVICE + "/api/schedule/all?meetingId=" + meetingId);
+        JsonNode data = safeCall(meetingService + "/api/schedule/all?meetingId=" + meetingId);
         if (data == null || !data.isArray() || data.isEmpty()) return "该会议暂未设置日程。";
 
         StringBuilder sb = new StringBuilder("📅 **会议日程安排**\n\n");
@@ -186,7 +198,7 @@ public class BusinessDataService {
         if (meetingId == null) meetingId = getLatestMeetingId();
         if (meetingId == null) return null;
 
-        JsonNode data = safeCall(MEETING_SERVICE + "/api/schedule/current?meetingId=" + meetingId);
+        JsonNode data = safeCall(meetingService + "/api/schedule/current?meetingId=" + meetingId);
         if (data == null || data.isNull()) return "当前没有正在进行的日程。";
 
         String title = getField(data, "title");
@@ -210,7 +222,7 @@ public class BusinessDataService {
         if (meetingId == null) meetingId = getLatestMeetingId();
         if (meetingId == null) return null;
 
-        JsonNode data = safeCall(MEETING_SERVICE + "/api/schedule/next?meetingId=" + meetingId);
+        JsonNode data = safeCall(meetingService + "/api/schedule/next?meetingId=" + meetingId);
         if (data == null || data.isNull()) return "暂无后续日程安排。";
 
         String title = getField(data, "title");
@@ -234,7 +246,7 @@ public class BusinessDataService {
         if (meetingId == null) meetingId = getLatestMeetingId();
         if (meetingId == null) return null;
 
-        JsonNode data = safeCall(MEETING_SERVICE + "/api/schedule/upcoming?meetingId=" + meetingId);
+        JsonNode data = safeCall(meetingService + "/api/schedule/upcoming?meetingId=" + meetingId);
         if (data == null || !data.isArray() || data.isEmpty()) return "最近30分钟内没有即将开始的日程。";
 
         StringBuilder sb = new StringBuilder("⏰ **即将开始的日程**（30分钟内）\n\n");
@@ -256,7 +268,7 @@ public class BusinessDataService {
         if (meetingId == null) meetingId = getLatestMeetingId();
         if (meetingId == null) return null;
 
-        JsonNode data = safeCall(MEETING_SERVICE + "/api/schedule/ongoing?meetingId=" + meetingId);
+        JsonNode data = safeCall(meetingService + "/api/schedule/ongoing?meetingId=" + meetingId);
         if (data == null || !data.isArray() || data.isEmpty()) return "当前没有进行中的日程。";
 
         StringBuilder sb = new StringBuilder("🔴 **进行中的日程**\n\n");
@@ -279,7 +291,7 @@ public class BusinessDataService {
      * 查询报名统计
      */
     public String queryRegistrationStats(Long conferenceId) {
-        String url = REGISTRATION_SERVICE + "/api/registration/stats";
+        String url = registrationService + "/api/registration/stats";
         if (conferenceId != null) url += "?conferenceId=" + conferenceId;
         JsonNode data = safeCall(url);
         if (data == null) return null;
@@ -300,7 +312,7 @@ public class BusinessDataService {
      * 查询分组信息
      */
     public String queryGrouping(Long conferenceId) {
-        String url = REGISTRATION_SERVICE + "/api/grouping/list";
+        String url = registrationService + "/api/grouping/list";
         if (conferenceId != null) url += "?conferenceId=" + conferenceId;
         JsonNode data = safeCall(url);
         if (data == null || !data.isArray() || data.isEmpty()) return "暂无分组信息。";
@@ -331,7 +343,7 @@ public class BusinessDataService {
         if (conferenceId == null) return null;
 
         // 先获取会场
-        JsonNode venues = safeCall(SEATING_SERVICE + "/api/seating/venues/" + conferenceId);
+        JsonNode venues = safeCall(seatingService + "/api/seating/venues/" + conferenceId);
         if (venues == null) return "暂无座位信息。";
 
         try {
@@ -363,7 +375,7 @@ public class BusinessDataService {
         // 尝试获取座位统计
         String venueId = getField(venue, "id", "venueId");
         if (venueId != null) {
-            JsonNode stats = safeCall(SEATING_SERVICE + "/api/seating/seats/stats/" + venueId);
+            JsonNode stats = safeCall(seatingService + "/api/seating/seats/stats/" + venueId);
             if (stats != null) {
                 appendStat(sb, stats, "总座位数", "totalSeats", "total");
                 appendStat(sb, stats, "已分配", "assignedSeats", "assigned");
@@ -380,7 +392,7 @@ public class BusinessDataService {
         if (conferenceId == null) conferenceId = getLatestMeetingId();
         if (conferenceId == null) return null;
 
-        JsonNode data = safeCall(SEATING_SERVICE + "/api/seating/accommodations/" + conferenceId);
+        JsonNode data = safeCall(seatingService + "/api/seating/accommodations/" + conferenceId);
         if (data == null || (data.isArray() && data.isEmpty())) return "暂无住宿安排信息。";
 
         StringBuilder sb = new StringBuilder("🏨 **住宿安排**\n\n");
@@ -408,7 +420,7 @@ public class BusinessDataService {
         if (conferenceId == null) conferenceId = getLatestMeetingId();
         if (conferenceId == null) return null;
 
-        JsonNode data = safeCall(SEATING_SERVICE + "/api/seating/dinings/" + conferenceId);
+        JsonNode data = safeCall(seatingService + "/api/seating/dinings/" + conferenceId);
         if (data == null || (data.isArray() && data.isEmpty())) return "暂无用餐安排信息。";
 
         StringBuilder sb = new StringBuilder("🍽️ **用餐安排**\n\n");
@@ -433,7 +445,7 @@ public class BusinessDataService {
         if (conferenceId == null) conferenceId = getLatestMeetingId();
         if (conferenceId == null) return null;
 
-        JsonNode data = safeCall(SEATING_SERVICE + "/api/seating/transports/" + conferenceId);
+        JsonNode data = safeCall(seatingService + "/api/seating/transports/" + conferenceId);
         if (data == null || (data.isArray() && data.isEmpty())) return "暂无交通安排信息。";
 
         StringBuilder sb = new StringBuilder("🚗 **交通安排**\n\n");
@@ -461,7 +473,7 @@ public class BusinessDataService {
      * 查询任务列表
      */
     public String queryTasks(Long conferenceId) {
-        String url = COLLABORATION_SERVICE + "/api/task/list?pageNum=1&pageSize=10";
+        String url = collaborationService + "/api/task/list?pageNum=1&pageSize=10";
         if (conferenceId != null) url += "&conferenceId=" + conferenceId;
         JsonNode data = safeCall(url);
         if (data == null) return null;
@@ -488,7 +500,7 @@ public class BusinessDataService {
      * 查询任务统计
      */
     public String queryTaskStats(Long conferenceId) {
-        String url = COLLABORATION_SERVICE + "/api/task/stats";
+        String url = collaborationService + "/api/task/stats";
         if (conferenceId != null) url += "?conferenceId=" + conferenceId;
         JsonNode data = safeCall(url);
         if (data == null) return null;
@@ -510,7 +522,7 @@ public class BusinessDataService {
      * 搜索资料
      */
     public String queryMaterials(String keyword, Long conferenceId) {
-        String url = COLLABORATION_SERVICE + "/api/material/search?keyword=" + keyword;
+        String url = collaborationService + "/api/material/search?keyword=" + keyword;
         if (conferenceId != null) url += "&meetingId=" + conferenceId;
         JsonNode data = safeCall(url);
         if (data == null) return null;
@@ -544,7 +556,7 @@ public class BusinessDataService {
      */
     public Long getLatestMeetingId() {
         try {
-            JsonNode data = safeCall(MEETING_SERVICE + "/api/meeting/list?pageNum=1&pageSize=1");
+            JsonNode data = safeCall(meetingService + "/api/meeting/list?pageNum=1&pageSize=1");
             if (data == null) return null;
             JsonNode records = data.has("records") ? data.get("records") : data;
             if (records.isArray() && !records.isEmpty()) {
@@ -565,7 +577,7 @@ public class BusinessDataService {
         if (meetingId == null) meetingId = getLatestMeetingId();
         if (meetingId == null) return null;
 
-        JsonNode data = safeCall(MEETING_SERVICE + "/api/meeting/" + meetingId);
+        JsonNode data = safeCall(meetingService + "/api/meeting/" + meetingId);
         if (data == null) return null;
 
         try {

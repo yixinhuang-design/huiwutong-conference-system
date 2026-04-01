@@ -376,4 +376,27 @@ public class TenantManagementController {
         
         return Result.ok("获取租户统计成功", stats);
     }
+
+    /**
+     * 公开接口：获取可用租户列表（供登录页面使用）
+     * 无需认证，仅返回活跃状态租户的名称和编码
+     */
+    @GetMapping("/public-list")
+    @Operation(summary = "获取可用租户列表（公开）", description = "登录页面使用，返回活跃租户的基本信息")
+    public Result<List<Map<String, Object>>> publicTenantList() {
+        List<SysTenant> tenants = tenantService.listTenants();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (SysTenant tenant : tenants) {
+            if (tenant.getStatus() != null && tenant.getStatus() == 1) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", String.valueOf(tenant.getId()));
+                item.put("name", tenant.getTenantName());
+                item.put("code", tenant.getTenantCode());
+                item.put("contact", tenant.getContactName());
+                item.put("phone", tenant.getContactPhone());
+                result.add(item);
+            }
+        }
+        return Result.ok("获取租户列表成功", result);
+    }
 }

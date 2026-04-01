@@ -483,6 +483,8 @@
         }
         .btn-modal-cancel:hover { background: #ebebeb; }
     </style>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
 </head>
 <body>
     <div id="app">
@@ -1181,7 +1183,7 @@
         async function aiApiFetch(path, options = {}) {
             const url = AI_API_BASE + path;
             const defaultHeaders = { 'Content-Type': 'application/json' };
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken');
             if (token) defaultHeaders['Authorization'] = 'Bearer ' + token;
             const tenantId = localStorage.getItem('tenantId') || '';
             defaultHeaders['X-Tenant-Id'] = tenantId;
@@ -1760,9 +1762,12 @@
                         if (this.conference.id) formData.append('conferenceId', this.conference.id);
 
                         const tenantId = localStorage.getItem('tenantId') || '';
+                        const uploadHeaders = { 'X-Tenant-Id': tenantId };
+                        const uploadToken = localStorage.getItem('authToken');
+                        if (uploadToken) uploadHeaders['Authorization'] = 'Bearer ' + uploadToken;
                         const resp = await fetch(AI_API_BASE + '/knowledge/upload', {
                             method: 'POST',
-                            headers: { 'X-Tenant-Id': tenantId },
+                            headers: uploadHeaders,
                             body: formData
                         });
                         const data = await resp.json();

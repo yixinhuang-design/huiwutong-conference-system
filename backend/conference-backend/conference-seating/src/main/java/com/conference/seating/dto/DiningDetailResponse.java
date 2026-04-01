@@ -9,11 +9,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 /**
  * 用餐安排详情响应 DTO
- * @author AI Assistant
- * @date 2026-03-12
  */
 @Data
 @NoArgsConstructor
@@ -57,7 +56,10 @@ public class DiningDetailResponse {
     
     @Schema(description = "菜单或特殊要求", example = "素食可选")
     private String remarks;
-    
+
+    @Schema(description = "已分配人员列表")
+    private List<AssignedAttendeeResponse> assignees;
+
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     

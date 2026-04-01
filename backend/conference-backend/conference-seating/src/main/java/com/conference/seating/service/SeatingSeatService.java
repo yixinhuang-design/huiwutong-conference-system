@@ -1,6 +1,7 @@
 package com.conference.seating.service;
 
 import com.conference.seating.dto.*;
+import com.conference.seating.entity.SeatingSeat;
 
 import java.util.List;
 
@@ -40,4 +41,9 @@ public interface SeatingSeatService {
      * 整体加载座位布局
      */
     LayoutLoadResponse loadLayout(Long conferenceId, Long scheduleId);
+
+    /**
+     * 获取会议下所有可用（未分配）的座位
+     */
+    List<SeatingSeat> getAvailableSeatsByConference(Long conferenceId);
 }

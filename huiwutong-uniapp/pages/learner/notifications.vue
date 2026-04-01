@@ -134,11 +134,18 @@ export default {
     },
 
     /**
-     * 查看详情
+     * 查看详情（同时调用后端标记已读）
      */
     viewDetail(notification) {
       notification.read = true
       this.updateBadge()
+
+      // 调用后端标记已读API
+      try {
+        notificationApi.markRead(notification.id, 0)
+      } catch (e) {
+        console.warn('标记已读失败:', e)
+      }
 
       uni.showModal({
         title: notification.title,
@@ -149,9 +156,19 @@ export default {
     },
 
     /**
-     * 全部标记已读
+     * 全部标记已读（调用后端API）
      */
     markAllRead() {
+      // 调用后端API
+      try {
+        notificationApi.markAllRead(this.conferenceId, 0)
+      } catch (e) {
+        console.warn('全部标记已读失败:', e)
+      }
+
+      this.allNotifications.forEach(item => {
+        item.read = true
+      })
       this.notificationList.forEach(item => {
         item.read = true
       })

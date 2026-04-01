@@ -36,6 +36,17 @@ public interface NotificationService extends IService<Notification> {
     /** 催报通知 */
     Map<String, Object> sendUrge(Long conferenceId);
 
+    /** 催报通知（自定义标题和内容） */
+    Map<String, Object> sendUrge(Long conferenceId, String customTitle, String customContent);
+
+    // === 已读跟踪 ===
+
+    /** 标记单条通知已读 */
+    void markRead(Long notificationId, Long userId);
+
+    /** 标记会议下所有通知已读 */
+    void markAllRead(Long conferenceId, Long userId);
+
     // === 模板相关 ===
 
     /** 获取模板列表 */
@@ -49,4 +60,7 @@ public interface NotificationService extends IService<Notification> {
 
     /** 获取模板详情 */
     NotificationTemplate getTemplate(Long id);
+
+    /** 执行实际发送（供定时调度器调用） */
+    void executeSend(Notification notification);
 }

@@ -36,7 +36,7 @@
                             :class="{ active: loginType === 'tenant' }"
                             @click="loginType = 'tenant'">
                         <i class="fas fa-building"></i>
-                        租户管理员
+                        租户登录
                     </button>
                 </div>
 
@@ -112,7 +112,7 @@
                         </label>
                         <input type="text" 
                                v-model="tenantLogin.username" 
-                               placeholder="请输入租户管理员账号"
+                               placeholder="请输入账号"
                                :disabled="!tenantLogin.tenantCode"
                                @keyup.enter="tenantLoginSubmit">
                     </div>
@@ -156,7 +156,7 @@
                     </div>
                     <div class="tip-item">
                         <i class="fas fa-info-circle"></i>
-                        <span>租户管理员需先选择租户，再输入账号密码</span>
+                        <span>租户用户（管理员/工作人员）需先选择租户，再输入账号密码</span>
                     </div>
                 </div>
             </div>
@@ -184,25 +184,34 @@
                         username: '',
                         password: ''
                     },
-                    availableTenants: [
-                        {
-                            id: 1,
-                            name: '默认租户',
-                            code: 'default',
-                            contact: '管理员',
-                            phone: '无',
-                            status: 'active'
-                        }
-                    ],
+                    availableTenants: [],
                     selectedTenantInfo: null
                 }
             },
             mounted() {
+                this.fetchTenantList();
                 this.loadRememberedData();
                 // 检查是否已登录
                 this.checkAuthToken();
             },
             methods: {
+                async fetchTenantList() {
+                    try {
+                        const resp = await fetch('/api/tenant/public-list');
+                        const data = await resp.json();
+                        if (data.code === 200 && Array.isArray(data.data)) {
+                            this.availableTenants = data.data;
+                        }
+                    } catch (e) {
+                        console.warn('获取租户列表失败，使用默认值', e);
+                        this.availableTenants = [{ id: '1', name: '默认租户', code: 'default', contact: '管理员' }];
+                    }
+                    // 如果租户列表不为空且当前未选择，自动选第一个
+                    if (this.availableTenants.length > 0 && !this.tenantLogin.tenantCode) {
+                        this.tenantLogin.tenantCode = this.availableTenants[0].code;
+                        this.onTenantSelect();
+                    }
+                },
                 checkAuthToken() {
                     // 如果已有有效的token，直接跳转
                     const token = localStorage.getItem('authToken');

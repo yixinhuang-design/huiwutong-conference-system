@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
     <script src="../js/interaction-utils.js"></script>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
 </head>
 <body>
     <div id="app">
@@ -532,6 +534,13 @@
                 }
             },
             mounted() {
+                // 客户端权限检查：仅超级管理员可访问
+                const userType = localStorage.getItem('userType');
+                if (userType !== 'super_admin') {
+                    alert('权限不足：仅超级管理员可访问客户管理');
+                    window.location.href = '../index.html';
+                    return;
+                }
                 // 确保模态框初始状态为关闭
                 this.showTenantModal = false;
                 this.currentStep = 1;

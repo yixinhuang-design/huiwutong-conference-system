@@ -20,10 +20,7 @@ const ScheduleAPI = {
     createSchedule(meetingId, scheduleData) {
         return fetch(`${this.baseURL}/create?meetingId=${meetingId}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': this.getAuthToken(),
-            },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(scheduleData)
         }).then(response => this.handleResponse(response));
     },
@@ -37,10 +34,7 @@ const ScheduleAPI = {
     updateSchedule(scheduleId, scheduleData) {
         return fetch(`${this.baseURL}/${scheduleId}`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': this.getAuthToken(),
-            },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(scheduleData)
         }).then(response => this.handleResponse(response));
     },
@@ -53,9 +47,7 @@ const ScheduleAPI = {
     deleteSchedule(scheduleId) {
         return fetch(`${this.baseURL}/${scheduleId}`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -66,9 +58,7 @@ const ScheduleAPI = {
      */
     getSchedule(scheduleId) {
         return fetch(`${this.baseURL}/${scheduleId}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -81,9 +71,7 @@ const ScheduleAPI = {
      */
     listSchedules(meetingId, pageNo = 1, pageSize = 10) {
         return fetch(`${this.baseURL}/list?meetingId=${meetingId}&pageNo=${pageNo}&pageSize=${pageSize}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -94,9 +82,7 @@ const ScheduleAPI = {
      */
     allSchedules(meetingId) {
         return fetch(`${this.baseURL}/all?meetingId=${meetingId}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -107,9 +93,7 @@ const ScheduleAPI = {
      */
     getNeedCheckinSchedules(meetingId) {
         return fetch(`${this.baseURL}/need-checkin?meetingId=${meetingId}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -120,9 +104,7 @@ const ScheduleAPI = {
      */
     getNeedReminderSchedules(meetingId) {
         return fetch(`${this.baseURL}/need-reminder?meetingId=${meetingId}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -133,9 +115,7 @@ const ScheduleAPI = {
      */
     getOngoingSchedules(meetingId) {
         return fetch(`${this.baseURL}/ongoing?meetingId=${meetingId}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -146,9 +126,7 @@ const ScheduleAPI = {
      */
     getUpcomingSchedules(meetingId) {
         return fetch(`${this.baseURL}/upcoming?meetingId=${meetingId}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -159,9 +137,7 @@ const ScheduleAPI = {
      */
     getNextSchedule(meetingId) {
         return fetch(`${this.baseURL}/next?meetingId=${meetingId}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -172,9 +148,7 @@ const ScheduleAPI = {
      */
     getCurrentSchedule(meetingId) {
         return fetch(`${this.baseURL}/current?meetingId=${meetingId}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -186,9 +160,7 @@ const ScheduleAPI = {
     publishSchedule(scheduleId) {
         return fetch(`${this.baseURL}/${scheduleId}/publish`, {
             method: 'PUT',
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -200,9 +172,7 @@ const ScheduleAPI = {
     cancelSchedule(scheduleId) {
         return fetch(`${this.baseURL}/${scheduleId}/cancel`, {
             method: 'PUT',
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -214,9 +184,7 @@ const ScheduleAPI = {
     duplicateSchedule(scheduleId) {
         return fetch(`${this.baseURL}/${scheduleId}/duplicate`, {
             method: 'POST',
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -227,9 +195,7 @@ const ScheduleAPI = {
      */
     countSchedules(meetingId) {
         return fetch(`${this.baseURL}/count?meetingId=${meetingId}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -253,9 +219,7 @@ const ScheduleAPI = {
 
         return fetch(`${this.baseURL}/attachment/upload?scheduleId=${scheduleId}`, {
             method: 'POST',
-            headers: {
-                'Authorization': this.getAuthToken(),
-            },
+            headers: this.getAuthHeaders(false),
             body: formData
         }).then(response => this.handleResponse(response));
     },
@@ -274,9 +238,7 @@ const ScheduleAPI = {
 
         return fetch(`${this.baseURL}/attachment/upload-batch?scheduleId=${scheduleId}`, {
             method: 'POST',
-            headers: {
-                'Authorization': this.getAuthToken(),
-            },
+            headers: this.getAuthHeaders(false),
             body: formData
         }).then(response => this.handleResponse(response));
     },
@@ -288,9 +250,7 @@ const ScheduleAPI = {
      */
     listAttachments(scheduleId) {
         return fetch(`${this.baseURL}/attachment/list?scheduleId=${scheduleId}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -301,9 +261,7 @@ const ScheduleAPI = {
      */
     getAttachment(attachmentId) {
         return fetch(`${this.baseURL}/attachment/${attachmentId}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -316,10 +274,7 @@ const ScheduleAPI = {
     updateAttachment(attachmentId, data) {
         return fetch(`${this.baseURL}/attachment/${attachmentId}`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': this.getAuthToken(),
-            },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(data)
         }).then(response => this.handleResponse(response));
     },
@@ -332,9 +287,7 @@ const ScheduleAPI = {
     deleteAttachment(attachmentId) {
         return fetch(`${this.baseURL}/attachment/${attachmentId}`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -345,9 +298,7 @@ const ScheduleAPI = {
      */
     getDownloadUrl(attachmentId) {
         return fetch(`${this.baseURL}/attachment/${attachmentId}/download-url`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -359,9 +310,7 @@ const ScheduleAPI = {
     recordDownload(attachmentId) {
         return fetch(`${this.baseURL}/attachment/${attachmentId}/download`, {
             method: 'POST',
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -373,9 +322,7 @@ const ScheduleAPI = {
      */
     validateFile(fileName, fileSize) {
         return fetch(`${this.baseURL}/attachment/validate?fileName=${encodeURIComponent(fileName)}&fileSize=${fileSize}`, {
-            headers: {
-                'Authorization': this.getAuthToken(),
-            }
+            headers: this.getAuthHeaders(false)
         }).then(response => this.handleResponse(response));
     },
 
@@ -401,9 +348,23 @@ const ScheduleAPI = {
      * @private
      */
     getAuthToken() {
-        // 从lectalStorage获取token，添加Bearer前缀
+        // 从localStorage获取token，添加Bearer前缀
         const token = localStorage.getItem('authToken') || '';
         return token ? `Bearer ${token}` : '';
+    },
+
+    /**
+     * 获取完整请求头（含认证和租户ID）
+     * @private
+     */
+    getAuthHeaders(withContentType = true) {
+        const headers = {};
+        if (withContentType) headers['Content-Type'] = 'application/json';
+        const token = localStorage.getItem('authToken') || '';
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const tenantId = localStorage.getItem('tenantId') || '';
+        if (tenantId) headers['X-Tenant-Id'] = tenantId;
+        return headers;
     }
 };
 

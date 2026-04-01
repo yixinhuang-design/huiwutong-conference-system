@@ -33,6 +33,8 @@
             page-break-after: avoid;
         }
     </style>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
 </head>
 <body>
     <div id="app">
@@ -920,6 +922,8 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="../js/conference-context.js"></script>
     <script>
         const { createApp } = Vue;
@@ -927,6 +931,7 @@
         // ===== 后端 API 配置 =====
         const REGISTRATION_API = '';
         const HANDBOOK_API = `${REGISTRATION_API}/api/handbook`;
+        const SEATING_API = '/api/seating';
         const DEFAULT_TENANT_ID = localStorage.getItem('tenantId') || '';
         
         function apiHeaders() {
@@ -1162,10 +1167,9 @@
                     if (conferenceId) {
                         this.conference = await window.conferenceContext.loadConference(conferenceId);
                     } else {
-                        this.conference = {
-                            id: 'demo_conf_001',
-                            name: '示例会议'
-                        };
+                        alert('未找到会议ID，请从会议管理中心进入');
+                        window.history.back();
+                        return;
                     }
                     
                     // 初始化封面配置
@@ -1321,10 +1325,14 @@
                             }
                         }
                         
-                        // 座位安排从 localStorage 加载（座位在独立的排座服务中）
-                        this.loadArrangementsFromSystem();
-                        if (this.seatingConfig.loaded) {
-                            loadedItems.push(`${this.seatingConfig.count}条座位`);
+                        // 座位和辅助安排从排座服务加载
+                        const arrangementResult = await this.loadArrangementsFromSystem();
+                        if (arrangementResult) {
+                            if (arrangementResult.seat > 0) loadedItems.push(`${arrangementResult.seat}条座位`);
+                            if (arrangementResult.transport > 0) loadedItems.push(`${arrangementResult.transport}条乘车`);
+                            if (arrangementResult.hotel > 0) loadedItems.push(`${arrangementResult.hotel}条住宿`);
+                            if (arrangementResult.dining > 0) loadedItems.push(`${arrangementResult.dining}条就餐`);
+                            if (arrangementResult.discussion > 0) loadedItems.push(`${arrangementResult.discussion}条讨论`);
                         }
                         
                         this.$hideLoading();
@@ -1371,11 +1379,13 @@
                 handleCoverUpload(event) {
                     const file = event.target.files[0];
                     if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            this.coverConfig.backgroundImage = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
+                        if (file.size > 5 * 1024 * 1024) {
+                            this.$showToast('图片大小不能超过5MB', 'warning');
+                            return;
+                        }
+                        this.compressAndSetImage(file, (dataUrl) => {
+                            this.coverConfig.backgroundImage = dataUrl;
+                        });
                     }
                 },
                 
@@ -1386,12 +1396,40 @@
                 handleBackcoverUpload(event) {
                     const file = event.target.files[0];
                     if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            this.backcoverConfig.backgroundImage = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
+                        if (file.size > 5 * 1024 * 1024) {
+                            this.$showToast('图片大小不能超过5MB', 'warning');
+                            return;
+                        }
+                        this.compressAndSetImage(file, (dataUrl) => {
+                            this.backcoverConfig.backgroundImage = dataUrl;
+                        });
                     }
+                },
+                
+                // 图片压缩工具 - 限制宽度和质量以避免 base64 过大
+                compressAndSetImage(file, callback, maxWidth = 1200) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            // 小图且小于500KB直接使用
+                            if (img.width <= maxWidth && file.size < 500 * 1024) {
+                                callback(e.target.result);
+                                return;
+                            }
+                            const canvas = document.createElement('canvas');
+                            const ratio = Math.min(maxWidth / img.width, 1);
+                            canvas.width = img.width * ratio;
+                            canvas.height = img.height * ratio;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            const compressed = canvas.toDataURL('image/jpeg', 0.7);
+                            console.log(`[图片压缩] ${file.name}: ${(file.size/1024).toFixed(0)}KB → ${(compressed.length*0.75/1024).toFixed(0)}KB`);
+                            callback(compressed);
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
                 },
                 
                 // 资料上传
@@ -1527,18 +1565,19 @@
                     }
                 },
                 
-                // 调取安排数据 - 从 seating_{conferenceId} 调取
-                loadArrangementsFromSystem() {
+                // 调取安排数据 - 座位从 localStorage, 辅助安排从后端 seating 服务 API
+                async loadArrangementsFromSystem() {
                     try {
-                        const seatingKey = `seating_${this.conference.id}`;
-                        const savedData = localStorage.getItem(seatingKey);
+                        const confId = this.conference.id;
                         let loadedCount = { seat: 0, transport: 0, hotel: 0, dining: 0, discussion: 0 };
-                        
+
+                        // ===== 1. 座位数据 - 从 localStorage 读取（排座服务保存在此）=====
+                        const seatingKey = `seating_${confId}`;
+                        const savedData = localStorage.getItem(seatingKey);
                         if (savedData) {
                             const data = JSON.parse(savedData);
                             console.log('[loadArrangementsFromSystem] 找到座位管理数据:', data);
-                            
-                            // 1. 调取座位数据
+
                             if (data.seatingAreas && data.seatingAreas.length > 0) {
                                 const seatAssignments = {};
                                 data.seatingAreas.forEach(area => {
@@ -1557,8 +1596,7 @@
                                         });
                                     }
                                 });
-                                
-                                // 更新学员座位信息
+
                                 this.allMembers.forEach(member => {
                                     if (seatAssignments[member.id]) {
                                         const s = seatAssignments[member.id];
@@ -1566,128 +1604,105 @@
                                         loadedCount.seat++;
                                     }
                                 });
-                                
+
                                 this.seatingConfig.loaded = true;
                                 this.seatingConfig.count = loadedCount.seat;
                             }
-                            
-                            // 2. 调取乘车安排
-                            if (data.transportList && data.transportList.length > 0) {
-                                this.transportConfig.buses = data.transportList.map(t => ({
-                                    name: t.name || '',
-                                    route: t.departure && t.destination ? `${t.departure} → ${t.destination}` : '',
-                                    time: t.departureTime || '',
-                                    passengers: t.passengers || []
-                                }));
-                                
-                                // 更新学员乘车信息
-                                data.transportList.forEach(bus => {
-                                    if (bus.passengers) {
-                                        bus.passengers.forEach(p => {
-                                            const member = this.allMembers.find(m => m.id === p.id);
-                                            if (member) {
-                                                member.bus = bus.name;
-                                                loadedCount.transport++;
-                                            }
-                                        });
-                                    }
+                        }
+
+                        // ===== 2. 辅助安排 - 从后端 seating 服务 API 读取 =====
+                        const reqHeaders = apiHeaders();
+                        const safeJson = (resp) => {
+                            if (!resp.ok) return [];
+                            return resp.json().then(j => {
+                                if (j.code === 200 || j.code === 0) return j.data || j;
+                                if (Array.isArray(j)) return j;
+                                return [];
+                            }).catch(() => []);
+                        };
+
+                        const [transportsRes, accommodationsRes, discussionsRes, diningsRes] = await Promise.allSettled([
+                            fetch(`${SEATING_API}/transports/${confId}`, { headers: reqHeaders }).then(safeJson).catch(() => []),
+                            fetch(`${SEATING_API}/accommodations/${confId}`, { headers: reqHeaders }).then(safeJson).catch(() => []),
+                            fetch(`${SEATING_API}/discussions/${confId}`, { headers: reqHeaders }).then(safeJson).catch(() => []),
+                            fetch(`${SEATING_API}/dinings/${confId}`, { headers: reqHeaders }).then(safeJson).catch(() => [])
+                        ]);
+
+                        // 2a. 乘车安排
+                        const transports = transportsRes.status === 'fulfilled' && Array.isArray(transportsRes.value) ? transportsRes.value : [];
+                        if (transports.length > 0) {
+                            this.transportConfig.buses = transports.map(t => ({
+                                name: t.vehicleName || t.name || '',
+                                route: t.departure && t.destination ? `${t.departure} → ${t.destination}` : '',
+                                time: t.departureTime || '',
+                                passengers: (t.assignedAttendees || []).map(a => ({ id: a.attendeeId, name: a.name }))
+                            }));
+                            transports.forEach(bus => {
+                                (bus.assignedAttendees || []).forEach(a => {
+                                    const member = this.allMembers.find(m => String(m.id) === String(a.attendeeId));
+                                    if (member) { member.bus = bus.vehicleName || bus.name || ''; loadedCount.transport++; }
                                 });
-                                
-                                this.rosterConfig.showTransport = true;
-                            }
-                            
-                            // 3. 调取住宿安排
-                            if (data.accommodationList && data.accommodationList.length > 0) {
-                                this.hotelConfig.hotels = data.accommodationList.map(h => ({
-                                    name: h.hotelName || '',
-                                    address: '',
-                                    phone: '',
-                                    rooms: h.roomNumber || ''
-                                }));
-                                
-                                // 更新学员住宿信息
-                                data.accommodationList.forEach(room => {
-                                    if (room.occupants) {
-                                        room.occupants.forEach(p => {
-                                            const member = this.allMembers.find(m => m.id === p.id);
-                                            if (member) {
-                                                member.room = `${room.hotelName || ''} ${room.roomNumber || ''}`.trim();
-                                                loadedCount.hotel++;
-                                            }
-                                        });
-                                    }
+                            });
+                            this.rosterConfig.showTransport = true;
+                        }
+
+                        // 2b. 住宿安排
+                        const accommodations = accommodationsRes.status === 'fulfilled' && Array.isArray(accommodationsRes.value) ? accommodationsRes.value : [];
+                        if (accommodations.length > 0) {
+                            this.hotelConfig.hotels = accommodations.map(h => ({
+                                name: h.hotelName || h.name || '',
+                                address: h.address || '',
+                                phone: h.phone || '',
+                                rooms: h.roomNumber || ''
+                            }));
+                            accommodations.forEach(room => {
+                                (room.assignedAttendees || []).forEach(a => {
+                                    const member = this.allMembers.find(m => String(m.id) === String(a.attendeeId));
+                                    if (member) { member.room = `${room.hotelName || ''} ${room.roomNumber || ''}`.trim(); loadedCount.hotel++; }
                                 });
-                                
-                                this.rosterConfig.showHotel = true;
-                            }
-                            
-                            // 4. 调取就餐安排
-                            if (data.diningList && data.diningList.length > 0) {
-                                // 更新学员就餐信息
-                                data.diningList.forEach(table => {
-                                    if (table.diners) {
-                                        table.diners.forEach(p => {
-                                            const member = this.allMembers.find(m => m.id === p.id);
-                                            if (member) {
-                                                member.table = table.name;
-                                                loadedCount.dining++;
-                                            }
-                                        });
-                                    }
+                            });
+                            this.rosterConfig.showHotel = true;
+                        }
+
+                        // 2c. 讨论安排
+                        const discussions = discussionsRes.status === 'fulfilled' && Array.isArray(discussionsRes.value) ? discussionsRes.value : [];
+                        if (discussions.length > 0) {
+                            this.discussionConfig.sessions = discussions.map(d => ({
+                                name: d.roomName || d.name || '',
+                                time: d.startTime ? `${d.startTime} - ${d.endTime || ''}` : '',
+                                location: d.location || '',
+                                topic: d.description || ''
+                            }));
+                            discussions.forEach(disc => {
+                                (disc.assignedAttendees || []).forEach(a => {
+                                    const member = this.allMembers.find(m => String(m.id) === String(a.attendeeId));
+                                    if (member) { member.discussionGroup = disc.roomName || disc.name || ''; loadedCount.discussion++; }
                                 });
-                                
-                                this.rosterConfig.showMeal = true;
-                            }
-                            
-                            // 5. 调取讨论室安排
-                            if (data.discussionList && data.discussionList.length > 0) {
-                                this.discussionConfig.sessions = data.discussionList.map(d => ({
-                                    name: d.name || '',
-                                    time: d.startTime ? `${d.startTime}-${d.endTime}` : '',
-                                    location: d.location || '',
-                                    topic: d.topic || ''
-                                }));
-                                
-                                // 更新学员讨论组信息
-                                data.discussionList.forEach(disc => {
-                                    if (disc.participants) {
-                                        disc.participants.forEach(p => {
-                                            const member = this.allMembers.find(m => m.id === p.id);
-                                            if (member) {
-                                                member.discussionGroup = disc.name;
-                                                loadedCount.discussion++;
-                                            }
-                                        });
-                                    }
+                            });
+                            this.rosterConfig.showDiscussion = true;
+                        }
+
+                        // 2d. 就餐安排
+                        const dinings = diningsRes.status === 'fulfilled' && Array.isArray(diningsRes.value) ? diningsRes.value : [];
+                        if (dinings.length > 0) {
+                            dinings.forEach(table => {
+                                (table.assignedAttendees || []).forEach(a => {
+                                    const member = this.allMembers.find(m => String(m.id) === String(a.attendeeId));
+                                    if (member) { member.table = table.restaurantName || table.name || ''; loadedCount.dining++; }
                                 });
-                                
-                                this.rosterConfig.showDiscussion = true;
+                            });
+                            this.rosterConfig.showMeal = true;
+                        }
+
+                        // ===== 3. 更新字段可见性 =====
+                        const visibilityMap = { seat: 'seat', transport: 'bus', hotel: 'room', dining: 'table', discussion: 'discussionGroup' };
+                        Object.entries(visibilityMap).forEach(([countKey, fieldId]) => {
+                            if (loadedCount[countKey] > 0) {
+                                const f = this.rosterFields.find(f => f.id === fieldId);
+                                if (f) f.visible = true;
                             }
-                        }
-                        
-                        // 也尝试从 auxiliary_arrangement_{conferenceId} 读取
-                        const auxKey = `auxiliary_arrangement_${this.conference.id}`;
-                        const auxData = localStorage.getItem(auxKey);
-                        if (auxData) {
-                            const aux = JSON.parse(auxData);
-                            console.log('[loadArrangementsFromSystem] 找到辅助安排数据:', aux);
-                            // 合并辅助安排数据...
-                        }
-                        
-                        // 更新字段可见性
-                        if (loadedCount.seat > 0) {
-                            const seatField = this.rosterFields.find(f => f.id === 'seat');
-                            if (seatField) seatField.visible = true;
-                        }
-                        if (loadedCount.transport > 0) {
-                            const busField = this.rosterFields.find(f => f.id === 'bus');
-                            if (busField) busField.visible = true;
-                        }
-                        if (loadedCount.hotel > 0) {
-                            const roomField = this.rosterFields.find(f => f.id === 'room');
-                            if (roomField) roomField.visible = true;
-                        }
-                        
+                        });
+
                         console.log('[loadArrangementsFromSystem] 加载完成:', loadedCount);
                         return loadedCount;
                     } catch (e) {
@@ -1997,7 +2012,27 @@
                 },
                 
                 sortGroupByDrag(groupIndex) {
-                    this.$showToast('拖动排序功能需要集成Sortable.js', 'info');
+                    this.$nextTick(() => {
+                        const cards = document.querySelectorAll('.group-card');
+                        const listEl = cards[groupIndex] ? cards[groupIndex].querySelector('.members-list, tbody') : null;
+                        if (listEl && typeof Sortable !== 'undefined') {
+                            if (listEl._sortableInstance) listEl._sortableInstance.destroy();
+                            listEl._sortableInstance = Sortable.create(listEl, {
+                                animation: 150,
+                                ghostClass: 'sortable-ghost',
+                                onEnd: (evt) => {
+                                    const group = this.groups[groupIndex];
+                                    if (group && group.members) {
+                                        const moved = group.members.splice(evt.oldIndex, 1)[0];
+                                        group.members.splice(evt.newIndex, 0, moved);
+                                    }
+                                }
+                            });
+                            this.$showToast('拖动排序已启用，拖拽成员调整顺序', 'success');
+                        } else {
+                            this.$showToast('拖动排序初始化失败', 'warning');
+                        }
+                    });
                 },
                 
                 sortGroupByNumber(groupIndex) {
@@ -2011,23 +2046,8 @@
                     this.selectedTemplate = templateId;
                 },
                 
-                triggerCoverUpload() {
-                    this.$refs.coverInput.click();
-                },
-                
-                handleCoverUpload(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            this.coverImage = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                },
-                
                 removeCover() {
-                    this.coverImage = null;
+                    this.coverConfig.backgroundImage = null;
                 },
                 
                 insertImage() {
@@ -2148,7 +2168,32 @@
                 },
                 
                 downloadRoster() {
-                    this.$showToast('下载名册功能需要后端支持', 'info');
+                    try {
+                        const fields = this.rosterFields.filter(f => f.visible);
+                        const headers = ['序号', ...fields.map(f => f.label)];
+                        const rows = this.allMembers.map((m, i) => {
+                            return [i + 1, ...fields.map(f => {
+                                const val = this.getMemberFieldValue(m, f.id);
+                                return typeof val === 'string' && (val.includes(',') || val.includes('"') || val.includes('\n'))
+                                    ? `"${val.replace(/"/g, '""')}"` : val;
+                            })];
+                        });
+                        const BOM = '\uFEFF';
+                        const csv = BOM + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+                        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${this.conference.name || '学员名册'}_名册.csv`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        this.$showToast('名册已导出为CSV文件', 'success');
+                    } catch (e) {
+                        console.error('[downloadRoster] 导出失败:', e);
+                        this.$showToast('导出失败: ' + e.message, 'error');
+                    }
                 },
                 
                 shareRoster() {
@@ -2156,16 +2201,42 @@
                 },
                 
                 downloadPDF() {
-                    this.$showToast('下载PDF功能需要后端支持', 'info');
+                    try {
+                        const printStyle = document.createElement('style');
+                        printStyle.id = 'print-pdf-style';
+                        printStyle.textContent = `
+                            @media print {
+                                .wizard-navigation, .wizard-actions, .step-header,
+                                .sidebar, nav, .toolbar, .no-print { display: none !important; }
+                                .preview-container { width: 100% !important; margin: 0 !important; }
+                                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                            }
+                        `;
+                        document.head.appendChild(printStyle);
+                        window.print();
+                        setTimeout(() => {
+                            const s = document.getElementById('print-pdf-style');
+                            if (s) s.remove();
+                        }, 1000);
+                    } catch (e) {
+                        this.$showToast('PDF导出失败: ' + e.message, 'error');
+                    }
                 },
 
                 generateShareLink() {
-                    // 模拟生成分享链接
-                    const link = `https://conference.example.com/roster/share/${this.conference.id}?token=${Date.now()}`;
-                    this.shareLink = link;
-                    
-                    // 生成二维码（需要集成qrcode库）
-                    this.$showToast('二维码生成需要集成qrcode.js库', 'info');
+                    const sharePayload = { mid: this.conference.id, ts: Date.now(), exp: (this.shareOptions ? this.shareOptions.expiryDays : 7) || 7 };
+                    const shareToken = btoa(JSON.stringify(sharePayload));
+                    const baseUrl = window.location.origin;
+                    this.shareLink = `${baseUrl}/pages/roster-generation.html?conferenceId=${this.conference.id}&share=${shareToken}`;
+
+                    this.$nextTick(() => {
+                        const qrcodeEl = document.getElementById('qrcode');
+                        if (qrcodeEl && typeof QRCode !== 'undefined') {
+                            qrcodeEl.innerHTML = '';
+                            new QRCode(qrcodeEl, { text: this.shareLink, width: 200, height: 200, colorDark: '#333333', colorLight: '#ffffff' });
+                        }
+                        this.$showToast('分享链接和二维码已生成', 'success');
+                    });
                 },
                 
                 async copyShareLink() {
@@ -2180,6 +2251,9 @@
                 async saveDraft() {
                     try {
                         const meetingId = this.conference.id;
+                        const materialsMeta = (this.uploadedMaterials || []).map(m => ({
+                            name: m.name, type: m.type, size: m.size, url: m.url || null, source: m.source || 'system'
+                        }));
                         const requestBody = {
                             meetingId: meetingId,
                             title: this.coverConfig.title || this.conference.name,
@@ -2196,7 +2270,8 @@
                             notesContent: this.notesContent,
                             handbookSections: this.handbookSections,
                             grouping: this.grouping,
-                            discussionTopics: this.discussionTopics
+                            discussionTopics: this.discussionTopics,
+                            materialsMeta: materialsMeta
                         };
                         
                         const result = await apiFetch(`${HANDBOOK_API}/save`, {
