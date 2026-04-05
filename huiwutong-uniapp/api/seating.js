@@ -13,7 +13,7 @@ export default {
    * GET /api/seating/venues/{conferenceId}
    */
   getVenues(conferenceId) {
-    return get(`/api/seating/venues/${conferenceId}`)
+    return get(`/seating/venues/${conferenceId}`)
   },
 
   /**
@@ -21,7 +21,7 @@ export default {
    * GET /api/seating/venues/detail/{venueId}
    */
   getVenueDetail(venueId) {
-    return get(`/api/seating/venues/detail/${venueId}`)
+    return get(`/seating/venues/detail/${venueId}`)
   },
 
   /**
@@ -29,7 +29,7 @@ export default {
    * POST /api/seating/venues
    */
   createVenue(data) {
-    return post('/api/seating/venues', data)
+    return post('/seating/venues', data)
   },
 
   /**
@@ -37,7 +37,7 @@ export default {
    * PUT /api/seating/venues/{venueId}
    */
   updateVenue(venueId, data) {
-    return put(`/api/seating/venues/${venueId}`, data)
+    return put(`/seating/venues/${venueId}`, data)
   },
 
   /**
@@ -45,7 +45,7 @@ export default {
    * DELETE /api/seating/venues/{venueId}
    */
   deleteVenue(venueId) {
-    return del(`/api/seating/venues/${venueId}`)
+    return del(`/seating/venues/${venueId}`)
   },
 
   /**
@@ -53,7 +53,7 @@ export default {
    * GET /api/seating/venues/stats/{venueId}
    */
   getVenueStats(venueId) {
-    return get(`/api/seating/venues/stats/${venueId}`)
+    return get(`/seating/venues/stats/${venueId}`)
   },
 
   // ==================== 座位 ====================
@@ -63,7 +63,7 @@ export default {
    * GET /api/seating/seats
    */
   getSeats(venueId) {
-    return get('/api/seating/seats', { venueId })
+    return get('/seating/seats', { venueId })
   },
 
   /**
@@ -71,7 +71,7 @@ export default {
    * POST /api/seating/seats/assign
    */
   assignSeat(data) {
-    return post('/api/seating/seats/assign', data)
+    return post('/seating/seats/assign', data)
   },
 
   /**
@@ -79,7 +79,7 @@ export default {
    * POST /api/seating/seats/swap
    */
   swapSeats(data) {
-    return post('/api/seating/seats/swap', data)
+    return post('/seating/seats/swap', data)
   },
 
   /**
@@ -87,7 +87,7 @@ export default {
    * GET /api/seating/seats/stats/{venueId}
    */
   getSeatStats(venueId) {
-    return get(`/api/seating/seats/stats/${venueId}`)
+    return get(`/seating/seats/stats/${venueId}`)
   },
 
   // ==================== 布局 ====================
@@ -97,7 +97,7 @@ export default {
    * POST /api/seating/layout/save
    */
   saveLayout(data) {
-    return post('/api/seating/layout/save', data)
+    return post('/seating/layout/save', data)
   },
 
   /**
@@ -105,7 +105,7 @@ export default {
    * GET /api/seating/layout/load
    */
   loadLayout(conferenceId, scheduleId) {
-    return get('/api/seating/layout/load', {
+    return get('/seating/layout/load', {
       conferenceId,
       scheduleId
     })
@@ -118,7 +118,7 @@ export default {
    * GET /api/seating/dinings/{conferenceId}
    */
   getDinings(conferenceId) {
-    return get(`/api/seating/dinings/${conferenceId}`)
+    return get(`/seating/dinings/${conferenceId}`)
   },
 
   /**
@@ -126,7 +126,7 @@ export default {
    * POST /api/seating/dinings
    */
   createDining(data) {
-    return post('/api/seating/dinings', data)
+    return post('/seating/dinings', data)
   },
 
   // ==================== 住宿 ====================
@@ -136,7 +136,7 @@ export default {
    * GET /api/seating/accommodations/{conferenceId}
    */
   getAccommodations(conferenceId) {
-    return get(`/api/seating/accommodations/${conferenceId}`)
+    return get(`/seating/accommodations/${conferenceId}`)
   },
 
   /**
@@ -144,7 +144,7 @@ export default {
    * POST /api/seating/accommodations
    */
   createAccommodation(data) {
-    return post('/api/seating/accommodations', data)
+    return post('/seating/accommodations', data)
   },
 
   // ==================== 车辆 ====================
@@ -154,7 +154,7 @@ export default {
    * GET /api/seating/transports/{conferenceId}
    */
   getTransports(conferenceId) {
-    return get(`/api/seating/transports/${conferenceId}`)
+    return get(`/seating/transports/${conferenceId}`)
   },
 
   /**
@@ -162,6 +162,6 @@ export default {
    * POST /api/seating/transports
    */
   createTransport(data) {
-    return post('/api/seating/transports', data)
+    return post('/seating/transports', data)
   }
 }

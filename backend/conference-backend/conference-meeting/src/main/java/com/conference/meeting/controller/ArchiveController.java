@@ -28,7 +28,7 @@ import java.util.*;
 @Slf4j
 @RestController
 @RequestMapping("/api/meeting/{meetingId}/archive")
-@CrossOrigin(origins = "*", maxAge = 3600)
+// @CrossOrigin  // 已禁用：使用Gateway的统一CORS配置
 public class ArchiveController {
 
     @Autowired

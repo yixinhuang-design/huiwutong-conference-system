@@ -30,7 +30,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequestMapping("/api/meeting")
-@CrossOrigin(origins = "*", maxAge = 3600)
+// @CrossOrigin  // 已禁用：使用Gateway的统一CORS配置
 public class MeetingController {
 
     @Autowired
