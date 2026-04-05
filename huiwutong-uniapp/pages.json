@@ -11,7 +11,8 @@
       "path": "pages/common/home",
       "style": {
         "navigationStyle": "custom",
-        "backgroundColor": "#f8fafc"
+        "backgroundColor": "#f8fafc",
+        "enablePullDownRefresh": true
       }
     },
     {

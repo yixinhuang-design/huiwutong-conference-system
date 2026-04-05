@@ -83,11 +83,11 @@ export default {
   },
 
   /**
-   * 会议统计
-   * GET /api/meeting/{id}/statistics
+   * 会议统计（租户维度）
+   * GET /api/meeting/statistics
    */
-  getStatistics(id) {
-    return get(`/meeting/${id}/statistics`)
+  getStatistics() {
+    return get('/meeting/statistics')
   },
 
   /**

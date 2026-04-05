@@ -7,7 +7,7 @@
           <text>{{ avatarText }}</text>
         </view>
         <view class="user-info">
-          <view class="card-title">上午好，{{ realName }}</view>
+          <view class="card-title">{{ greeting }}，{{ realName }}</view>
           <view class="card-subtitle-inline">
             <text>{{ userTypeName }}</text>
             <text class="sep" v-if="organization">｜</text>
@@ -19,14 +19,22 @@
 
     <!-- 今日提醒 -->
     <view v-if="todayReminder" class="info-banner fade-in">
-      <strong><text class="fa fa-bullhorn"></text> 今日提醒</strong>
-      {{ todayReminder }}
+      <view class="info-banner-content">
+        <text class="fa fa-bullhorn"></text>
+        <text class="info-banner-text">{{ todayReminder }}</text>
+      </view>
     </view>
 
     <!-- 当前会议/培训列表 -->
     <view class="section-title">我参加的培训</view>
 
-    <view v-if="meetings.length > 0">
+    <!-- 加载中 -->
+    <view v-if="loading" class="loading-state">
+      <text class="fa fa-spinner fa-spin"></text>
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <view v-else-if="meetings.length > 0">
       <view
         v-for="(meeting, index) in meetings"
         :key="meeting.id"
@@ -35,15 +43,19 @@
       >
         <view class="meeting-header">
           <view class="meeting-info">
-            <view class="meeting-title">{{ meeting.title }}</view>
+            <view class="meeting-title">{{ meeting.meetingName }}</view>
             <view class="meeting-meta">
               <text class="meta-item">
                 <text><text class="fa fa-calendar-alt"></text></text>
-                {{ meeting.dateRange }} · 共{{ meeting.days }}天
+                {{ formatDateRange(meeting.startTime, meeting.endTime) }}
               </text>
               <text class="meta-item">
                 <text><text class="fa fa-map-marker-alt"></text></text>
-                {{ meeting.location }}
+                {{ meeting.venueName || '待定' }}
+              </text>
+              <text class="meta-item" v-if="meeting.currentParticipants != null">
+                <text><text class="fa fa-users"></text></text>
+                {{ meeting.currentParticipants || 0 }}{{ meeting.maxParticipants ? '/' + meeting.maxParticipants : '' }} 人
               </text>
             </view>
           </view>
@@ -52,7 +64,7 @@
             :class="getStatusClass(meeting.status)"
           >
             <text class="status-dot"></text>
-            {{ meeting.statusText }}
+            {{ getStatusText(meeting.status) }}
           </view>
         </view>
       </view>
@@ -61,6 +73,23 @@
     <view v-else class="empty-state">
       <text class="empty-icon"><text class="fa fa-clipboard"></text></text>
       <text class="empty-text">暂无培训安排</text>
+    </view>
+
+    <!-- 最新通知 -->
+    <view class="section-title" v-if="notifications.length > 0">最新通知</view>
+    <view v-if="notifications.length > 0" class="notification-list">
+      <view
+        v-for="(noti, idx) in notifications"
+        :key="noti.id || idx"
+        class="notification-item card fade-in"
+        @click="goToNotificationDetail(noti.id)"
+      >
+        <view class="noti-header">
+          <text class="noti-title">{{ noti.title || '系统通知' }}</text>
+          <text class="noti-time">{{ formatTime(noti.createTime || noti.sendTime) }}</text>
+        </view>
+        <view class="noti-content" v-if="noti.content">{{ truncate(noti.content, 60) }}</view>
+      </view>
     </view>
 
     <!-- 功能导航 -->
@@ -87,12 +116,15 @@
 <script>
 import { useUserStore } from '@/store/modules/user'
 import { useAppStore } from '@/store/modules/app'
+import { meeting as meetingApi, notification as notificationApi } from '@/api/index'
 
 export default {
   data() {
     return {
+      loading: false,
       todayReminder: '',
       meetings: [],
+      notifications: [],
       featureList: [
         {
           icon: 'fa-book',
@@ -162,6 +194,17 @@ export default {
 
     organization() {
       return this.userStore.userInfo?.organization || ''
+    },
+
+    /** 根据当前时间段显示问候语 */
+    greeting() {
+      const hour = new Date().getHours()
+      if (hour < 6) return '凌晨好'
+      if (hour < 9) return '早上好'
+      if (hour < 12) return '上午好'
+      if (hour < 14) return '中午好'
+      if (hour < 18) return '下午好'
+      return '晚上好'
     }
   },
 
@@ -174,71 +217,114 @@ export default {
     this.loadMeetings()
   },
 
+  // 下拉刷新
+  onPullDownRefresh() {
+    this.initPage()
+    setTimeout(() => uni.stopPullDownRefresh(), 500)
+  },
+
   methods: {
     /**
      * 初始化页面
      */
     initPage() {
-      // 设置今日提醒
-      this.setTodayReminder()
-
       // 加载会议列表
       this.loadMeetings()
+
+      // 加载最新通知
+      this.loadNotifications()
 
       // 根据用户类型调整功能列表
       this.adjustFeatureList()
     },
 
     /**
-     * 设置今日提醒
+     * 加载会议列表（调用真实后端接口）
      */
-    setTodayReminder() {
-      const now = new Date()
-      const hour = now.getHours()
+    async loadMeetings() {
+      this.loading = true
+      try {
+        // 优先获取进行中的会议
+        let ongoingList = []
+        try {
+          const ongoingRes = await meetingApi.getOngoing()
+          ongoingList = this.extractList(ongoingRes)
+        } catch (e) {
+          console.warn('获取进行中会议失败，回退到全量列表:', e)
+        }
 
-      if (hour < 9) {
-        this.todayReminder = '请在 09:00 前完成报到签到，携带胸牌入场。'
-      } else if (hour >= 9 && hour < 12) {
-        this.todayReminder = '上午课程即将开始，请前往指定会议室。'
-      } else if (hour >= 12 && hour < 14) {
-        this.todayReminder = '午休时间，下午课程将在 14:00 开始。'
-      } else {
-        this.todayReminder = '请注意下午课程安排，准时参加。'
+        // 获取全部会议列表（分页第1页）
+        const listRes = await meetingApi.getList({ pageNum: 1, pageSize: 20 })
+        let allMeetings = this.extractList(listRes)
+
+        // 合并去重：进行中的排在最前
+        if (ongoingList.length > 0) {
+          const ongoingIds = new Set(ongoingList.map(m => String(m.id)))
+          const rest = allMeetings.filter(m => !ongoingIds.has(String(m.id)))
+          this.meetings = [...ongoingList, ...rest]
+        } else {
+          this.meetings = allMeetings
+        }
+
+        // 设置今日提醒（基于会议数据）
+        this.setTodayReminder(ongoingList)
+      } catch (error) {
+        console.error('加载会议列表失败:', error)
+        this.meetings = []
+        this.todayReminder = ''
+      } finally {
+        this.loading = false
       }
     },
 
     /**
-     * 加载会议列表
+     * 加载最新通知
      */
-    async loadMeetings() {
+    async loadNotifications() {
       try {
-        // TODO: 调用API获取会议列表
-        // const res = await this.$api.meeting.getList()
-
-        // 模拟数据
-        this.meetings = [
-          {
-            id: 1,
-            title: '2025党务干部培训班',
-            dateRange: '1月15日 - 1月19日',
-            days: 5,
-            location: '市委党校报告厅',
-            status: 'ongoing',
-            statusText: '进行中'
-          },
-          {
-            id: 2,
-            title: '青年干部能力提升班',
-            dateRange: '1月22日 - 1月26日',
-            days: 5,
-            location: '市委党校教学楼',
-            status: 'upcoming',
-            statusText: '即将开始'
-          }
-        ]
+        const res = await notificationApi.list({ page: 1, pageSize: 5 })
+        this.notifications = this.extractList(res)
       } catch (error) {
-        console.error('Load meetings error:', error)
-        this.meetings = []
+        console.warn('加载通知列表失败:', error)
+        this.notifications = []
+      }
+    },
+
+    /**
+     * 从分页响应中提取数组
+     * 兼容多种后端返回格式: { records: [] } / { list: [] } / { data: { records: [] } } / 直接数组
+     */
+    extractList(res) {
+      if (!res) return []
+      if (Array.isArray(res)) return res
+      if (res.records && Array.isArray(res.records)) return res.records
+      if (res.list && Array.isArray(res.list)) return res.list
+      if (res.data) {
+        if (Array.isArray(res.data)) return res.data
+        if (res.data.records) return res.data.records
+        if (res.data.list) return res.data.list
+      }
+      if (res.rows && Array.isArray(res.rows)) return res.rows
+      return []
+    },
+
+    /**
+     * 根据进行中的会议设置今日提醒
+     */
+    setTodayReminder(ongoingList) {
+      if (ongoingList && ongoingList.length > 0) {
+        const first = ongoingList[0]
+        this.todayReminder = `"${first.meetingName}" 正在进行中，请留意日程安排。`
+      } else if (this.meetings.length > 0) {
+        // 找到最近即将开始的会议
+        const upcoming = this.meetings.find(m => m.status === 0 || m.status === 1)
+        if (upcoming) {
+          this.todayReminder = `"${upcoming.meetingName}" 即将开始，请做好准备。`
+        } else {
+          this.todayReminder = ''
+        }
+      } else {
+        this.todayReminder = ''
       }
     },
 
@@ -290,16 +376,91 @@ export default {
     },
 
     /**
-     * 获取状态样式类
+     * 获取状态样式类（后端 status 为 Integer）
+     * 0=草稿, 1=报名中, 2=进行中, 3=已结束, 4=已取消
      */
     getStatusClass(status) {
       const classMap = {
-        ongoing: 'status-accent',
-        upcoming: 'status-warn',
-        completed: 'status-success',
-        cancelled: 'status-danger'
+        0: 'status-info',
+        1: 'status-warn',
+        2: 'status-accent',
+        3: 'status-success',
+        4: 'status-danger',
+        // 兼容字符串格式
+        'draft': 'status-info',
+        'registering': 'status-warn',
+        'ongoing': 'status-accent',
+        'completed': 'status-success',
+        'cancelled': 'status-danger'
       }
       return classMap[status] || 'status-accent'
+    },
+
+    /**
+     * 获取状态显示文本
+     */
+    getStatusText(status) {
+      const textMap = {
+        0: '草稿',
+        1: '报名中',
+        2: '进行中',
+        3: '已结束',
+        4: '已取消',
+        'draft': '草稿',
+        'registering': '报名中',
+        'ongoing': '进行中',
+        'completed': '已结束',
+        'cancelled': '已取消'
+      }
+      return textMap[status] || '进行中'
+    },
+
+    /**
+     * 格式化日期范围
+     * 将后端 startTime / endTime（如 "2026-04-01 09:00:00"）转为 "4月1日 - 4月5日 · 共5天"
+     */
+    formatDateRange(startTime, endTime) {
+      if (!startTime) return '时间待定'
+      try {
+        const start = new Date(startTime.replace(/-/g, '/'))
+        const end = endTime ? new Date(endTime.replace(/-/g, '/')) : null
+        const sm = start.getMonth() + 1
+        const sd = start.getDate()
+        if (!end) return `${sm}月${sd}日`
+        const em = end.getMonth() + 1
+        const ed = end.getDate()
+        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1
+        return `${sm}月${sd}日 - ${em}月${ed}日 · 共${days > 0 ? days : 1}天`
+      } catch (e) {
+        return startTime
+      }
+    },
+
+    /**
+     * 格式化时间为友好格式
+     */
+    formatTime(timeStr) {
+      if (!timeStr) return ''
+      try {
+        const t = new Date(timeStr.replace(/-/g, '/'))
+        const now = new Date()
+        const diff = now - t
+        if (diff < 60000) return '刚刚'
+        if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
+        if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
+        if (diff < 604800000) return Math.floor(diff / 86400000) + '天前'
+        return `${t.getMonth() + 1}/${t.getDate()}`
+      } catch (e) {
+        return timeStr
+      }
+    },
+
+    /**
+     * 截断文本
+     */
+    truncate(text, maxLen) {
+      if (!text) return ''
+      return text.length > maxLen ? text.substring(0, maxLen) + '...' : text
     },
 
     /**
@@ -308,6 +469,16 @@ export default {
     goToMeetingDetail(id) {
       uni.navigateTo({
         url: `/pages/learner/meeting-detail?id=${id}`
+      })
+    },
+
+    /**
+     * 跳转到通知详情
+     */
+    goToNotificationDetail(id) {
+      if (!id) return
+      uni.navigateTo({
+        url: `/pages/common/notification-detail?id=${id}`
       })
     },
 
@@ -448,5 +619,82 @@ export default {
   height: constant(safe-area-inset-bottom);
   height: env(safe-area-inset-bottom);
   min-height: $spacing-lg;
+}
+
+/* 加载状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64rpx 0;
+  color: $text-tertiary;
+}
+
+.loading-state .fa {
+  font-size: 48rpx;
+  margin-bottom: 16rpx;
+}
+
+.loading-text {
+  font-size: $font-size-sm;
+  color: $text-tertiary;
+}
+
+/* 今日提醒横幅内容 */
+.info-banner-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.info-banner-content .fa {
+  font-size: 32rpx;
+  flex-shrink: 0;
+}
+
+.info-banner-text {
+  flex: 1;
+  font-size: $font-size-sm;
+}
+
+/* 通知列表 */
+.notification-list {
+  padding: 0 $spacing-md;
+}
+
+.notification-item {
+  margin-bottom: $spacing-sm;
+  border-radius: 20rpx;
+  padding: $spacing-md;
+}
+
+.noti-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.noti-title {
+  font-size: $font-size-md;
+  font-weight: 500;
+  color: $text-primary;
+  flex: 1;
+}
+
+.noti-time {
+  font-size: $font-size-xs;
+  color: $text-tertiary;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.noti-content {
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  line-height: 1.5;
 }
 </style>
