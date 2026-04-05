@@ -81,30 +81,28 @@
       <view
         v-for="(noti, idx) in notifications"
         :key="noti.id || idx"
-        class="notification-item card fade-in"
+        class="noti-card fade-in"
         @click="goToNotificationDetail(noti.id)"
       >
-        <view class="noti-header">
-          <view class="noti-title-row">
-            <text class="noti-type-tag" :class="'noti-type-' + (noti.type || 'system')">{{ getNotiTypeName(noti.type) }}</text>
-            <text class="noti-title">{{ noti.title || '系统通知' }}</text>
-          </view>
-          <text class="noti-status-dot" :class="'noti-st-' + (noti.status || 'sent')"></text>
+        <!-- 左侧图标 -->
+        <view class="noti-icon" :class="'noti-icon-' + (noti.type || 'system')">
+          <text class="fa" :class="getNotiIcon(noti.type)"></text>
         </view>
-        <view class="noti-content" v-if="noti.content">{{ truncate(noti.content, 60) }}</view>
-        <view class="noti-footer">
-          <text class="noti-time">
-            <text class="fa fa-clock"></text>
-            {{ formatTime(noti.sentTime || noti.createTime) }}
-          </text>
-          <text class="noti-meta" v-if="noti.recipientCount">
-            <text class="fa fa-users"></text>
-            {{ noti.recipientCount }}人
-          </text>
-          <text class="noti-meta" v-if="noti.channels">
-            <text class="fa fa-paper-plane"></text>
-            {{ formatChannels(noti.channels) }}
-          </text>
+        <!-- 右侧内容 -->
+        <view class="noti-body">
+          <view class="noti-top-row">
+            <text class="noti-title">{{ noti.title || '系统通知' }}</text>
+            <text class="noti-badge" :class="'noti-badge-' + (noti.type || 'system')">{{ getNotiTypeName(noti.type) }}</text>
+          </view>
+          <view class="noti-summary" v-if="noti.content">{{ truncate(noti.content, 50) }}</view>
+          <view class="noti-bottom-row">
+            <text class="noti-time">{{ formatTime(noti.sentTime || noti.createTime) }}</text>
+            <text class="noti-status-label" :class="'noti-st-' + (noti.status || 'sent')" v-if="noti.status && noti.status !== 'sent'">{{ getNotiStatusName(noti.status) }}</text>
+          </view>
+        </view>
+        <!-- 右箭头 -->
+        <view class="noti-arrow">
+          <text class="fa fa-chevron-right"></text>
         </view>
       </view>
     </view>
@@ -498,6 +496,37 @@ export default {
     },
 
     /**
+     * 获取通知类型对应的图标
+     */
+    getNotiIcon(type) {
+      const map = {
+        'conference': 'fa-bullhorn',
+        'registration': 'fa-user-check',
+        'schedule': 'fa-calendar-alt',
+        'checkin': 'fa-map-marker-alt',
+        'reminder': 'fa-bell',
+        'urge': 'fa-exclamation-circle',
+        'system': 'fa-info-circle',
+        'custom': 'fa-envelope'
+      }
+      return map[type] || 'fa-bell'
+    },
+
+    /**
+     * 获取通知状态中文名
+     */
+    getNotiStatusName(status) {
+      const map = {
+        'draft': '草稿',
+        'pending': '待发送',
+        'sending': '发送中',
+        'sent': '已发送',
+        'failed': '发送失败'
+      }
+      return map[status] || ''
+    },
+
+    /**
      * 格式化发送渠道（后端 channels 字段，JSON字符串 ["sms","wechat"] 或已解析的数组）
      */
     formatChannels(channels) {
@@ -716,146 +745,151 @@ export default {
   font-size: $font-size-sm;
 }
 
-/* 通知列表 */
+/* ==================== 通知列表 ==================== */
 .notification-list {
   padding: 0 $spacing-md;
 }
 
-.notification-item {
+.noti-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: $bg-primary;
+  border-radius: $border-radius-xxl;
+  padding: 28rpx $spacing-md;
   margin-bottom: $spacing-sm;
-  border-radius: 20rpx;
-  padding: $spacing-md;
+  box-shadow: $shadow-sm;
+  border: 2rpx solid $border-color;
+  transition: $transition-fast;
 }
 
-.noti-header {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8rpx;
+.noti-card:active {
+  transform: scale(0.98);
+  background: $bg-tertiary;
 }
 
-.noti-title-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex: 1;
-  gap: 10rpx;
-  overflow: hidden;
-}
-
-.noti-type-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 2rpx 14rpx;
-  border-radius: 8rpx;
-  font-size: 20rpx;
-  font-weight: 500;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.noti-type-conference {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-.noti-type-registration {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-}
-.noti-type-schedule {
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
-}
-.noti-type-checkin {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-}
-.noti-type-reminder,
-.noti-type-urge {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-.noti-type-system {
-  background: rgba(107, 114, 128, 0.1);
-  color: #6b7280;
-}
-.noti-type-custom {
-  background: rgba(6, 182, 212, 0.1);
-  color: #06b6d4;
-}
-
-.noti-status-dot {
-  width: 14rpx;
-  height: 14rpx;
+/* 左侧圆形图标 */
+.noti-icon {
+  width: 80rpx;
+  height: 80rpx;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  margin-left: 12rpx;
+  margin-right: 24rpx;
 }
 
-.noti-st-sent {
-  background: #10b981;
+.noti-icon .fa {
+  font-size: 34rpx;
+  color: #fff;
 }
-.noti-st-draft {
-  background: #9ca3af;
+
+.noti-icon-conference { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.noti-icon-registration { background: linear-gradient(135deg, #10b981, #059669); }
+.noti-icon-schedule { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.noti-icon-checkin { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.noti-icon-reminder { background: linear-gradient(135deg, #f97316, #ea580c); }
+.noti-icon-urge { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.noti-icon-system { background: linear-gradient(135deg, #6b7280, #4b5563); }
+.noti-icon-custom { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+
+/* 右侧内容区 */
+.noti-body {
+  flex: 1;
+  min-width: 0;
 }
-.noti-st-pending,
-.noti-st-sending {
-  background: #f59e0b;
-  animation: pulse 2s infinite;
-}
-.noti-st-failed {
-  background: #ef4444;
+
+.noti-top-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 6rpx;
 }
 
 .noti-title {
-  font-size: $font-size-md;
-  font-weight: 500;
+  font-size: 30rpx;
+  font-weight: 600;
   color: $text-primary;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.4;
 }
 
-.noti-content {
+/* 类型小标签 */
+.noti-badge {
+  font-size: 20rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 6rpx;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+
+.noti-badge-conference { background: rgba(59,130,246,0.1); color: #3b82f6; }
+.noti-badge-registration { background: rgba(16,185,129,0.1); color: #10b981; }
+.noti-badge-schedule { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+.noti-badge-checkin { background: rgba(245,158,11,0.1); color: #f59e0b; }
+.noti-badge-reminder { background: rgba(249,115,22,0.1); color: #f97316; }
+.noti-badge-urge { background: rgba(239,68,68,0.1); color: #ef4444; }
+.noti-badge-system { background: rgba(107,114,128,0.1); color: #6b7280; }
+.noti-badge-custom { background: rgba(6,182,212,0.1); color: #06b6d4; }
+
+/* 摘要文字 */
+.noti-summary {
   font-size: $font-size-sm;
   color: $text-secondary;
   line-height: 1.5;
-  margin-bottom: 10rpx;
+  margin-bottom: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.noti-footer {
+/* 底部：时间 + 状态 */
+.noti-bottom-row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 20rpx;
-  margin-top: 4rpx;
+  gap: 16rpx;
 }
 
 .noti-time {
   font-size: $font-size-xs;
   color: $text-tertiary;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6rpx;
+  line-height: 1.4;
 }
 
-.noti-time .fa {
+.noti-status-label {
   font-size: 20rpx;
+  padding: 0 10rpx;
+  border-radius: 6rpx;
+  line-height: 1.8;
 }
 
-.noti-meta {
-  font-size: $font-size-xs;
-  color: $text-tertiary;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6rpx;
+.noti-st-draft {
+  background: rgba(156,163,175,0.12);
+  color: #9ca3af;
+}
+.noti-st-pending,
+.noti-st-sending {
+  background: rgba(245,158,11,0.12);
+  color: #d97706;
+}
+.noti-st-failed {
+  background: rgba(239,68,68,0.12);
+  color: #ef4444;
 }
 
-.noti-meta .fa {
-  font-size: 20rpx;
+/* 右箭头 */
+.noti-arrow {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  color: $text-placeholder;
+  font-size: 24rpx;
 }
 </style>
