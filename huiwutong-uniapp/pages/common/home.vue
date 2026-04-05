@@ -85,10 +85,27 @@
         @click="goToNotificationDetail(noti.id)"
       >
         <view class="noti-header">
-          <text class="noti-title">{{ noti.title || '系统通知' }}</text>
-          <text class="noti-time">{{ formatTime(noti.createTime || noti.sendTime) }}</text>
+          <view class="noti-title-row">
+            <text class="noti-type-tag" :class="'noti-type-' + (noti.type || 'system')">{{ getNotiTypeName(noti.type) }}</text>
+            <text class="noti-title">{{ noti.title || '系统通知' }}</text>
+          </view>
+          <text class="noti-status-dot" :class="'noti-st-' + (noti.status || 'sent')"></text>
         </view>
         <view class="noti-content" v-if="noti.content">{{ truncate(noti.content, 60) }}</view>
+        <view class="noti-footer">
+          <text class="noti-time">
+            <text class="fa fa-clock"></text>
+            {{ formatTime(noti.sentTime || noti.createTime) }}
+          </text>
+          <text class="noti-meta" v-if="noti.recipientCount">
+            <text class="fa fa-users"></text>
+            {{ noti.recipientCount }}人
+          </text>
+          <text class="noti-meta" v-if="noti.channels">
+            <text class="fa fa-paper-plane"></text>
+            {{ formatChannels(noti.channels) }}
+          </text>
+        </view>
       </view>
     </view>
 
@@ -464,6 +481,46 @@ export default {
     },
 
     /**
+     * 获取通知类型名称（后端 type 字段）
+     */
+    getNotiTypeName(type) {
+      const map = {
+        'conference': '会议',
+        'registration': '报名',
+        'schedule': '日程',
+        'checkin': '签到',
+        'reminder': '提醒',
+        'urge': '催报',
+        'system': '系统',
+        'custom': '自定义'
+      }
+      return map[type] || '通知'
+    },
+
+    /**
+     * 格式化发送渠道（后端 channels 字段，JSON字符串 ["sms","wechat"] 或已解析的数组）
+     */
+    formatChannels(channels) {
+      if (!channels) return ''
+      const channelMap = {
+        'sms': '短信',
+        'wechat': '微信',
+        'email': '邮件',
+        'push': '推送',
+        'app': 'APP'
+      }
+      try {
+        const arr = typeof channels === 'string' ? JSON.parse(channels) : channels
+        if (Array.isArray(arr)) {
+          return arr.map(c => channelMap[c] || c).join('/')
+        }
+        return channelMap[channels] || channels
+      } catch (e) {
+        return channels
+      }
+    },
+
+    /**
      * 跳转到会议详情
      */
     goToMeetingDetail(id) {
@@ -678,23 +735,127 @@ export default {
   margin-bottom: 8rpx;
 }
 
+.noti-title-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+  gap: 10rpx;
+  overflow: hidden;
+}
+
+.noti-type-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2rpx 14rpx;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.noti-type-conference {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+.noti-type-registration {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+.noti-type-schedule {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+.noti-type-checkin {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+.noti-type-reminder,
+.noti-type-urge {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+.noti-type-system {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+.noti-type-custom {
+  background: rgba(6, 182, 212, 0.1);
+  color: #06b6d4;
+}
+
+.noti-status-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-left: 12rpx;
+}
+
+.noti-st-sent {
+  background: #10b981;
+}
+.noti-st-draft {
+  background: #9ca3af;
+}
+.noti-st-pending,
+.noti-st-sending {
+  background: #f59e0b;
+  animation: pulse 2s infinite;
+}
+.noti-st-failed {
+  background: #ef4444;
+}
+
 .noti-title {
   font-size: $font-size-md;
   font-weight: 500;
   color: $text-primary;
   flex: 1;
-}
-
-.noti-time {
-  font-size: $font-size-xs;
-  color: $text-tertiary;
-  flex-shrink: 0;
-  margin-left: 16rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .noti-content {
   font-size: $font-size-sm;
   color: $text-secondary;
   line-height: 1.5;
+  margin-bottom: 10rpx;
+}
+
+.noti-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  margin-top: 4rpx;
+}
+
+.noti-time {
+  font-size: $font-size-xs;
+  color: $text-tertiary;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.noti-time .fa {
+  font-size: 20rpx;
+}
+
+.noti-meta {
+  font-size: $font-size-xs;
+  color: $text-tertiary;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.noti-meta .fa {
+  font-size: 20rpx;
 }
 </style>
