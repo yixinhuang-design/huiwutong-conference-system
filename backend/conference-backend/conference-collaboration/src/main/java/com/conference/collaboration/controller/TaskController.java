@@ -29,7 +29,10 @@ public class TaskController {
 
     /** 创建任务 */
     @PostMapping("/create")
-    public Result<TaskInfo> createTask(@RequestBody Map<String, Object> request) {
+    public Result<TaskInfo> createTask(
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestHeader(value = "X-Tenant-Id", required = false) Long headerTenantId,
+            @RequestBody Map<String, Object> request) {
         TaskInfo task = new TaskInfo();
         task.setConferenceId(toLong(request.get("conferenceId")));
         task.setTaskName((String) request.get("taskName"));
@@ -38,8 +41,13 @@ public class TaskController {
         task.setCompletionMethod((String) request.get("completionMethod"));
         task.setDescription((String) request.get("description"));
         task.setPriority((String) request.get("priority"));
-        task.setCreatorId(toLong(request.get("creatorId")));
+        // 优先使用网关注入的用户ID
+        task.setCreatorId(headerUserId != null ? headerUserId : toLong(request.get("creatorId")));
         task.setOwnerName((String) request.get("ownerName"));
+        // 如果网关注入了租户ID，则设置
+        if (headerTenantId != null) {
+            task.setTenantId(headerTenantId);
+        }
         task.setTargetGroups(request.get("targetGroups") != null ? request.get("targetGroups").toString() : null);
         task.setConfig(request.get("config") != null ? request.get("config").toString() : null);
         task.setAttachments(request.get("attachments") != null ? request.get("attachments").toString() : null);
@@ -113,11 +121,16 @@ public class TaskController {
     /** 获取我的任务(作为执行人) */
     @GetMapping("/my-tasks")
     public Result<Page<Map<String, Object>>> getMyTasks(
-            @RequestParam Long userId,
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
+            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Page<Map<String, Object>> result = taskService.listMyTasks(userId, status, page, size);
+        Long effectiveUserId = headerUserId != null ? headerUserId : userId;
+        if (effectiveUserId == null) {
+            return Result.fail("用户ID不能为空");
+        }
+        Page<Map<String, Object>> result = taskService.listMyTasks(effectiveUserId, status, page, size);
         return Result.ok(result);
     }
 
@@ -143,8 +156,9 @@ public class TaskController {
     @PostMapping("/{taskId}/submit")
     public Result<String> submitTask(
             @PathVariable Long taskId,
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
             @RequestBody Map<String, Object> submitData) {
-        Long userId = toLong(submitData.get("userId"));
+        Long userId = headerUserId != null ? headerUserId : toLong(submitData.get("userId"));
         String content = (String) submitData.get("content");
         String images = submitData.get("images") != null ? submitData.get("images").toString() : null;
         String location = submitData.get("location") != null ? submitData.get("location").toString() : null;
@@ -156,8 +170,9 @@ public class TaskController {
     @PostMapping("/{taskId}/complete")
     public Result<String> completeTask(
             @PathVariable Long taskId,
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
             @RequestBody Map<String, Object> data) {
-        Long operatorId = toLong(data.get("operatorId"));
+        Long operatorId = headerUserId != null ? headerUserId : toLong(data.get("operatorId"));
         String operatorName = (String) data.get("operatorName");
         String remark = (String) data.get("remark");
         taskService.completeTask(taskId, operatorId, operatorName, remark);
@@ -168,11 +183,12 @@ public class TaskController {
     @PostMapping("/{taskId}/cancel")
     public Result<String> cancelTask(
             @PathVariable Long taskId,
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
             @RequestBody(required = false) Map<String, Object> data) {
         if (data == null) {
             data = new java.util.HashMap<>();
         }
-        Long operatorId = toLong(data.get("operatorId"));
+        Long operatorId = headerUserId != null ? headerUserId : toLong(data.get("operatorId"));
         String operatorName = (String) data.get("operatorName");
         String remark = (String) data.get("remark");
         taskService.cancelTask(taskId, operatorId, operatorName, remark);
@@ -183,8 +199,9 @@ public class TaskController {
     @PostMapping("/{taskId}/urge")
     public Result<String> urgeTask(
             @PathVariable Long taskId,
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
             @RequestBody Map<String, Object> data) {
-        Long operatorId = toLong(data.get("operatorId"));
+        Long operatorId = headerUserId != null ? headerUserId : toLong(data.get("operatorId"));
         String operatorName = (String) data.get("operatorName");
         taskService.urgeTask(taskId, operatorId, operatorName);
         return Result.ok("催办已发送");

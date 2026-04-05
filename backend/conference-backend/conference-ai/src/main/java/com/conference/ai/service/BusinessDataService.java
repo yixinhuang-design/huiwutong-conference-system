@@ -36,9 +36,6 @@ public class BusinessDataService {
     @Value("${service.collaboration.url:http://localhost:8089}")
     private String collaborationService;
 
-    @Value("${service.auth.url:http://localhost:8081}")
-    private String authService;
-
     @Value("${service.default-tenant-id:2027317834622709762}")
     private String defaultTenantId;
 

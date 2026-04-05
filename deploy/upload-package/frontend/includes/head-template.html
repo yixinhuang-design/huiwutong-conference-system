@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+    国产浏览器兼容性头部模板
+    支持：360浏览器、QQ浏览器、奇安信浏览器、搜狗浏览器、猎豹浏览器、UC浏览器等
+    使用方法：将此文件内容复制到各页面的<head>标签中
+-->
+<head>
+    <meta charset="UTF-8">
+
+    <!-- 国产浏览器渲染模式设置 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+
+    <!-- 视口设置 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <!-- QQ浏览器/微信浏览器全屏设置 -->
+    <meta name="browsermode" content="application">
+    <meta name="x5-orientation" content="portrait">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="x5-page-mode" content="app">
+
+    <!-- UC浏览器全屏设置 -->
+    <meta name="full-screen" content="yes">
+    <meta name="screen-orientation" content="portrait">
+
+    <!-- 页面标题 -->
+    <title>智能会议系统 - 管理端PC</title>
+
+    <!-- 样式表 -->
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Vue 3 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+
+    <!-- 国产浏览器兼容性支持脚本 -->
+    <script>
+        // ========================================
+        // 浏览器检测和兼容性初始化
+        // ========================================
+        (function() {
+            'use strict';
+
+            // 检测国产浏览器
+            var userAgent = navigator.userAgent.toLowerCase();
+            var browserInfo = {
+                is360: userAgent.indexOf('qihucbrowser') > -1 || userAgent.indexOf('360se') > -1,
+                isQQ: userAgent.indexOf('qqbrowser') > -1,
+                isSogou: userAgent.indexOf('metasr') > -1 || userAgent.indexOf('sogou') > -1,
+                isLiebao: userAgent.indexOf('lbbrowser') > -1,
+                isMaxthon: userAgent.indexOf('maxthon') > -1,
+                isUC: userAgent.indexOf('ucbrowser') > -1,
+                isLiebao: userAgent.indexOf('liebao') > -1,
+                isChrome: userAgent.indexOf('chrome') > -1 && userAgent.indexOf('edge') === -1,
+                isDomestic: false
+            };
+
+            // 判断是否为国产浏览器
+            browserInfo.isDomestic = browserInfo.is360 || browserInfo.isQQ || browserInfo.isSogou ||
+                                       browserInfo.isLiebao || browserInfo.isMaxthon || browserInfo.isUC;
+
+            // 设置文档类名
+            if (browserInfo.is360) document.documentElement.classList.add('browser-360');
+            if (browserInfo.isQQ) document.documentElement.classList.add('browser-qq');
+            if (browserInfo.isSogou) document.documentElement.classList.add('browser-sogou');
+            if (browserInfo.isUC) document.documentElement.classList.add('browser-uc');
+
+            if (browserInfo.isDomestic) {
+                document.documentElement.classList.add('domestic-browser');
+                console.log('检测到国产浏览器，已启用兼容模式:', browserInfo);
+
+                // 国产浏览器特殊优化
+                window.isDomesticBrowser = true;
+
+                // 强制GPU加速
+                document.body.style.webkitTransform = 'translateZ(0)';
+                document.body.style.transform = 'translateZ(0)';
+            }
+
+            // 存储浏览器信息到全局
+            window.browserInfo = browserInfo;
+
+            // 检测并启用硬件加速
+            if ('ondeviceorientation' in window || 'ontouchstart' in window) {
+                document.documentElement.classList.add('touch-device');
+            }
+        })();
+
+        // ========================================
+        // Polyfill: CSS.supports
+        // ========================================
+        if (!CSS.supports) {
+            CSS.supports = function(property, value) {
+                try {
+                    var elem = document.createElement('div');
+                    if (typeof value === 'undefined') {
+                        return property in elem.style;
+                    }
+                    elem.style.cssText = property + ':' + value;
+                    return elem.style.cssText.indexOf(value) > -1;
+                } catch (e) {
+                    return false;
+                }
+            };
+        }
+
+        // ========================================
+        // Polyfill: requestAnimationFrame
+        // ========================================
+        (function() {
+            var lastTime = 0;
+            var vendors = ['ms', 'moz', 'webkit', 'o'];
+
+            for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+                window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+                window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame'] ||
+                                         window[vendors[x] + 'CancelRequestAnimationFrame'];
+            }
+
+            if (!window.requestAnimationFrame) {
+                window.requestAnimationFrame = function(callback, element) {
+                    var currTime = new Date().getTime();
+                    var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                    var id = window.setTimeout(function() {
+                        callback(currTime + timeToCall);
+                    }, timeToCall);
+                    lastTime = currTime + timeToCall;
+                    return id;
+                };
+
+                window.cancelAnimationFrame = function(id) {
+                    clearTimeout(id);
+                };
+            }
+        })();
+
+        // ========================================
+        // Polyfill: Array.from
+        // ========================================
+        if (!Array.from) {
+            Array.from = function(arrayLike) {
+                var result = [];
+                for (var i = 0; i < arrayLike.length; i++) {
+                    result.push(arrayLike[i]);
+                }
+                return result;
+            };
+        }
+
+        // ========================================
+        // Polyfill: Object.assign
+        // ========================================
+        if (typeof Object.assign !== 'function') {
+            Object.assign = function(target) {
+                if (target === null || target === undefined) {
+                    throw new TypeError('Cannot convert undefined or null to object');
+                }
+                var to = Object(target);
+                for (var index = 1; index < arguments.length; index++) {
+                    var nextSource = arguments[index];
+                    if (nextSource !== null && nextSource !== undefined) {
+                        for (var nextKey in nextSource) {
+                            if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+                                to[nextKey] = nextSource[nextKey];
+                            }
+                        }
+                    }
+                }
+                return to;
+            };
+        }
+
+        // ========================================
+        // Polyfill: String.prototype.includes
+        // ========================================
+        if (!String.prototype.includes) {
+            String.prototype.includes = function(search, start) {
+                if (typeof start !== 'number') {
+                    start = 0;
+                }
+                if (start + search.length > this.length) {
+                    return false;
+                }
+                return this.indexOf(search, start) !== -1;
+            };
+        }
+
+        // ========================================
+        // Polyfill: Array.prototype.find
+        // ========================================
+        if (!Array.prototype.find) {
+            Array.prototype.find = function(predicate) {
+                if (this === null) {
+                    throw new TypeError('Array.prototype.find called on null or undefined');
+                }
+                if (typeof predicate !== 'function') {
+                    throw new TypeError('predicate must be a function');
+                }
+                var list = Object(this);
+                var length = list.length >>> 0;
+                var thisArg = arguments[1];
+                var value;
+
+                for (var i = 0; i < length; i++) {
+                    value = list[i];
+                    if (predicate.call(thisArg, value, i, list)) {
+                        return value;
+                    }
+                }
+                return undefined;
+            };
+        }
+
+        // ========================================
+        // 国产浏览器Console优化
+        // ========================================
+        if (window.isDomesticBrowser) {
+            // 重写console方法，添加浏览器标识
+            var originalLog = console.log;
+            console.log = function() {
+                arguments[0] = '[国产浏览器] ' + (arguments[0] || '');
+                originalLog.apply(console, arguments);
+            };
+        }
+
+        // ========================================
+        // 错误监控和上报
+        // ========================================
+        window.addEventListener('error', function(e) {
+            var errorInfo = {
+                message: e.message,
+                filename: e.filename,
+                lineno: e.lineno,
+                colno: e.colno,
+                browser: window.browserInfo,
+                userAgent: navigator.userAgent
+            };
+
+            // 在国产浏览器中提供更友好的错误提示
+            if (window.isDomesticBrowser) {
+                console.warn('检测到页面错误，建议使用Chrome或Edge浏览器获得最佳体验');
+                console.error('错误详情:', errorInfo);
+            }
+
+            // 可以在这里添加错误上报逻辑
+            // reportError(errorInfo);
+        });
+
+        // ========================================
+        // 页面加载完成提示
+        // ========================================
+        window.addEventListener('load', function() {
+            if (window.isDomesticBrowser) {
+                console.log('✓ 国产浏览器兼容模式已加载完成');
+                console.log('✓ 浏览器信息:', window.browserInfo);
+            } else {
+                console.log('✓ 页面加载完成');
+            }
+        });
+
+        // ========================================
+        // Vue 3兼容性配置
+        // ========================================
+        window.vueConfig = {
+            // 国产浏览器性能优化配置
+            devtools: true,
+            performance: window.isDomesticBrowser ? false : true
+        };
+
+        // ========================================
+        // 全局工具函数
+        // ========================================
+        window.DomesticBrowserUtils = {
+            // 检查是否为国产浏览器
+            isDomestic: function() {
+                return window.isDomesticBrowser || false;
+            },
+
+            // 获取浏览器信息
+            getBrowserInfo: function() {
+                return window.browserInfo || {};
+            },
+
+            // 检查功能支持
+            supports: function(feature) {
+                switch(feature) {
+                    case 'grid':
+                        return CSS.supports('display', 'grid');
+                    case 'flex':
+                        return CSS.supports('display', 'flex');
+                    case 'backdrop-filter':
+                        return CSS.supports('backdrop-filter', 'blur(10px)');
+                    default:
+                        return false;
+                }
+            },
+
+            // 显示兼容性提示
+            showCompatibilityTip: function() {
+                if (this.isDomestic()) {
+                    var info = this.getBrowserInfo();
+                    console.log('当前使用国产浏览器，某些高级特性可能不可用');
+                    console.log('建议使用Chrome 90+或Edge 90+获得最佳体验');
+                }
+            }
+        };
+    </script>
+</head>

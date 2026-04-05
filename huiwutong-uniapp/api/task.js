@@ -5,8 +5,8 @@
 
 import { get, post, put, del } from './request'
 
-// 协同服务基础地址
-const COLLAB_BASE = { baseUrl: 'http://localhost:8089' }
+// 协同服务基础地址 (通过网关转发)
+const COLLAB_BASE = { baseUrl: 'http://localhost:8080' }
 
 export default {
   // ============ 任务CRUD ============

@@ -1385,7 +1385,9 @@
                             body: JSON.stringify({
                                 message: question,
                                 conversationId: this.currentConversation && !String(this.currentConversation).startsWith('local_') ? this.currentConversation : null,
-                                conferenceId: this.conference.id || null
+                                conferenceId: this.conference.id || null,
+                                userId: localStorage.getItem('userId') || null,
+                                userName: localStorage.getItem('userName') || localStorage.getItem('username') || null
                             })
                         });
                         

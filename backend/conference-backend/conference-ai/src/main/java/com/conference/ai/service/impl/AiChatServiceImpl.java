@@ -39,6 +39,8 @@ public class AiChatServiceImpl extends ServiceImpl<AiConversationMapper, AiConve
     private final AiFaqService faqService;
     private final AiKnowledgeService knowledgeService;
     private final BusinessDataService businessDataService;
+    private final com.conference.ai.service.RAGService ragService;
+    private final com.conference.ai.service.ConferenceKnowledgeCollector knowledgeCollector;
 
     private Long getTenantId() {
         try {
@@ -121,7 +123,7 @@ public class AiChatServiceImpl extends ServiceImpl<AiConversationMapper, AiConve
 
     /**
      * 智能回答生成引擎
-     * 优先级: FAQ精确匹配 → 知识库检索 → 智能分析生成
+     * 优先级: FAQ精确匹配 → RAG(知识库+LLM) → 会议知识库+LLM → 会议知识库本地回答 → 业务数据直查 → 兆底
      */
     private String generateIntelligentAnswer(String question, Long conferenceId, Long conversationId) {
         // Step 1: 分析用户意图
@@ -139,7 +141,45 @@ public class AiChatServiceImpl extends ServiceImpl<AiConversationMapper, AiConve
             log.warn("FAQ匹配异常", e);
         }
 
-        // Step 3: 从知识库检索相关内容
+        // Step 3: RAG检索增强生成 (结合向量检索和LLM)
+        try {
+            String ragAnswer = ragService.chat(question, String.valueOf(conversationId), null);
+            if (ragAnswer != null && !ragAnswer.startsWith("抱歉")) {
+                log.debug("RAG生成回答成功");
+                return ragAnswer;
+            }
+        } catch (Exception e) {
+            log.warn("RAG生成异常", e);
+        }
+
+        // Step 4: 采集会议全维度知识 + 调用LLM生成智能回答
+        String conferenceKnowledge = null;
+        try {
+            conferenceKnowledge = knowledgeCollector.collectKnowledge(conferenceId);
+        } catch (Exception e) {
+            log.warn("会议知识采集异常", e);
+        }
+
+        if (StringUtils.hasText(conferenceKnowledge)) {
+            // 尝试用LLM基于知识库回答
+            try {
+                String llmAnswer = generateLLMAnswerWithKnowledge(question, conferenceKnowledge, conferenceId);
+                if (llmAnswer != null) {
+                    log.debug("知识库+LLM回答成功");
+                    return llmAnswer;
+                }
+            } catch (Exception e) {
+                log.warn("LLM回答生成异常", e);
+            }
+
+            // LLM不可用时，用知识库生成本地回答
+            String localAnswer = buildAnswerFromKnowledge(question, intent, conferenceKnowledge);
+            if (localAnswer != null) {
+                return localAnswer;
+            }
+        }
+
+        // Step 5: 从知识库表检索相关内容
         StringBuilder knowledgeContext = new StringBuilder();
         try {
             List<AiKnowledge> relevantKnowledge = knowledgeService.searchKnowledge(question, conferenceId);
@@ -158,11 +198,137 @@ public class AiChatServiceImpl extends ServiceImpl<AiConversationMapper, AiConve
             log.warn("知识库检索异常", e);
         }
 
-        // Step 4: 获取对话上下文 (最近5条消息)
+        // Step 6: 获取对话上下文 (最近5条消息)
         List<AiMessage> recentMessages = getRecentMessages(conversationId, 5);
 
-        // Step 5: 生成智能回答（传入conferenceId以支持实时业务查询）
+        // Step 7: 生成回答（传入conferenceId以支持实时业务查询）
         return buildAnswer(question, intent, knowledgeContext.toString(), recentMessages, conferenceId);
+    }
+
+    /**
+     * 使用LLM基于会议知识库生成回答
+     */
+    private String generateLLMAnswerWithKnowledge(String question, String conferenceKnowledge, Long conferenceId) {
+        try {
+            Map<String, Object> context = new HashMap<>();
+            context.put("conferenceKnowledge", conferenceKnowledge);
+
+            String llmAnswer = ragService.getAiService().chat(question, null, context);
+            if (llmAnswer != null && !llmAnswer.isBlank()) {
+                return llmAnswer;
+            }
+        } catch (Exception e) {
+            log.debug("LLM不可用: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 基于采集的会议知识生成本地回答（无需LLM）
+     */
+    private String buildAnswerFromKnowledge(String question, String intent, String conferenceKnowledge) {
+        if (!StringUtils.hasText(conferenceKnowledge)) return null;
+
+        // 根据意图从Tknowledge中提取相关段落
+        String q = question.toLowerCase();
+        String[] knowledgeSections = conferenceKnowledge.split("【");
+
+        StringBuilder answer = new StringBuilder();
+        String intentEmoji = getIntentEmoji(intent);
+        String intentTitle = getIntentTitle(intent);
+        answer.append(intentEmoji).append(" **").append(intentTitle).append("**\n\n");
+
+        boolean found = false;
+        for (String section : knowledgeSections) {
+            if (section.isBlank()) continue;
+            String sectionTitle = section.contains("】") ? section.substring(0, section.indexOf("】")) : "";
+
+            // 根据意图匹配相关段落
+            boolean match = false;
+            switch (intent) {
+                case "schedule_query":
+                    match = sectionTitle.contains("日程");
+                    break;
+                case "seat_query":
+                    match = sectionTitle.contains("会场") || sectionTitle.contains("座位");
+                    break;
+                case "registration_query":
+                    match = sectionTitle.contains("报名");
+                    break;
+                case "location_query":
+                    match = sectionTitle.contains("会议基本") || sectionTitle.contains("会场") || sectionTitle.contains("交通");
+                    break;
+                case "hotel_query":
+                    match = sectionTitle.contains("住宿");
+                    break;
+                case "meal_query":
+                    match = sectionTitle.contains("餐饮");
+                    break;
+                case "speaker_query":
+                    match = sectionTitle.contains("日程");
+                    break;
+                case "contact_query":
+                    match = sectionTitle.contains("会议基本") || sectionTitle.contains("工作人员");
+                    break;
+                case "general_query":
+                    // 通用查询根据关键词匹配
+                    match = containsAny(q, sectionTitle.toLowerCase().replace("信息", "").replace("安排", ""));
+                    break;
+                default:
+                    match = true;
+                    break;
+            }
+
+            if (match) {
+                String content = section.contains("】") ? section.substring(section.indexOf("】") + 1).trim() : section.trim();
+                if (!content.isBlank()) {
+                    answer.append(content).append("\n\n");
+                    found = true;
+                }
+            }
+        }
+
+        if (!found) {
+            // 未匹配到特定段落，返回ull让后续流程处理
+            return null;
+        }
+
+        answer.append("---\n*如有其他问题，请继续提问。*");
+        return answer.toString();
+    }
+
+    private String getIntentEmoji(String intent) {
+        switch (intent) {
+            case "schedule_query": return "📅";
+            case "seat_query": return "🪑";
+            case "registration_query": return "📝";
+            case "location_query": return "📍";
+            case "hotel_query": return "🏨";
+            case "meal_query": return "🍽️";
+            case "speaker_query": return "👨\u200d🏫";
+            case "checkin_query": return "✅";
+            case "material_query": return "📁";
+            case "contact_query": return "📞";
+            case "exam_query": return "📝";
+            default: return "📋";
+        }
+    }
+
+    private String getIntentTitle(String intent) {
+        switch (intent) {
+            case "schedule_query": return "日程安排";
+            case "seat_query": return "座位信息";
+            case "registration_query": return "报名信息";
+            case "location_query": return "会议信息";
+            case "hotel_query": return "住宿安排";
+            case "meal_query": return "餐饮安排";
+            case "speaker_query": return "讲师信息";
+            case "checkin_query": return "签到信息";
+            case "material_query": return "资料信息";
+            case "contact_query": return "联系方式";
+            case "exam_query": return "考试信息";
+            default: return "查询结果";
+        }
     }
 
     /**

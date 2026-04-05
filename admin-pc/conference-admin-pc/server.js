@@ -70,15 +70,21 @@ const server = http.createServer((req, res) => {
 
         proxyReq.on('error', (err) => {
             console.error(`[API代理] 请求失败: ${req.method} ${req.url} → ${err.message}`);
-            res.writeHead(502, { 'Content-Type': 'application/json' });
+            if (!res.headersSent) {
+                res.writeHead(502, { 'Content-Type': 'application/json' });
+            }
             res.end(JSON.stringify({ code: 502, message: '后端服务不可用，请确保Gateway(8080)已启动' }));
         });
 
         // 超时设置
         proxyReq.setTimeout(30000, () => {
             proxyReq.destroy();
-            res.writeHead(504, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ code: 504, message: '后端服务响应超时' }));
+            if (!res.headersSent) {
+                res.writeHead(504, { 'Content-Type': 'application/json' });
+            }
+            if (!res.writableEnded) {
+                res.end(JSON.stringify({ code: 504, message: '后端服务响应超时' }));
+            }
         });
 
         req.pipe(proxyReq, { end: true });

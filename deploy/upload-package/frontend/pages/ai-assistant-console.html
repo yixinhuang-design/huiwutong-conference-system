@@ -1,0 +1,1970 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI助教系统 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/marked/9.1.0/marked.min.js"></script>
+    <style>
+        /* 语音输入按钮样式 */
+        .btn-voice {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 50%;
+            background: var(--gray-100, #f5f5f5);
+            border: 1px solid var(--gray-200, #e5e5e5);
+            color: var(--gray-600, #525252);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .btn-voice:hover {
+            background: var(--gray-200, #e5e5e5);
+            color: var(--gray-900, #171717);
+            transform: scale(1.05);
+        }
+        
+        .btn-voice.recording {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+            animation: pulse-recording 1.5s infinite;
+        }
+        
+        .btn-voice .recording-indicator {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border-radius: 50%;
+            border: 2px solid white;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes pulse-recording {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* 语音状态提示 */
+        .voice-status {
+            margin-top: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: var(--gray-50, #fafafa);
+            border: 1px solid var(--gray-200, #e5e5e5);
+        }
+        
+        .voice-status-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--gray-700, #404040);
+        }
+        
+        .voice-status-content.recording {
+            color: #ef4444;
+        }
+        
+        .voice-status-content.recording i {
+            animation: pulse 1s infinite;
+        }
+        
+        .voice-status-content.error {
+            color: #ef4444;
+        }
+        
+        .voice-status-content.error i {
+            color: #ef4444;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        /* 语音波形动画 */
+        .voice-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 20px;
+            margin-left: auto;
+        }
+        
+        .voice-wave span {
+            display: block;
+            width: 3px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 2px;
+            animation: wave 0.8s ease-in-out infinite;
+        }
+        
+        .voice-wave span:nth-child(1) { animation-delay: 0s; }
+        .voice-wave span:nth-child(2) { animation-delay: 0.1s; }
+        .voice-wave span:nth-child(3) { animation-delay: 0.2s; }
+        .voice-wave span:nth-child(4) { animation-delay: 0.3s; }
+        .voice-wave span:nth-child(5) { animation-delay: 0.4s; }
+        
+        @keyframes wave {
+            0%, 100% { height: 8px; }
+            50% { height: 20px; }
+        }
+        
+        /* 输入操作区域调整 */
+        .input-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== 模态框样式 ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .modal-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            width: 680px;
+            max-width: 90vw;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+        }
+        .modal-container.large {
+            width: 780px;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-close {
+            width: 32px; height: 32px;
+            border: none; background: #f5f5f5;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: #666;
+            transition: all 0.2s;
+        }
+        .modal-close:hover { background: #e5e5e5; color: #333; }
+
+        .modal-body {
+            padding: 20px 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 24px 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        /* 表单项样式 */
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        .form-group label .required {
+            color: #ef4444;
+            margin-left: 2px;
+        }
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #333;
+            background: #fff;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary, #4f46e5);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.6;
+            font-family: inherit;
+        }
+        .form-textarea.content-area {
+            min-height: 200px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .form-hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+        .tag-input-wrapper {
+            display: flex; gap: 8px; flex-wrap: wrap;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            min-height: 40px;
+            cursor: text;
+            transition: all 0.2s;
+        }
+        .tag-input-wrapper:focus-within {
+            border-color: var(--primary, #4f46e5);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .tag-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: #f0f0ff;
+            color: #4f46e5;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .tag-item .tag-remove {
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.6;
+        }
+        .tag-item .tag-remove:hover { opacity: 1; }
+        .tag-input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 80px;
+            font-size: 14px;
+            padding: 4px 0;
+        }
+
+        /* 文件上传区 */
+        .upload-zone {
+            border: 2px dashed #d9d9d9;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: var(--primary, #4f46e5);
+            background: #f0f0ff;
+        }
+        .upload-zone .upload-icon {
+            font-size: 48px;
+            color: #ccc;
+            margin-bottom: 12px;
+        }
+        .upload-zone:hover .upload-icon { color: var(--primary, #4f46e5); }
+        .upload-zone h4 {
+            margin: 0 0 8px;
+            font-size: 16px;
+            color: #333;
+        }
+        .upload-zone p {
+            margin: 0;
+            font-size: 13px;
+            color: #999;
+        }
+        .upload-zone .supported-types {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .upload-zone .type-badge {
+            padding: 3px 10px;
+            background: white;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* 文件预览 */
+        .file-preview {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            margin-top: 16px;
+        }
+        .file-preview .file-icon {
+            width: 48px; height: 48px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .file-preview .file-icon.pdf { background: #fef2f2; color: #dc2626; }
+        .file-preview .file-icon.word { background: #eff6ff; color: #2563eb; }
+        .file-preview .file-icon.excel { background: #f0fdf4; color: #16a34a; }
+        .file-preview .file-icon.text { background: #f5f5f5; color: #666; }
+        .file-preview .file-info { flex: 1; }
+        .file-preview .file-name { font-size: 14px; font-weight: 500; color: #333; }
+        .file-preview .file-meta { font-size: 12px; color: #999; margin-top: 2px; }
+        .file-preview .file-remove {
+            width: 32px; height: 32px;
+            border: none; background: #fee2e2;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #dc2626;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .file-preview .file-remove:hover { background: #fecaca; }
+
+        /* 上传进度 */
+        .upload-progress {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f0f0ff;
+            border-radius: 10px;
+        }
+        .upload-progress .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #4f46e5;
+        }
+        .upload-progress .progress-bar {
+            height: 6px;
+            background: #e0e0ff;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .upload-progress .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .upload-progress .progress-detail {
+            font-size: 12px;
+            color: #999;
+            margin-top: 6px;
+        }
+
+        /* 上传结果 */
+        .upload-result {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 10px;
+        }
+        .upload-result.success { background: #f0fdf4; border: 1px solid #bbf7d0; }
+        .upload-result.error { background: #fef2f2; border: 1px solid #fecaca; }
+        .upload-result h5 {
+            margin: 0 0 8px;
+            display: flex; align-items: center; gap: 6px;
+            font-size: 14px;
+        }
+        .upload-result.success h5 { color: #16a34a; }
+        .upload-result.error h5 { color: #dc2626; }
+        .upload-result .result-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .upload-result .result-stat {
+            text-align: center;
+            padding: 8px;
+            background: white;
+            border-radius: 8px;
+        }
+        .upload-result .result-stat .stat-value { font-size: 20px; font-weight: 700; color: #333; }
+        .upload-result .result-stat .stat-label { font-size: 11px; color: #999; margin-top: 2px; }
+
+        /* 按钮样式补充 */
+        .btn-modal-primary {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-modal-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-modal-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-modal-cancel {
+            padding: 10px 20px;
+            background: #f5f5f5;
+            color: #666;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-modal-cancel:hover { background: #ebebeb; }
+    </style>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">AI助教系统</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav" style="padding-top: 90px !important;">
+        <!-- 页面头部 -->
+        <div class="page-header glass-card">
+            <div>
+                <h2>🤖 AI助教系统</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    <span class="ai-status">
+                        <span class="status-indicator" :class="{ active: aiOnline }"></span>
+                        {{ aiOnline ? 'AI在线' : 'AI离线' }}
+                    </span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="exportConversation">
+                    <i class="fas fa-download"></i>
+                    导出对话
+                </button>
+            </div>
+        </div>
+
+        <!-- AI功能概览 -->
+        <div class="ai-overview glass-card">
+            <h3>🤖 AI功能概览</h3>
+            <div class="features-grid">
+                <div class="feature-card" 
+                     v-for="feature in aiFeatures" 
+                     :key="feature.id"
+                     :class="{ active: feature.enabled }">
+                    <div class="feature-icon">
+                        <i :class="feature.icon"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h5>{{ feature.name }}</h5>
+                        <p>{{ feature.description }}</p>
+                        <div class="feature-stats">
+                            <span>今日使用: {{ feature.usage }}次</span>
+                        </div>
+                    </div>
+                    <div class="feature-toggle">
+                        <label class="switch">
+                            <input type="checkbox" v-model="feature.enabled">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI对话界面 -->
+        <div class="ai-chat glass-card">
+            <h3>💬 AI助教对话</h3>
+            
+            <div class="chat-container">
+                <!-- 对话历史侧边栏 -->
+                <div class="chat-sidebar">
+                    <button class="btn-primary" @click="newConversation">
+                        <i class="fas fa-plus"></i>
+                        新建对话
+                    </button>
+                    
+                    <div class="conversation-list">
+                        <div class="conversation-item"
+                             v-for="conv in conversations"
+                             :key="conv.id"
+                             :class="{ active: currentConversation === conv.id }"
+                             @click="switchConversation(conv.id)">
+                            <div class="conversation-title">{{ conv.title }}</div>
+                            <div class="conversation-preview">{{ conv.lastMessage }}</div>
+                            <div class="conversation-time">{{ formatTime(conv.updatedAt) }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 对话主区域 -->
+                <div class="chat-main">
+                    <div class="chat-header">
+                        <div>
+                            <h4>{{ getCurrentConversationTitle() }}</h4>
+                            <span class="chat-meta">{{ messages.length }}条消息</span>
+                        </div>
+                        <div class="chat-actions">
+                            <button class="btn-icon" @click="clearConversation" title="清空对话">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn-icon" @click="exportConversation" title="导出对话">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chat-messages" ref="chatMessages">
+                        <div v-for="message in messages" 
+                             :key="message.id" 
+                             class="message"
+                             :class="message.role">
+                            <div class="message-avatar">
+                                <i :class="message.role === 'ai' ? 'fas fa-robot' : 'fas fa-user'"></i>
+                            </div>
+                            <div class="message-content">
+                                <div class="message-bubble" v-html="renderMarkdown(message.content)"></div>
+                                <div class="message-meta">
+                                    <span>{{ formatTime(message.timestamp) }}</span>
+                                    <span v-if="message.model">{{ message.model }}</span>
+                                </div>
+                                <div class="message-actions" v-if="message.role === 'ai'">
+                                    <button class="message-action-btn" @click="copyMessage(message.content)">
+                                        <i class="fas fa-copy"></i>
+                                        复制
+                                    </button>
+                                    <button class="message-action-btn" @click="regenerateResponse(message.id)">
+                                        <i class="fas fa-redo"></i>
+                                        重新生成
+                                    </button>
+                                    <button class="message-action-btn" @click="rateMessage(message.id, 'good')">
+                                        <i class="fas fa-thumbs-up"></i>
+                                        有用
+                                    </button>
+                                    <button class="message-action-btn" @click="rateMessage(message.id, 'bad')">
+                                        <i class="fas fa-thumbs-down"></i>
+                                        无用
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 输入中指示器 -->
+                        <div v-if="isTyping" class="message ai">
+                            <div class="message-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                <div class="typing-indicator">
+                                    <div class="typing-dot"></div>
+                                    <div class="typing-dot"></div>
+                                    <div class="typing-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input">
+                        <div class="quick-prompts">
+                            <div class="prompt-chip" 
+                                 v-for="prompt in quickPrompts" 
+                                 :key="prompt.id"
+                                 @click="useQuickPrompt(prompt.text)">
+                                {{ prompt.text }}
+                            </div>
+                        </div>
+                        
+                        <div class="input-wrapper">
+                            <textarea class="input-field"
+                                      v-model="inputMessage"
+                                      @keydown.enter.ctrl="sendMessage"
+                                      placeholder="输入您的问题... (Ctrl+Enter发送)"></textarea>
+                            <div class="input-actions">
+                                <button class="btn-voice" 
+                                        @click="toggleVoiceInput"
+                                        :class="{ recording: isRecording }"
+                                        :title="isRecording ? '停止录音' : '语音输入'">
+                                    <i :class="isRecording ? 'fas fa-stop' : 'fas fa-microphone'"></i>
+                                    <span v-if="isRecording" class="recording-indicator"></span>
+                                </button>
+                                <button class="btn-primary" 
+                                        @click="sendMessage"
+                                        :disabled="!inputMessage.trim() || isTyping">
+                                    <i class="fas fa-paper-plane"></i>
+                                    发送
+                                </button>
+                                <button class="btn-outline" @click="attachFile">
+                                    <i class="fas fa-paperclip"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- 语音输入状态提示 -->
+                        <div class="voice-status" v-if="isRecording || voiceStatus">
+                            <div class="voice-status-content" :class="{ recording: isRecording, error: voiceError }">
+                                <i :class="voiceError ? 'fas fa-exclamation-circle' : (isRecording ? 'fas fa-waveform' : 'fas fa-check-circle')"></i>
+                                <span>{{ voiceStatus }}</span>
+                                <div class="voice-wave" v-if="isRecording">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 知识库管理 -->
+        <div class="knowledge-base glass-card">
+            <h3>📚 知识库管理</h3>
+
+            <div class="knowledge-tabs">
+                <button class="tab-btn" :class="{ active: knowledgeTab === 'docs' }" @click="knowledgeTab = 'docs'">
+                    <i class="fas fa-file-alt"></i>
+                    文档管理
+                </button>
+                <button class="tab-btn" :class="{ active: knowledgeTab === 'faq' }" @click="knowledgeTab = 'faq'">
+                    <i class="fas fa-question-circle"></i>
+                    常见问题
+                </button>
+                <button class="tab-btn" :class="{ active: knowledgeTab === 'feedback' }" @click="knowledgeTab = 'feedback'">
+                    <i class="fas fa-thumbs-up"></i>
+                    反馈统计
+                </button>
+                <button class="tab-btn" :class="{ active: knowledgeTab === 'context' }" @click="knowledgeTab = 'context'">
+                    <i class="fas fa-history"></i>
+                    上下文记忆
+                </button>
+            </div>
+
+            <!-- 文档管理 -->
+            <div v-show="knowledgeTab === 'docs'" class="tab-content">
+                <div class="knowledge-actions">
+                    <button class="btn-primary" @click="addKnowledge">
+                        <i class="fas fa-plus"></i>
+                        添加知识
+                    </button>
+                    <button class="btn-outline" @click="importKnowledge">
+                        <i class="fas fa-upload"></i>
+                        导入文档
+                    </button>
+                    <button class="btn-outline" @click="exportKnowledge">
+                        <i class="fas fa-download"></i>
+                        导出知识库
+                    </button>
+                    <button class="btn-outline" @click="trainModel">
+                        <i class="fas fa-brain"></i>
+                        训练模型
+                    </button>
+                </div>
+
+                <div class="knowledge-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ knowledgeStats.total }}</div>
+                        <div class="stat-label">知识条目</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ knowledgeStats.categories }}</div>
+                        <div class="stat-label">分类数量</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ knowledgeStats.updated }}</div>
+                        <div class="stat-label">最近更新</div>
+                    </div>
+                </div>
+
+                <div class="knowledge-list">
+                    <div class="knowledge-card"
+                         v-for="item in knowledgeItems"
+                         :key="item.id"
+                         @click="editKnowledge(item.id)">
+                        <div class="knowledge-title" style="display:flex; align-items:center; justify-content:space-between;">
+                            <span><i :class="item.icon"></i> {{ item.title }}</span>
+                            <span style="display:flex; gap:4px;">
+                                <button class="btn-icon" @click.stop="editKnowledge(item.id)" title="编辑" style="width:28px; height:28px; font-size:12px;">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon" @click.stop="deleteKnowledge(item.id)" title="删除" style="width:28px; height:28px; font-size:12px; color:#ef4444;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </span>
+                        </div>
+                        <div class="knowledge-content">{{ item.summary }}</div>
+                        <div class="knowledge-meta">
+                            <span class="category">{{ item.category }}</span>
+                            <span class="views">浏览: {{ item.views }}次</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 常见问题管理 -->
+            <div v-show="knowledgeTab === 'faq'" class="tab-content">
+                <div class="knowledge-actions">
+                    <button class="btn-primary" @click="addFAQ">
+                        <i class="fas fa-plus"></i>
+                        添加问题
+                    </button>
+                    <button class="btn-outline" @click="importFAQ">
+                        <i class="fas fa-upload"></i>
+                        批量导入
+                    </button>
+                    <button class="btn-outline" @click="exportFAQ">
+                        <i class="fas fa-download"></i>
+                        导出问题
+                    </button>
+                </div>
+
+                <div class="faq-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ faqStats.total }}</div>
+                        <div class="stat-label">问题总数</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-value">{{ faqStats.resolved }}</div>
+                        <div class="stat-label">已解决</div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="stat-value">{{ faqStats.avgRating }}</div>
+                        <div class="stat-label">平均评分</div>
+                    </div>
+                </div>
+
+                <div class="faq-list">
+                    <div class="faq-item" v-for="faq in faqList" :key="faq.id">
+                        <div class="faq-header">
+                            <h4>{{ faq.question }}</h4>
+                            <div class="faq-actions">
+                                <button class="btn-icon" @click="editFAQ(faq.id)" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon" @click="deleteFAQ(faq.id)" title="删除">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="faq-answer">{{ faq.answer }}</div>
+                        <div class="faq-meta">
+                            <span class="category"><i class="fas fa-tag"></i> {{ faq.category }}</span>
+                            <span class="views"><i class="fas fa-eye"></i> {{ faq.views }}次</span>
+                            <span class="rating"><i class="fas fa-star"></i> {{ faq.rating }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 反馈统计 -->
+            <div v-show="knowledgeTab === 'feedback'" class="tab-content">
+                <div class="feedback-chart">
+                    <h4>📊 用户反馈统计</h4>
+                    <div class="feedback-summary">
+                        <div class="feedback-card positive">
+                            <div class="feedback-icon">
+                                <i class="fas fa-thumbs-up"></i>
+                            </div>
+                            <div class="feedback-info">
+                                <div class="feedback-value">{{ feedbackStats.positive }}</div>
+                                <div class="feedback-label">有用</div>
+                            </div>
+                        </div>
+                        <div class="feedback-card negative">
+                            <div class="feedback-icon">
+                                <i class="fas fa-thumbs-down"></i>
+                            </div>
+                            <div class="feedback-info">
+                                <div class="feedback-value">{{ feedbackStats.negative }}</div>
+                                <div class="feedback-label">无用</div>
+                            </div>
+                        </div>
+                        <div class="feedback-card neutral">
+                            <div class="feedback-icon">
+                                <i class="fas fa-minus"></i>
+                            </div>
+                            <div class="feedback-info">
+                                <div class="feedback-value">{{ feedbackStats.neutral }}</div>
+                                <div class="feedback-label">未评价</div>
+                            </div>
+                        </div>
+                        <div class="feedback-card rate">
+                            <div class="feedback-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="feedback-info">
+                                <div class="feedback-value">{{ feedbackStats.rate }}%</div>
+                                <div class="feedback-label">满意度</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feedback-list">
+                    <h4>反馈详情</h4>
+                    <div class="feedback-item" v-for="item in feedbackList" :key="item.id">
+                        <div class="feedback-question">{{ item.question }}</div>
+                        <div class="feedback-answer-preview">{{ item.answer }}</div>
+                        <div class="feedback-meta">
+                            <span class="feedback-type" :class="item.feedback">
+                                <i :class="getFeedbackIcon(item.feedback)"></i>
+                                {{ getFeedbackText(item.feedback) }}
+                            </span>
+                            <span class="feedback-time">{{ formatTime(item.timestamp) }}</span>
+                            <span class="feedback-user">{{ item.userName }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 上下文记忆 -->
+            <div v-show="knowledgeTab === 'context'" class="tab-content">
+                <div class="context-actions">
+                    <button class="btn-outline" @click="clearAllContext">
+                        <i class="fas fa-trash"></i>
+                        清空所有上下文
+                    </button>
+                    <button class="btn-outline" @click="exportContext">
+                        <i class="fas fa-download"></i>
+                        导出上下文
+                    </button>
+                </div>
+
+                <div class="context-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ contextStats.totalUsers }}</div>
+                        <div class="stat-label">活跃用户</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ contextStats.totalContexts }}</div>
+                        <div class="stat-label">上下文数量</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ contextStats.avgTurns }}</div>
+                        <div class="stat-label">平均轮次</div>
+                    </div>
+                </div>
+
+                <div class="context-list">
+                    <div class="context-item" v-for="ctx in contextList" :key="ctx.userId">
+                        <div class="context-header">
+                            <div class="context-user">
+                                <i class="fas fa-user"></i>
+                                {{ ctx.userName }}
+                            </div>
+                            <div class="context-time">{{ formatTime(ctx.lastUpdate) }}</div>
+                        </div>
+                        <div class="context-turns">
+                            <span>{{ ctx.turns }}轮对话</span>
+                            <span class="context-duration">时长: {{ ctx.duration }}</span>
+                        </div>
+                        <div class="context-preview">
+                            最后消息: {{ ctx.lastMessage }}
+                        </div>
+                        <button class="btn-sm btn-outline" @click="viewContext(ctx.userId)">
+                            查看详情
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI统计 -->
+        <div class="ai-statistics glass-card">
+            <h3>📊 AI使用统计</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ aiStats.totalQueries }}</div>
+                    <div class="stat-label">总查询数</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-value">{{ aiStats.todayQueries }}</div>
+                    <div class="stat-label">今日查询</div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-value">{{ aiStats.avgResponse }}ms</div>
+                    <div class="stat-label">平均响应</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value">{{ aiStats.satisfaction }}%</div>
+                    <div class="stat-label">满意度</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 知识编辑模态框 ===== -->
+    <div class="modal-overlay" v-if="showKnowledgeModal" @click.self="closeKnowledgeModal">
+        <div class="modal-container large">
+            <div class="modal-header">
+                <h3><i class="fas" :class="knowledgeForm.id ? 'fa-edit' : 'fa-plus-circle'"></i> {{ knowledgeForm.id ? '编辑知识' : '添加知识' }}</h3>
+                <button class="modal-close" @click="closeKnowledgeModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>知识标题 <span class="required">*</span></label>
+                    <input class="form-input" v-model="knowledgeForm.title" placeholder="请输入知识标题，例如：会议签到流程说明" maxlength="100">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>分类 <span class="required">*</span></label>
+                        <select class="form-select" v-model="knowledgeForm.category">
+                            <option value="">请选择分类</option>
+                            <option value="会议信息">📋 会议信息</option>
+                            <option value="出行指南">🚗 出行指南</option>
+                            <option value="住宿信息">🏨 住宿信息</option>
+                            <option value="餐饮服务">🍽️ 餐饮服务</option>
+                            <option value="报名签到">✅ 报名签到</option>
+                            <option value="讲师信息">👨‍🏫 讲师信息</option>
+                            <option value="会务须知">📌 会务须知</option>
+                            <option value="学习资料">📚 学习资料</option>
+                            <option value="技术支持">🔧 技术支持</option>
+                            <option value="其他">📎 其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>图标</label>
+                        <select class="form-select" v-model="knowledgeForm.icon">
+                            <option value="fas fa-file-alt">📄 文档</option>
+                            <option value="fas fa-calendar">📅 日程</option>
+                            <option value="fas fa-map-marker-alt">📍 地点</option>
+                            <option value="fas fa-hotel">🏨 住宿</option>
+                            <option value="fas fa-utensils">🍽️ 餐饮</option>
+                            <option value="fas fa-bus">🚌 交通</option>
+                            <option value="fas fa-user-tie">👔 人员</option>
+                            <option value="fas fa-question-circle">❓ 常见问题</option>
+                            <option value="fas fa-book">📖 资料</option>
+                            <option value="fas fa-cog">⚙️ 设置</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>摘要</label>
+                    <textarea class="form-textarea" v-model="knowledgeForm.summary" placeholder="简要描述该知识内容（可选，不填将自动截取正文前150字）" rows="2" maxlength="200"></textarea>
+                    <div class="form-hint">{{ (knowledgeForm.summary || '').length }}/200 字</div>
+                </div>
+                <div class="form-group">
+                    <label>正文内容 <span class="required">*</span></label>
+                    <textarea class="form-textarea content-area" v-model="knowledgeForm.content" placeholder="请输入知识正文内容，支持多行文本。\n\nAI助教将从这里检索信息来回答用户问题。\n请尽量详细描述，包含关键信息点。"></textarea>
+                    <div class="form-hint">{{ (knowledgeForm.content || '').length }} 字 · AI将从此内容中检索答案</div>
+                </div>
+                <div class="form-group">
+                    <label>标签</label>
+                    <div class="tag-input-wrapper" @click="$refs.tagInput && $refs.tagInput.focus()">
+                        <span class="tag-item" v-for="(tag, idx) in knowledgeFormTags" :key="idx">
+                            {{ tag }}
+                            <span class="tag-remove" @click.stop="removeTag(idx)">×</span>
+                        </span>
+                        <input class="tag-input" ref="tagInput" v-model="tagInputValue"
+                               @keydown.enter.prevent="addTag" @keydown.,.prevent="addTag"
+                               placeholder="输入标签后按回车添加">
+                    </div>
+                    <div class="form-hint">添加标签可以提高AI检索的准确度</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal-cancel" @click="closeKnowledgeModal">取消</button>
+                <button class="btn-modal-primary" @click="submitKnowledge" :disabled="!knowledgeForm.title || !knowledgeForm.content">
+                    <i class="fas" :class="knowledgeForm.id ? 'fa-save' : 'fa-plus'"></i>
+                    {{ knowledgeForm.id ? '保存修改' : '添加知识' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 文档上传模态框 ===== -->
+    <div class="modal-overlay" v-if="showUploadModal" @click.self="closeUploadModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-cloud-upload-alt"></i> 导入文档到知识库</h3>
+                <button class="modal-close" @click="closeUploadModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="margin:0 0 16px; font-size:14px; color:#666;">
+                    上传文档后，系统将自动提取文档内容并智能分块存入知识库，供AI助教检索回答用户问题。
+                </p>
+
+                <!-- 上传区 -->
+                <div class="upload-zone" v-if="!uploadFile && !uploadResult"
+                     @click="triggerFileSelect"
+                     @dragover.prevent="onDragOver"
+                     @dragleave.prevent="onDragLeave"
+                     @drop.prevent="onDrop"
+                     :class="{ 'drag-over': isDragOver }">
+                    <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <h4>点击选择文件 或 拖拽文件到此处</h4>
+                    <p>单个文件最大 50MB</p>
+                    <div class="supported-types">
+                        <span class="type-badge">PDF</span>
+                        <span class="type-badge">Word (.docx)</span>
+                        <span class="type-badge">Excel (.xlsx)</span>
+                        <span class="type-badge">TXT</span>
+                        <span class="type-badge">Markdown</span>
+                        <span class="type-badge">CSV</span>
+                    </div>
+                </div>
+                <input type="file" ref="fileInput" style="display:none" @change="onFileSelected"
+                       accept=".pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.csv">
+
+                <!-- 文件预览 -->
+                <div class="file-preview" v-if="uploadFile && !uploadResult">
+                    <div class="file-icon" :class="getFileIconClass(uploadFile.name)">
+                        <i :class="getFileIcon(uploadFile.name)"></i>
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name">{{ uploadFile.name }}</div>
+                        <div class="file-meta">{{ formatFileSize(uploadFile.size) }} · {{ getFileTypeName(uploadFile.name) }}</div>
+                    </div>
+                    <button class="file-remove" @click="removeUploadFile" title="移除文件">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+
+                <!-- 分类和标签 -->
+                <div v-if="uploadFile && !uploadResult" style="margin-top:16px">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>存入分类</label>
+                            <select class="form-select" v-model="uploadCategory">
+                                <option value="">自动识别</option>
+                                <option value="会议信息">📋 会议信息</option>
+                                <option value="出行指南">🚗 出行指南</option>
+                                <option value="住宿信息">🏨 住宿信息</option>
+                                <option value="餐饮服务">🍽️ 餐饮服务</option>
+                                <option value="报名签到">✅ 报名签到</option>
+                                <option value="讲师信息">👨‍🏫 讲师信息</option>
+                                <option value="会务须知">📌 会务须知</option>
+                                <option value="学习资料">📚 学习资料</option>
+                                <option value="其他">📎 其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>附加标签</label>
+                            <input class="form-input" v-model="uploadTags" placeholder="可选，多个用逗号分隔">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 上传进度 -->
+                <div class="upload-progress" v-if="uploading">
+                    <div class="progress-header">
+                        <span><i class="fas fa-spinner fa-spin"></i> {{ uploadStatus }}</span>
+                        <span>{{ uploadProgress }}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" :style="{ width: uploadProgress + '%' }"></div>
+                    </div>
+                    <div class="progress-detail">正在解析文档内容并存入知识库，请稍候...</div>
+                </div>
+
+                <!-- 上传结果 -->
+                <div class="upload-result" :class="uploadResult && uploadResult.success ? 'success' : 'error'" v-if="uploadResult">
+                    <h5>
+                        <i :class="uploadResult.success ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
+                        {{ uploadResult.success ? '文档解析成功！' : '解析失败' }}
+                    </h5>
+                    <p style="margin:0 0 10px; font-size:13px; color:#666;">{{ uploadResult.message }}</p>
+                    <div class="result-stats" v-if="uploadResult.success">
+                        <div class="result-stat">
+                            <div class="stat-value">{{ uploadResult.chunksSaved }}</div>
+                            <div class="stat-label">知识条目</div>
+                        </div>
+                        <div class="result-stat">
+                            <div class="stat-value">{{ uploadResult.textLength }}</div>
+                            <div class="stat-label">提取字符</div>
+                        </div>
+                        <div class="result-stat">
+                            <div class="stat-value">{{ uploadResult.fileSize }}</div>
+                            <div class="stat-label">文件大小</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal-cancel" @click="closeUploadModal">{{ uploadResult ? '关闭' : '取消' }}</button>
+                <button class="btn-modal-primary" v-if="uploadFile && !uploading && !uploadResult" @click="doUploadDocument" :disabled="uploading">
+                    <i class="fas fa-upload"></i> 开始解析并导入
+                </button>
+                <button class="btn-modal-primary" v-if="uploadResult" @click="uploadAnother">
+                    <i class="fas fa-plus"></i> 继续上传
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        // AI服务API基础地址
+        const AI_API_BASE = '/api/ai';
+
+        // 通用API请求方法
+        async function aiApiFetch(path, options = {}) {
+            const url = AI_API_BASE + path;
+            const defaultHeaders = { 'Content-Type': 'application/json' };
+            const token = localStorage.getItem('authToken');
+            if (token) defaultHeaders['Authorization'] = 'Bearer ' + token;
+            const tenantId = localStorage.getItem('tenantId') || '';
+            defaultHeaders['X-Tenant-Id'] = tenantId;
+
+            const resp = await fetch(url, {
+                headers: { ...defaultHeaders, ...options.headers },
+                ...options
+            });
+            const data = await resp.json();
+            if (data.code !== 200) throw new Error(data.message || '请求失败');
+            return data.data;
+        }
+        
+        createApp({
+            data() {
+                return {
+                    conference: { id: '', name: '加载中...' },
+                    aiOnline: true,
+                    knowledgeTab: 'docs',
+                    aiFeatures: [
+                        { id: 'qa', name: '智能问答', description: '回答会议相关问题', icon: 'fas fa-comments', enabled: true, usage: 0 },
+                        { id: 'translate', name: '实时翻译', description: '多语言实时翻译', icon: 'fas fa-language', enabled: true, usage: 0 },
+                        { id: 'summary', name: '内容总结', description: '自动总结会议内容', icon: 'fas fa-file-alt', enabled: true, usage: 0 },
+                        { id: 'recommend', name: '智能推荐', description: '个性化内容推荐', icon: 'fas fa-lightbulb', enabled: false, usage: 0 }
+                    ],
+                    conversations: [],
+                    currentConversation: null,
+                    messages: [],
+                    inputMessage: '',
+                    isTyping: false,
+                    isRecording: false,
+                    voiceStatus: '',
+                    voiceError: false,
+                    recognition: null,
+                    quickPrompts: [
+                        { id: 1, text: '会议日程安排' },
+                        { id: 2, text: '如何到达会场' },
+                        { id: 3, text: '我的座位信息' },
+                        { id: 4, text: '会议资料下载' }
+                    ],
+                    knowledgeStats: { total: 0, categories: 0, updated: '-' },
+                    knowledgeItems: [],
+                    faqStats: { total: 0, resolved: 0, avgRating: 0 },
+                    faqList: [],
+                    feedbackStats: { positive: 0, negative: 0, neutral: 0, rate: 0 },
+                    feedbackList: [],
+                    contextStats: { totalUsers: 0, totalContexts: 0, avgTurns: 0 },
+                    contextList: [],
+                    aiStats: { totalQueries: 0, todayQueries: 0, avgResponse: 0, satisfaction: 0 },
+
+                    // 知识编辑模态框
+                    showKnowledgeModal: false,
+                    knowledgeForm: { id: null, title: '', summary: '', content: '', category: '', icon: 'fas fa-file-alt', tags: '' },
+                    knowledgeFormTags: [],
+                    tagInputValue: '',
+
+                    // 文档上传模态框
+                    showUploadModal: false,
+                    uploadFile: null,
+                    uploadCategory: '',
+                    uploadTags: '',
+                    uploading: false,
+                    uploadProgress: 0,
+                    uploadStatus: '',
+                    uploadResult: null,
+                    isDragOver: false
+                }
+            },
+            async mounted() {
+                await this.initialize();
+                this.scrollToBottom();
+            },
+            methods: {
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        try {
+                            this.conference = await window.conferenceContext.loadConference(conferenceId);
+                        } catch (e) {
+                            this.conference = { id: conferenceId, name: '会议 ' + conferenceId };
+                        }
+                    } else {
+                        this.conference = { id: '', name: '全局AI助教' };
+                    }
+                    // 并行加载所有数据
+                    await Promise.allSettled([
+                        this.loadConversations(),
+                        this.loadKnowledge(),
+                        this.loadFaqList(),
+                        this.loadFeedback(),
+                        this.loadAiStats()
+                    ]);
+                    // 检查AI服务是否在线
+                    this.checkAiOnline();
+                },
+
+                async checkAiOnline() {
+                    try {
+                        await aiApiFetch('/stats');
+                        this.aiOnline = true;
+                    } catch (e) {
+                        this.aiOnline = false;
+                    }
+                },
+
+                // ===== 对话管理 =====
+                async loadConversations() {
+                    try {
+                        const list = await aiApiFetch('/conversations');
+                        this.conversations = (list || []).map(c => ({
+                            id: c.id,
+                            title: c.title || '未命名对话',
+                            lastMessage: c.lastMessage || '',
+                            updatedAt: c.updateTime ? new Date(c.updateTime) : new Date()
+                        }));
+                        if (this.conversations.length > 0 && !this.currentConversation) {
+                            this.currentConversation = this.conversations[0].id;
+                            await this.loadConversationMessages(this.conversations[0].id);
+                        }
+                    } catch (e) {
+                        console.warn('加载对话列表失败:', e);
+                    }
+                },
+
+                async newConversation() {
+                    try {
+                        const conv = await aiApiFetch('/conversations', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                title: '新对话',
+                                conferenceId: this.conference.id || null
+                            })
+                        });
+                        const newConv = {
+                            id: conv.id,
+                            title: conv.title || '新对话',
+                            lastMessage: '',
+                            updatedAt: new Date()
+                        };
+                        this.conversations.unshift(newConv);
+                        this.currentConversation = conv.id;
+                        this.messages = [];
+                    } catch (e) {
+                        // 降级: 纯前端创建
+                        const id = 'local_' + Date.now();
+                        this.conversations.unshift({ id, title: '新对话', lastMessage: '', updatedAt: new Date() });
+                        this.currentConversation = id;
+                        this.messages = [];
+                    }
+                },
+                
+                async switchConversation(convId) {
+                    this.currentConversation = convId;
+                    await this.loadConversationMessages(convId);
+                },
+                
+                async loadConversationMessages(convId) {
+                    if (!convId || String(convId).startsWith('local_')) return;
+                    try {
+                        const list = await aiApiFetch('/conversations/' + convId + '/messages');
+                        this.messages = (list || []).map(m => ({
+                            id: m.id,
+                            role: m.role,
+                            content: m.content,
+                            timestamp: m.createTime ? new Date(m.createTime) : new Date(),
+                            model: m.model || null
+                        }));
+                        this.$nextTick(() => this.scrollToBottom());
+                    } catch (e) {
+                        console.warn('加载对话消息失败:', e);
+                    }
+                },
+                
+                getCurrentConversationTitle() {
+                    const conv = this.conversations.find(c => c.id === this.currentConversation);
+                    return conv ? conv.title : '新对话';
+                },
+                
+                async sendMessage() {
+                    if (!this.inputMessage.trim() || this.isTyping) return;
+                    
+                    const question = this.inputMessage.trim();
+                    // 立即显示用户消息
+                    const userMessage = {
+                        id: 'msg_' + Date.now(),
+                        role: 'user',
+                        content: question,
+                        timestamp: new Date()
+                    };
+                    this.messages.push(userMessage);
+                    this.inputMessage = '';
+                    this.isTyping = true;
+                    this.$nextTick(() => this.scrollToBottom());
+                    
+                    try {
+                        // 调用后端AI聊天接口
+                        const result = await aiApiFetch('/chat', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                message: question,
+                                conversationId: this.currentConversation && !String(this.currentConversation).startsWith('local_') ? this.currentConversation : null,
+                                conferenceId: this.conference.id || null
+                            })
+                        });
+                        
+                        // 更新conversationId（首次对话自动创建）
+                        if (result.conversationId && (!this.currentConversation || String(this.currentConversation).startsWith('local_'))) {
+                            this.currentConversation = result.conversationId;
+                            this.loadConversations(); // 刷新对话列表
+                        }
+                        
+                        // 更新用户消息ID
+                        if (result.userMessage && result.userMessage.id) {
+                            userMessage.id = result.userMessage.id;
+                        }
+                        
+                        // 显示AI回复
+                        const aiMsg = result.aiMessage || {};
+                        this.messages.push({
+                            id: aiMsg.id || ('msg_ai_' + Date.now()),
+                            role: 'ai',
+                            content: aiMsg.content || '抱歉，未能生成回复',
+                            timestamp: aiMsg.timestamp ? new Date(aiMsg.timestamp) : new Date(),
+                            model: aiMsg.model || 'conference-ai-v1'
+                        });
+
+                        // 更新左侧对话列表的最后消息
+                        const conv = this.conversations.find(c => String(c.id) === String(result.conversationId));
+                        if (conv) {
+                            conv.lastMessage = question;
+                            conv.updatedAt = new Date();
+                        }
+
+                    } catch (e) {
+                        console.error('AI聊天失败:', e);
+                        this.messages.push({
+                            id: 'msg_err_' + Date.now(),
+                            role: 'ai',
+                            content: '抱歉，AI服务暂时无法响应，请稍后重试。\n\n错误信息: ' + e.message,
+                            timestamp: new Date(),
+                            model: 'system'
+                        });
+                    } finally {
+                        this.isTyping = false;
+                        this.$nextTick(() => this.scrollToBottom());
+                        // 刷新统计
+                        this.loadAiStats();
+                    }
+                },
+                
+                useQuickPrompt(text) {
+                    this.inputMessage = text;
+                    this.sendMessage();
+                },
+                
+                renderMarkdown(content) {
+                    if (typeof marked !== 'undefined') {
+                        return marked.parse(content);
+                    }
+                    return content.replace(/\n/g, '<br>');
+                },
+                
+                formatTime(date) {
+                    if (!date) return '';
+                    if (typeof date === 'string') date = new Date(date);
+                    const now = new Date();
+                    const diff = now - date;
+                    if (diff < 60000) return '刚刚';
+                    if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+                    if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+                    return date.toLocaleDateString('zh-CN');
+                },
+                
+                scrollToBottom() {
+                    const container = this.$refs.chatMessages;
+                    if (container) container.scrollTop = container.scrollHeight;
+                },
+                
+                async copyMessage(content) {
+                    try {
+                        await navigator.clipboard.writeText(content);
+                        this.$showToast('已复制到剪贴板', 'success');
+                    } catch (error) {
+                        this.$showToast('复制失败，请重试', 'error');
+                    }
+                },
+                
+                async regenerateResponse(messageId) {
+                    if (!messageId || String(messageId).startsWith('msg_')) {
+                        this.$showToast('本地消息无法重新生成', 'info');
+                        return;
+                    }
+                    try {
+                        this.isTyping = true;
+                        const result = await aiApiFetch('/messages/' + messageId + '/regenerate', { method: 'POST' });
+                        if (result && result.newMessage) {
+                            const newMsg = result.newMessage;
+                            this.messages.push({
+                                id: newMsg.id || ('msg_re_' + Date.now()),
+                                role: 'ai',
+                                content: newMsg.content,
+                                timestamp: newMsg.timestamp ? new Date(newMsg.timestamp) : new Date(),
+                                model: newMsg.model || 'conference-ai-v1'
+                            });
+                            this.$showToast('已重新生成回复', 'success');
+                        }
+                    } catch (e) {
+                        this.$showToast('重新生成失败: ' + e.message, 'error');
+                    } finally {
+                        this.isTyping = false;
+                        this.$nextTick(() => this.scrollToBottom());
+                    }
+                },
+                
+                async rateMessage(messageId, rating) {
+                    if (!messageId || String(messageId).startsWith('msg_')) {
+                        this.$showToast(rating === 'good' ? '感谢您的肯定！' : '感谢您的反馈！', 'success');
+                        return;
+                    }
+                    try {
+                        await aiApiFetch('/messages/' + messageId + '/rate', {
+                            method: 'POST',
+                            body: JSON.stringify({ rating })
+                        });
+                        this.$showToast(rating === 'good' ? '感谢您的肯定！' : '感谢您的反馈，我们会持续改进', 'success');
+                    } catch (e) {
+                        this.$showToast('评价失败: ' + e.message, 'error');
+                    }
+                },
+                
+                async clearConversation() {
+                    const confirmed = await this.$showConfirm('确定要清空当前对话吗？', '清空对话', 'warning');
+                    if (!confirmed) return;
+                    try {
+                        if (this.currentConversation && !String(this.currentConversation).startsWith('local_')) {
+                            await aiApiFetch('/conversations/' + this.currentConversation + '/clear', { method: 'POST' });
+                        }
+                        this.messages = [];
+                        this.$showToast('对话已清空', 'success');
+                    } catch (e) {
+                        this.messages = [];
+                        this.$showToast('对话已清空', 'success');
+                    }
+                },
+                
+                async exportConversation() {
+                    try {
+                        const text = this.messages.map(m => {
+                            const role = m.role === 'ai' ? 'AI助教' : '用户';
+                            const time = this.formatTime(m.timestamp);
+                            return `[${role}] (${time})\n${m.content}`;
+                        }).join('\n\n---\n\n');
+                        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'AI对话记录_' + new Date().toISOString().slice(0,10) + '.txt';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        this.$showToast('对话已导出', 'success');
+                    } catch (e) {
+                        this.$showToast('导出失败: ' + e.message, 'error');
+                    }
+                },
+                
+                attachFile() {
+                    this.$showToast('附件功能即将开放', 'info');
+                },
+                
+                // ===== 语音输入 =====
+                toggleVoiceInput() {
+                    if (this.isRecording) { this.stopVoiceInput(); } else { this.startVoiceInput(); }
+                },
+                startVoiceInput() {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    if (!SpeechRecognition) {
+                        this.voiceError = true;
+                        this.voiceStatus = '您的浏览器不支持语音输入功能';
+                        setTimeout(() => { this.voiceStatus = ''; this.voiceError = false; }, 3000);
+                        return;
+                    }
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.lang = 'zh-CN';
+                    this.recognition.continuous = true;
+                    this.recognition.interimResults = true;
+                    this.recognition.onstart = () => { this.isRecording = true; this.voiceError = false; this.voiceStatus = '正在聆听，请说话...'; };
+                    this.recognition.onresult = (event) => {
+                        let finalTranscript = '', interimTranscript = '';
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) finalTranscript += transcript;
+                            else interimTranscript += transcript;
+                        }
+                        if (finalTranscript) { this.inputMessage += finalTranscript; this.voiceStatus = '识别成功'; }
+                        else if (interimTranscript) { this.voiceStatus = '识别中: ' + interimTranscript.substring(0, 30) + (interimTranscript.length > 30 ? '...' : ''); }
+                    };
+                    this.recognition.onerror = (event) => {
+                        this.voiceError = true;
+                        const msgs = { 'no-speech': '未检测到语音，请重试', 'audio-capture': '未找到麦克风设备', 'not-allowed': '请允许使用麦克风权限' };
+                        this.voiceStatus = msgs[event.error] || ('语音识别出错: ' + event.error);
+                        this.isRecording = false;
+                        setTimeout(() => { this.voiceStatus = ''; this.voiceError = false; }, 3000);
+                    };
+                    this.recognition.onend = () => {
+                        this.isRecording = false;
+                        if (!this.voiceError) setTimeout(() => { this.voiceStatus = ''; }, 2000);
+                    };
+                    try { this.recognition.start(); } catch (error) {
+                        this.voiceError = true; this.voiceStatus = '启动语音识别失败';
+                        setTimeout(() => { this.voiceStatus = ''; this.voiceError = false; }, 3000);
+                    }
+                },
+                stopVoiceInput() {
+                    if (this.recognition) { this.recognition.stop(); this.voiceStatus = '语音输入已停止'; setTimeout(() => { this.voiceStatus = ''; }, 1500); }
+                    this.isRecording = false;
+                },
+
+                // ===== 知识库管理 =====
+                async loadKnowledge() {
+                    try {
+                        const list = await aiApiFetch('/knowledge');
+                        this.knowledgeItems = (list || []).map(k => ({
+                            id: k.id,
+                            title: k.title,
+                            summary: k.summary || k.content || '',
+                            category: k.category || '未分类',
+                            icon: k.icon || 'fas fa-file-alt',
+                            views: k.views || 0
+                        }));
+                        const stats = await aiApiFetch('/knowledge/stats');
+                        if (stats) this.knowledgeStats = { total: stats.total || 0, categories: stats.categories || 0, updated: stats.lastUpdated || '-' };
+                    } catch (e) { console.warn('加载知识库失败:', e); }
+                },
+                async addKnowledge() {
+                    this.knowledgeForm = { id: null, title: '', summary: '', content: '', category: '', icon: 'fas fa-file-alt', tags: '' };
+                    this.knowledgeFormTags = [];
+                    this.tagInputValue = '';
+                    this.showKnowledgeModal = true;
+                },
+                async editKnowledge(id) {
+                    const item = this.knowledgeItems.find(k => k.id === id);
+                    if (!item) return;
+                    // 从后端获取完整数据（含content）
+                    try {
+                        const list = await aiApiFetch('/knowledge');
+                        const full = (list || []).find(k => String(k.id) === String(id));
+                        if (full) {
+                            this.knowledgeForm = {
+                                id: full.id,
+                                title: full.title || '',
+                                summary: full.summary || '',
+                                content: full.content || '',
+                                category: full.category || '',
+                                icon: full.icon || 'fas fa-file-alt',
+                                tags: full.tags || ''
+                            };
+                            this.knowledgeFormTags = (full.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+                        } else {
+                            this.knowledgeForm = { id: item.id, title: item.title, summary: item.summary, content: item.summary, category: item.category, icon: 'fas fa-file-alt', tags: '' };
+                            this.knowledgeFormTags = [];
+                        }
+                    } catch (e) {
+                        this.knowledgeForm = { id: item.id, title: item.title, summary: item.summary, content: item.summary, category: item.category, icon: 'fas fa-file-alt', tags: '' };
+                        this.knowledgeFormTags = [];
+                    }
+                    this.tagInputValue = '';
+                    this.showKnowledgeModal = true;
+                },
+                closeKnowledgeModal() {
+                    this.showKnowledgeModal = false;
+                },
+                addTag() {
+                    const val = this.tagInputValue.trim().replace(/,/g, '');
+                    if (val && !this.knowledgeFormTags.includes(val)) {
+                        this.knowledgeFormTags.push(val);
+                    }
+                    this.tagInputValue = '';
+                },
+                removeTag(idx) {
+                    this.knowledgeFormTags.splice(idx, 1);
+                },
+                async submitKnowledge() {
+                    if (!this.knowledgeForm.title || !this.knowledgeForm.content) {
+                        this.$showToast('请填写标题和正文内容', 'warning');
+                        return;
+                    }
+                    const payload = {
+                        title: this.knowledgeForm.title,
+                        content: this.knowledgeForm.content,
+                        summary: this.knowledgeForm.summary || this.knowledgeForm.content.substring(0, 150),
+                        category: this.knowledgeForm.category || '未分类',
+                        icon: this.knowledgeForm.icon || 'fas fa-file-alt',
+                        tags: this.knowledgeFormTags.join(',')
+                    };
+                    try {
+                        if (this.knowledgeForm.id) {
+                            await aiApiFetch('/knowledge/' + this.knowledgeForm.id, {
+                                method: 'PUT',
+                                body: JSON.stringify(payload)
+                            });
+                            this.$showToast('知识更新成功', 'success');
+                        } else {
+                            await aiApiFetch('/knowledge', {
+                                method: 'POST',
+                                body: JSON.stringify(payload)
+                            });
+                            this.$showToast('知识添加成功', 'success');
+                        }
+                        this.showKnowledgeModal = false;
+                        await this.loadKnowledge();
+                    } catch (e) {
+                        this.$showToast('保存失败: ' + e.message, 'error');
+                    }
+                },
+
+                // ===== 文档上传 =====
+                importKnowledge() {
+                    this.uploadFile = null;
+                    this.uploadCategory = '';
+                    this.uploadTags = '';
+                    this.uploading = false;
+                    this.uploadProgress = 0;
+                    this.uploadResult = null;
+                    this.isDragOver = false;
+                    this.showUploadModal = true;
+                },
+                closeUploadModal() {
+                    this.showUploadModal = false;
+                    if (this.uploadResult && this.uploadResult.success) {
+                        this.loadKnowledge();
+                    }
+                },
+                triggerFileSelect() {
+                    this.$refs.fileInput && this.$refs.fileInput.click();
+                },
+                onFileSelected(e) {
+                    const file = e.target.files[0];
+                    if (file) this.uploadFile = file;
+                    e.target.value = ''; // 重置以支持重复选择同一文件
+                },
+                onDragOver(e) { this.isDragOver = true; },
+                onDragLeave(e) { this.isDragOver = false; },
+                onDrop(e) {
+                    this.isDragOver = false;
+                    const file = e.dataTransfer.files[0];
+                    if (file) this.uploadFile = file;
+                },
+                removeUploadFile() {
+                    this.uploadFile = null;
+                },
+                uploadAnother() {
+                    this.uploadFile = null;
+                    this.uploadResult = null;
+                    this.uploadProgress = 0;
+                },
+                async doUploadDocument() {
+                    if (!this.uploadFile) return;
+                    this.uploading = true;
+                    this.uploadProgress = 0;
+                    this.uploadStatus = '正在上传文件...';
+
+                    // 模拟进度
+                    const progressTimer = setInterval(() => {
+                        if (this.uploadProgress < 90) {
+                            this.uploadProgress += Math.random() * 15;
+                            if (this.uploadProgress > 30 && this.uploadProgress < 60) this.uploadStatus = '正在解析文档内容...';
+                            if (this.uploadProgress >= 60) this.uploadStatus = '正在分块存入知识库...';
+                        }
+                    }, 500);
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', this.uploadFile);
+                        if (this.uploadCategory) formData.append('category', this.uploadCategory);
+                        if (this.uploadTags) formData.append('tags', this.uploadTags);
+                        if (this.conference.id) formData.append('conferenceId', this.conference.id);
+
+                        const tenantId = localStorage.getItem('tenantId') || '';
+                        const uploadHeaders = { 'X-Tenant-Id': tenantId };
+                        const uploadToken = localStorage.getItem('authToken');
+                        if (uploadToken) uploadHeaders['Authorization'] = 'Bearer ' + uploadToken;
+                        const resp = await fetch(AI_API_BASE + '/knowledge/upload', {
+                            method: 'POST',
+                            headers: uploadHeaders,
+                            body: formData
+                        });
+                        const data = await resp.json();
+                        clearInterval(progressTimer);
+                        this.uploadProgress = 100;
+                        this.uploadStatus = '完成';
+
+                        if (data.code === 200) {
+                            this.uploadResult = data.data;
+                        } else {
+                            this.uploadResult = { success: false, message: data.message || '上传失败' };
+                        }
+                    } catch (e) {
+                        clearInterval(progressTimer);
+                        this.uploadResult = { success: false, message: '网络错误: ' + e.message };
+                    } finally {
+                        this.uploading = false;
+                    }
+                },
+                getFileIcon(name) {
+                    const ext = (name || '').split('.').pop().toLowerCase();
+                    const map = { pdf: 'fas fa-file-pdf', docx: 'fas fa-file-word', doc: 'fas fa-file-word', xlsx: 'fas fa-file-excel', xls: 'fas fa-file-excel', csv: 'fas fa-file-excel', txt: 'fas fa-file-alt', md: 'fas fa-file-code' };
+                    return map[ext] || 'fas fa-file';
+                },
+                getFileIconClass(name) {
+                    const ext = (name || '').split('.').pop().toLowerCase();
+                    if (ext === 'pdf') return 'pdf';
+                    if (['docx', 'doc'].includes(ext)) return 'word';
+                    if (['xlsx', 'xls', 'csv'].includes(ext)) return 'excel';
+                    return 'text';
+                },
+                getFileTypeName(name) {
+                    const ext = (name || '').split('.').pop().toLowerCase();
+                    const map = { pdf: 'PDF 文档', docx: 'Word 文档', doc: 'Word 文档(旧)', xlsx: 'Excel 表格', xls: 'Excel 表格(旧)', csv: 'CSV 数据', txt: '纯文本', md: 'Markdown' };
+                    return map[ext] || '文件';
+                },
+                formatFileSize(bytes) {
+                    if (!bytes) return '0 B';
+                    if (bytes < 1024) return bytes + ' B';
+                    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+                },
+                async exportKnowledge() {
+                    const text = this.knowledgeItems.map(k => `# ${k.title}\n分类: ${k.category}\n\n${k.summary}`).join('\n\n---\n\n');
+                    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a'); a.href = url; a.download = '知识库导出_' + new Date().toISOString().slice(0,10) + '.txt'; a.click();
+                    URL.revokeObjectURL(url);
+                    this.$showToast('知识库已导出', 'success');
+                },
+                async trainModel() {
+                    this.$showLoading('正在同步知识库数据...');
+                    await this.loadKnowledge();
+                    this.$hideLoading();
+                    this.$showToast('知识库已同步，AI助教将使用最新知识回答问题', 'success');
+                },
+                async deleteKnowledge(id) {
+                    const confirmed = await this.$showConfirm('确定要删除这条知识吗？删除后AI将无法检索到相关内容。', '删除知识', 'warning');
+                    if (!confirmed) return;
+                    try {
+                        await aiApiFetch('/knowledge/' + id, { method: 'DELETE' });
+                        this.$showToast('知识已删除', 'success');
+                        await this.loadKnowledge();
+                    } catch (e) { this.$showToast('删除失败: ' + e.message, 'error'); }
+                },
+
+                // ===== FAQ管理 =====
+                async loadFaqList() {
+                    try {
+                        const list = await aiApiFetch('/faq');
+                        this.faqList = (list || []).map(f => ({
+                            id: f.id,
+                            question: f.question,
+                            answer: f.answer,
+                            category: f.category || '未分类',
+                            views: f.views || 0,
+                            rating: f.ratingScore || 0
+                        }));
+                        const stats = await aiApiFetch('/faq/stats');
+                        if (stats) this.faqStats = { total: stats.total || 0, resolved: stats.resolved || 0, avgRating: stats.avgRating || 0 };
+                    } catch (e) { console.warn('加载FAQ失败:', e); }
+                },
+                async addFAQ() {
+                    const question = prompt('请输入问题:');
+                    if (!question) return;
+                    const answer = prompt('请输入答案:');
+                    if (!answer) return;
+                    const category = prompt('请输入分类:') || '未分类';
+                    try {
+                        await aiApiFetch('/faq', {
+                            method: 'POST',
+                            body: JSON.stringify({ question, answer, category })
+                        });
+                        this.$showToast('FAQ添加成功', 'success');
+                        await this.loadFaqList();
+                    } catch (e) { this.$showToast('添加失败: ' + e.message, 'error'); }
+                },
+                async editFAQ(id) {
+                    const item = this.faqList.find(f => f.id === id);
+                    if (!item) return;
+                    const question = prompt('修改问题:', item.question);
+                    if (!question) return;
+                    const answer = prompt('修改答案:', item.answer);
+                    if (answer === null) return;
+                    try {
+                        await aiApiFetch('/faq/' + id, {
+                            method: 'PUT',
+                            body: JSON.stringify({ question, answer })
+                        });
+                        this.$showToast('FAQ更新成功', 'success');
+                        await this.loadFaqList();
+                    } catch (e) { this.$showToast('更新失败: ' + e.message, 'error'); }
+                },
+                async deleteFAQ(id) {
+                    const confirmed = await this.$showConfirm('确定要删除这个问题吗？', '删除问题', 'warning');
+                    if (!confirmed) return;
+                    try {
+                        await aiApiFetch('/faq/' + id, { method: 'DELETE' });
+                        this.$showToast('FAQ已删除', 'success');
+                        await this.loadFaqList();
+                    } catch (e) { this.$showToast('删除失败: ' + e.message, 'error'); }
+                },
+                importFAQ() { this.$showToast('批量导入功能即将开放', 'info'); },
+                async exportFAQ() {
+                    const text = this.faqList.map(f => `Q: ${f.question}\nA: ${f.answer}\n分类: ${f.category}`).join('\n\n---\n\n');
+                    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a'); a.href = url; a.download = 'FAQ导出_' + new Date().toISOString().slice(0,10) + '.txt'; a.click();
+                    URL.revokeObjectURL(url);
+                    this.$showToast('FAQ已导出', 'success');
+                },
+
+                // ===== 反馈统计 =====
+                async loadFeedback() {
+                    try {
+                        const stats = await aiApiFetch('/feedback/stats');
+                        if (stats) this.feedbackStats = { positive: stats.positive || 0, negative: stats.negative || 0, neutral: stats.neutral || 0, rate: stats.rate || 0 };
+                        const list = await aiApiFetch('/feedback');
+                        this.feedbackList = (list || []).map(f => ({
+                            id: f.id,
+                            question: f.question || '',
+                            answer: f.answer || '',
+                            feedback: f.feedback || 'neutral',
+                            timestamp: f.createTime ? new Date(f.createTime) : new Date(),
+                            userName: f.userName || '匿名'
+                        }));
+                    } catch (e) { console.warn('加载反馈失败:', e); }
+                },
+                getFeedbackIcon(feedback) {
+                    return { good: 'fas fa-thumbs-up', bad: 'fas fa-thumbs-down', neutral: 'fas fa-minus' }[feedback] || 'fas fa-minus';
+                },
+                getFeedbackText(feedback) {
+                    return { good: '有用', bad: '无用', neutral: '未评价' }[feedback] || '未评价';
+                },
+
+                // ===== 上下文记忆 =====
+                viewContext(userId) { this.$showToast('查看用户 ' + userId + ' 的详细对话上下文', 'info'); },
+                async clearAllContext() {
+                    const confirmed = await this.$showConfirm('确定要清空所有用户的上下文记忆吗？此操作不可恢复。', '清空上下文', 'warning');
+                    if (confirmed) {
+                        this.contextList = [];
+                        this.contextStats = { totalUsers: 0, totalContexts: 0, avgTurns: 0 };
+                        this.$showToast('已清空所有上下文', 'success');
+                    }
+                },
+                exportContext() {
+                    const text = this.contextList.map(c => `用户: ${c.userName}\n轮次: ${c.turns}\n时长: ${c.duration}\n最后消息: ${c.lastMessage}`).join('\n\n---\n\n');
+                    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a'); a.href = url; a.download = '上下文导出_' + new Date().toISOString().slice(0,10) + '.txt'; a.click();
+                    URL.revokeObjectURL(url);
+                    this.$showToast('上下文数据已导出', 'success');
+                },
+
+                // ===== AI统计 =====
+                async loadAiStats() {
+                    try {
+                        const stats = await aiApiFetch('/stats');
+                        if (stats) {
+                            this.aiStats = {
+                                totalQueries: stats.totalQueries || 0,
+                                todayQueries: stats.todayQueries || 0,
+                                avgResponse: stats.avgResponse || 0,
+                                satisfaction: stats.satisfaction || 0
+                            };
+                            // 更新功能概览中的使用量
+                            const qaFeature = this.aiFeatures.find(f => f.id === 'qa');
+                            if (qaFeature) qaFeature.usage = stats.todayQueries || 0;
+                        }
+                    } catch (e) { console.warn('加载AI统计失败:', e); }
+                },
+
+                goBack() { window.history.back(); }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+        </div><!-- 关闭page-with-nav -->
+</body>
+</html>

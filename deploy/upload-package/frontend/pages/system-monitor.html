@@ -1,0 +1,937 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统监控 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <style>
+        .command-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .realtime-monitor {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            min-height: 200px;
+        }
+
+        .monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .refresh-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .data-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .stream-item {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            animation: slideInRight 0.3s;
+        }
+
+        .stream-item.info { border-color: var(--info-color); }
+        .stream-item.success { border-color: var(--success-color); }
+        .stream-item.warning { border-color: var(--warning-color); }
+        .stream-item.error { border-color: var(--error-color); }
+
+        .system-monitor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .monitor-card {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+        }
+
+        .monitor-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        .monitor-label {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-top: 0.25rem;
+        }
+
+        .monitor-chart {
+            height: 80px;
+            margin-top: 0.5rem;
+            position: relative;
+        }
+
+        .monitor-chart canvas {
+            max-width: 100%;
+            height: 80px !important;
+        }
+
+        .status-online {
+            color: var(--success-color);
+        }
+
+        .status-warning {
+            color: var(--warning-color);
+        }
+
+        .status-error {
+            color: var(--error-color);
+        }
+
+        .service-status {
+            margin-top: 2rem;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .service-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .service-item.healthy {
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .service-item.warning {
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .service-item.error {
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .service-item.offline {
+            border-color: rgba(107, 114, 128, 0.3);
+            opacity: 0.7;
+        }
+
+        .service-item.unknown {
+            border-color: rgba(156, 163, 175, 0.3);
+        }
+
+        .status-online {
+            color: var(--success-color);
+        }
+
+        .status-offline {
+            color: var(--gray-500);
+        }
+
+        .service-info {
+            flex: 1;
+        }
+
+        .service-name {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.25rem;
+        }
+
+        .service-desc {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        .service-metrics {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .db-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .db-stat-card {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .db-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        .db-stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .api-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .api-metric-card {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .endpoint-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .endpoint-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.5rem;
+        }
+
+        .endpoint-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .endpoint-method {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .endpoint-method.get {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success-color);
+        }
+
+        .endpoint-method.post {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning-color);
+        }
+
+        .endpoint-method.put {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--info-color);
+        }
+
+        .endpoint-method.delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error-color);
+        }
+
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: var(--gray-700);
+        }
+
+        .endpoint-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .performance-charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .performance-charts .chart-container {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            min-height: 350px;
+        }
+
+        .performance-charts .chart-container h4 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 1rem;
+        }
+
+        .performance-charts .chart-container canvas {
+            max-height: 280px;
+        }
+    </style>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
+</head>
+<body>
+    <div id="app">
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">系统监控</h1>
+                <div class="nav-actions"></div>
+            </div>
+        </nav>
+
+        <div class="page-with-nav" style="padding-top: 90px !important;">
+        <div class="page-header glass-card">
+            <div>
+                <h2>🖥️ 系统监控</h2>
+                <div class="conference-context">
+                    <span class="context-label">当前会议:</span>
+                    <span class="context-value">{{ conference.name }} ({{ conference.id }})</span>
+                    <span style="margin-left: 1rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <div class="refresh-indicator"></div>
+                        实时监控中
+                    </span>
+                </div>
+            </div>
+            <div class="page-actions">
+                <button class="btn-outline" @click="goBack">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <button class="btn-primary" @click="exportReport">
+                    <i class="fas fa-file-download"></i>
+                    导出报告
+                </button>
+            </div>
+        </div>
+
+        <!-- 实时事件流 -->
+        <div class="command-grid">
+            <div class="realtime-monitor">
+                <div class="monitor-header">
+                    <h4>系统事件</h4>
+                    <span>{{ systemEvents.length }}条</span>
+                </div>
+                <div class="data-stream">
+                    <div v-for="event in systemEvents"
+                         :key="event.id"
+                         class="stream-item"
+                         :class="event.type">
+                        <div>{{ formatTime(event.timestamp) }}</div>
+                        <div>{{ event.message }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="realtime-monitor">
+                <div class="monitor-header">
+                    <h4>用户活动</h4>
+                    <span>{{ userActivities.length }}条</span>
+                </div>
+                <div class="data-stream">
+                    <div v-for="activity in userActivities"
+                         :key="activity.id"
+                         class="stream-item info">
+                        <div>{{ formatTime(activity.timestamp) }}</div>
+                        <div>
+                            <strong>{{ activity.user }}</strong> {{ activity.action }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="realtime-monitor">
+                <div class="monitor-header">
+                    <h4>数据变更</h4>
+                    <span>{{ dataChanges.length }}条</span>
+                </div>
+                <div class="data-stream">
+                    <div v-for="change in dataChanges"
+                         :key="change.id"
+                         class="stream-item success">
+                        <div>{{ formatTime(change.timestamp) }}</div>
+                        <div>
+                            {{ change.table }}: {{ change.operation }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系统资源监控 -->
+        <div class="glass-card" style="margin-bottom: 1.5rem;">
+            <h3>💻 系统资源监控</h3>
+            <div class="system-monitor-grid">
+                <div class="monitor-card">
+                    <div class="monitor-value">{{ systemMetrics.cpu }}%</div>
+                    <div class="monitor-label">CPU使用率</div>
+                    <div class="monitor-chart">
+                        <canvas :id="'cpuChart'"></canvas>
+                    </div>
+                </div>
+                <div class="monitor-card">
+                    <div class="monitor-value">{{ systemMetrics.memory }}%</div>
+                    <div class="monitor-label">内存使用率</div>
+                    <div class="monitor-chart">
+                        <canvas :id="'memoryChart'"></canvas>
+                    </div>
+                </div>
+                <div class="monitor-card">
+                    <div class="monitor-value">{{ systemMetrics.disk }}%</div>
+                    <div class="monitor-label">磁盘使用率</div>
+                    <div class="monitor-chart">
+                        <canvas :id="'diskChart'"></canvas>
+                    </div>
+                </div>
+                <div class="monitor-card">
+                    <div class="monitor-value">{{ systemMetrics.network }}</div>
+                    <div class="monitor-label">网络流量 (MB/s)</div>
+                    <div class="monitor-chart">
+                        <canvas :id="'networkChart'"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 服务状态 -->
+        <div class="glass-card service-status">
+            <h3>🔧 服务状态</h3>
+            <div class="services-grid">
+                <div v-for="service in services"
+                     :key="service.name"
+                     class="service-item"
+                     :class="service.status">
+                    <div class="service-icon" style="margin-right: 1rem;">
+                        <i :class="service.icon" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="service-info">
+                        <div class="service-name">{{ service.name }}</div>
+                        <div class="service-desc">{{ service.description }}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div :class="getStatusClass(service.status)">
+                            {{ getStatusText(service.status) }}
+                        </div>
+                        <div class="service-metrics">
+                            <span>{{ service.responseTime }}ms</span>
+                            <span>QPS: {{ service.qps }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据库监控 -->
+        <div class="glass-card" style="margin-bottom: 1.5rem;">
+            <h3>💾 数据库监控</h3>
+            <div class="db-stats">
+                <div class="db-stat-card">
+                    <div class="db-stat-value">{{ dbMetrics.connections }}</div>
+                    <div class="db-stat-label">活动连接数</div>
+                </div>
+                <div class="db-stat-card">
+                    <div class="db-stat-value">{{ dbMetrics.qps }}</div>
+                    <div class="db-stat-label">查询速率 (QPS)</div>
+                </div>
+                <div class="db-stat-card">
+                    <div class="db-stat-value">{{ dbMetrics.slowQueries }}</div>
+                    <div class="db-stat-label">慢查询</div>
+                </div>
+                <div class="db-stat-card">
+                    <div class="db-stat-value">{{ dbMetrics.cacheHitRate }}%</div>
+                    <div class="db-stat-label">缓存命中率</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API监控 -->
+        <div class="glass-card" style="margin-bottom: 1.5rem;">
+            <h3>🌐 API监控</h3>
+            <div class="api-metrics">
+                <div class="api-metric-card">
+                    <div class="db-stat-value">{{ apiMetrics.totalRequests }}</div>
+                    <div class="db-stat-label">总请求数</div>
+                </div>
+                <div class="api-metric-card">
+                    <div class="db-stat-value">{{ apiMetrics.successRate }}%</div>
+                    <div class="db-stat-label">成功率</div>
+                </div>
+                <div class="api-metric-card">
+                    <div class="db-stat-value">{{ apiMetrics.avgResponseTime }}ms</div>
+                    <div class="db-stat-label">平均响应时间</div>
+                </div>
+                <div class="api-metric-card">
+                    <div class="db-stat-value">{{ apiMetrics.errorCount }}</div>
+                    <div class="db-stat-label">错误数量</div>
+                </div>
+            </div>
+
+            <h4 style="margin: 1.5rem 0 1rem 0;">热门接口</h4>
+            <div class="endpoint-list">
+                <div v-for="endpoint in topEndpoints"
+                     :key="endpoint.path"
+                     class="endpoint-item">
+                    <div class="endpoint-info">
+                        <span class="endpoint-method" :class="'method-' + endpoint.method.toLowerCase()">
+                            {{ endpoint.method }}
+                        </span>
+                        <span class="endpoint-path">{{ endpoint.path }}</span>
+                    </div>
+                    <div class="endpoint-stats">
+                        <span>请求: {{ endpoint.requests }}</span>
+                        <span>平均: {{ endpoint.avgTime }}ms</span>
+                        <span>成功率: {{ endpoint.successRate }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 性能分析 -->
+        <div class="glass-card">
+            <h3>⚡ 性能分析</h3>
+            <div class="performance-charts">
+                <div class="chart-container">
+                    <h4>响应时间分布</h4>
+                    <canvas id="responseTimeChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h4>错误率趋势</h4>
+                    <canvas id="errorRateChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/conference-context.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <script>
+        const { createApp } = Vue;
+        const DATA_API = '/api/data';
+
+        // chart.umd.js 已自动注册所有组件，无需手动 Chart.register()
+
+        createApp({
+            data() {
+                return {
+                    conference: {
+                        id: '',
+                        name: '加载中...'
+                    },
+                    systemEvents: [],
+                    userActivities: [],
+                    dataChanges: [],
+                    systemMetrics: {
+                        cpu: 0,
+                        memory: 0,
+                        disk: 0,
+                        network: 0
+                    },
+                    services: [],
+                    dbMetrics: {
+                        connections: 0,
+                        qps: 0,
+                        slowQueries: 0,
+                        cacheHitRate: 0
+                    },
+                    apiMetrics: {
+                        totalRequests: 0,
+                        successRate: 100,
+                        avgResponseTime: 0,
+                        errorCount: 0
+                    },
+                    topEndpoints: [],
+                    monitorTimer: null,
+                    charts: {}
+                }
+            },
+            async mounted() {
+                await this.initialize();
+                await this.loadAllData();
+                this.startMonitoring();
+                this.initializeCharts();
+            },
+            beforeUnmount() {
+                if (this.monitorTimer) clearInterval(this.monitorTimer);
+            },
+            methods: {
+                async initialize() {
+                    const conferenceId = new URLSearchParams(window.location.search).get('conferenceId');
+                    if (conferenceId) {
+                        try {
+                            this.conference = await window.conferenceContext.loadConference(conferenceId);
+                        } catch (e) {
+                            this.conference = { id: conferenceId, name: '会议 ' + conferenceId };
+                        }
+                    } else {
+                        this.conference = { id: 'all', name: '全局监控' };
+                    }
+                },
+
+                async apiGet(path) {
+                    try {
+                        const resp = await fetch(DATA_API + path, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Tenant-Id': localStorage.getItem('tenantId') || '',
+                                'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || localStorage.getItem('token') || '')
+                            }
+                        });
+                        const json = await resp.json();
+                        if (json.code === 200) return json.data;
+                        console.warn('API返回非200:', path, json);
+                        return null;
+                    } catch (e) {
+                        console.warn('API请求失败:', path, e.message);
+                        return null;
+                    }
+                },
+
+                async loadAllData() {
+                    await Promise.all([
+                        this.loadSystemMetrics(),
+                        this.loadServiceHealth(),
+                        this.loadDbMetrics(),
+                        this.loadApiMetrics(),
+                        this.loadTopEndpoints(),
+                        this.loadSystemEvents(),
+                        this.loadUserActivities()
+                    ]);
+                },
+
+                startMonitoring() {
+                    this.monitorTimer = setInterval(async () => {
+                        await this.loadSystemMetrics();
+                        await this.loadServiceHealth();
+                        await this.loadDbMetrics();
+                        await this.loadApiMetrics();
+                        await this.loadSystemEvents();
+                        await this.loadUserActivities();
+                        this.updateChartData();
+                    }, 10000);
+                },
+
+                async loadSystemMetrics() {
+                    const data = await this.apiGet('/system/metrics');
+                    if (data) {
+                        this.systemMetrics.cpu = data.cpu || 0;
+                        this.systemMetrics.memory = data.memory || 0;
+                        this.systemMetrics.disk = data.disk || 0;
+                        this.systemMetrics.network = data.network || 0;
+                    }
+                },
+
+                async loadServiceHealth() {
+                    const data = await this.apiGet('/system/services');
+                    if (data && data.length > 0) {
+                        this.services = data.map(s => ({
+                            name: s.serviceName,
+                            description: s.serviceDesc || s.serviceName,
+                            icon: s.serviceIcon || 'fas fa-server',
+                            status: s.status || 'unknown',
+                            responseTime: s.responseTime || '-',
+                            qps: s.qps || 0
+                        }));
+                    }
+                },
+
+                async loadDbMetrics() {
+                    const data = await this.apiGet('/system/db-metrics');
+                    if (data) {
+                        this.dbMetrics.connections = data.connections || 0;
+                        this.dbMetrics.qps = data.qps || 0;
+                        this.dbMetrics.slowQueries = data.slowQueries || 0;
+                        this.dbMetrics.cacheHitRate = data.cacheHitRate || 0;
+                    }
+                },
+
+                async loadApiMetrics() {
+                    const data = await this.apiGet('/system/api-metrics');
+                    if (data) {
+                        this.apiMetrics.totalRequests = data.totalRequests || 0;
+                        this.apiMetrics.successRate = data.successRate || 100;
+                        this.apiMetrics.avgResponseTime = data.avgResponseTime || 0;
+                        this.apiMetrics.errorCount = data.errorCount || 0;
+                    }
+                },
+
+                async loadTopEndpoints() {
+                    const data = await this.apiGet('/system/top-endpoints');
+                    if (data && data.length > 0) {
+                        this.topEndpoints = data.map(e => ({
+                            method: e.method || 'GET',
+                            path: e.path || '/',
+                            requests: e.requests || 0,
+                            avgTime: e.avg_time || 0,
+                            successRate: e.success_rate || 100
+                        }));
+                    }
+                },
+
+                async loadSystemEvents() {
+                    const data = await this.apiGet('/system/events?limit=10');
+                    if (data) {
+                        this.systemEvents = data.map(e => ({
+                            id: e.id,
+                            type: e.eventType || 'info',
+                            message: e.message || '',
+                            timestamp: e.createdTime ? new Date(e.createdTime) : new Date()
+                        }));
+                    }
+                    // 同时获取数据变更（API访问日志近似）
+                    this.dataChanges = this.systemEvents.filter(e => e.type === 'success').slice(0, 10).map(e => ({
+                        ...e,
+                        table: 'API',
+                        operation: e.message
+                    }));
+                },
+
+                async loadUserActivities() {
+                    const data = await this.apiGet('/system/user-activities?limit=10');
+                    if (data) {
+                        this.userActivities = data.map(a => ({
+                            id: a.id,
+                            user: a.username || '系统',
+                            action: a.action || '',
+                            timestamp: a.createdTime ? new Date(a.createdTime) : new Date()
+                        }));
+                    }
+                },
+
+                updateChartData() {
+                    // 更新迷你图表
+                    Object.keys(this.charts).forEach(key => {
+                        const chart = this.charts[key];
+                        if (chart && chart.data) {
+                            const dataset = chart.data.datasets[0];
+                            if (dataset) {
+                                dataset.data.shift();
+                                let newVal = 0;
+                                if (key === 'cpuChart') newVal = this.systemMetrics.cpu;
+                                else if (key === 'memoryChart') newVal = this.systemMetrics.memory;
+                                else if (key === 'diskChart') newVal = this.systemMetrics.disk;
+                                else if (key === 'networkChart') newVal = parseFloat(this.systemMetrics.network) || 0;
+                                dataset.data.push(newVal);
+                                chart.update('none');
+                            }
+                        }
+                    });
+                },
+
+                initializeCharts() {
+                    this.$nextTick(() => {
+                        this.createMiniCharts();
+                        this.createPerformanceCharts();
+                    });
+                },
+
+                createMiniCharts() {
+                    const chartIds = ['cpuChart', 'memoryChart', 'diskChart', 'networkChart'];
+                    const colors = ['#667eea', '#22c55e', '#f59e0b', '#3b82f6'];
+
+                    chartIds.forEach((id, index) => {
+                        const ctx = document.getElementById(id);
+                        if (!ctx) return;
+
+                        const initialData = Array.from({ length: 20 }, () => {
+                            if (id === 'cpuChart') return this.systemMetrics.cpu || 0;
+                            if (id === 'memoryChart') return this.systemMetrics.memory || 0;
+                            if (id === 'diskChart') return this.systemMetrics.disk || 0;
+                            return parseFloat(this.systemMetrics.network) || 0;
+                        });
+
+                        this.charts[id] = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: Array.from({ length: 20 }, (_, i) => i),
+                                datasets: [{
+                                    data: initialData,
+                                    borderColor: colors[index],
+                                    borderWidth: 1.5,
+                                    pointRadius: 0,
+                                    fill: true,
+                                    backgroundColor: colors[index] + '20'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                animation: false,
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    x: { display: false },
+                                    y: { beginAtZero: true, max: id === 'networkChart' ? 50 : 100, display: false }
+                                }
+                            }
+                        });
+                    });
+                },
+
+                async createPerformanceCharts() {
+                    // 响应时间趋势
+                    const responseData = await this.apiGet('/system/response-time-trend');
+                    const respCtx = document.getElementById('responseTimeChart');
+                    if (respCtx) {
+                        const labels = responseData && responseData.length > 0
+                            ? responseData.map(d => d.hour + ':00')
+                            : Array.from({ length: 24 }, (_, i) => i + ':00');
+                        const data = responseData && responseData.length > 0
+                            ? responseData.map(d => d.avg_time)
+                            : Array.from({ length: 24 }, () => 0);
+
+                        new Chart(respCtx, {
+                            type: 'line',
+                            data: {
+                                labels,
+                                datasets: [{
+                                    label: '响应时间(ms)',
+                                    data,
+                                    borderColor: '#667eea',
+                                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                    tension: 0.4,
+                                    fill: true
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
+
+                    // 错误率趋势
+                    const errorData = await this.apiGet('/system/error-rate-trend');
+                    const errCtx = document.getElementById('errorRateChart');
+                    if (errCtx) {
+                        const labels = errorData && errorData.length > 0
+                            ? errorData.map(d => d.date)
+                            : ['暂无数据'];
+                        const data = errorData && errorData.length > 0
+                            ? errorData.map(d => d.error_rate)
+                            : [0];
+
+                        new Chart(errCtx, {
+                            type: 'bar',
+                            data: {
+                                labels,
+                                datasets: [{
+                                    label: '错误率(%)',
+                                    data,
+                                    backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                                    borderColor: '#ef4444',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } }
+                            }
+                        });
+                    }
+                },
+
+                getStatusText(status) {
+                    const map = {
+                        healthy: '正常',
+                        warning: '警告',
+                        error: '错误',
+                        offline: '离线',
+                        unknown: '检测中'
+                    };
+                    return map[status] || status;
+                },
+
+                getStatusClass(status) {
+                    if (status === 'offline' || status === 'unknown') return 'status-warning';
+                    return 'status-' + (status === 'healthy' ? 'online' : status);
+                },
+
+                formatTime(date) {
+                    if (!date) return '';
+                    if (typeof date === 'string') date = new Date(date);
+                    return date.toLocaleTimeString('zh-CN');
+                },
+
+                async exportReport() {
+                    try {
+                        this.$showLoading('正在导出系统监控报告...');
+                        const reportData = {
+                            exportTime: new Date().toISOString(),
+                            systemMetrics: this.systemMetrics,
+                            services: this.services,
+                            dbMetrics: this.dbMetrics,
+                            apiMetrics: this.apiMetrics,
+                            topEndpoints: this.topEndpoints
+                        };
+                        const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = '系统监控报告_' + new Date().toISOString().slice(0, 10) + '.json';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        this.$hideLoading();
+                        this.$showToast('系统监控报告已导出', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        this.$showToast('导出失败: ' + error.message, 'error');
+                    }
+                },
+
+                goBack() {
+                    window.history.back();
+                }
+            },
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+        </div>
+    </div>
+</body>
+</html>

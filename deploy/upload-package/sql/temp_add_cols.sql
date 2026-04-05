@@ -1,0 +1,4 @@
+﻿ALTER TABLE sys_tenant 
+ADD COLUMN IF NOT EXISTS description VARCHAR(500) COMMENT '租户描述' AFTER tenant_name,
+ADD COLUMN IF NOT EXISTS created_by BIGINT COMMENT '创建人ID' AFTER tenant_name,
+ADD COLUMN IF NOT EXISTS updated_by BIGINT COMMENT '更新人ID' AFTER updated_at;

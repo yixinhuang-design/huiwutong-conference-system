@@ -34,4 +34,16 @@ public interface SystemMetricsMapper extends BaseMapper<SystemMetrics> {
      */
     @Select("SHOW STATUS LIKE 'Slow_queries'")
     Map<String, Object> getSlowQueries();
+
+    /**
+     * 获取InnoDB Buffer Pool 物理读次数（缓存未命中时的磁盘读取）
+     */
+    @Select("SHOW STATUS LIKE 'Innodb_buffer_pool_reads'")
+    Map<String, Object> getBufferPoolReads();
+
+    /**
+     * 获取InnoDB Buffer Pool 逻辑读请求次数（缓存命中+未命中总数）
+     */
+    @Select("SHOW STATUS LIKE 'Innodb_buffer_pool_read_requests'")
+    Map<String, Object> getBufferPoolReadRequests();
 }

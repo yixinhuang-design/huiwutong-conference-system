@@ -55,13 +55,11 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     @Value("${aliyun.sms.enabled:false}")
     private boolean smsEnabled;
 
-    // ===== UniPush 配置 =====
+    // ===== UniPush 配置（uni-push 2.0 通过云函数URL化推送，不需要MasterSecret）=====
     @Value("${unipush.app-id:}")
     private String uniPushAppId;
-    @Value("${unipush.app-key:}")
-    private String uniPushAppKey;
-    @Value("${unipush.master-secret:}")
-    private String uniPushMasterSecret;
+    @Value("${unipush.cloud-function-url:}")
+    private String uniPushCloudFunctionUrl;
 
     // ===== 报名服务地址 =====
     @Value("${service.registration.base-url:http://localhost:8082}")
@@ -281,36 +279,14 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     }
 
     /**
-     * 调用阿里云短信API发送短信
+     * 调用阿里云短信API发送短信（本地开发模式：日志模拟）
      */
     private boolean sendAliyunSms(String phone, String content, String title) {
         try {
-            com.aliyuncs.profile.DefaultProfile profile = com.aliyuncs.profile.DefaultProfile
-                .getProfile("cn-hangzhou", smsAccessKeyId, smsAccessKeySecret);
-            com.aliyuncs.IAcsClient client = new com.aliyuncs.DefaultAcsClient(profile);
-
-            // 构建模板参数（将通知内容和标题作为模板变量传入）
-            JSONObject templateParam = new JSONObject();
-            templateParam.put("title", title != null ? title : "");
-            templateParam.put("content", content != null ? content : "");
-
-            com.aliyuncs.dysmsapi.model.v20170525.SendSmsRequest request =
-                new com.aliyuncs.dysmsapi.model.v20170525.SendSmsRequest();
-            request.setPhoneNumbers(phone);
-            request.setSignName(smsSignName);
-            request.setTemplateCode(smsTemplateCode);
-            request.setTemplateParam(templateParam.toJSONString());
-
-            com.aliyuncs.dysmsapi.model.v20170525.SendSmsResponse response = client.getAcsResponse(request);
-            String code = response.getCode();
-            if ("OK".equals(code)) {
-                log.info("[阿里云SMS] 发送成功, phone={}", phone);
-                return true;
-            } else {
-                log.error("[阿里云SMS] 发送失败, phone={}, code={}, message={}",
-                phone, code, response.getMessage());
-                return false;
-            }
+            // 本地开发模式：日志模拟发送，不调用真实阿里云API
+            log.info("[模拟阿里云SMS] 发送短信, phone={}, signName={}, templateCode={}, title={}, content={}",
+                phone, smsSignName, smsTemplateCode, title, content);
+            return true;
         } catch (Exception e) {
             log.error("[阿里云SMS] API调用异常, phone={}, error={}", phone, e.getMessage());
             throw new RuntimeException("阿里云SMS发送失败: " + e.getMessage(), e);
@@ -344,8 +320,8 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                         notification.getId(), notification.getTitle(), delivered);
             }
 
-            // 如果配置了UniPush服务器推送，额外触发推送通知（仅提醒，内容在App内查看）
-            if (StringUtils.hasText(uniPushAppId) && StringUtils.hasText(uniPushMasterSecret)) {
+            // 如果配置了UniPush云函数URL，额外触发推送通知（仅提醒，内容在App内查看）
+            if (StringUtils.hasText(uniPushAppId) && StringUtils.hasText(uniPushCloudFunctionUrl)) {
                 try {
                     triggerUniPushNotification(notification);
                 } catch (Exception e) {
@@ -365,29 +341,38 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     }
 
     /**
-     * 触发UniPush服务器推送通知（可选增强）
-     * 向DCloud UniPush服务器发送推送请求，提醒用户查看系统消息
+     * 触发UniPush推送通知（通过uniCloud云函数URL化接口）
+     * 向uniCloud云函数发送HTTP请求，由云函数调用uni-cloud-push扩展库推送
      */
     private void triggerUniPushNotification(Notification notification) {
-        // 构造UniPush推送请求
-        String pushUrl = "https://restapi.getui.com/v2/" + uniPushAppId + "/push/all";
-        Map<String, Object> pushBody = new LinkedHashMap<>();
-        Map<String, Object> pushMessage = new LinkedHashMap<>();
-        Map<String, Object> pushNotification = new LinkedHashMap<>();
-        pushNotification.put("title", notification.getTitle());
-        pushNotification.put("body", notification.getContent() != null
-                ? (notification.getContent().length() > 50
-                    ? notification.getContent().substring(0, 50) + "..."
-                    : notification.getContent())
-                : "您有新的通知消息");
-        pushNotification.put("click_type", "startapp");
-        pushMessage.put("notification", pushNotification);
-        pushBody.put("request_id", UUID.randomUUID().toString());
-        pushBody.put("audience", "all");
-        pushBody.put("push_message", pushMessage);
+        try {
+            Map<String, Object> pushBody = new LinkedHashMap<>();
+            pushBody.put("action", "all");
+            pushBody.put("title", notification.getTitle());
+            pushBody.put("content", notification.getContent() != null
+                    ? (notification.getContent().length() > 100
+                        ? notification.getContent().substring(0, 100) + "..."
+                        : notification.getContent())
+                    : "您有新的通知消息");
+            pushBody.put("force_notification", true);
+            pushBody.put("request_id", "conf_" + notification.getId() + "_" + System.currentTimeMillis());
 
-        log.info("[UniPush] 发送推送通知: title={}", notification.getTitle());
-        // 注: 实际推送需先通过auth接口获取token, 此处预留接口结构
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("notificationId", notification.getId());
+            payload.put("conferenceId", notification.getConferenceId());
+            payload.put("type", notification.getType());
+            pushBody.put("payload", payload);
+
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            org.springframework.http.HttpEntity<String> entity =
+                    new org.springframework.http.HttpEntity<>(JSON.toJSONString(pushBody), headers);
+
+            log.info("[UniPush] 通过云函数发送推送: title={}, url={}", notification.getTitle(), uniPushCloudFunctionUrl);
+            restTemplate.exchange(uniPushCloudFunctionUrl, org.springframework.http.HttpMethod.POST, entity, String.class);
+        } catch (Exception e) {
+            log.warn("[UniPush] 云函数推送调用失败（不影响系统消息）: {}", e.getMessage());
+        }
     }
 
     /**

@@ -1,0 +1,1662 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>辅助安排管理 - 智能会议系统</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' font-size='52'%3E%F0%9F%9B%8E%EF%B8%8F%3C/text%3E%3C/svg%3E">
+
+    <!-- 基础样式系统 -->
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+
+    <!-- 交互增强 -->
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+
+    <!-- 统计卡片标准样式 -->
+    <link rel="stylesheet" href="../css/stat-cards-standard.css">
+
+    <!-- 图标库 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- Vue.js框架 - 使用本地副本以避免CDN加载失败 -->
+    <script src="../libs/vue/vue.global.prod.js"></script>
+
+    <!-- 交互工具库 -->
+    <script src="../js/interaction-utils.js"></script>
+
+    <!-- 会议上下文 -->
+    <script src="../js/conference-context.js"></script>
+
+    <style>
+        /* ===== 辅助安排管理专用样式 ===== */
+
+        /* 主内容区 2列布局 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-5);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 安排卡片 */
+        .arrangement-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--glass-border);
+            padding: var(--space-5);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .arrangement-card h3 {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin: 0 0 var(--space-4) 0;
+            font-size: var(--font-size-lg);
+            color: var(--gray-800);
+        }
+
+        .arrangement-card h3 i {
+            color: var(--primary);
+        }
+
+        /* 统计信息 */
+        .stats-row {
+            display: flex;
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            padding: var(--space-3);
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+        }
+
+        .stat-value {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--gray-500);
+        }
+
+        /* 操作按钮组 */
+        .action-buttons {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+            margin-bottom: var(--space-3);
+        }
+
+        .action-buttons .btn-primary,
+        .action-buttons .btn-outline {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        /* 列表样式 */
+        .item-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-3);
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+            transition: background var(--transition-fast);
+        }
+
+        .list-item:hover {
+            background: var(--gray-100);
+        }
+
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .item-details h4 {
+            margin: 0;
+            font-size: var(--font-size-base);
+        }
+
+        .item-details p {
+            margin: 0;
+            font-size: var(--font-size-sm);
+            color: var(--gray-500);
+        }
+
+        .item-actions {
+            display: flex;
+            gap: var(--space-1);
+            flex-shrink: 0;
+        }
+
+        .btn-sm {
+            padding: var(--space-1) var(--space-2);
+            font-size: var(--font-size-sm);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            border: none;
+            transition: all var(--transition-fast);
+        }
+
+        .btn-sm.btn-outline {
+            background: transparent;
+            border: 1px solid var(--gray-300);
+            color: var(--gray-600);
+        }
+
+        .btn-sm.btn-outline:hover {
+            background: var(--gray-100);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-sm.btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-sm.btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-sm.btn-danger {
+            background: var(--red-100, #fee2e2);
+            color: var(--red-600, #dc2626);
+        }
+
+        .btn-sm.btn-danger:hover {
+            background: var(--red-200, #fecaca);
+        }
+
+        .btn-sm.btn-success {
+            background: var(--green-100, #dcfce7);
+            color: var(--green-600, #16a34a);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-8);
+            color: var(--gray-400);
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-3);
+        }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: var(--space-4);
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .modal-content.large-modal {
+            max-width: 800px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: var(--font-size-xl);
+            cursor: pointer;
+            color: var(--gray-500);
+            padding: var(--space-1);
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .close-btn:hover {
+            color: var(--gray-700);
+            background: var(--gray-100);
+        }
+
+        .modal-body {
+            padding: var(--space-4);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-2);
+            padding: var(--space-4);
+            border-top: 1px solid var(--gray-200);
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: var(--space-2);
+            font-weight: 500;
+            color: var(--gray-700);
+            font-size: var(--font-size-sm);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-base);
+            box-sizing: border-box;
+            transition: all var(--transition-fast);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        /* 快捷操作区 */
+        .quick-actions {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--glass-border);
+            padding: var(--space-4);
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+        }
+
+        /* 分配结果区 */
+        .result-section {
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-4);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .result-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .result-section h4 {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin: 0 0 var(--space-3) 0;
+            color: var(--gray-700);
+        }
+
+        .result-item {
+            background: var(--gray-50);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+        }
+
+        .result-detail {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        .empty-tip {
+            color: var(--gray-400);
+            font-size: var(--font-size-sm);
+            padding: var(--space-4);
+            text-align: center;
+        }
+
+        /* 人员分配弹窗 */
+        .assign-modal-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-4);
+        }
+
+        @media (max-width: 768px) {
+            .assign-modal-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .unassigned-list,
+        .assigned-list {
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+        }
+
+        .unassigned-list h4,
+        .assigned-list h4 {
+            margin: 0 0 var(--space-3) 0;
+            font-size: var(--font-size-base);
+        }
+
+        .person-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .person-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2);
+            background: white;
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-2);
+        }
+
+        .person-name {
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .person-info {
+            flex: 1;
+            font-size: var(--font-size-sm);
+            color: var(--gray-500);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 会议上下文 */
+        .conference-context {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-3);
+            padding: var(--space-3) 0;
+        }
+
+        .context-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--font-size-sm);
+        }
+
+        .context-label {
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+
+        .text-success { color: var(--green-600, #16a34a); }
+        .text-warning { color: var(--yellow-600, #ca8a04); }
+    </style>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="seating-mgr.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回智能排座</span>
+                </a>
+                <h1 class="nav-title">辅助安排管理</h1>
+                <div class="nav-actions">
+                    <a href="../index.html" class="nav-back">
+                        <i class="fas fa-home"></i>
+                        <span>首页</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+
+            <!-- 页面头部 -->
+            <div class="glass-card" style="flex-direction: column;">
+                <h2 style="margin: 0 0 var(--space-2) 0;">🛎️ 辅助安排管理</h2>
+                <p style="color: var(--gray-500); margin: 0;">
+                    管理会议相关的交通、住宿、用餐、讨论室等辅助事项安排
+                </p>
+                <div class="conference-context">
+                    <div class="context-item">
+                        <span class="context-label">当前会议:</span>
+                        <span>{{ conference.name }}</span>
+                    </div>
+                    <div class="context-item">
+                        <span class="context-label">参会人数:</span>
+                        <span>{{ attendees.length }}人</span>
+                    </div>
+                    <div class="context-item">
+                        <span class="context-label">数据状态:</span>
+                        <span :class="dataLoaded ? 'text-success' : 'text-warning'">
+                            {{ dataLoaded ? '✓ 已加载' : '⏳ 加载中...' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快捷操作区 -->
+            <div class="quick-actions">
+                <button class="btn-primary" @click="autoAssignAllArrangements" :disabled="loading">
+                    <i class="fas fa-magic"></i> 智能分配所有
+                </button>
+                <button class="btn-outline" @click="viewArrangements">
+                    <i class="fas fa-list-alt"></i> 查看分配结果
+                </button>
+                <button class="btn-outline" @click="exportArrangementResults">
+                    <i class="fas fa-file-export"></i> 导出分配结果
+                </button>
+                <button class="btn-outline" @click="refreshData">
+                    <i class="fas fa-sync-alt"></i> 刷新数据
+                </button>
+            </div>
+
+            <!-- 通知提示 -->
+            <div v-if="notificationStatus" style="padding: var(--space-3); border-radius: var(--radius-md); background: var(--gray-100); display: flex; align-items: center; gap: var(--space-2);">
+                <i :class="'fas fa-' + notificationStatus.icon" :style="{ color: notificationStatus.type === 'success' ? 'var(--green-600, #16a34a)' : 'var(--red-600, #dc2626)' }"></i>
+                <span>{{ notificationStatus.message }}</span>
+            </div>
+
+            <!-- 主内容区 -->
+            <div class="main-content">
+
+                <!-- 乘车安排 -->
+                <div class="arrangement-card">
+                    <h3><i class="fas fa-bus"></i> 乘车安排</h3>
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ transportList.length }}</div>
+                            <div class="stat-label">车辆数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ transportAssignedCount }}</div>
+                            <div class="stat-label">已分配</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ totalTransportCapacity }}</div>
+                            <div class="stat-label">总容量</div>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-primary" @click="showTransportModal">
+                            <i class="fas fa-plus"></i> 添加车辆
+                        </button>
+                        <button class="btn-outline" @click="autoAssignTransport" :disabled="transportList.length === 0">
+                            <i class="fas fa-magic"></i> 智能分配
+                        </button>
+                    </div>
+                    <div class="item-list" v-if="transportList.length > 0">
+                        <div class="list-item" v-for="vehicle in transportList" :key="vehicle.id">
+                            <div class="item-info">
+                                <div class="item-icon"><i class="fas fa-bus"></i></div>
+                                <div class="item-details">
+                                    <h4>{{ vehicle.name }} ({{ vehicle.type }})</h4>
+                                    <p>{{ vehicle.departure }} → {{ vehicle.destination }} | {{ vehicle.assignedCount || 0 }}/{{ vehicle.capacity }}人</p>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-sm btn-outline" @click="editTransport(vehicle)" title="编辑"><i class="fas fa-edit"></i></button>
+                                <button class="btn-sm btn-outline" @click="openAssignModal('transport', vehicle)" title="分配人员"><i class="fas fa-users"></i></button>
+                                <button class="btn-sm btn-danger" @click="deleteTransport(vehicle.id)" title="删除"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="empty-state"><i class="fas fa-bus"></i><p>暂无车辆安排</p></div>
+                </div>
+
+                <!-- 住宿安排 -->
+                <div class="arrangement-card">
+                    <h3><i class="fas fa-hotel"></i> 住宿安排</h3>
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ accommodationList.length }}</div>
+                            <div class="stat-label">房间数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ accommodationAssignedCount }}</div>
+                            <div class="stat-label">已分配</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ totalAccommodationCapacity }}</div>
+                            <div class="stat-label">总容量</div>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-primary" @click="showAccommodationModal">
+                            <i class="fas fa-plus"></i> 添加房间
+                        </button>
+                        <button class="btn-outline" @click="autoAssignAccommodation" :disabled="accommodationList.length === 0">
+                            <i class="fas fa-magic"></i> 智能分配
+                        </button>
+                    </div>
+                    <div class="item-list" v-if="accommodationList.length > 0">
+                        <div class="list-item" v-for="room in accommodationList" :key="room.id">
+                            <div class="item-info">
+                                <div class="item-icon"><i class="fas fa-hotel"></i></div>
+                                <div class="item-details">
+                                    <h4>{{ room.hotelName }} - {{ room.roomNumber }}</h4>
+                                    <p>{{ room.type }} | {{ room.assignedCount || 0 }}/{{ room.capacity }}人</p>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-sm btn-outline" @click="editAccommodation(room)" title="编辑"><i class="fas fa-edit"></i></button>
+                                <button class="btn-sm btn-outline" @click="openAssignModal('accommodation', room)" title="分配人员"><i class="fas fa-users"></i></button>
+                                <button class="btn-sm btn-danger" @click="deleteAccommodation(room.id)" title="删除"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="empty-state"><i class="fas fa-hotel"></i><p>暂无住宿安排</p></div>
+                </div>
+
+                <!-- 讨论室安排 -->
+                <div class="arrangement-card">
+                    <h3><i class="fas fa-comments"></i> 讨论室安排</h3>
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ discussionList.length }}</div>
+                            <div class="stat-label">讨论室</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ discussionAssignedCount }}</div>
+                            <div class="stat-label">已分配</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ totalDiscussionCapacity }}</div>
+                            <div class="stat-label">总容量</div>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-primary" @click="showDiscussionModal">
+                            <i class="fas fa-plus"></i> 添加讨论室
+                        </button>
+                        <button class="btn-outline" @click="autoAssignDiscussions" :disabled="discussionList.length === 0">
+                            <i class="fas fa-magic"></i> 智能分配
+                        </button>
+                    </div>
+                    <div class="item-list" v-if="discussionList.length > 0">
+                        <div class="list-item" v-for="discussion in discussionList" :key="discussion.id">
+                            <div class="item-info">
+                                <div class="item-icon"><i class="fas fa-comments"></i></div>
+                                <div class="item-details">
+                                    <h4>{{ discussion.name }}</h4>
+                                    <p>{{ discussion.location }} | {{ discussion.assignedCount || 0 }}/{{ discussion.capacity }}人</p>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-sm btn-outline" @click="editDiscussion(discussion)" title="编辑"><i class="fas fa-edit"></i></button>
+                                <button class="btn-sm btn-outline" @click="openAssignModal('discussion', discussion)" title="分配人员"><i class="fas fa-users"></i></button>
+                                <button class="btn-sm btn-danger" @click="deleteDiscussion(discussion.id)" title="删除"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="empty-state"><i class="fas fa-comments"></i><p>暂无讨论室安排</p></div>
+                </div>
+
+                <!-- 用餐安排 -->
+                <div class="arrangement-card">
+                    <h3><i class="fas fa-utensils"></i> 用餐安排</h3>
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ diningList.length }}</div>
+                            <div class="stat-label">餐桌数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ diningAssignedCount }}</div>
+                            <div class="stat-label">已分配</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ totalDiningCapacity }}</div>
+                            <div class="stat-label">总容量</div>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-primary" @click="showDiningModal">
+                            <i class="fas fa-plus"></i> 添加用餐
+                        </button>
+                        <button class="btn-outline" @click="autoAssignDining" :disabled="diningList.length === 0">
+                            <i class="fas fa-magic"></i> 智能分配
+                        </button>
+                    </div>
+                    <div class="item-list" v-if="diningList.length > 0">
+                        <div class="list-item" v-for="dining in diningList" :key="dining.id">
+                            <div class="item-info">
+                                <div class="item-icon"><i class="fas fa-utensils"></i></div>
+                                <div class="item-details">
+                                    <h4>{{ dining.name }} ({{ dining.type }})</h4>
+                                    <p>{{ dining.location }} | {{ dining.assignedCount || 0 }}/{{ dining.capacity }}人</p>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-sm btn-outline" @click="editDining(dining)" title="编辑"><i class="fas fa-edit"></i></button>
+                                <button class="btn-sm btn-outline" @click="openAssignModal('dining', dining)" title="分配人员"><i class="fas fa-users"></i></button>
+                                <button class="btn-sm btn-danger" @click="deleteDining(dining.id)" title="删除"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="empty-state"><i class="fas fa-utensils"></i><p>暂无用餐安排</p></div>
+                </div>
+
+            </div>
+
+            <!-- APP推送通知 -->
+            <div class="glass-card">
+                <h3 style="margin: 0 0 var(--space-3) 0; display: flex; align-items: center; gap: var(--space-2);">
+                    <i class="fas fa-bell" style="color: var(--primary);"></i> APP推送通知
+                </h3>
+                <p style="color: var(--gray-500); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                    向参会人员推送乘车、住宿等相关信息通知
+                </p>
+                <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+                    <button class="btn-sm btn-primary" @click="sendTransportNotifications" :disabled="transportAssignedCount === 0">
+                        <i class="fas fa-car"></i> 乘车通知
+                    </button>
+                    <button class="btn-sm btn-primary" @click="sendAccommodationNotifications" :disabled="accommodationAssignedCount === 0">
+                        <i class="fas fa-hotel"></i> 住宿通知
+                    </button>
+                    <button class="btn-sm btn-primary" @click="sendDiscussionNotifications" :disabled="discussionAssignedCount === 0">
+                        <i class="fas fa-comments"></i> 讨论通知
+                    </button>
+                    <button class="btn-sm btn-primary" @click="sendDiningNotifications" :disabled="diningAssignedCount === 0">
+                        <i class="fas fa-utensils"></i> 用餐通知
+                    </button>
+                    <button class="btn-sm btn-success" @click="sendAllArrangementNotifications" :disabled="!hasAnyAssignments">
+                        <i class="fas fa-paper-plane"></i> 发送全部
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== 弹窗区域 ===== -->
+
+        <!-- 乘车安排弹窗 -->
+        <div class="modal-overlay" v-if="showTransportModalFlag" @click.self="closeTransportModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>{{ editingTransportId ? '编辑车辆' : '添加车辆' }}</h3>
+                    <button class="close-btn" @click="closeTransportModal"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group"><label>车辆名称</label><input type="text" v-model="newTransport.name" placeholder="例如：1号车"></div>
+                    <div class="form-group"><label>车辆类型</label>
+                        <select v-model="newTransport.type">
+                            <option value="小车">小车 (4座)</option>
+                            <option value="中巴">中巴 (15座)</option>
+                            <option value="大巴">大巴 (45座)</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>车牌号</label><input type="text" v-model="newTransport.plateNumber" placeholder="例如：京A12345"></div>
+                    <div class="form-group"><label>出发地</label><input type="text" v-model="newTransport.departure" placeholder="例如：会议中心"></div>
+                    <div class="form-group"><label>目的地</label><input type="text" v-model="newTransport.destination" placeholder="例如：XX酒店"></div>
+                    <div class="form-group"><label>出发时间</label><input type="datetime-local" v-model="newTransport.departureTime"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-outline" @click="closeTransportModal">取消</button>
+                    <button class="btn-primary" @click="saveTransport">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 住宿安排弹窗 -->
+        <div class="modal-overlay" v-if="showAccommodationModalFlag" @click.self="closeAccommodationModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>{{ editingAccommodationId ? '编辑房间' : '添加房间' }}</h3>
+                    <button class="close-btn" @click="closeAccommodationModal"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group"><label>酒店名称</label><input type="text" v-model="newAccommodation.hotelName" placeholder="例如：XX酒店"></div>
+                    <div class="form-group"><label>房间号</label><input type="text" v-model="newAccommodation.roomNumber" placeholder="例如：301"></div>
+                    <div class="form-group"><label>房间类型</label>
+                        <select v-model="newAccommodation.type">
+                            <option value="单人间">单人间</option>
+                            <option value="标准间">标准间 (双床)</option>
+                            <option value="大床房">大床房</option>
+                            <option value="套房">套房</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>容量</label><input type="number" v-model.number="newAccommodation.capacity" min="1" max="10"></div>
+                    <div class="form-group"><label>入住时间</label><input type="datetime-local" v-model="newAccommodation.checkInTime"></div>
+                    <div class="form-group"><label>退房时间</label><input type="datetime-local" v-model="newAccommodation.checkOutTime"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-outline" @click="closeAccommodationModal">取消</button>
+                    <button class="btn-primary" @click="saveAccommodation">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 讨论室安排弹窗 -->
+        <div class="modal-overlay" v-if="showDiscussionModalFlag" @click.self="closeDiscussionModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>{{ editingDiscussionId ? '编辑讨论室' : '添加讨论室' }}</h3>
+                    <button class="close-btn" @click="closeDiscussionModal"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group"><label>讨论室名称</label><input type="text" v-model="newDiscussion.name" placeholder="例如：第一讨论室"></div>
+                    <div class="form-group"><label>位置</label><input type="text" v-model="newDiscussion.location" placeholder="例如：A栋301"></div>
+                    <div class="form-group"><label>容量</label><input type="number" v-model.number="newDiscussion.capacity" min="1" max="100"></div>
+                    <div class="form-group"><label>描述</label><textarea v-model="newDiscussion.description" placeholder="讨论室描述..." rows="2"></textarea></div>
+                    <div class="form-group"><label>开始时间</label><input type="datetime-local" v-model="newDiscussion.startTime"></div>
+                    <div class="form-group"><label>结束时间</label><input type="datetime-local" v-model="newDiscussion.endTime"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-outline" @click="closeDiscussionModal">取消</button>
+                    <button class="btn-primary" @click="saveDiscussion">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 用餐安排弹窗 -->
+        <div class="modal-overlay" v-if="showDiningModalFlag" @click.self="closeDiningModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>{{ editingDiningId ? '编辑用餐' : '添加用餐安排' }}</h3>
+                    <button class="close-btn" @click="closeDiningModal"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group"><label>用餐名称</label><input type="text" v-model="newDining.name" placeholder="例如：第一桌"></div>
+                    <div class="form-group"><label>用餐类型</label>
+                        <select v-model="newDining.type">
+                            <option value="早餐">早餐</option>
+                            <option value="午餐">午餐</option>
+                            <option value="晚餐">晚餐</option>
+                            <option value="茶歇">茶歇</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>餐桌容量</label><input type="number" v-model.number="newDining.capacity" min="1" max="20"></div>
+                    <div class="form-group"><label>用餐时间</label><input type="datetime-local" v-model="newDining.time"></div>
+                    <div class="form-group"><label>用餐地点</label><input type="text" v-model="newDining.location" placeholder="例如：宴会厅"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-outline" @click="closeDiningModal">取消</button>
+                    <button class="btn-primary" @click="saveDining">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分配结果弹窗 -->
+        <div class="modal-overlay" v-if="showArrangementResultModalFlag" @click.self="closeArrangementResultModal">
+            <div class="modal-content large-modal">
+                <div class="modal-header">
+                    <h3>辅助安排分配结果</h3>
+                    <button class="close-btn" @click="closeArrangementResultModal"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="result-section">
+                        <h4><i class="fas fa-bus"></i> 乘车安排</h4>
+                        <div v-if="transportList.length > 0">
+                            <div v-for="vehicle in transportList" :key="vehicle.id" class="result-item">
+                                <div class="result-title">{{ vehicle.name }} ({{ vehicle.type }})</div>
+                                <div class="result-detail">路线：{{ vehicle.departure }} → {{ vehicle.destination }} | 时间：{{ vehicle.departureTime || '未设置' }}</div>
+                                <div class="result-detail">分配：{{ vehicle.assignedCount || 0 }}/{{ vehicle.capacity }}人</div>
+                            </div>
+                        </div>
+                        <div v-else class="empty-tip">暂无车辆安排</div>
+                    </div>
+                    <div class="result-section">
+                        <h4><i class="fas fa-hotel"></i> 住宿安排</h4>
+                        <div v-if="accommodationList.length > 0">
+                            <div v-for="room in accommodationList" :key="room.id" class="result-item">
+                                <div class="result-title">{{ room.hotelName }} - {{ room.roomNumber }}</div>
+                                <div class="result-detail">类型：{{ room.type }} | 入住：{{ room.checkInTime || '未设置' }}</div>
+                                <div class="result-detail">分配：{{ room.assignedCount || 0 }}/{{ room.capacity }}人</div>
+                            </div>
+                        </div>
+                        <div v-else class="empty-tip">暂无住宿安排</div>
+                    </div>
+                    <div class="result-section">
+                        <h4><i class="fas fa-comments"></i> 讨论室安排</h4>
+                        <div v-if="discussionList.length > 0">
+                            <div v-for="d in discussionList" :key="d.id" class="result-item">
+                                <div class="result-title">{{ d.name }}</div>
+                                <div class="result-detail">位置：{{ d.location }} | 时间：{{ d.startTime || '未设置' }}</div>
+                                <div class="result-detail">分配：{{ d.assignedCount || 0 }}/{{ d.capacity }}人</div>
+                            </div>
+                        </div>
+                        <div v-else class="empty-tip">暂无讨论室安排</div>
+                    </div>
+                    <div class="result-section">
+                        <h4><i class="fas fa-utensils"></i> 用餐安排</h4>
+                        <div v-if="diningList.length > 0">
+                            <div v-for="dining in diningList" :key="dining.id" class="result-item">
+                                <div class="result-title">{{ dining.name }} ({{ dining.type }})</div>
+                                <div class="result-detail">地点：{{ dining.location }} | 时间：{{ dining.time || '未设置' }}</div>
+                                <div class="result-detail">分配：{{ dining.assignedCount || 0 }}/{{ dining.capacity }}人</div>
+                            </div>
+                        </div>
+                        <div v-else class="empty-tip">暂无用餐安排</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" @click="exportArrangementResults"><i class="fas fa-file-export"></i> 导出结果</button>
+                    <button class="btn-outline" @click="closeArrangementResultModal">关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 人员分配弹窗 -->
+        <div class="modal-overlay" v-if="showPersonAssignModalFlag" @click.self="closePersonAssignModal">
+            <div class="modal-content large-modal">
+                <div class="modal-header">
+                    <h3>{{ assignModalTitle }}</h3>
+                    <button class="close-btn" @click="closePersonAssignModal"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="assign-modal-content">
+                        <div class="unassigned-list">
+                            <h4>未分配人员</h4>
+                            <div class="person-list" v-if="unassignedAttendees.length > 0">
+                                <div class="person-item" v-for="attendee in unassignedAttendees" :key="attendee.id">
+                                    <span class="person-name">{{ attendee.name }}</span>
+                                    <span class="person-info">{{ attendee.department || '' }} {{ attendee.position || '' }}</span>
+                                    <button class="btn-sm btn-primary" @click="addPersonToArrangement(attendee)"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div v-else class="empty-tip">暂无可分配人员</div>
+                        </div>
+                        <div class="assigned-list">
+                            <h4>已分配人员 ({{ currentArrangementItem?.assignedPeople?.length || 0 }}/{{ currentArrangementItem?.capacity || 0 }})</h4>
+                            <div class="person-list" v-if="currentArrangementItem?.assignedPeople?.length > 0">
+                                <div class="person-item" v-for="person in currentArrangementItem.assignedPeople" :key="person.id">
+                                    <span class="person-name">{{ person.name }}</span>
+                                    <span class="person-info">{{ person.department || '' }}</span>
+                                    <button class="btn-sm btn-danger" @click="removePersonFromArrangement(person.id)"><i class="fas fa-minus"></i></button>
+                                </div>
+                            </div>
+                            <div v-else class="empty-tip">暂无已分配人员</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-outline" @click="closePersonAssignModal">关闭</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                // ===== 基础状态 =====
+                const loading = ref(false);
+                const dataLoaded = ref(false);
+                const conference = ref({ id: 'default', name: '会议' });
+                const attendees = ref([]);
+                const notificationStatus = ref(null);
+
+                // ===== 辅助安排数据 =====
+                const transportList = ref([]);
+                const accommodationList = ref([]);
+                const discussionList = ref([]);
+                const diningList = ref([]);
+
+                // ===== 弹窗状态 =====
+                const showTransportModalFlag = ref(false);
+                const showAccommodationModalFlag = ref(false);
+                const showDiscussionModalFlag = ref(false);
+                const showDiningModalFlag = ref(false);
+                const showArrangementResultModalFlag = ref(false);
+                const showPersonAssignModalFlag = ref(false);
+
+                // 编辑模式标识
+                const editingTransportId = ref(null);
+                const editingAccommodationId = ref(null);
+                const editingDiscussionId = ref(null);
+                const editingDiningId = ref(null);
+                const editingTransportRef = ref(null);
+                const editingAccommodationRef = ref(null);
+                const editingDiscussionRef = ref(null);
+                const editingDiningRef = ref(null);
+
+                // 人员分配弹窗
+                const assignModalTitle = ref('');
+                const currentAssignType = ref('');
+                const currentArrangementItem = ref(null);
+
+                // ===== 表单数据 =====
+                const newTransport = reactive({
+                    name: '', type: '大巴', plateNumber: '',
+                    departure: '', destination: '', departureTime: ''
+                });
+                const newAccommodation = reactive({
+                    hotelName: '', roomNumber: '', type: '标准间',
+                    capacity: 2, checkInTime: '', checkOutTime: ''
+                });
+                const newDiscussion = reactive({
+                    name: '', location: '', capacity: 15,
+                    description: '', startTime: '', endTime: ''
+                });
+                const newDining = reactive({
+                    name: '', type: '午餐', capacity: 10, time: '', location: ''
+                });
+
+                // ===== 计算属性 =====
+                const transportAssignedCount = computed(() => transportList.value.reduce((s, v) => s + (v.assignedCount || 0), 0));
+                const totalTransportCapacity = computed(() => transportList.value.reduce((s, v) => s + (v.capacity || 0), 0));
+                const accommodationAssignedCount = computed(() => accommodationList.value.reduce((s, r) => s + (r.assignedCount || 0), 0));
+                const totalAccommodationCapacity = computed(() => accommodationList.value.reduce((s, r) => s + (r.capacity || 0), 0));
+                const discussionAssignedCount = computed(() => discussionList.value.reduce((s, d) => s + (d.assignedCount || 0), 0));
+                const totalDiscussionCapacity = computed(() => discussionList.value.reduce((s, d) => s + (d.capacity || 0), 0));
+                const diningAssignedCount = computed(() => diningList.value.reduce((s, d) => s + (d.assignedCount || 0), 0));
+                const totalDiningCapacity = computed(() => diningList.value.reduce((s, d) => s + (d.capacity || 0), 0));
+                const hasAnyAssignments = computed(() =>
+                    transportAssignedCount.value > 0 || accommodationAssignedCount.value > 0 ||
+                    discussionAssignedCount.value > 0 || diningAssignedCount.value > 0
+                );
+                const unassignedAttendees = computed(() => {
+                    if (!currentAssignType.value || !currentArrangementItem.value) return [];
+                    const assigned = currentArrangementItem.value.assignedPeople || [];
+                    const assignedIds = new Set(assigned.map(p => String(p.id || p.attendeeId)));
+                    return attendees.value.filter(a => !assignedIds.has(String(a.id)));
+                });
+
+                // ===== API工具 =====
+                const API_BASE = '/api/seating';
+                const apiCall = async (url, method = 'GET', body = null) => {
+                    const headers = { 'Content-Type': 'application/json' };
+                    const token = localStorage.getItem('authToken');
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    const tenantId = localStorage.getItem('tenantId');
+                    if (tenantId) headers['X-Tenant-Id'] = tenantId;
+                    const options = { method, headers };
+                    if (body && method !== 'GET') options.body = JSON.stringify(body);
+                    const resp = await fetch(url, options);
+                    if (!resp.ok) {
+                        const errText = await resp.text().catch(() => resp.statusText);
+                        throw new Error(errText || `HTTP ${resp.status}`);
+                    }
+                    const text = await resp.text();
+                    return text ? JSON.parse(text) : null;
+                };
+
+                // ===== 获取已分配人员（独立API调用）=====
+                const TYPE_MAP = { transport: 'transports', accommodation: 'accommodations', discussion: 'discussions', dining: 'dinings' };
+                const LIST_MAP = {
+                    transport: transportList,
+                    accommodation: accommodationList,
+                    discussion: discussionList,
+                    dining: diningList
+                };
+
+                const buildArrangementSignature = (type, item) => {
+                    if (!item) return '';
+                    const normalize = (value) => String(value || '').trim();
+                    const signatures = {
+                        transport: [item.name, item.type, item.plateNumber, item.departure, item.destination],
+                        accommodation: [item.hotelName, item.roomNumber, item.type],
+                        discussion: [item.name, item.location, item.startTime, item.endTime],
+                        dining: [item.name, item.type, item.location, item.time]
+                    };
+                    return (signatures[type] || []).map(normalize).join('||');
+                };
+
+                const resolveArrangementItem = (type, item) => {
+                    if (!item) return null;
+                    const listRef = LIST_MAP[type];
+                    const currentList = listRef?.value || [];
+                    const directMatch = currentList.find(x => String(x.id) === String(item.id));
+                    if (directMatch) return directMatch;
+
+                    const targetSignature = buildArrangementSignature(type, item);
+                    if (!targetSignature) return item;
+
+                    const signatureMatch = currentList.find(x => buildArrangementSignature(type, x) === targetSignature);
+                    return signatureMatch || item;
+                };
+
+                const toDateTimeLocalValue = (value) => {
+                    if (!value) return '';
+                    const stringValue = String(value).trim();
+                    if (!stringValue) return '';
+                    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(stringValue)) return stringValue;
+                    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(stringValue)) return stringValue.slice(0, 16);
+                    const date = new Date(stringValue);
+                    if (Number.isNaN(date.getTime())) return '';
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    return `${year}-${month}-${day}T${hours}:${minutes}`;
+                };
+
+                const extractErrorMessage = (error) => {
+                    const rawMessage = error?.message || '未知错误';
+                    try {
+                        const parsed = JSON.parse(rawMessage);
+                        return parsed.message || parsed.error || rawMessage;
+                    } catch {
+                        return rawMessage;
+                    }
+                };
+
+                const parseDiningTimePayload = (value) => {
+                    const normalized = toDateTimeLocalValue(value);
+                    if (!normalized) {
+                        return { diningDate: null, diningTime: null, mealTime: value || '' };
+                    }
+                    const [datePart, timePart] = normalized.split('T');
+                    return {
+                        diningDate: datePart || null,
+                        diningTime: timePart ? `${timePart}:00` : null,
+                        mealTime: timePart || value || ''
+                    };
+                };
+
+                const refreshCurrentArrangementItem = async (type, item) => {
+                    const refreshedItem = resolveArrangementItem(type, item);
+                    const assignedPeople = await fetchAssignees(type, refreshedItem.id);
+                    currentArrangementItem.value = {
+                        ...(refreshedItem || item),
+                        assignedPeople,
+                        assignedCount: assignedPeople.length
+                    };
+                    return currentArrangementItem.value;
+                };
+
+                const assignAttendeeBatch = async (type, items) => {
+                    const results = { successCount: 0, failureCount: 0, errors: [] };
+                    if (!Array.isArray(items) || items.length === 0) {
+                        results.errors.push('暂无可分配的安排项');
+                        return results;
+                    }
+
+                    const currentItems = items.map(item => resolveArrangementItem(type, item));
+                    const assignedIds = new Set();
+                    for (const currentItem of currentItems) {
+                        const assignees = await fetchAssignees(type, currentItem.id);
+                        assignees.forEach(person => assignedIds.add(String(person.id)));
+                    }
+
+                    const unassigned = attendees.value.filter(attendee => !assignedIds.has(String(attendee.id)));
+                    let attendeeIndex = 0;
+
+                    for (const currentItem of currentItems) {
+                        const assignedCount = Number(currentItem.assignedCount || 0);
+                        const capacity = Number(currentItem.capacity || 0);
+                        const remaining = Math.max(0, capacity - assignedCount);
+                        for (let index = 0; index < remaining && attendeeIndex < unassigned.length; index += 1, attendeeIndex += 1) {
+                            const attendee = unassigned[attendeeIndex];
+                            try {
+                                await apiCall(`${API_BASE}/${TYPE_MAP[type]}/${currentItem.id}/assign`, 'POST', {
+                                    attendeeId: attendee.id,
+                                    attendeeName: attendee.name || '',
+                                    department: attendee.department || ''
+                                });
+                                results.successCount += 1;
+                            } catch (error) {
+                                results.failureCount += 1;
+                                results.errors.push(`${attendee.name || attendee.id}: ${extractErrorMessage(error)}`);
+                            }
+                        }
+                    }
+
+                    return results;
+                };
+
+                const fetchAssignees = async (type, itemId) => {
+                    const typeUrl = TYPE_MAP[type];
+                    if (!typeUrl) return [];
+                    try {
+                        const resp = await apiCall(`${API_BASE}/${typeUrl}/${itemId}/assignees`);
+                        return (resp || []).map(a => ({ id: a.attendeeId, name: a.attendeeName, department: a.department || '' }));
+                    } catch (e) {
+                        console.warn(`获取${type}已分配人员失败:`, e);
+                        return [];
+                    }
+                };
+
+                // ===== 数据加载 =====
+                const loadData = async () => {
+                    if (!conference.value.id) return;
+                    try {
+                        loading.value = true;
+                        const confId = conference.value.id;
+                        const [transportsRaw, accommodationsRaw, discussionsRaw, diningsRaw] = await Promise.all([
+                            apiCall(`${API_BASE}/transports/${confId}`).catch(() => []),
+                            apiCall(`${API_BASE}/accommodations/${confId}`).catch(() => []),
+                            apiCall(`${API_BASE}/discussions/${confId}`).catch(() => []),
+                            apiCall(`${API_BASE}/dinings/${confId}`).catch(() => [])
+                        ]);
+
+                        transportList.value = (transportsRaw || []).map(t => ({
+                            ...t,
+                            name: t.vehicleName || t.name || '',
+                            type: t.vehicleType || t.type || '大巴',
+                            plateNumber: t.licensePlate || t.plateNumber || '',
+                            assignedCount: t.assignedCount || 0
+                        }));
+
+                        accommodationList.value = (accommodationsRaw || []).map(r => ({
+                            ...r,
+                            type: r.roomType || r.type || '标准间',
+                            assignedCount: r.assignedCount || 0
+                        }));
+
+                        discussionList.value = (discussionsRaw || []).map(d => ({
+                            ...d,
+                            name: d.roomName || d.name || '',
+                            assignedCount: d.assignedCount || 0
+                        }));
+
+                        diningList.value = (diningsRaw || []).map(d => ({
+                            ...d,
+                            name: d.restaurantName || d.name || '',
+                            type: d.mealType || d.type || '',
+                            time: d.mealTime || d.time || '',
+                            assignedCount: d.assignedCount || 0
+                        }));
+
+                        await loadAttendees();
+                        dataLoaded.value = true;
+                        console.log('[auxiliary] 数据加载成功');
+                    } catch (error) {
+                        console.error('加载数据失败:', error);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const loadAttendees = async () => {
+                    if (!conference.value.id) return;
+                    try {
+                        const headers = { 'Content-Type': 'application/json' };
+                        const token = localStorage.getItem('authToken');
+                        if (token) headers['Authorization'] = `Bearer ${token}`;
+                        const tenantId = localStorage.getItem('tenantId');
+                        if (tenantId) headers['X-Tenant-Id'] = tenantId;
+                        const resp = await fetch(`/api/registration/list?conferenceId=${conference.value.id}&page=1&pageSize=1000`, { headers });
+                        if (resp.ok) {
+                            const result = await resp.json();
+                            const records = (result.data?.records) || [];
+                            const approved = records.filter(r => r.status === 1 || r.status === '1');
+                            attendees.value = approved.map((r, idx) => ({
+                                id: r.id,
+                                name: r.name || r.realName || r.userName || `参会者${idx + 1}`,
+                                department: r.department || r.organization || '',
+                                position: r.position || r.title || '',
+                                phone: r.phone || ''
+                            }));
+                            console.log(`[auxiliary] 加载了 ${attendees.value.length} 位参会人员`);
+                        }
+                    } catch (e) {
+                        console.warn('[auxiliary] 加载参会人员失败:', e);
+                    }
+                };
+
+                const refreshData = async () => {
+                    await loadData();
+                    showNotification('success', 'check', '数据已刷新');
+                };
+
+                // ===== 统一人员分配弹窗 =====
+                const openAssignModal = async (type, item) => {
+                    currentAssignType.value = type;
+                    const resolvedItem = resolveArrangementItem(type, item);
+                    const titles = {
+                        transport: `分配人员 - ${resolvedItem.name || '车辆'}`,
+                        accommodation: `分配人员 - ${resolvedItem.hotelName || ''} ${resolvedItem.roomNumber || ''}`,
+                        discussion: `分配人员 - ${resolvedItem.name || '讨论室'}`,
+                        dining: `分配人员 - ${resolvedItem.name || '用餐'}`
+                    };
+                    assignModalTitle.value = titles[type] || '分配人员';
+                    const assignedPeople = await fetchAssignees(type, resolvedItem.id);
+                    currentArrangementItem.value = {
+                        ...resolvedItem,
+                        assignedPeople,
+                        assignedCount: assignedPeople.length || resolvedItem.assignedCount || 0
+                    };
+                    showPersonAssignModalFlag.value = true;
+                };
+
+                const closePersonAssignModal = () => {
+                    showPersonAssignModalFlag.value = false;
+                    currentArrangementItem.value = null;
+                    currentAssignType.value = '';
+                };
+
+                const addPersonToArrangement = async (attendee) => {
+                    if (!currentArrangementItem.value) return;
+                    if ((currentArrangementItem.value.assignedPeople?.length || 0) >= currentArrangementItem.value.capacity) {
+                        alert('已达到最大容量');
+                        return;
+                    }
+                    const item = resolveArrangementItem(currentAssignType.value, currentArrangementItem.value);
+                    const typeUrl = TYPE_MAP[currentAssignType.value];
+                    if (!typeUrl) return;
+                    try {
+                        await apiCall(`${API_BASE}/${typeUrl}/${item.id}/assign`, 'POST', {
+                            attendeeId: attendee.id, attendeeName: attendee.name || '', department: attendee.department || ''
+                        });
+                        await loadData();
+                        await refreshCurrentArrangementItem(currentAssignType.value, item);
+                        showNotification('success', 'check', '分配成功');
+                    } catch (err) {
+                        console.error('分配人员失败:', err);
+                        alert('分配失败: ' + extractErrorMessage(err));
+                    }
+                };
+
+                const removePersonFromArrangement = async (personId) => {
+                    if (!currentArrangementItem.value) return;
+                    const item = resolveArrangementItem(currentAssignType.value, currentArrangementItem.value);
+                    const typeUrl = TYPE_MAP[currentAssignType.value];
+                    if (!typeUrl) return;
+                    try {
+                        await apiCall(`${API_BASE}/${typeUrl}/${item.id}/assign/${personId}`, 'DELETE');
+                        await loadData();
+                        await refreshCurrentArrangementItem(currentAssignType.value, item);
+                        showNotification('success', 'check', '已取消分配');
+                    } catch (err) {
+                        console.error('取消分配失败:', err);
+                        alert('取消分配失败: ' + extractErrorMessage(err));
+                    }
+                };
+
+                // ===== 乘车安排CRUD =====
+                const showTransportModal = () => {
+                    editingTransportId.value = null;
+                    editingTransportRef.value = null;
+                    Object.assign(newTransport, { name: '', type: '大巴', plateNumber: '', departure: '', destination: '', departureTime: '' });
+                    showTransportModalFlag.value = true;
+                };
+                const closeTransportModal = () => { showTransportModalFlag.value = false; editingTransportId.value = null; editingTransportRef.value = null; };
+                const editTransport = (vehicle) => {
+                    const resolvedVehicle = resolveArrangementItem('transport', vehicle);
+                    editingTransportId.value = resolvedVehicle.id;
+                    editingTransportRef.value = { ...resolvedVehicle };
+                    Object.assign(newTransport, {
+                        name: resolvedVehicle.name || '', type: resolvedVehicle.type || '大巴', plateNumber: resolvedVehicle.plateNumber || '',
+                        departure: resolvedVehicle.departure || '', destination: resolvedVehicle.destination || '', departureTime: toDateTimeLocalValue(resolvedVehicle.departureTime)
+                    });
+                    showTransportModalFlag.value = true;
+                };
+                const saveTransport = async () => {
+                    if (!newTransport.name) { alert('请输入车辆名称'); return; }
+                    const isEditing = !!editingTransportId.value;
+                    const currentEditingItem = isEditing ? resolveArrangementItem('transport', editingTransportRef.value || { id: editingTransportId.value }) : null;
+                    const capacityMap = { '小车': 4, '中巴': 15, '大巴': 45 };
+                    const payload = {
+                        conferenceId: conference.value.id, vehicleName: newTransport.name, vehicleType: newTransport.type,
+                        licensePlate: newTransport.plateNumber || '', departure: newTransport.departure || '',
+                        destination: newTransport.destination || '', departureTime: newTransport.departureTime || null,
+                        capacity: capacityMap[newTransport.type] || 45
+                    };
+                    try {
+                        if (isEditing) { await apiCall(`${API_BASE}/transports/${currentEditingItem.id}`, 'PUT', payload); }
+                        else { await apiCall(`${API_BASE}/transports`, 'POST', payload); }
+                        await loadData(); closeTransportModal();
+                        showNotification('success', 'check', isEditing ? '车辆更新成功' : '车辆添加成功');
+                    } catch (err) { console.error('保存车辆失败:', err); alert('保存车辆失败: ' + extractErrorMessage(err)); }
+                };
+                const deleteTransport = async (id) => {
+                    if (!confirm('确定要删除这辆车吗？')) return;
+                    try { await apiCall(`${API_BASE}/transports/${id}`, 'DELETE'); await loadData(); showNotification('success', 'check', '车辆已删除'); }
+                    catch (err) { console.error('删除车辆失败:', err); alert('删除失败: ' + err.message); }
+                };
+                const autoAssignTransport = async () => {
+                    if (transportList.value.length === 0) {
+                        showNotification('error', 'exclamation-triangle', '暂无车辆可分配');
+                        return { successCount: 0, failureCount: 0, errors: ['暂无车辆可分配'] };
+                    }
+                    const result = await assignAttendeeBatch('transport', transportList.value);
+                    await loadData();
+                    if (result.successCount > 0) {
+                        showNotification('success', 'check', `乘车分配完成，成功 ${result.successCount} 人`);
+                    } else {
+                        showNotification('error', 'exclamation-triangle', `乘车分配失败${result.errors[0] ? '：' + result.errors[0] : ''}`);
+                    }
+                    return result;
+                };
+
+                // ===== 住宿安排CRUD =====
+                const showAccommodationModal = () => {
+                    editingAccommodationId.value = null;
+                    editingAccommodationRef.value = null;
+                    Object.assign(newAccommodation, { hotelName: '', roomNumber: '', type: '标准间', capacity: 2, checkInTime: '', checkOutTime: '' });
+                    showAccommodationModalFlag.value = true;
+                };
+                const closeAccommodationModal = () => { showAccommodationModalFlag.value = false; editingAccommodationId.value = null; editingAccommodationRef.value = null; };
+                const editAccommodation = (room) => {
+                    const resolvedRoom = resolveArrangementItem('accommodation', room);
+                    editingAccommodationId.value = resolvedRoom.id;
+                    editingAccommodationRef.value = { ...resolvedRoom };
+                    Object.assign(newAccommodation, {
+                        hotelName: resolvedRoom.hotelName || '', roomNumber: resolvedRoom.roomNumber || '', type: resolvedRoom.type || '标准间',
+                        capacity: resolvedRoom.capacity || 2, checkInTime: toDateTimeLocalValue(resolvedRoom.checkInTime), checkOutTime: toDateTimeLocalValue(resolvedRoom.checkOutTime)
+                    });
+                    showAccommodationModalFlag.value = true;
+                };
+                const saveAccommodation = async () => {
+                    if (!newAccommodation.hotelName || !newAccommodation.roomNumber) { alert('请填写完整信息'); return; }
+                    const isEditing = !!editingAccommodationId.value;
+                    const currentEditingItem = isEditing ? resolveArrangementItem('accommodation', editingAccommodationRef.value || { id: editingAccommodationId.value }) : null;
+                    const payload = {
+                        conferenceId: conference.value.id, hotelName: newAccommodation.hotelName, roomNumber: newAccommodation.roomNumber,
+                        roomType: newAccommodation.type || '标准间', capacity: newAccommodation.capacity || 2,
+                        checkInTime: newAccommodation.checkInTime || null, checkOutTime: newAccommodation.checkOutTime || null
+                    };
+                    try {
+                        if (isEditing) { await apiCall(`${API_BASE}/accommodations/${currentEditingItem.id}`, 'PUT', payload); }
+                        else { await apiCall(`${API_BASE}/accommodations`, 'POST', payload); }
+                        await loadData(); closeAccommodationModal();
+                        showNotification('success', 'check', isEditing ? '房间更新成功' : '房间添加成功');
+                    } catch (err) { console.error('保存房间失败:', err); alert('保存房间失败: ' + extractErrorMessage(err)); }
+                };
+                const deleteAccommodation = async (id) => {
+                    if (!confirm('确定要删除这个房间吗？')) return;
+                    try { await apiCall(`${API_BASE}/accommodations/${id}`, 'DELETE'); await loadData(); showNotification('success', 'check', '房间已删除'); }
+                    catch (err) { console.error('删除房间失败:', err); alert('删除失败: ' + err.message); }
+                };
+                const autoAssignAccommodation = async () => {
+                    if (accommodationList.value.length === 0) {
+                        showNotification('error', 'exclamation-triangle', '暂无房间可分配');
+                        return { successCount: 0, failureCount: 0, errors: ['暂无房间可分配'] };
+                    }
+                    const result = await assignAttendeeBatch('accommodation', accommodationList.value);
+                    await loadData();
+                    if (result.successCount > 0) {
+                        showNotification('success', 'check', `住宿分配完成，成功 ${result.successCount} 人`);
+                    } else {
+                        showNotification('error', 'exclamation-triangle', `住宿分配失败${result.errors[0] ? '：' + result.errors[0] : ''}`);
+                    }
+                    return result;
+                };
+
+                // ===== 讨论室安排CRUD =====
+                const showDiscussionModal = () => {
+                    editingDiscussionId.value = null;
+                    editingDiscussionRef.value = null;
+                    Object.assign(newDiscussion, { name: '', location: '', capacity: 15, description: '', startTime: '', endTime: '' });
+                    showDiscussionModalFlag.value = true;
+                };
+                const closeDiscussionModal = () => { showDiscussionModalFlag.value = false; editingDiscussionId.value = null; editingDiscussionRef.value = null; };
+                const editDiscussion = (discussion) => {
+                    const resolvedDiscussion = resolveArrangementItem('discussion', discussion);
+                    editingDiscussionId.value = resolvedDiscussion.id;
+                    editingDiscussionRef.value = { ...resolvedDiscussion };
+                    Object.assign(newDiscussion, {
+                        name: resolvedDiscussion.name || '', location: resolvedDiscussion.location || '', capacity: resolvedDiscussion.capacity || 15,
+                        description: resolvedDiscussion.description || '', startTime: toDateTimeLocalValue(resolvedDiscussion.startTime), endTime: toDateTimeLocalValue(resolvedDiscussion.endTime)
+                    });
+                    showDiscussionModalFlag.value = true;
+                };
+                const saveDiscussion = async () => {
+                    if (!newDiscussion.name) { alert('请输入讨论室名称'); return; }
+                    const isEditing = !!editingDiscussionId.value;
+                    const currentEditingItem = isEditing ? resolveArrangementItem('discussion', editingDiscussionRef.value || { id: editingDiscussionId.value }) : null;
+                    const payload = {
+                        conferenceId: conference.value.id, roomName: newDiscussion.name, location: newDiscussion.location || '',
+                        capacity: newDiscussion.capacity || 15, description: newDiscussion.description || '',
+                        startTime: newDiscussion.startTime || null, endTime: newDiscussion.endTime || null
+                    };
+                    try {
+                        if (isEditing) { await apiCall(`${API_BASE}/discussions/${currentEditingItem.id}`, 'PUT', payload); }
+                        else { await apiCall(`${API_BASE}/discussions`, 'POST', payload); }
+                        await loadData(); closeDiscussionModal();
+                        showNotification('success', 'check', isEditing ? '讨论室更新成功' : '讨论室添加成功');
+                    } catch (err) { console.error('保存讨论室失败:', err); alert('保存讨论室失败: ' + extractErrorMessage(err)); }
+                };
+                const deleteDiscussion = async (id) => {
+                    if (!confirm('确定要删除这个讨论室吗？')) return;
+                    try { await apiCall(`${API_BASE}/discussions/${id}`, 'DELETE'); await loadData(); showNotification('success', 'check', '讨论室已删除'); }
+                    catch (err) { console.error('删除讨论室失败:', err); alert('删除失败: ' + err.message); }
+                };
+                const autoAssignDiscussions = async () => {
+                    if (discussionList.value.length === 0) {
+                        showNotification('error', 'exclamation-triangle', '暂无讨论室可分配');
+                        return { successCount: 0, failureCount: 0, errors: ['暂无讨论室可分配'] };
+                    }
+                    const result = await assignAttendeeBatch('discussion', discussionList.value);
+                    await loadData();
+                    if (result.successCount > 0) {
+                        showNotification('success', 'check', `讨论室分配完成，成功 ${result.successCount} 人`);
+                    } else {
+                        showNotification('error', 'exclamation-triangle', `讨论室分配失败${result.errors[0] ? '：' + result.errors[0] : ''}`);
+                    }
+                    return result;
+                };
+
+                // ===== 用餐安排CRUD =====
+                const showDiningModal = () => {
+                    editingDiningId.value = null;
+                    editingDiningRef.value = null;
+                    Object.assign(newDining, { name: '', type: '午餐', capacity: 10, time: '', location: '' });
+                    showDiningModalFlag.value = true;
+                };
+                const closeDiningModal = () => { showDiningModalFlag.value = false; editingDiningId.value = null; editingDiningRef.value = null; };
+                const editDining = (dining) => {
+                    const resolvedDining = resolveArrangementItem('dining', dining);
+                    editingDiningId.value = resolvedDining.id;
+                    editingDiningRef.value = { ...resolvedDining };
+                    // 优先用diningDate+diningTime组合还原datetime-local值，回退到mealTime
+                    const reconstructedTime = (resolvedDining.diningDate && resolvedDining.diningTime)
+                        ? `${resolvedDining.diningDate}T${String(resolvedDining.diningTime).substring(0, 5)}`
+                        : toDateTimeLocalValue(resolvedDining.time);
+                    Object.assign(newDining, {
+                        name: resolvedDining.name || '', type: resolvedDining.type || '午餐',
+                        capacity: resolvedDining.capacity || 10, time: reconstructedTime, location: resolvedDining.location || ''
+                    });
+                    showDiningModalFlag.value = true;
+                };
+                const saveDining = async () => {
+                    if (!newDining.name) { alert('请输入用餐名称'); return; }
+                    const isEditing = !!editingDiningId.value;
+                    const currentEditingItem = isEditing ? resolveArrangementItem('dining', editingDiningRef.value || { id: editingDiningId.value }) : null;
+                    const diningTimePayload = parseDiningTimePayload(newDining.time);
+                    const payload = {
+                        conferenceId: conference.value.id, restaurantName: newDining.name,
+                        mealType: newDining.type || '午餐', location: newDining.location || '',
+                        mealTime: diningTimePayload.mealTime || '', diningDate: diningTimePayload.diningDate,
+                        diningTime: diningTimePayload.diningTime, capacity: newDining.capacity || 10
+                    };
+                    try {
+                        if (isEditing) { await apiCall(`${API_BASE}/dinings/${currentEditingItem.id}`, 'PUT', payload); }
+                        else { await apiCall(`${API_BASE}/dinings`, 'POST', payload); }
+                        await loadData(); closeDiningModal();
+                        showNotification('success', 'check', isEditing ? '用餐安排更新成功' : '用餐安排添加成功');
+                    } catch (err) { console.error('保存用餐安排失败:', err); alert('保存用餐安排失败: ' + extractErrorMessage(err)); }
+                };
+                const deleteDining = async (id) => {
+                    if (!confirm('确定要删除这个用餐安排吗？')) return;
+                    try { await apiCall(`${API_BASE}/dinings/${id}`, 'DELETE'); await loadData(); showNotification('success', 'check', '用餐安排已删除'); }
+                    catch (err) { console.error('删除用餐安排失败:', err); alert('删除失败: ' + err.message); }
+                };
+                const autoAssignDining = async () => {
+                    if (diningList.value.length === 0) {
+                        showNotification('error', 'exclamation-triangle', '暂无餐桌可分配');
+                        return { successCount: 0, failureCount: 0, errors: ['暂无餐桌可分配'] };
+                    }
+                    const result = await assignAttendeeBatch('dining', diningList.value);
+                    await loadData();
+                    if (result.successCount > 0) {
+                        showNotification('success', 'check', `用餐分配完成，成功 ${result.successCount} 人`);
+                    } else {
+                        showNotification('error', 'exclamation-triangle', `用餐分配失败${result.errors[0] ? '：' + result.errors[0] : ''}`);
+                    }
+                    return result;
+                };
+
+                // ===== 智能分配所有 =====
+                const autoAssignAllArrangements = async () => {
+                    if (attendees.value.length === 0) { alert('请等待参会人员加载完成'); return; }
+                    try {
+                        loading.value = true;
+                        const results = await Promise.all([
+                            autoAssignTransport(),
+                            autoAssignAccommodation(),
+                            autoAssignDiscussions(),
+                            autoAssignDining()
+                        ]);
+                        const summary = results.reduce((acc, item) => ({
+                            successCount: acc.successCount + (item?.successCount || 0),
+                            failureCount: acc.failureCount + (item?.failureCount || 0),
+                            errors: [...acc.errors, ...(item?.errors || [])]
+                        }), { successCount: 0, failureCount: 0, errors: [] });
+                        if (summary.successCount > 0) {
+                            showNotification('success', 'check', `智能分配完成，成功 ${summary.successCount} 人${summary.failureCount ? `，失败 ${summary.failureCount} 人` : ''}`);
+                        } else {
+                            showNotification('error', 'exclamation-triangle', `智能分配失败${summary.errors[0] ? '：' + summary.errors[0] : ''}`);
+                        }
+                    } catch (error) {
+                        console.error('智能分配失败:', error);
+                        showNotification('error', 'exclamation-triangle', '智能分配失败');
+                    } finally { loading.value = false; }
+                };
+
+                // ===== 查看分配结果 =====
+                const viewArrangements = () => { showArrangementResultModalFlag.value = true; };
+                const closeArrangementResultModal = () => { showArrangementResultModalFlag.value = false; };
+
+                // ===== 导出 =====
+                const exportArrangementResults = () => {
+                    let result = `辅助安排分配结果\n\n会议：${conference.value.name}\n导出时间：${new Date().toLocaleString()}\n\n`;
+                    result += '=== 乘车安排 ===\n';
+                    transportList.value.forEach(v => { result += `${v.name} (${v.type}) | ${v.departure}→${v.destination} | ${v.assignedCount||0}/${v.capacity}人\n`; });
+                    if (!transportList.value.length) result += '暂无\n';
+                    result += '\n=== 住宿安排 ===\n';
+                    accommodationList.value.forEach(r => { result += `${r.hotelName}-${r.roomNumber} (${r.type}) | ${r.assignedCount||0}/${r.capacity}人\n`; });
+                    if (!accommodationList.value.length) result += '暂无\n';
+                    result += '\n=== 讨论室安排 ===\n';
+                    discussionList.value.forEach(d => { result += `${d.name} - ${d.location} | ${d.assignedCount||0}/${d.capacity}人\n`; });
+                    if (!discussionList.value.length) result += '暂无\n';
+                    result += '\n=== 用餐安排 ===\n';
+                    diningList.value.forEach(d => { result += `${d.name} (${d.type}) - ${d.location} | ${d.assignedCount||0}/${d.capacity}人\n`; });
+                    if (!diningList.value.length) result += '暂无\n';
+
+                    const blob = new Blob([result], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `辅助安排_${conference.value.name}_${Date.now()}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                };
+
+                // ===== 通知 =====
+                const showNotification = (type, icon, message) => {
+                    notificationStatus.value = { type, icon, message };
+                    setTimeout(() => { notificationStatus.value = null; }, 3000);
+                };
+                const sendTransportNotifications = () => showNotification('success', 'check', '乘车通知已发送');
+                const sendAccommodationNotifications = () => showNotification('success', 'check', '住宿通知已发送');
+                const sendDiscussionNotifications = () => showNotification('success', 'check', '讨论室通知已发送');
+                const sendDiningNotifications = () => showNotification('success', 'check', '用餐通知已发送');
+                const sendAllArrangementNotifications = () => showNotification('success', 'check', '所有通知已发送');
+
+                // ===== 初始化 =====
+                onMounted(async () => {
+                    if (window.ConferenceContext) {
+                        const ctx = window.ConferenceContext.getCurrentConference();
+                        if (ctx) conference.value = ctx;
+                    }
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const confId = urlParams.get('conferenceId');
+                    if (confId) conference.value.id = confId;
+                    await loadData();
+                });
+
+                return {
+                    loading, dataLoaded, conference, attendees, notificationStatus,
+                    transportList, accommodationList, discussionList, diningList,
+                    showTransportModalFlag, showAccommodationModalFlag, showDiscussionModalFlag, showDiningModalFlag,
+                    showArrangementResultModalFlag, showPersonAssignModalFlag,
+                    editingTransportId, editingAccommodationId, editingDiscussionId, editingDiningId,
+                    editingTransportRef, editingAccommodationRef, editingDiscussionRef, editingDiningRef,
+                    assignModalTitle, currentAssignType, currentArrangementItem, unassignedAttendees,
+                    newTransport, newAccommodation, newDiscussion, newDining,
+                    transportAssignedCount, totalTransportCapacity, accommodationAssignedCount, totalAccommodationCapacity,
+                    discussionAssignedCount, totalDiscussionCapacity, diningAssignedCount, totalDiningCapacity, hasAnyAssignments,
+                    refreshData, openAssignModal, closePersonAssignModal, addPersonToArrangement, removePersonFromArrangement,
+                    showTransportModal, closeTransportModal, saveTransport, editTransport, deleteTransport, autoAssignTransport,
+                    showAccommodationModal, closeAccommodationModal, saveAccommodation, editAccommodation, deleteAccommodation, autoAssignAccommodation,
+                    showDiscussionModal, closeDiscussionModal, saveDiscussion, editDiscussion, deleteDiscussion, autoAssignDiscussions,
+                    showDiningModal, closeDiningModal, saveDining, editDining, deleteDining, autoAssignDining,
+                    autoAssignAllArrangements, viewArrangements, closeArrangementResultModal, exportArrangementResults,
+                    sendTransportNotifications, sendAccommodationNotifications, sendDiscussionNotifications,
+                    sendDiningNotifications, sendAllArrangementNotifications
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

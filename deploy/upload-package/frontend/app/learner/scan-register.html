@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <title>会议报名</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #f5f6fa;
+            color: #333;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 顶部横幅 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 16px 28px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 0; right: 0;
+            height: 24px;
+            background: #f5f6fa;
+            border-radius: 16px 16px 0 0;
+        }
+        .header .tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.25);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        .header .meta {
+            font-size: 13px;
+            opacity: 0.9;
+            line-height: 1.8;
+        }
+        .header .meta i { margin-right: 6px; width: 14px; text-align: center; }
+
+        /* 内容区 */
+        .content { padding: 8px 14px 100px; }
+
+        /* 卡片 */
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 18px 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-title::before {
+            content: '';
+            width: 4px; height: 18px;
+            background: linear-gradient(180deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        /* 表单 */
+        .form-group { margin-bottom: 16px; }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 6px;
+        }
+        .form-label .required { color: #e53e3e; margin-left: 2px; }
+        .form-input {
+            width: 100%;
+            height: 44px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 14px;
+            font-size: 15px;
+            color: #333;
+            background: #fafbfc;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+            background: #fff;
+        }
+        .form-input::placeholder { color: #a0aec0; }
+        .form-textarea {
+            height: 80px;
+            padding: 12px 14px;
+            resize: none;
+            line-height: 1.5;
+        }
+        .form-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+
+        /* 上传 */
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            background: #fafbfc;
+        }
+        .upload-area:active { background: #f0f0ff; border-color: #667eea; }
+        .upload-area .icon { font-size: 28px; color: #667eea; margin-bottom: 8px; }
+        .upload-area .text { font-size: 14px; color: #555; }
+        .upload-area .hint { font-size: 12px; color: #a0aec0; margin-top: 4px; }
+        .upload-status {
+            font-size: 12px;
+            color: #667eea;
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: #f0f0ff;
+            border-radius: 6px;
+            display: none;
+        }
+        .upload-status.show { display: block; }
+        .upload-status.error { color: #e53e3e; background: #fef2f2; }
+        .upload-status.success { color: #38a169; background: #f0fdf4; }
+
+        /* 同意条款 */
+        .agree-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #64748b;
+        }
+        .agree-row input[type="checkbox"] {
+            width: 18px; height: 18px;
+            accent-color: #667eea;
+        }
+        .agree-row a { color: #667eea; text-decoration: none; }
+
+        /* 须知 */
+        .notice-list {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 2;
+        }
+
+        /* 底部提交栏 */
+        .footer-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: #fff;
+            padding: 10px 16px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+        .footer-bar::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: env(safe-area-inset-bottom, 0);
+            background: #fff;
+        }
+        .btn {
+            flex: 1;
+            height: 46px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: opacity 0.2s;
+        }
+        .btn:active { opacity: 0.8; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            flex: 2;
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        /* 加载中 */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        .loading-overlay.hidden { display: none; }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 14px; color: #64748b; }
+
+        /* 空状态 / 错误状态 */
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .error-state .icon { font-size: 48px; margin-bottom: 16px; }
+        .error-state h2 { font-size: 18px; margin-bottom: 8px; }
+        .error-state p { font-size: 14px; color: #94a3b8; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            z-index: 10000;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+            max-width: 80%;
+            text-align: center;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* SVG 图标 */
+        .icon-svg { width: 16px; height: 16px; vertical-align: -2px; fill: currentColor; }
+    </style>
+</head>
+<body>
+
+<!-- 加载状态 -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">正在加载报名信息...</div>
+</div>
+
+<!-- 顶部横幅 -->
+<div class="header" id="headerArea">
+    <div class="tag">📋 在线报名</div>
+    <h1 id="conferenceName">会议报名</h1>
+    <div class="meta" id="conferenceMeta"></div>
+</div>
+
+<!-- 内容区 -->
+<div class="content" id="mainContent" style="display:none;">
+
+    <!-- 报名表单（完全由后端配置驱动） -->
+    <div class="card">
+        <div class="card-title">基本信息</div>
+        <div id="formFieldsContainer">
+            <div style="text-align:center;padding:20px;color:#a0aec0;">
+                <div class="spinner" style="margin:0 auto 10px;width:24px;height:24px;border-width:2px;"></div>
+                加载表单字段中...
+            </div>
+        </div>
+    </div>
+
+    <!-- 证件上传 -->
+    <div class="card" id="uploadCard" style="display:none;">
+        <div class="card-title">证件上传</div>
+        <div class="form-group">
+            <label class="form-label">身份证照片 <span style="font-size:12px;color:#a0aec0;">(选填)</span></label>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('idCardFile').click()">
+                <div class="icon">📤</div>
+                <div class="text" id="uploadLabel">点击上传身份证照片</div>
+                <div class="hint">支持 JPG / PNG 格式，不超过 10MB</div>
+            </div>
+            <input type="file" id="idCardFile" accept="image/*" style="display:none">
+            <div class="upload-status" id="uploadStatus"></div>
+        </div>
+    </div>
+
+    <!-- 报名须知 -->
+    <div class="card">
+        <div class="card-title">报名须知</div>
+        <div class="notice-list">
+            1. 请填写真实准确的个人信息<br>
+            2. 报名后需等待管理员审核<br>
+            3. 审核通过后将收到通知<br>
+            4. 如有疑问请联系会务组
+        </div>
+        <div style="margin-top: 14px;">
+            <label class="agree-row">
+                <input type="checkbox" id="agreeTerms">
+                <span>我已阅读并同意以上<a href="javascript:;">报名须知</a></span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- 底部提交栏 -->
+<div class="footer-bar" id="footerBar" style="display:none;">
+    <button class="btn btn-secondary" onclick="queryStatus()">查询报名</button>
+    <button class="btn btn-primary" id="submitBtn" onclick="submitRegistration()">
+        ✅ 提交报名
+    </button>
+</div>
+
+<!-- Toast 提示 -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+    'use strict';
+
+    // ========== 配置 ==========
+    // API 通过 Nginx 代理到网关，路径统一 /api/registration/
+    const API_BASE = window.location.origin + '/api/registration';
+    
+    // ========== 全局状态 ==========
+    let meetingId = null;
+    let tenantId = null;
+    let dynamicFieldConfigs = [];
+    const uploadState = { fileUrl: '', sha256: '', ocrData: null };
+
+    // ========== 工具函数 ==========
+    function $(id) { return document.getElementById(id); }
+
+    function showToast(msg, duration) {
+        const t = $('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => t.classList.remove('show'), duration || 2500);
+    }
+
+    function showLoading(msg) {
+        const ol = $('loadingOverlay');
+        ol.querySelector('.loading-text').textContent = msg || '加载中...';
+        ol.classList.remove('hidden');
+    }
+
+    function hideLoading() {
+        $('loadingOverlay').classList.add('hidden');
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    function getUrlParam(key) {
+        return new URLSearchParams(window.location.search).get(key);
+    }
+
+    // ========== 初始化 ==========
+    function init() {
+        meetingId = getUrlParam('meetingId') || getUrlParam('conferenceId');
+        tenantId = getUrlParam('tenantId') || '100';
+
+        if (!meetingId) {
+            hideLoading();
+            showErrorState('缺少会议参数', '请从正确的报名链接或二维码进入');
+            return;
+        }
+
+        // 绑定文件上传事件
+        $('idCardFile').addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                handleUpload(this.files[0]);
+            }
+        });
+
+        // 加载会议信息 + 动态字段
+        Promise.all([
+            loadConferenceInfo(),
+            loadDynamicFields()
+        ]).then(() => {
+            hideLoading();
+            $('mainContent').style.display = '';
+            $('footerBar').style.display = '';
+        }).catch(err => {
+            console.error('初始化失败:', err);
+            hideLoading();
+            // 即使加载失败也显示表单（用默认标题）
+            $('mainContent').style.display = '';
+            $('footerBar').style.display = '';
+        });
+    }
+
+    function showErrorState(title, desc) {
+        $('mainContent').innerHTML = `
+            <div class="error-state">
+                <div class="icon">😔</div>
+                <h2>${escapeHtml(title)}</h2>
+                <p>${escapeHtml(desc)}</p>
+            </div>`;
+        $('mainContent').style.display = '';
+    }
+
+    // ========== 加载会议信息 ==========
+    async function loadConferenceInfo() {
+        try {
+            const resp = await fetch(window.location.origin + '/api/meeting/' + meetingId, {
+                headers: { 'X-Tenant-Id': tenantId }
+            });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const result = await resp.json();
+            if (result.code === 200 && result.data) {
+                const d = result.data;
+                $('conferenceName').textContent = d.meetingName || d.conferenceName || d.name || '会议报名';
+                const metaParts = [];
+                if (d.startTime) metaParts.push('📅 ' + formatDate(d.startTime) + (d.endTime ? ' ~ ' + formatDate(d.endTime) : ''));
+                if (d.venueAddress || d.venueName || d.location || d.venue) metaParts.push('📍 ' + (d.venueAddress || d.venueName || d.location || d.venue));
+                if (d.organizer) metaParts.push('🏛 ' + d.organizer);
+                $('conferenceMeta').innerHTML = metaParts.join('<br>');
+            }
+        } catch (e) {
+            console.warn('加载会议信息失败，使用默认标题:', e.message);
+        }
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        try {
+            const d = new Date(dateStr);
+            return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        } catch(e) { return dateStr; }
+    }
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+    // ========== 动态字段（完全由后端配置驱动） ==========
+    // 字段类型到后端提交 key 的映射关系
+    const FIELD_TYPE_MAP = {
+        'text':     { inputType: 'text', maxLen: 100 },
+        'mobile':   { inputType: 'tel',  maxLen: 11, pattern: /^1[3-9]\d{9}$/, patternMsg: '请输入正确的11位手机号' },
+        'phone':    { inputType: 'tel',  maxLen: 11, pattern: /^1[3-9]\d{9}$/, patternMsg: '请输入正确的11位手机号' },
+        'email':    { inputType: 'email', maxLen: 100, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, patternMsg: '请输入正确的邮箱' },
+        'idcard':   { inputType: 'text', maxLen: 18, pattern: /^[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/, patternMsg: '请输入正确的18位身份证号' },
+        'number':   { inputType: 'number', maxLen: 20 },
+        'textarea': { inputType: 'textarea', maxLen: 500 },
+        'select':   { inputType: 'select' },
+        'radio':    { inputType: 'radio' },
+        'checkbox': { inputType: 'checkbox' },
+        'date':     { inputType: 'date' }
+    };
+
+    // 字段 label 到后端提交字段名的猜测映射
+    function guessSubmitKey(label, type) {
+        const l = (label || '').trim();
+        if (/^姓名$/.test(l)) return 'realName';
+        if (/手机|电话|联系方式/.test(l)) return 'phone';
+        if (/邮箱|email/i.test(l)) return 'email';
+        if (/身份证/.test(l)) return 'idCard';
+        if (/单位|部门|组织|公司/.test(l)) return 'department';
+        if (/职务|职位|岗位/.test(l)) return 'position';
+        if (/性别/.test(l)) return 'gender';
+        return null; // 非核心字段，放 registrationData
+    }
+
+    async function loadDynamicFields() {
+        const container = $('formFieldsContainer');
+        try {
+            const resp = await fetch(API_BASE + '/form/fields?conferenceId=' + meetingId, {
+                headers: { 'X-Tenant-Id': tenantId }
+            });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const result = await resp.json();
+            if (result.code !== 200 || !Array.isArray(result.data) || result.data.length === 0) {
+                // 后端没有配置字段，回退为默认最小字段集
+                container.innerHTML = buildFallbackFields();
+                dynamicFieldConfigs = getDefaultFieldConfigs();
+                return;
+            }
+
+            dynamicFieldConfigs = result.data
+                .filter(f => f && f.enabled !== false)
+                .sort((a, b) => (a.sort || 0) - (b.sort || 0));
+
+            let html = '';
+            let hasIdCardField = false;
+
+            for (let i = 0; i < dynamicFieldConfigs.length; i++) {
+                const field = dynamicFieldConfigs[i];
+                const label = escapeHtml(field.label || field.key || '');
+                const req = field.required ? '<span class="required">*</span>' : '';
+                const ph = escapeHtml(field.placeholder || '请输入' + (field.label || ''));
+                const fieldId = 'field_' + i;
+                const typeConf = FIELD_TYPE_MAP[field.type] || FIELD_TYPE_MAP['text'];
+                const options = Array.isArray(field.options) ? field.options : [];
+
+                // 记录 fieldId 到 config
+                field._fieldId = fieldId;
+                field._submitKey = guessSubmitKey(field.label, field.type);
+
+                if (field.type === 'idcard') hasIdCardField = true;
+
+                if (typeConf.inputType === 'select' || (field.type === 'select' && options.length > 0)) {
+                    const opts = options.map(o => '<option value="' + escapeHtml(o) + '">' + escapeHtml(o) + '</option>').join('');
+                    html += '<div class="form-group"><label class="form-label">' + label + req + '</label>'
+                         + '<select id="' + fieldId + '" class="form-input form-select"><option value="">请选择</option>' + opts + '</select></div>';
+                } else if (typeConf.inputType === 'radio' && options.length > 0) {
+                    const radios = options.map((o, ri) => 
+                        '<label style="display:inline-flex;align-items:center;gap:6px;margin-right:16px;font-size:14px;color:#555;">'
+                        + '<input type="radio" name="' + fieldId + '" value="' + escapeHtml(o) + '" style="accent-color:#667eea;"> ' + escapeHtml(o)
+                        + '</label>'
+                    ).join('');
+                    html += '<div class="form-group"><label class="form-label">' + label + req + '</label>'
+                         + '<div id="' + fieldId + '" style="padding:8px 0;">' + radios + '</div></div>';
+                } else if (typeConf.inputType === 'textarea') {
+                    html += '<div class="form-group"><label class="form-label">' + label + req + '</label>'
+                         + '<textarea id="' + fieldId + '" class="form-input form-textarea" placeholder="' + ph + '" maxlength="' + (typeConf.maxLen || 500) + '"></textarea></div>';
+                } else if (typeConf.inputType === 'date') {
+                    html += '<div class="form-group"><label class="form-label">' + label + req + '</label>'
+                         + '<input type="date" id="' + fieldId + '" class="form-input"></div>';
+                } else {
+                    html += '<div class="form-group"><label class="form-label">' + label + req + '</label>'
+                         + '<input type="' + typeConf.inputType + '" id="' + fieldId + '" class="form-input" placeholder="' + ph + '" maxlength="' + (typeConf.maxLen || 100) + '"></div>';
+                }
+            }
+
+            container.innerHTML = html;
+
+            // 如果有身份证字段，显示上传区域
+            if (hasIdCardField) {
+                const uploadCard = $('uploadCard');
+                if (uploadCard) uploadCard.style.display = '';
+            }
+
+        } catch (e) {
+            console.warn('加载动态字段失败，使用默认字段:', e);
+            container.innerHTML = buildFallbackFields();
+            dynamicFieldConfigs = getDefaultFieldConfigs();
+        }
+    }
+
+    // 后端无配置时的回退默认字段
+    function getDefaultFieldConfigs() {
+        return [
+            { label: '姓名', type: 'text', required: true, placeholder: '请输入真实姓名', _fieldId: 'field_0', _submitKey: 'realName' },
+            { label: '手机号码', type: 'mobile', required: true, placeholder: '请输入11位手机号码', _fieldId: 'field_1', _submitKey: 'phone' },
+            { label: '单位/部门', type: 'text', required: true, placeholder: '请输入单位或部门', _fieldId: 'field_2', _submitKey: 'department' },
+            { label: '职务', type: 'text', required: false, placeholder: '请输入职务', _fieldId: 'field_3', _submitKey: 'position' }
+        ];
+    }
+    function buildFallbackFields() {
+        const fields = getDefaultFieldConfigs();
+        return fields.map((f, i) => {
+            const req = f.required ? '<span class="required">*</span>' : '';
+            return '<div class="form-group"><label class="form-label">' + escapeHtml(f.label) + req + '</label>'
+                 + '<input type="' + (f.type === 'mobile' ? 'tel' : 'text') + '" id="field_' + i + '" class="form-input" placeholder="' + escapeHtml(f.placeholder) + '" maxlength="100"></div>';
+        }).join('');
+    }
+
+    // 获取字段值（支持 radio）
+    function getFieldValue(field) {
+        const el = $(field._fieldId);
+        if (!el) return '';
+        // radio 类型
+        if (field.type === 'radio') {
+            const checked = el.querySelector('input[type="radio"]:checked');
+            return checked ? checked.value : '';
+        }
+        return (el.value || '').trim();
+    }
+
+    // ========== 文件上传 ==========
+    async function handleUpload(file) {
+        if (!file) return;
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('文件大小不能超过10MB');
+            return;
+        }
+        if (!file.type.startsWith('image/')) {
+            showToast('请上传图片格式文件');
+            return;
+        }
+
+        const status = $('uploadStatus');
+        const label = $('uploadLabel');
+        status.className = 'upload-status show';
+        status.textContent = '⏳ 上传中...';
+
+        try {
+            const formData = new FormData();
+            formData.append('conferenceId', meetingId);
+            formData.append('fileType', 'idCard');
+            formData.append('file', file);
+
+            const resp = await fetch(API_BASE + '/upload', {
+                method: 'POST',
+                headers: { 'X-Tenant-Id': tenantId },
+                body: formData
+            });
+            const result = await resp.json();
+            if (!resp.ok || result.code !== 200) throw new Error(result.message || '上传失败');
+
+            uploadState.fileUrl = result.data.fileUrl || '';
+            uploadState.sha256 = result.data.sha256 || '';
+            label.textContent = '✅ ' + file.name;
+            status.className = 'upload-status show success';
+            status.textContent = '✅ 上传成功';
+
+            // 尝试 OCR 识别
+            try {
+                status.textContent = '🔍 OCR识别中...';
+                const ocrResp = await fetch(API_BASE + '/ocr/idCard?photoUrl=' + encodeURIComponent(uploadState.fileUrl), {
+                    method: 'POST',
+                    headers: { 'X-Tenant-Id': tenantId }
+                });
+                const ocrResult = await ocrResp.json();
+                if (ocrResp.ok && ocrResult.code === 200 && ocrResult.data) {
+                    uploadState.ocrData = ocrResult.data;
+                    // 自动填入识别到的姓名和身份证号
+                    if (ocrResult.data.name) {
+                        for (const f of dynamicFieldConfigs) {
+                            if (f._submitKey === 'realName') {
+                                const el = $(f._fieldId);
+                                if (el && !el.value) el.value = ocrResult.data.name;
+                                break;
+                            }
+                        }
+                    }
+                    if (ocrResult.data.idCard) {
+                        for (const f of dynamicFieldConfigs) {
+                            if (f._submitKey === 'idCard' || f.type === 'idcard') {
+                                const el = $(f._fieldId);
+                                if (el && !el.value) el.value = ocrResult.data.idCard;
+                                break;
+                            }
+                        }
+                    }
+                    status.textContent = '✅ 上传成功，OCR识别完成';
+                } else {
+                    status.textContent = '✅ 上传成功（OCR未识别到信息）';
+                }
+            } catch (ocrErr) {
+                console.warn('OCR识别失败:', ocrErr);
+                status.textContent = '✅ 上传成功';
+            }
+        } catch (e) {
+            console.error('上传失败:', e);
+            status.className = 'upload-status show error';
+            status.textContent = '❌ 上传失败：' + e.message;
+        }
+    }
+
+    // ========== 查询报名状态 ==========
+    window.queryStatus = async function() {
+        // 找到手机号字段
+        let phone = '';
+        for (const field of dynamicFieldConfigs) {
+            if (field._submitKey === 'phone' || field.type === 'mobile' || field.type === 'phone') {
+                phone = getFieldValue(field);
+                break;
+            }
+        }
+        if (!phone) {
+            showToast('请先输入手机号');
+            return;
+        }
+        window.location.href = 'registration-status.html?meetingId=' + meetingId + '&phone=' + encodeURIComponent(phone);
+    };
+
+    // ========== 提交报名 ==========
+    window.submitRegistration = async function() {
+        const agree = $('agreeTerms').checked;
+        if (!agree) { showToast('请先同意报名须知'); return; }
+
+        // 遍历所有配置字段，收集数据并验证
+        // 注意：meetingId 是雪花ID字符串，超出JS安全整数范围，不能用 Number() 转换
+        // Jackson 会自动将 JSON 字符串 "123" 反序列化为 Java Long
+        const coreBody = {
+            conferenceId: meetingId
+        };
+        const extraData = {};
+        let phoneValue = '';
+
+        for (const field of dynamicFieldConfigs) {
+            const val = getFieldValue(field);
+            const label = field.label || '';
+            const typeConf = FIELD_TYPE_MAP[field.type] || FIELD_TYPE_MAP['text'];
+
+            // 必填验证
+            if (field.required && !val) {
+                showToast('请填写：' + label);
+                const el = $(field._fieldId);
+                if (el && el.focus) el.focus();
+                return;
+            }
+
+            // 格式验证
+            if (val && typeConf.pattern && !typeConf.pattern.test(val)) {
+                showToast(typeConf.patternMsg || '格式不正确：' + label);
+                const el = $(field._fieldId);
+                if (el && el.focus) el.focus();
+                return;
+            }
+
+            // 分派到核心字段或扩展数据
+            const submitKey = field._submitKey;
+            if (submitKey) {
+                coreBody[submitKey] = val;
+                if (submitKey === 'phone') phoneValue = val;
+            } else {
+                // 非核心字段存入 registrationData
+                extraData[label] = val;
+            }
+        }
+
+        // 附加文件信息
+        extraData['files'] = { idCardPhotoUrl: uploadState.fileUrl || '' };
+        if (uploadState.ocrData) {
+            extraData['ocr'] = uploadState.ocrData;
+            // 如果 OCR 识别出身份证号且核心字段里没有，补上
+            if (uploadState.ocrData.idCard && !coreBody.idCard) {
+                coreBody.idCard = uploadState.ocrData.idCard;
+            }
+        }
+
+        coreBody.idCardPhotoUrl = uploadState.fileUrl || '';
+        coreBody.diplomaPhotoUrl = '';
+        coreBody.registrationData = JSON.stringify(extraData);
+
+        // 禁用按钮
+        const btn = $('submitBtn');
+        btn.disabled = true;
+        btn.textContent = '提交中...';
+
+        try {
+            // 手动拼接JSON：conferenceId 是雪花ID超过JS安全整数范围，
+            // JSON.stringify 会丢失精度，所以用原始字符串拼接保证精度
+            const bodyWithoutId = Object.assign({}, coreBody);
+            delete bodyWithoutId.conferenceId;
+            const jsonPart = JSON.stringify(bodyWithoutId);
+            const bodyStr = '{"conferenceId":' + meetingId + ',' + jsonPart.substring(1);
+
+            const resp = await fetch(API_BASE + '/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Tenant-Id': tenantId
+                },
+                body: bodyStr
+            });
+            const result = await resp.json();
+
+            if (!resp.ok || result.code !== 200) {
+                throw new Error(result.message || '提交失败');
+            }
+
+            showToast('🎉 报名提交成功！');
+            setTimeout(() => {
+                window.location.href = 'registration-status.html?meetingId=' + meetingId + '&phone=' + encodeURIComponent(phoneValue);
+            }, 800);
+        } catch (e) {
+            console.error('报名失败:', e);
+            showToast('提交失败：' + e.message, 3500);
+            btn.disabled = false;
+            btn.textContent = '✅ 提交报名';
+        }
+    };
+
+    // ========== 入口 ==========
+    document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>

@@ -32,6 +32,7 @@ import { ref } from 'vue'
 const inputText = ref('')
 const messages = ref([])
 let idSeed = 0
+let conferenceId = null
 
 const hotQuestions = [
   '今天的培训日程是什么？',
@@ -59,11 +60,14 @@ const ask = async (text) => {
   inputText.value = ''
 
   try {
+    const tenantId = uni.getStorageSync('tenantId') || '2027317834622709762'
+    const userId = uni.getStorageSync('userId') || null
+    const userName = uni.getStorageSync('userName') || uni.getStorageSync('realName') || null
     const res = await uni.request({
       url: 'http://localhost:8085/api/ai/assistant/chat',
       method: 'POST',
-      header: { 'Content-Type': 'application/json', 'X-Tenant-Id': '2027317834622709762' },
-      data: { message: q }
+      header: { 'Content-Type': 'application/json', 'X-Tenant-Id': tenantId },
+      data: { message: q, conferenceId: conferenceId, userId: userId, userName: userName }
     })
     const ans = res?.data?.data?.reply
     pushMsg('ai', ans || mockReply(q))
@@ -75,8 +79,11 @@ const ask = async (text) => {
 const send = () => ask(inputText.value)
 const quickAsk = (q) => ask(q)
 
-onLoad(() => {
+onLoad((options) => {
   uni.setNavigationBarTitle({ title: 'AI助手' })
+  if (options && options.conferenceId) {
+    conferenceId = options.conferenceId
+  }
 })
 </script>
 

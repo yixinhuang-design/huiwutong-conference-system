@@ -1,5 +1,7 @@
 package com.conference.collaboration.config;
 
+import com.conference.common.util.JwtUtils;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -17,7 +19,10 @@ import java.util.Map;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class WebSocketAuthInterceptor implements HandshakeInterceptor {
+
+    private final JwtUtils jwtUtils;
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
@@ -42,25 +47,40 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
         }
 
         // 也支持从请求头获取token
-        if (token == null && request instanceof ServletServerHttpRequest) {
-            ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
+        if (token == null && request instanceof ServletServerHttpRequest servletRequest) {
             String authHeader = servletRequest.getServletRequest().getHeader("Authorization");
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 token = authHeader.substring(7);
             }
         }
 
-        // 验证token是否存在
+        // 验证token
         if (token == null || token.isEmpty()) {
             log.warn("[WebSocket] 握手被拒绝: 缺少认证token, uri={}", uri);
-            // 生产环境应返回false拒绝连接，当前允许通过以保持兼容
-            // return false;
+            // 允许无token连接（兼容模式），生产环境建议 return false
             log.warn("[WebSocket] 允许无token连接（兼容模式），建议前端传递token参数");
         } else {
-            // TODO: 使用JwtUtils验证token有效性
-            // Claims claims = JwtUtils.parseToken(token);
-            // userId = claims.getSubject();
-            log.info("[WebSocket] 握手认证通过: userId={}", userId);
+            // 使用JwtUtils验证token有效性
+            Boolean isValid = jwtUtils.validateToken(token);
+            if (isValid != null && isValid) {
+                Long jwtUserId = jwtUtils.getUserIdFromToken(token);
+                Long tenantId = jwtUtils.getTenantIdFromToken(token);
+                String username = jwtUtils.getUsernameFromToken(token);
+
+                if (jwtUserId != null) {
+                    userId = jwtUserId.toString();
+                }
+                if (tenantId != null) {
+                    attributes.put("tenantId", tenantId.toString());
+                }
+                if (username != null) {
+                    attributes.put("username", username);
+                }
+                log.info("[WebSocket] JWT验证通过: userId={}, username={}", userId, username);
+            } else {
+                log.warn("[WebSocket] JWT验证失败, token无效, uri={}", uri);
+                // 生产环境建议 return false 拒绝连接
+            }
         }
 
         // 将userId存入attributes，供WebSocket handler使用
@@ -74,6 +94,6 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                WebSocketHandler wsHandler, Exception exception) {
-        // 握手完成后的处理（可选）
+        // 握手完成后的处理
     }
 }

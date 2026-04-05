@@ -60,13 +60,26 @@ aliyun:
     # 是否启用真实短信发送（false时仅打印日志不调用接口）
     enabled: ${ALIYUN_SMS_ENABLED:false}
 
-# ===== UniPush 系统消息配置 =====
+# ===== UniPush 2.0 系统消息配置 =====
+# uni-push 2.0 通过 uniCloud 云函数 URL化接口推送，不需要 MasterSecret
+# 部署步骤：
+#   1. 在 HBuilderX 中将 uniCloud/cloudfunctions/push-notification 部署到 uniCloud
+#   2. 在 uniCloud Web控制台 对云函数进行 URL化配置
+#   3. 将 URL化后的地址填入 cloud-function-url
 unipush:
-  app-id: ${UNIPUSH_APP_ID:}
-  app-key: ${UNIPUSH_APP_KEY:}
-  master-secret: ${UNIPUSH_MASTER_SECRET:}
+  app-id: ${UNIPUSH_APP_ID:8so3xvwEO79ocbQm1Rfwx5}
+  app-key: ${UNIPUSH_APP_KEY:ioDMIpahzU6GGbpHmpUmPA}
+  # uniCloud云函数URL化地址
+  cloud-function-url: ${UNIPUSH_CLOUD_FUNCTION_URL:https://fc-mp-d6e56ad8-24e2-4903-89ba-5519e8193911.next.bspapp.com/push-notification}
 
 # ===== 报名服务地址（用于查询收件人信息）=====
 service:
   registration:
     base-url: http://localhost:8082
+
+# ===== 预警检测配置 =====
+alert:
+  gateway:
+    url: http://localhost:8080
+  data-service:
+    url: http://localhost:8088

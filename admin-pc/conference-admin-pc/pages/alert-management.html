@@ -690,6 +690,10 @@
                         <span v-if="alert.status === 'processing'" class="severity-badge" style="background: rgba(34,197,94,0.1); color: var(--success-color);">
                             <i class="fas fa-check-circle"></i> 已催办
                         </span>
+                        <button v-if="alert.status === 'processing'" class="btn-sm btn-primary" style="background: var(--success-color);" @click="resolveAlert(alert)">
+                            <i class="fas fa-check-double"></i>
+                            标记已解决
+                        </button>
                         <span v-if="alert.status === 'resolved'" class="severity-badge" style="background: rgba(156,163,175,0.1); color: var(--gray-600);">
                             <i class="fas fa-check-double"></i> 已处理
                         </span>
@@ -1225,6 +1229,27 @@
                     } catch (e) { /* 静默处理 */ }
                 },
 
+                async resolveAlert(alert) {
+                    const remark = prompt('请输入解决备注（可选）:', '已处理完毕');
+                    if (remark === null) return; // 用户取消
+                    try {
+                        const resp = await fetch(`${this.API_BASE}/api/alert/${alert.id}/resolve?remark=${encodeURIComponent(remark || '')}`, {
+                            method: 'PUT',
+                            headers: this.getAuthHeaders()
+                        });
+                        const result = await resp.json();
+                        if (result.code === 200) {
+                            this.$showToast('预警已标记为已解决', 'success');
+                            await this.loadAlertEvents();
+                            await this.loadAlertHistory();
+                        } else {
+                            this.$showToast('操作失败: ' + (result.msg || '未知错误'), 'error');
+                        }
+                    } catch (e) {
+                        this.$showToast('网络请求失败', 'error');
+                    }
+                },
+
                 viewDetail(id) {
                     const alert = this.alertNotifications.find(a => a.id === id);
                     if (alert) {
@@ -1265,7 +1290,23 @@
                 async exportReport() {
                     try {
                         this.$showLoading('正在导出预警报告...');
-                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        // 收集当前页面所有预警数据
+                        const exportData = {
+                            conference: this.conference.name,
+                            conferenceId: this.conference.id,
+                            exportTime: new Date().toISOString(),
+                            rules: this.alertRules,
+                            currentMetrics: this.currentMetrics,
+                            alertNotifications: this.alertNotifications,
+                            alertHistory: this.alertHistory
+                        };
+                        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `预警报告_${this.conference.name}_${new Date().toISOString().slice(0, 10)}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
                         this.$hideLoading();
                         this.$showToast('预警报告已导出', 'success');
                     } catch (error) {

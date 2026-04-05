@@ -10,6 +10,7 @@ import com.conference.collaboration.mapper.TaskAssigneeMapper;
 import com.conference.collaboration.mapper.TaskInfoMapper;
 import com.conference.collaboration.mapper.TaskLogMapper;
 import com.conference.collaboration.service.TaskService;
+import com.conference.collaboration.service.TaskNotificationService;
 import com.conference.common.tenant.TenantContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,8 @@ public class TaskServiceImpl extends ServiceImpl<TaskInfoMapper, TaskInfo>
     private final TaskInfoMapper taskMapper;
     private final TaskAssigneeMapper assigneeMapper;
     private final TaskLogMapper logMapper;
+    private final TaskNotificationService notificationService;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     private Long getTenantId() {
         try {
@@ -66,6 +69,16 @@ public class TaskServiceImpl extends ServiceImpl<TaskInfoMapper, TaskInfo>
 
         // 记录日志
         addLog(task.getId(), task.getCreatorId(), task.getOwnerName(), "created", "任务已创建");
+
+        // 发送任务分派通知
+        if (assignees != null && !assignees.isEmpty()) {
+            try {
+                notificationService.notifyTaskAssigned(task, assignees);
+            } catch (Exception e) {
+                log.error("任务分派通知发送失败: taskId={}", task.getId(), e);
+            }
+        }
+
         log.info("[租户{}] 任务创建成功: id={}, name={}", tenantId, task.getId(), task.getTaskName());
         return task;
     }
@@ -212,6 +225,15 @@ public class TaskServiceImpl extends ServiceImpl<TaskInfoMapper, TaskInfo>
             throw new RuntimeException("您不是此任务的执行人");
         }
 
+        // 获取任务及其完成配置
+        TaskInfo task = taskMapper.selectById(taskId);
+        if (task == null) {
+            throw new RuntimeException("任务不存在");
+        }
+
+        // 校验完成配置
+        validateSubmission(task, content, images, location);
+
         assignee.setStatus("completed");
         assignee.setSubmitContent(content);
         assignee.setSubmitImages(images);
@@ -222,6 +244,14 @@ public class TaskServiceImpl extends ServiceImpl<TaskInfoMapper, TaskInfo>
         // 检查是否所有人都已完成
         updateTaskProgress(taskId);
         addLog(taskId, userId, assignee.getUserName(), "submitted", "提交了任务反馈");
+
+        // 发送完成通知给任务创建者
+        try {
+            notificationService.notifyTaskCompleted(task, assignee);
+        } catch (Exception e) {
+            log.error("任务完成通知发送失败: taskId={}", taskId, e);
+        }
+
         log.info("用户{}提交了任务{}的反馈", userId, taskId);
     }
 
@@ -238,6 +268,15 @@ public class TaskServiceImpl extends ServiceImpl<TaskInfoMapper, TaskInfo>
 
         addLog(taskId, operatorId, operatorName, "cancelled",
                 StringUtils.hasText(remark) ? remark : "任务已取消");
+
+        // 发送任务取消通知
+        try {
+            List<TaskAssignee> allAssignees = getAssignees(taskId);
+            notificationService.notifyTaskCancelled(task, allAssignees, remark);
+        } catch (Exception e) {
+            log.error("任务取消通知发送失败: taskId={}", taskId, e);
+        }
+
         log.info("任务{}已取消", taskId);
     }
 
@@ -277,47 +316,64 @@ public class TaskServiceImpl extends ServiceImpl<TaskInfoMapper, TaskInfo>
     @Override
     public Map<String, Object> getTaskStats(Long conferenceId) {
         Long tenantId = getTenantId();
-        LambdaQueryWrapper<TaskInfo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TaskInfo::getTenantId, tenantId)
-                .eq(TaskInfo::getDeleted, 0);
+
+        // 使用SQL聚合查询代替全量加载到内存
+        StringBuilder sql = new StringBuilder(
+            "SELECT COUNT(*) as total," +
+            " SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END) as pending_cnt," +
+            " SUM(CASE WHEN status='in_progress' THEN 1 ELSE 0 END) as progress_cnt," +
+            " SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as completed_cnt," +
+            " SUM(CASE WHEN status='overdue' THEN 1 ELSE 0 END) as overdue_cnt," +
+            " SUM(CASE WHEN status='cancelled' THEN 1 ELSE 0 END) as cancelled_cnt," +
+            " COALESCE(AVG(progress), 0) as avg_progress" +
+            " FROM task_info WHERE tenant_id = ? AND deleted = 0"
+        );
+
+        List<Object> params = new java.util.ArrayList<>();
+        params.add(tenantId);
         if (conferenceId != null) {
-            wrapper.eq(TaskInfo::getConferenceId, conferenceId);
+            sql.append(" AND conference_id = ?");
+            params.add(conferenceId);
         }
 
-        List<TaskInfo> tasks = taskMapper.selectList(wrapper);
-        long total = tasks.size();
-        long pending = tasks.stream().filter(t -> "pending".equals(t.getStatus())).count();
-        long inProgress = tasks.stream().filter(t -> "in_progress".equals(t.getStatus())).count();
-        long completed = tasks.stream().filter(t -> "completed".equals(t.getStatus())).count();
-        long overdue = tasks.stream().filter(t -> "overdue".equals(t.getStatus())).count();
-        long cancelled = tasks.stream().filter(t -> "cancelled".equals(t.getStatus())).count();
+        Map<String, Object> stats = new LinkedHashMap<>();
+        jdbcTemplate.query(sql.toString(), rs -> {
+            long total = rs.getLong("total");
+            long completedCount = rs.getLong("completed_cnt");
+            stats.put("total", total);
+            stats.put("pending", rs.getLong("pending_cnt"));
+            stats.put("inProgress", rs.getLong("progress_cnt"));
+            stats.put("completed", completedCount);
+            stats.put("overdue", rs.getLong("overdue_cnt"));
+            stats.put("cancelled", rs.getLong("cancelled_cnt"));
+            stats.put("completionRate", total > 0 ? Math.round(completedCount * 100.0 / total) : 0);
+            stats.put("avgProgress", Math.round(rs.getDouble("avg_progress")));
+        }, params.toArray());
 
         // 按优先级统计
-        Map<String, Long> byPriority = tasks.stream()
-                .filter(t -> t.getPriority() != null)
-                .collect(Collectors.groupingBy(TaskInfo::getPriority, Collectors.counting()));
+        StringBuilder pSql = new StringBuilder(
+            "SELECT priority, COUNT(*) as cnt FROM task_info WHERE tenant_id = ? AND deleted = 0 AND priority IS NOT NULL");
+        List<Object> pParams = new java.util.ArrayList<>();
+        pParams.add(tenantId);
+        if (conferenceId != null) { pSql.append(" AND conference_id = ?"); pParams.add(conferenceId); }
+        pSql.append(" GROUP BY priority");
+        Map<String, Long> byPriority = new LinkedHashMap<>();
+        jdbcTemplate.query(pSql.toString(), rs -> {
+            byPriority.put(rs.getString("priority"), rs.getLong("cnt"));
+        }, pParams.toArray());
 
         // 按类别统计
-        Map<String, Long> byCategory = tasks.stream()
-                .filter(t -> t.getCategory() != null)
-                .collect(Collectors.groupingBy(TaskInfo::getCategory, Collectors.counting()));
+        StringBuilder cSql = new StringBuilder(
+            "SELECT category, COUNT(*) as cnt FROM task_info WHERE tenant_id = ? AND deleted = 0 AND category IS NOT NULL");
+        List<Object> cParams = new java.util.ArrayList<>();
+        cParams.add(tenantId);
+        if (conferenceId != null) { cSql.append(" AND conference_id = ?"); cParams.add(conferenceId); }
+        cSql.append(" GROUP BY category");
+        Map<String, Long> byCategory = new LinkedHashMap<>();
+        jdbcTemplate.query(cSql.toString(), rs -> {
+            byCategory.put(rs.getString("category"), rs.getLong("cnt"));
+        }, cParams.toArray());
 
-        // 计算平均进度
-        double avgProgress = tasks.stream()
-                .filter(t -> t.getProgress() != null)
-                .mapToInt(TaskInfo::getProgress)
-                .average()
-                .orElse(0);
-
-        Map<String, Object> stats = new LinkedHashMap<>();
-        stats.put("total", total);
-        stats.put("pending", pending);
-        stats.put("inProgress", inProgress);
-        stats.put("completed", completed);
-        stats.put("overdue", overdue);
-        stats.put("cancelled", cancelled);
-        stats.put("completionRate", total > 0 ? Math.round(completed * 100.0 / total) : 0);
-        stats.put("avgProgress", Math.round(avgProgress));
         stats.put("byPriority", byPriority);
         stats.put("byCategory", byCategory);
         return stats;
@@ -331,6 +387,19 @@ public class TaskServiceImpl extends ServiceImpl<TaskInfoMapper, TaskInfo>
             throw new RuntimeException("任务不存在");
         }
         addLog(taskId, operatorId, operatorName, "urged", "催办了此任务");
+
+        // 获取未完成的执行人并发送催办通知
+        List<TaskAssignee> pendingAssignees = getAssignees(taskId).stream()
+                .filter(a -> !"completed".equals(a.getStatus()))
+                .toList();
+        if (!pendingAssignees.isEmpty()) {
+            try {
+                notificationService.notifyTaskUrge(task, pendingAssignees);
+            } catch (Exception e) {
+                log.error("催办通知发送失败: taskId={}", taskId, e);
+            }
+        }
+
         log.info("任务{}已被催办", taskId);
     }
 
@@ -354,6 +423,95 @@ public class TaskServiceImpl extends ServiceImpl<TaskInfoMapper, TaskInfo>
             task.setUpdateTime(LocalDateTime.now());
             taskMapper.updateById(task);
         }
+    }
+
+    /**
+     * 校验提交内容是否符合完成配置要求
+     */
+    @SuppressWarnings("unchecked")
+    private void validateSubmission(TaskInfo task, String content, String images, String location) {
+        if (task.getConfig() == null || task.getConfig().isEmpty()) {
+            return;
+        }
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> config = objectMapper.readValue(task.getConfig(), Map.class);
+            String method = task.getCompletionMethod();
+
+            // 文字/图片类型校验
+            if ("text_image".equals(method)) {
+                Integer minTextLength = getConfigInt(config, "minTextLength");
+                if (minTextLength != null && minTextLength > 0) {
+                    if (content == null || content.length() < minTextLength) {
+                        throw new RuntimeException("文字内容至少需要" + minTextLength + "个字符");
+                    }
+                }
+                Integer minImageCount = getConfigInt(config, "minImageCount");
+                if (minImageCount != null && minImageCount > 0) {
+                    int imageCount = 0;
+                    if (images != null && !images.isEmpty()) {
+                        try {
+                            List<?> imageList = objectMapper.readValue(images, List.class);
+                            imageCount = imageList.size();
+                        } catch (Exception e) {
+                            imageCount = images.split(",").length;
+                        }
+                    }
+                    if (imageCount < minImageCount) {
+                        throw new RuntimeException("至少需要上传" + minImageCount + "张图片");
+                    }
+                }
+            }
+
+            // 位置签到类型校验 (haversine距离)
+            if ("location".equals(method) && location != null && !location.isEmpty()) {
+                Object targetLocationObj = config.get("targetLocation");
+                Integer maxDistance = getConfigInt(config, "maxDistance");
+                if (targetLocationObj instanceof Map<?, ?> targetMap && maxDistance != null) {
+                    double targetLat = toDouble(targetMap.get("lat"));
+                    double targetLng = toDouble(targetMap.get("lng"));
+                    if (targetLat != 0 && targetLng != 0) {
+                        Map<String, Object> userLocation = objectMapper.readValue(location, Map.class);
+                        double userLat = toDouble(userLocation.get("lat"));
+                        double userLng = toDouble(userLocation.get("lng"));
+                        double distance = haversineDistance(targetLat, targetLng, userLat, userLng);
+                        if (distance > maxDistance) {
+                            throw new RuntimeException(String.format(
+                                "签到位置超出范围，距离目标%.0f米，最大允许%d米", distance, maxDistance));
+                        }
+                    }
+                }
+            }
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("解析完成配置失败: {}", e.getMessage());
+        }
+    }
+
+    /** Haversine公式计算两点间距离（米） */
+    private double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371000;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                   Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                   Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    private Integer getConfigInt(Map<String, Object> config, String key) {
+        Object value = config.get(key);
+        if (value == null) return null;
+        if (value instanceof Number n) return n.intValue();
+        try { return Integer.parseInt(value.toString()); } catch (Exception e) { return null; }
+    }
+
+    private double toDouble(Object value) {
+        if (value == null) return 0;
+        if (value instanceof Number n) return n.doubleValue();
+        try { return Double.parseDouble(value.toString()); } catch (Exception e) { return 0; }
     }
 
     /** 添加任务日志 */

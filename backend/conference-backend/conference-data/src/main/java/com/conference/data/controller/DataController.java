@@ -7,10 +7,16 @@ import com.conference.data.entity.SystemEvent;
 import com.conference.data.entity.UserActivity;
 import com.conference.data.service.BusinessDataService;
 import com.conference.data.service.SystemMonitorService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -290,19 +296,102 @@ public class DataController {
     }
 
     /**
-     * 数据导出接口
+     * 数据导出接口 - 生成真实Excel文件并返回下载
      */
     @GetMapping("/business/export")
-    public Result<Map<String, Object>> exportData(
+    public void exportData(
             @RequestParam String type,
-            @RequestParam(required = false) Long conferenceId) {
+            @RequestParam(required = false) Long conferenceId,
+            HttpServletResponse response) throws IOException {
         log.info("导出数据: type={}, conferenceId={}", type, conferenceId);
-        Map<String, Object> exportResult = new LinkedHashMap<>();
-        exportResult.put("type", type);
-        exportResult.put("conferenceId", conferenceId);
-        exportResult.put("status", "success");
-        exportResult.put("message", "数据导出功能准备就绪");
-        exportResult.put("timestamp", System.currentTimeMillis());
-        return Result.ok(exportResult);
+
+        String fileName;
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet;
+
+        switch (type) {
+            case "report":
+                fileName = "报到率数据";
+                sheet = workbook.createSheet("报到率");
+                exportReportData(sheet, conferenceId);
+                break;
+            case "checkin":
+                fileName = "签到率数据";
+                sheet = workbook.createSheet("签到率");
+                exportCheckinData(sheet, conferenceId);
+                break;
+            case "dormitory":
+                fileName = "查寝率数据";
+                sheet = workbook.createSheet("查寝率");
+                exportDormitoryData(sheet, conferenceId);
+                break;
+            default:
+                fileName = "业务数据";
+                sheet = workbook.createSheet("综合数据");
+                exportReportData(sheet, conferenceId);
+                break;
+        }
+
+        // 设置响应头
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        String encodedName = URLEncoder.encode(fileName + ".xlsx", StandardCharsets.UTF_8);
+        response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + encodedName);
+
+        workbook.write(response.getOutputStream());
+        workbook.close();
+        response.getOutputStream().flush();
+    }
+
+    private void exportReportData(Sheet sheet, Long conferenceId) {
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("会议名称");
+        header.createCell(1).setCellValue("总报名数");
+        header.createCell(2).setCellValue("已审核数");
+        header.createCell(3).setCellValue("已报到数");
+        header.createCell(4).setCellValue("报到率(%)");
+
+        Map<String, Object> data = businessDataService.getReportRate(conferenceId);
+        Row row = sheet.createRow(1);
+        row.createCell(0).setCellValue(String.valueOf(data.getOrDefault("conferenceName", "-")));
+        row.createCell(1).setCellValue(((Number) data.getOrDefault("total", 0)).doubleValue());
+        row.createCell(2).setCellValue(((Number) data.getOrDefault("expected", 0)).doubleValue());
+        row.createCell(3).setCellValue(((Number) data.getOrDefault("actual", 0)).doubleValue());
+        row.createCell(4).setCellValue(((Number) data.getOrDefault("rate", 0)).doubleValue());
+    }
+
+    private void exportCheckinData(Sheet sheet, Long conferenceId) {
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("日程名称");
+        header.createCell(1).setCellValue("应签到人数");
+        header.createCell(2).setCellValue("实签到人数");
+        header.createCell(3).setCellValue("签到率(%)");
+
+        List<Map<String, Object>> list = businessDataService.getCheckinRate(conferenceId);
+        for (int i = 0; i < list.size(); i++) {
+            Map<String, Object> item = list.get(i);
+            Row row = sheet.createRow(i + 1);
+            row.createCell(0).setCellValue(String.valueOf(item.getOrDefault("name", "-")));
+            row.createCell(1).setCellValue(((Number) item.getOrDefault("expected", 0)).doubleValue());
+            row.createCell(2).setCellValue(((Number) item.getOrDefault("actual", 0)).doubleValue());
+            row.createCell(3).setCellValue(((Number) item.getOrDefault("rate", 0)).doubleValue());
+        }
+    }
+
+    private void exportDormitoryData(Sheet sheet, Long conferenceId) {
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("日期");
+        header.createCell(1).setCellValue("应查寝人数");
+        header.createCell(2).setCellValue("实查寝人数");
+        header.createCell(3).setCellValue("查寝率(%)");
+
+        List<Map<String, Object>> list = businessDataService.getDormitoryRate(conferenceId);
+        for (int i = 0; i < list.size(); i++) {
+            Map<String, Object> item = list.get(i);
+            Row row = sheet.createRow(i + 1);
+            row.createCell(0).setCellValue(String.valueOf(item.getOrDefault("date", "-")));
+            row.createCell(1).setCellValue(((Number) item.getOrDefault("expected", 0)).doubleValue());
+            row.createCell(2).setCellValue(((Number) item.getOrDefault("actual", 0)).doubleValue());
+            row.createCell(3).setCellValue(((Number) item.getOrDefault("rate", 0)).doubleValue());
+        }
     }
 }

@@ -28,7 +28,7 @@ public class AiFeatureConfig {
     private String featureName;
     private String description;
     private String icon;
-    private Integer enabled;       // 0-off 1-on
+    private Boolean enabled;       // false-off true-on
     private Integer usageCount;
     private String config;         // JSON
 

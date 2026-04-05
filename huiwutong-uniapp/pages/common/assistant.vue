@@ -131,27 +131,11 @@ export default {
   data() {
     return {
       overview: {
-        totalDays: 5,
-        completedDays: 2,
-        remainingDays: 3
+        totalDays: '-',
+        completedDays: '-',
+        remainingDays: '-'
       },
-      todaySchedule: [
-        {
-          time: '09:00',
-          title: '专题讲座：新时代党的建设',
-          location: '报告厅'
-        },
-        {
-          time: '14:00',
-          title: '分组讨论',
-          location: 'A栋302室'
-        },
-        {
-          time: '18:00',
-          title: '晚餐',
-          location: '餐厅'
-        }
-      ],
+      todaySchedule: [],
       quickActions: [
         {
           icon: 'fa-calendar-alt',
@@ -203,30 +187,85 @@ export default {
           content: '您好！我是智能助理，有什么可以帮助您的吗？'
         }
       ],
-      todoList: [
-        {
-          id: 1,
-          title: '完成下午课程签到',
-          time: '14:00 前',
-          completed: false
-        },
-        {
-          id: 2,
-          title: '提交课程反馈',
-          time: '今天 18:00 前',
-          completed: false
-        },
-        {
-          id: 3,
-          title: '查看明日课程安排',
-          time: '今天 22:00 前',
-          completed: false
-        }
-      ]
+      todoList: []
     }
   },
 
+  onLoad() {
+    this.fetchOverview()
+    this.fetchTodaySchedule()
+    this.fetchTodoList()
+  },
+
   methods: {
+    /**
+     * 获取会议概览数据
+     */
+    async fetchOverview() {
+      try {
+        const [err, res] = await uni.request({
+          url: 'http://localhost:8080/api/ai/stats',
+          method: 'GET',
+          header: { 'X-Tenant-Id': '2027317834622709762' }
+        })
+        if (res && res.data && res.data.code === 200 && res.data.data) {
+          const stats = res.data.data
+          this.overview = {
+            totalDays: stats.totalQueries || 0,
+            completedDays: stats.todayQueries || 0,
+            remainingDays: stats.satisfaction ? stats.satisfaction + '%' : '95%'
+          }
+        }
+      } catch (e) {
+        console.warn('获取概览失败，使用默认数据', e)
+      }
+    },
+
+    /**
+     * 获取今日日程
+     */
+    async fetchTodaySchedule() {
+      try {
+        const [err, res] = await uni.request({
+          url: 'http://localhost:8080/api/meetings/schedules/today',
+          method: 'GET',
+          header: { 'X-Tenant-Id': '2027317834622709762' }
+        })
+        if (res && res.data && res.data.code === 200 && res.data.data) {
+          this.todaySchedule = (res.data.data || []).map(item => ({
+            time: item.startTime ? item.startTime.substring(11, 16) : '',
+            title: item.title || item.name || '日程',
+            location: item.location || item.venue || ''
+          }))
+        }
+      } catch (e) {
+        console.warn('获取日程失败', e)
+      }
+    },
+
+    /**
+     * 获取待办事项
+     */
+    async fetchTodoList() {
+      try {
+        const [err, res] = await uni.request({
+          url: 'http://localhost:8080/api/meetings/tasks/my',
+          method: 'GET',
+          header: { 'X-Tenant-Id': '2027317834622709762' }
+        })
+        if (res && res.data && res.data.code === 200 && res.data.data) {
+          this.todoList = (res.data.data || []).slice(0, 5).map((item, idx) => ({
+            id: item.id || idx + 1,
+            title: item.title || item.name || '待办事项',
+            time: item.deadline || item.dueDate || '',
+            completed: item.status === 'completed' || item.status === 'done'
+          }))
+        }
+      } catch (e) {
+        console.warn('获取待办失败', e)
+      }
+    },
+
     /**
      * 处理快捷操作
      */
@@ -260,17 +299,17 @@ export default {
       this.qaHistory.push({ role: 'user', content: question })
       this.qaInput = ''
 
-      // 调用后端AI聊天接口
+      // 调用后端AI聊天接口 (通过网关，使用APP兼容接口)
       try {
         const [err, res] = await uni.request({
-          url: 'http://localhost:8085/api/ai/chat',
+          url: 'http://localhost:8080/api/ai/assistant/chat',
           method: 'POST',
           header: { 'Content-Type': 'application/json', 'X-Tenant-Id': '2027317834622709762' },
           data: { message: question }
         })
         if (res && res.data && res.data.code === 200 && res.data.data) {
-          const aiMsg = res.data.data.aiMessage
-          this.qaHistory.push({ role: 'assistant', content: aiMsg ? aiMsg.content : '已收到您的问题，正在处理中...' })
+          const reply = res.data.data.reply
+          this.qaHistory.push({ role: 'assistant', content: reply || '已收到您的问题，正在处理中...' })
         } else {
           this.qaHistory.push({ role: 'assistant', content: this.getLocalAnswer(question) })
         }

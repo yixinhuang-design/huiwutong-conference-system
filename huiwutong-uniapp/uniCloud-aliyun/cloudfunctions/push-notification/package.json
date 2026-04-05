@@ -1,0 +1,16 @@
+{
+    "name": "push-notification",
+    "version": "1.0.0",
+    "description": "会议系统推送云函数 - 通过 uni-cloud-push 发送推送通知",
+    "main": "index.js",
+    "extensions": {
+        "uni-cloud-push": {}
+    },
+    "cloudfunction-config": {
+        "concurrency": 1,
+        "memorySize": 256,
+        "timeout": 30,
+        "path": "/push-notification",
+        "runtime": "Nodejs16"
+    }
+}

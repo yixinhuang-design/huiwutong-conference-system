@@ -1,0 +1,14 @@
+/* Layui Laydate CSS Placeholder
+ * 此文件是占位符，实际功能已由以下方案替代：
+ * 1. HTML5 <input type="date"> 原生日期选择
+ * 2. Vue 3 日期组件
+ * 3. conference-theme.css 自定义样式
+ * 
+ * 保留此文件以消除浏览器 404 错误
+ * 实际功能请参考 css/conference-theme.css
+ */
+
+/* 防止样式干扰 */
+.laydate {
+  display: none !important;
+}

@@ -1,0 +1,4333 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建新会议 - 智能会议系统</title>
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+    <!-- ECharts 当前页面未使用，移除可避免部分环境下 HTTP2 协议错误导致噪音日志 -->
+    <!-- 二维码生成库 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="../js/interaction-utils.js"></script>
+    <!-- 高德地图API（可选）: 未配置有效Key时不加载，页面支持手工输入地址 -->
+    <script type="text/javascript">
+        window.AMAP_SECURITY_JS_CODE = window.AMAP_SECURITY_JS_CODE || '';
+    </script>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
+    <script src="../js/api/collaboration-api.js"></script>
+</head>
+<body>
+    <!-- 调试面板 -->
+    <div id="debug-panel" style="position: fixed; top: 10px; right: 10px; background: #fff; border: 2px solid #667eea; padding: 10px; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+        <h4 style="margin: 0 0 10px 0;">调试信息</h4>
+        <div>Vue加载: <span id="debug-vue" style="color: red;">检查中...</span></div>
+        <div>App挂载: <span id="debug-app" style="color: red;">检查中...</span></div>
+        <div>CurrentStep: <span id="debug-step" style="color: red;">检查中...</span></div>
+    </div>
+
+    <script>
+        // 更新调试面板
+        setTimeout(() => {
+            const vueSpan = document.getElementById('debug-vue');
+            const appSpan = document.getElementById('debug-app');
+            const appEl = document.querySelector('#app');
+
+            if (typeof Vue !== 'undefined') {
+                vueSpan.textContent = '✅ 已加载';
+                vueSpan.style.color = 'green';
+            } else {
+                vueSpan.textContent = '❌ 未加载';
+            }
+
+            if (appEl && appEl.__vue_app__) {
+                appSpan.textContent = '✅ 已挂载';
+                appSpan.style.color = 'green';
+            } else {
+                appSpan.textContent = '❌ 未挂载';
+            }
+        }, 1000);
+    </script>
+
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回会议列表</span>
+                </a>
+                <h1 class="nav-title">{{ isEditMode ? '编辑会议' : '创建新会议' }}</h1>
+                <div class="nav-actions">
+                    <button class="btn-outline" @click="saveDraft">
+                        <i class="fas fa-save"></i>
+                        保存草稿
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+            <!-- 页面头部 -->
+            <div class="page-header glass-card">
+                <h2>{{ isEditMode ? '编辑会议' : '创建新会议' }}</h2>
+                <p>{{ isEditMode ? '修改会议信息，保存后立即生效' : '分步骤向导式创建会议，自动初始化所有关联系统' }}</p>
+            </div>
+
+            <!-- 步骤导航 -->
+            <div class="wizard-navigation glass-card">
+                <div class="wizard-steps">
+                    <div class="step"
+                         :class="{ active: currentStep === 1, completed: currentStep > 1 }"
+                         @click="goToStep(1)">
+                        <div class="step-number">1</div>
+                        <div class="step-label">基本信息</div>
+                    </div>
+                    <div class="step"
+                         :class="{ active: currentStep === 2, completed: currentStep > 2 }"
+                         @click="goToStep(2)">
+                        <div class="step-number">2</div>
+                        <div class="step-label">报名设置</div>
+                    </div>
+                    <div class="step"
+                         :class="{ active: currentStep === 3, completed: currentStep > 3 }"
+                         @click="goToStep(3)">
+                        <div class="step-number">3</div>
+                        <div class="step-label">报到设置</div>
+                    </div>
+                    <div class="step"
+                         :class="{ active: currentStep === 4, completed: currentStep > 4 }"
+                         @click="goToStep(4)">
+                        <div class="step-number">4</div>
+                        <div class="step-label">通知设置</div>
+                    </div>
+                    <div class="step"
+                         :class="{ active: currentStep === 5, completed: currentStep > 5 }"
+                         @click="goToStep(5)">
+                        <div class="step-number">5</div>
+                        <div class="step-label">工作人员</div>
+                    </div>
+                    <div class="step"
+                         :class="{ active: currentStep === 6 }"
+                         @click="goToStep(6)">
+                        <div class="step-number">6</div>
+                        <div class="step-label">确认创建</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤1：基本信息 -->
+            <div v-if="currentStep === 1" class="step-content glass-card">
+                <h3>步骤1：基本信息</h3>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>会议/培训名称 *</label>
+                        <input type="text" v-model="form.name" required placeholder="请输入会议/培训名称" maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label>会议类型</label>
+                        <select v-model="form.type">
+                            <option value="training">培训会议</option>
+                            <option value="seminar">研讨会</option>
+                            <option value="conference">大型会议</option>
+                            <option value="workshop">工作坊</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>会议编号</label>
+                        <div class="input-with-button">
+                            <input type="text" v-model="form.code" placeholder="自动生成" readonly>
+                            <button type="button" class="btn-sm" @click="generateCode">自动生成</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>开始日期 *</label>
+                        <input type="date" v-model="form.startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>结束日期 *</label>
+                        <input type="date" v-model="form.endDate" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>会议地点 *</label>
+                        <div class="location-input-group">
+                            <input
+                                type="text"
+                                v-model="form.location.fullAddress"
+                                required
+                                placeholder="点击选择地图选点或输入详细地址"
+                            >
+                            <button type="button" class="btn-map" @click="showLocationPicker" title="地图选点">
+                                <i class="fas fa-map-marker-alt"></i>
+                                地图选点
+                            </button>
+                        </div>
+                        <div class="location-detail" v-if="form.location.fullAddress">
+                            <div class="location-info">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>{{ form.location.fullAddress }}</span>
+                            </div>
+                            <div class="coordinate-info" v-if="form.location.latitude && form.location.longitude">
+                                <i class="fas fa-crosshairs"></i>
+                                <span>坐标：{{ form.location.latitude }}, {{ form.location.longitude }}</span>
+                                <a :href="getNavigationUrl()" target="_blank" class="nav-link" title="在地图中打开">
+                                    <i class="fas fa-external-link-alt"></i>
+                                    导航
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>会议描述</label>
+                        <textarea v-model="form.description" rows="4" placeholder="请输入会议描述"></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>会议封面图</label>
+                        <div class="cover-upload-area" @click="triggerCoverUpload" v-if="!form.coverImage">
+                            <i class="fas fa-image"></i>
+                            <p>点击上传封面图</p>
+                            <input type="file" ref="coverInput" accept="image/*" style="display: none;" @change="handleCoverUpload">
+                        </div>
+                        <div v-else class="cover-preview">
+                            <img :src="form.coverImage" alt="封面预览">
+                            <button class="btn-sm btn-danger" @click="removeCover">
+                                <i class="fas fa-trash"></i>
+                                删除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤2：报名设置 -->
+            <div v-if="currentStep === 2" class="step-content glass-card">
+                <h3>步骤2：报名设置</h3>
+                
+                <div class="registration-mode">
+                    <h4>报名方式选择 *</h4>
+                    <div class="mode-options">
+                        <label class="mode-option" :class="{ active: form.registration.mode === 'open' }">
+                            <input type="radio" value="open" v-model="form.registration.mode">
+                            <div class="mode-card">
+                                <i class="fas fa-unlock"></i>
+                                <h5>开放式报名</h5>
+                                <p>任何人都可以报名</p>
+                            </div>
+                        </label>
+                        <label class="mode-option" :class="{ active: form.registration.mode === 'limited' }">
+                            <input type="radio" value="limited" v-model="form.registration.mode">
+                            <div class="mode-card">
+                                <i class="fas fa-building"></i>
+                                <h5>限定式报名</h5>
+                                <p>仅限指定单位报名</p>
+                            </div>
+                        </label>
+                        <label class="mode-option" :class="{ active: form.registration.mode === 'import' }">
+                            <input type="radio" value="import" v-model="form.registration.mode">
+                            <div class="mode-card">
+                                <i class="fas fa-file-import"></i>
+                                <h5>导入式报名</h5>
+                                <p>导入或录入参会人员</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 开放式报名配置 -->
+                <div v-if="form.registration.mode === 'open'" class="registration-config">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" v-model="form.registration.open.limitTotal">
+                                <span>限制总人数</span>
+                            </label>
+                        </div>
+                        <div class="form-group" v-if="form.registration.open.limitTotal">
+                            <label>最大人数</label>
+                            <input type="number" v-model="form.registration.open.maxCount" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" v-model="form.registration.open.generateQRCode" checked>
+                                <span>生成报名二维码</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div v-if="form.registration.open.generateQRCode && form.registration.open.qrCode" class="qrcode-preview">
+                        <img :src="form.registration.open.qrCode" alt="报名二维码" style="max-width: 200px; border: 1px solid #ddd; padding: 10px;">
+                        <div style="margin-top: 10px;">
+                            <button class="btn-outline" @click="downloadQRCode('open')" style="margin-right: 10px;">
+                                <i class="fas fa-download"></i>
+                                下载二维码
+                            </button>
+                            <button class="btn-outline" @click="copyQRCodeLink('open')">
+                                <i class="fas fa-copy"></i>
+                                复制链接
+                            </button>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 12px; color: #666;" v-if="form.registration.open.qrCodeUrl">
+                            <p>报名链接: <code style="background: #f5f5f5; padding: 2px 5px;">{{ form.registration.open.qrCodeUrl }}</code></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 限定式报名配置 -->
+                <div v-if="form.registration.mode === 'limited'" class="registration-config">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>导入单位名录</label>
+                            <div class="file-upload-area" @click="triggerUnitListUpload">
+                                <i class="fas fa-file-excel"></i>
+                                <p>点击上传Excel文件</p>
+                                <p class="upload-hint">支持Excel格式，请下载模板</p>
+                                <button type="button" class="btn-sm btn-outline" @click.stop="downloadUnitListTemplate">下载模板</button>
+                                <input type="file" ref="unitListInput" accept=".xlsx,.xls" style="display: none;" @change="handleUnitListUpload">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>每个单位报N人</label>
+                            <input type="number" v-model="form.registration.limited.perUnitCount" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" v-model="form.registration.limited.generateQRCode" checked>
+                                <span>生成报名二维码</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div v-if="form.registration.limited.generateQRCode" class="qrcode-display">
+                        <h5>报名二维码</h5>
+                        <div v-if="form.registration.limited.qrCode" class="qrcode-preview">
+                            <img :src="form.registration.limited.qrCode" alt="限定式报名二维码" style="max-width: 200px; border: 1px solid #ddd; padding: 10px;">
+                            <div style="margin-top: 10px;">
+                                <button class="btn-outline" @click="downloadQRCode('limited')" style="margin-right: 10px;">
+                                    <i class="fas fa-download"></i>
+                                    下载二维码
+                                </button>
+                                <button class="btn-outline" @click="copyQRCodeLink('limited')">
+                                    <i class="fas fa-copy"></i>
+                                    复制链接
+                                </button>
+                            </div>
+                            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                                <p>报名链接: <code style="background: #f5f5f5; padding: 2px 5px;">{{ form.registration.limited.qrCodeUrl }}</code></p>
+                            </div>
+                        </div>
+                        <div v-else class="qrcode-placeholder">
+                            <i class="fas fa-qrcode"></i>
+                            <p>创建会议后自动生成</p>
+                        </div>
+                        <p class="qrcode-hint">限定式报名二维码将发送至指定单位，用于参会人员报名</p>
+                    </div>
+                    <div v-if="form.registration.limited.unitList && form.registration.limited.unitList.length > 0" class="unit-list">
+                        <h5>已导入单位列表 ({{ form.registration.limited.unitList.length }}个)</h5>
+                        <button class="btn-outline" @click="manageUnitList">管理单位名录</button>
+                    </div>
+                </div>
+
+                <!-- 导入式报名配置 -->
+                <div v-if="form.registration.mode === 'import'" class="registration-config">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>导入或录入参会人员</label>
+                            <div class="file-upload-area" @click="triggerParticipantUpload">
+                                <i class="fas fa-file-excel"></i>
+                                <p>点击上传Excel文件或手动录入</p>
+                                <button type="button" class="btn-sm btn-outline" @click.stop="showManualEntry">手动录入</button>
+                                <input type="file" ref="participantInput" accept=".xlsx,.xls" style="display: none;" @change="handleParticipantUpload">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" v-model="form.registration.import.generateQRCode" checked>
+                                <span>生成签到二维码</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div v-if="form.registration.import.generateQRCode" class="qrcode-display">
+                        <h5>签到二维码</h5>
+                        <div v-if="form.registration.import.qrCode" class="qrcode-preview">
+                            <img :src="form.registration.import.qrCode" alt="导入式报名签到二维码" style="max-width: 200px; border: 1px solid #ddd; padding: 10px;">
+                            <div style="margin-top: 10px;">
+                                <button class="btn-outline" @click="downloadQRCode('import')" style="margin-right: 10px;">
+                                    <i class="fas fa-download"></i>
+                                    下载二维码
+                                </button>
+                                <button class="btn-outline" @click="copyQRCodeLink('import')">
+                                    <i class="fas fa-copy"></i>
+                                    复制链接
+                                </button>
+                            </div>
+                            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                                <p>报名链接: <code style="background: #f5f5f5; padding: 2px 5px;">{{ form.registration.import.qrCodeUrl }}</code></p>
+                            </div>
+                        </div>
+                        <div v-else class="qrcode-placeholder">
+                            <i class="fas fa-qrcode"></i>
+                            <p>创建会议后自动生成</p>
+                        </div>
+                        <p class="qrcode-hint">导入式报名参会人员可使用二维码进行签到</p>
+                    </div>
+                    <div v-if="form.registration.import.participants && form.registration.import.participants.length > 0" class="participant-list">
+                        <h5>已导入参会人员 ({{ form.registration.import.participants.length }}人)</h5>
+                        <button class="btn-outline" @click="manageParticipants">管理参会人员</button>
+                    </div>
+                </div>
+
+                <!-- 报名时间设置 -->
+                <div class="registration-time">
+                    <h4>报名时间设置</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>报名开始时间 *</label>
+                            <input type="datetime-local" v-model="form.registration.startTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>报名截止时间 *</label>
+                            <input type="datetime-local" v-model="form.registration.endTime" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 报名审核方式 -->
+                <div class="registration-audit">
+                    <h4>报名审核方式 *</h4>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" value="required" v-model="form.registration.auditMode">
+                            <span>需审核</span>
+                        </label>
+                        <label>
+                            <input type="radio" value="not_required" v-model="form.registration.auditMode">
+                            <span>不需要审核</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 报名表单设置 -->
+                <div class="registration-form">
+                    <h4>报名表单字段设置</h4>
+                    <p class="section-desc">设置报名时需要收集的信息字段，支持多种类型和智能格式验证</p>
+
+                    <div class="form-fields-list">
+                        <div v-for="(field, index) in form.registration.formFields"
+                             :key="index"
+                             class="field-item enhanced"
+                             :class="{ 'dragging': draggingIndex === index }"
+                             draggable="true"
+                             @dragstart="handleDragStart(index, $event)"
+                             @dragover.prevent="handleDragOver(index, $event)"
+                             @dragend="handleDragEnd"
+                             @drop="handleDrop(index, $event)">
+                            <div class="field-header">
+                                <div class="field-drag-handle">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </div>
+                                <div class="field-info">
+                                    <span class="field-label">{{ field.label }}</span>
+                                    <span class="field-type-badge" :class="'type-' + field.type">
+                                        {{ getFieldTypeLabel(field.type) }}
+                                    </span>
+                                    <span class="field-required-badge" v-if="field.required">必填</span>
+                                </div>
+                                <div class="field-actions">
+                                    <button class="btn-sm btn-outline" @click="editFormField(index)" title="编辑">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-sm btn-danger" @click="removeFormField(index)" title="删除">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="field-details" v-if="field.description || field.placeholder">
+                                <span v-if="field.description" class="field-description">{{ field.description }}</span>
+                                <span v-if="field.placeholder" class="field-placeholder">占位符: {{ field.placeholder }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="add-field-options">
+                        <h5>添加字段类型：</h5>
+                        <div class="field-types-grid">
+                            <button class="field-type-btn" @click="addFormField('text')">
+                                <i class="fas fa-font"></i>
+                                <span>文本</span>
+                            </button>
+                            <button class="field-type-btn" @click="addFormField('number')">
+                                <i class="fas fa-hashtag"></i>
+                                <span>数字</span>
+                            </button>
+                            <button class="field-type-btn" @click="addFormField('mobile')">
+                                <i class="fas fa-mobile-alt"></i>
+                                <span>手机号</span>
+                            </button>
+                            <button class="field-type-btn" @click="addFormField('idcard')">
+                                <i class="fas fa-id-card"></i>
+                                <span>身份证号</span>
+                            </button>
+                            <button class="field-type-btn" @click="addFormField('idcard_front')">
+                                <i class="fas fa-id-card"></i>
+                                <span>身份证正面</span>
+                                <span class="field-badge">OCR</span>
+                            </button>
+                            <button class="field-type-btn" @click="addFormField('idcard_back')">
+                                <i class="fas fa-id-card"></i>
+                                <span>身份证反面</span>
+                                <span class="field-badge">OCR</span>
+                            </button>
+                            <button class="field-type-btn" @click="addFormField('certificate')">
+                                <i class="fas fa-certificate"></i>
+                                <span>学历证书</span>
+                                <span class="field-badge">OCR</span>
+                            </button>
+                            <button class="field-type-btn" @click="addFormField('image')">
+                                <i class="fas fa-image"></i>
+                                <span>图片</span>
+                            </button>
+                            <button class="field-type-btn" @click="addFormField('select')">
+                                <i class="fas fa-caret-square-down"></i>
+                                <span>下拉选择</span>
+                            </button>
+                            <button class="field-type-btn" @click="addFormField('radio')">
+                                <i class="fas fa-dot-circle"></i>
+                                <span>单选</span>
+                            </button>
+                            <button class="field-type-btn" @click="addFormField('checkbox')">
+                                <i class="fas fa-check-square"></i>
+                                <span>多选</span>
+                            </button>
+                            <button class="field-type-btn" @click="addFormField('textarea')">
+                                <i class="fas fa-align-left"></i>
+                                <span>多行文本</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 字段编辑弹窗 -->
+                <div v-if="showFieldEditorModal" class="modal-overlay" @click="closeFieldEditor">
+                    <div class="modal-content field-editor-modal" @click.stop>
+                        <div class="modal-header">
+                            <h3>{{ editingFieldIndex === -1 ? '添加字段' : '编辑字段' }}</h3>
+                            <button class="btn-close" @click="closeFieldEditor">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>字段名称 *</label>
+                                <input type="text" v-model="editingField.label" placeholder="请输入字段名称">
+                            </div>
+                            <div class="form-group">
+                                <label>字段类型 *</label>
+                                <select v-model="editingField.type" :disabled="editingFieldIndex !== -1">
+                                    <option value="text">文本</option>
+                                    <option value="number">数字</option>
+                                    <option value="mobile">手机号</option>
+                                    <option value="idcard">身份证号</option>
+                                    <option value="idcard_front">身份证正面（OCR识别）</option>
+                                    <option value="idcard_back">身份证反面（OCR识别）</option>
+                                    <option value="certificate">学历证书（OCR识别）</option>
+                                    <option value="image">图片上传</option>
+                                    <option value="select">下拉选择</option>
+                                    <option value="radio">单选</option>
+                                    <option value="checkbox">多选</option>
+                                    <option value="textarea">多行文本</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" v-model="editingField.required">
+                                    <span>必填字段</span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>占位符提示</label>
+                                <input type="text" v-model="editingField.placeholder" placeholder="请输入占位符文本">
+                            </div>
+                            <div class="form-group">
+                                <label>字段说明</label>
+                                <textarea v-model="editingField.description" rows="2" placeholder="请输入字段说明（可选）"></textarea>
+                            </div>
+                            <!-- 选择类型字段的选项配置 -->
+                            <div v-if="['select', 'radio', 'checkbox'].includes(editingField.type)" class="form-group">
+                                <label>选项配置 *</label>
+                                <div class="options-config">
+                                    <div v-for="(option, idx) in editingField.options" :key="idx" class="option-item">
+                                        <input type="text" v-model="editingField.options[idx]" placeholder="选项内容">
+                                        <button class="btn-sm btn-danger" @click="removeOption(idx)" v-if="editingField.options.length > 1">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <button class="btn-sm btn-outline" @click="addOption">
+                                        <i class="fas fa-plus"></i>
+                                        添加选项
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- OCR提示 -->
+                            <div v-if="['idcard_front', 'idcard_back', 'certificate'].includes(editingField.type)" class="ocr-tip">
+                                <i class="fas fa-info-circle"></i>
+                                <span>此字段类型将使用OCR技术自动识别上传图片中的文字信息</span>
+                            </div>
+                            <!-- 格式验证提示 -->
+                            <div v-if="['mobile', 'idcard'].includes(editingField.type)" class="validation-tip">
+                                <i class="fas fa-check-circle"></i>
+                                <span>系统将自动验证{{ editingField.type === 'mobile' ? '手机号' : '身份证号' }}格式是否正确</span>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-outline" @click="closeFieldEditor">取消</button>
+                            <button class="btn-primary" @click="saveFormField">保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤3：报到设置 -->
+            <div v-if="currentStep === 3" class="step-content glass-card">
+                <h3>步骤3：报到设置</h3>
+                
+                <div class="checkin-mode">
+                    <h4>报到方式 *</h4>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" value="print" v-model="form.checkin.mode">
+                            <span>打印表单签字</span>
+                        </label>
+                        <label>
+                            <input type="radio" value="qrcode" v-model="form.checkin.mode">
+                            <span>二维码扫码+位置信息</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="checkin-time">
+                    <h4>报到时间</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>报到开始时间 *</label>
+                            <input type="datetime-local" v-model="form.checkin.startTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>报到截止时间 *</label>
+                            <input type="datetime-local" v-model="form.checkin.endTime" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="checkin-location">
+                    <h4>报到详细地址 *</h4>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>报到地点 *</label>
+                            <div class="location-input-group">
+                                <input
+                                    type="text"
+                                    v-model="form.checkin.location.address"
+                                    required
+                                    placeholder="点击选择地图选点或输入详细地址"
+                                >
+                                <button type="button" class="btn-map" @click="showCheckInLocationPicker" title="地图选点">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    地图选点
+                                </button>
+                            </div>
+                            <div class="location-detail" v-if="form.checkin.location.address">
+                                <div class="location-info">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>{{ form.checkin.location.address }}</span>
+                                </div>
+                                <div class="coordinate-info" v-if="form.checkin.location.latitude && form.checkin.location.longitude">
+                                    <i class="fas fa-crosshairs"></i>
+                                    <span>坐标：{{ form.checkin.location.latitude }}, {{ form.checkin.location.longitude }}</span>
+                                    <a :href="getCheckInNavigationUrl()" target="_blank" class="nav-link" title="在地图中打开">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        导航
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" v-if="form.checkin.mode === 'qrcode'">
+                            <label>报到范围（米）</label>
+                            <input type="number" v-model="form.checkin.location.radius" min="10" max="1000" placeholder="半径米数">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤4：通知设置 -->
+            <div v-if="currentStep === 4" class="step-content glass-card">
+                <h3>步骤4：通知设置</h3>
+                
+                <div class="notification-channels">
+                    <h4>默认通知方式（多选）</h4>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" v-model="form.notification.channels" value="app">
+                            <span>APP推送</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" v-model="form.notification.channels" value="sms">
+                            <span>短信</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" v-model="form.notification.channels" value="wechat">
+                            <span>微信</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="notification-templates">
+                    <h4>通知文本设置</h4>
+                    <div class="template-list">
+                        <div v-for="(template, key) in form.notification.templates" :key="key" class="template-item">
+                            <label>{{ getTemplateLabel(key) }}</label>
+                            <div class="template-editor">
+                                <textarea v-model="template.content" rows="4" :placeholder="`请输入${getTemplateLabel(key)}内容`"></textarea>
+                                <button class="btn-sm btn-outline" @click="selectTemplate(key)">选择模板</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤5：工作人员及权限设置 -->
+            <div v-if="currentStep === 5" class="step-content glass-card">
+                <h3>步骤5：工作人员</h3>
+
+                <!-- 添加工作人员 -->
+                <div class="staff-add-section">
+                    <h4>添加工作人员</h4>
+                    <div class="add-staff-methods">
+                        <div class="method-tabs">
+                            <button
+                                class="tab-btn"
+                                :class="{ active: addStaffMethod === 'phone' }"
+                                @click="addStaffMethod = 'phone'">
+                                <i class="fas fa-phone"></i>
+                                录入手机号
+                            </button>
+                            <button
+                                class="tab-btn"
+                                :class="{ active: addStaffMethod === 'select' }"
+                                @click="addStaffMethod = 'select'">
+                                <i class="fas fa-users"></i>
+                                选择系统用户
+                            </button>
+                        </div>
+
+                        <!-- 方式1：录入手机号 -->
+                        <div v-if="addStaffMethod === 'phone'" class="method-content">
+                            <div class="form-group">
+                                <label>工作人员姓名 *</label>
+                                <input type="text" v-model="newStaff.name" placeholder="请输入姓名">
+                            </div>
+                            <div class="form-group">
+                                <label>手机号码 *</label>
+                                <input type="tel" v-model="newStaff.phone" placeholder="请输入手机号" maxlength="11">
+                            </div>
+                            <div class="form-group">
+                                <label>职务/角色</label>
+                                <input type="text" v-model="newStaff.position" placeholder="如：协管员、志愿者等">
+                            </div>
+                            <button class="btn-primary" @click="addStaffByPhone">
+                                <i class="fas fa-plus"></i>
+                                添加工作人员
+                            </button>
+                        </div>
+
+                        <!-- 方式2：选择系统用户 -->
+                        <div v-if="addStaffMethod === 'select'" class="method-content">
+                            <div class="form-group">
+                                <label>搜索系统用户</label>
+                                <div class="search-box">
+                                    <input
+                                        type="text"
+                                        v-model="userSearchKeyword"
+                                        placeholder="输入姓名或手机号搜索"
+                                        @input="searchSystemUsers">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                            </div>
+
+                            <div v-if="searchingUsers" class="loading-state">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                搜索中...
+                            </div>
+
+                            <div v-else-if="systemUsers.length > 0" class="user-list">
+                                <div
+                                    v-for="user in systemUsers"
+                                    :key="user.id"
+                                    class="user-item"
+                                    :class="{ selected: isUserSelected(user.id) }"
+                                    @click="selectSystemUser(user)">
+                                    <div class="user-avatar">
+                                        <img :src="user.avatar || getDefaultAvatar(user.name)" :alt="user.name">
+                                    </div>
+                                    <div class="user-info">
+                                        <div class="user-name">{{ user.name }}</div>
+                                        <div class="user-phone">{{ user.phone }}</div>
+                                        <div class="user-dept" v-if="user.department">{{ user.department }}</div>
+                                    </div>
+                                    <div class="user-check">
+                                        <i class="fas fa-check-circle" v-if="isUserSelected(user.id)"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-else-if="userSearchKeyword" class="empty-state">
+                                <i class="fas fa-search"></i>
+                                <p>未找到匹配的用户</p>
+                            </div>
+
+                            <div v-else class="empty-state">
+                                <i class="fas fa-info-circle"></i>
+                                <p>请输入关键词搜索系统用户</p>
+                            </div>
+
+                            <div v-if="selectedUsers.length > 0" class="selected-users-summary">
+                                <span>已选择 {{ selectedUsers.length }} 位用户</span>
+                                <button class="btn-sm btn-primary" @click="addSelectedUsers">
+                                    <i class="fas fa-plus"></i>
+                                    添加已选用户
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 已添加的工作人员列表 -->
+                <div class="staff-list-section" v-if="staffList.length > 0">
+                    <h4>已添加工作人员 ({{ staffList.length }}人)</h4>
+                    <div class="staff-list">
+                        <div
+                            v-for="(staff, index) in staffList"
+                            :key="staff.id"
+                            class="staff-card">
+                            <div class="staff-header">
+                                <div class="staff-info">
+                                    <div class="staff-avatar">
+                                        <img :src="staff.avatar || getDefaultAvatar(staff.name)" :alt="staff.name">
+                                    </div>
+                                    <div class="staff-details">
+                                        <div class="staff-name">{{ staff.name }}</div>
+                                        <div class="staff-phone">{{ staff.phone }}</div>
+                                        <div class="staff-position" v-if="staff.position">{{ staff.position }}</div>
+                                    </div>
+                                </div>
+                                <button class="btn-sm btn-danger" @click="removeStaff(index)">
+                                    <i class="fas fa-trash"></i>
+                                    移除
+                                </button>
+                            </div>
+
+                            <!-- 权限设置 -->
+                            <div class="staff-permissions">
+                                <div class="permissions-title">
+                                    <i class="fas fa-key"></i>
+                                    权限设置
+                                    <button 
+                                        type="button" 
+                                        class="btn-select-all"
+                                        @click="toggleAllPermissions(staff)"
+                                        :title="isAllPermissionsSelected(staff) ? '取消全选' : '全选'">
+                                        {{ isAllPermissionsSelected(staff) ? '取消全选' : '全选' }}
+                                    </button>
+                                </div>
+                                <div class="permissions-grid">
+                                    <label class="permission-checkbox">
+                                        <input type="checkbox" v-model="staff.permissions.participantManagement">
+                                        <span>参会人员管理</span>
+                                    </label>
+                                    <label class="permission-checkbox">
+                                        <input type="checkbox" v-model="staff.permissions.seatManagement">
+                                        <span>座位管理</span>
+                                    </label>
+                                    <label class="permission-checkbox">
+                                        <input type="checkbox" v-model="staff.permissions.taskPublish">
+                                        <span>群任务发布</span>
+                                    </label>
+                                    <label class="permission-checkbox">
+                                        <input type="checkbox" v-model="staff.permissions.scheduleManagement">
+                                        <span>日程管理</span>
+                                    </label>
+                                    <label class="permission-checkbox">
+                                        <input type="checkbox" v-model="staff.permissions.checkinManagement">
+                                        <span>签到管理</span>
+                                    </label>
+                                    <label class="permission-checkbox">
+                                        <input type="checkbox" v-model="staff.permissions.materialManagement">
+                                        <span>资料管理</span>
+                                    </label>
+                                    <label class="permission-checkbox">
+                                        <input type="checkbox" v-model="staff.permissions.notificationManagement">
+                                        <span>通知管理</span>
+                                    </label>
+                                    <label class="permission-checkbox">
+                                        <input type="checkbox" v-model="staff.permissions.dataExport">
+                                        <span>数据导出</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="empty-state" v-else>
+                    <i class="fas fa-user-plus"></i>
+                    <p>暂无工作人员，请先添加工作人员</p>
+                </div>
+            </div>
+
+            <!-- 步骤6：确认创建 -->
+            <div v-if="currentStep === 6" class="step-content glass-card">
+                <h3>步骤6：确认创建</h3>
+                
+                <div class="preview-summary">
+                    <div class="summary-section">
+                        <h4>基本信息</h4>
+                        <div class="summary-item">
+                            <span class="label">会议/培训名称:</span>
+                            <span class="value">{{ form.name || '未填写' }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">会议类型:</span>
+                            <span class="value">{{ getTypeText(form.type) }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">时间:</span>
+                            <span class="value">{{ form.startDate }} 至 {{ form.endDate }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">地点:</span>
+                            <span class="value">{{ form.location.fullAddress || '未填写' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-section">
+                        <h4>报名设置</h4>
+                        <div class="summary-item">
+                            <span class="label">报名方式:</span>
+                            <span class="value">{{ getRegistrationModeText(form.registration.mode) }}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">审核方式:</span>
+                            <span class="value">{{ form.registration.auditMode === 'required' ? '需审核' : '不需要审核' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-section">
+                        <h4>报到设置</h4>
+                        <div class="summary-item">
+                            <span class="label">报到方式:</span>
+                            <span class="value">{{ form.checkin.mode === 'print' ? '打印表单签字' : '二维码扫码+位置信息' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-section">
+                        <h4>通知设置</h4>
+                        <div class="summary-item">
+                            <span class="label">通知渠道:</span>
+                            <span class="value">{{ form.notification.channels.join(', ') || '未设置' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-section">
+                        <h4>工作人员及权限</h4>
+                        <div class="summary-item">
+                            <span class="label">工作人员数量:</span>
+                            <span class="value">{{ staffList.length }}人</span>
+                        </div>
+                        <div v-if="staffList.length > 0" class="staff-preview">
+                            <div v-for="staff in staffList" :key="staff.id" class="staff-preview-item">
+                                <span>{{ staff.name }} ({{ staff.phone }})</span>
+                                <span class="staff-permissions-preview">
+                                    <span v-if="staff.permissions.participantManagement">参会人员</span>
+                                    <span v-if="staff.permissions.seatManagement">座位</span>
+                                    <span v-if="staff.permissions.taskPublish">任务</span>
+                                    <span v-if="staff.permissions.scheduleManagement">日程</span>
+                                    <span v-if="staff.permissions.checkinManagement">签到</span>
+                                    <span v-if="staff.permissions.materialManagement">资料</span>
+                                    <span v-if="staff.permissions.notificationManagement">通知</span>
+                                    <span v-if="staff.permissions.dataExport">导出</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="create-actions">
+                    <button class="btn-outline" @click="saveDraft">
+                        <i class="fas fa-save"></i>
+                        保存草稿
+                    </button>
+                    <button class="btn-primary btn-lg" @click="createConference" :disabled="!canCreate">
+                        <i class="fas fa-check"></i>
+                        {{ isEditMode ? '保存修改' : '创建会议' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步骤导航按钮 -->
+            <div class="step-navigation glass-card">
+                <button class="btn-outline" @click="prevStep" :disabled="currentStep === 1">
+                    <i class="fas fa-arrow-left"></i>
+                    上一步
+                </button>
+                <button class="btn-outline" @click="saveDraft">
+                    <i class="fas fa-save"></i>
+                    保存草稿
+                </button>
+                <button class="btn-primary" @click="nextStep" :class="{ 'disabled': !canProceed && currentStep !== 7 }">
+                    下一步
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- 地图选点弹窗 -->
+            <div class="map-picker-modal" v-if="showMapModal" @click.self="closeMapModal">
+                <div class="map-picker-content">
+                    <div class="map-picker-header">
+                        <h3><i class="fas fa-map-marker-alt"></i> 地图选点</h3>
+                        <button class="close-btn" @click="closeMapModal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="map-picker-body">
+                        <div class="map-search">
+                            <input
+                                type="text"
+                                v-model="mapSearchKeyword"
+                                placeholder="搜索地址（如：北京市朝阳区会议中心）"
+                                @keyup.enter="searchLocation"
+                            >
+                            <button class="btn-search" @click="searchLocation">
+                                <i class="fas fa-search"></i>
+                                搜索
+                            </button>
+                        </div>
+                        <div class="map-search-results" v-if="searchResults.length > 0">
+                            <div
+                                class="search-result-item"
+                                v-for="(result, index) in searchResults"
+                                :key="index"
+                                @click="selectSearchResult(result)"
+                            >
+                                <div class="result-name">{{ result.name }}</div>
+                                <div class="result-address">{{ result.address }}</div>
+                            </div>
+                        </div>
+                        <div class="map-container" id="mapContainer"></div>
+                        <div class="map-selected-info" v-if="selectedLocation">
+                            <div class="selected-location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <strong>{{ selectedLocation.name }}</strong>
+                            </div>
+                            <div class="selected-address">
+                                <i class="fas fa-location-dot"></i>
+                                {{ selectedLocation.address }}
+                            </div>
+                            <div class="selected-coordinate">
+                                <i class="fas fa-crosshairs"></i>
+                                经度：{{ selectedLocation.lng }}，纬度：{{ selectedLocation.lat }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="map-picker-footer">
+                        <button class="btn-secondary" @click="closeMapModal">取消</button>
+                        <button class="btn-primary" @click="confirmLocation" :disabled="!selectedLocation">
+                            <i class="fas fa-check"></i>
+                            确认选点
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 调试：检查Vue是否加载
+        console.log('=== 调试信息开始 ===');
+        console.log('Vue type:', typeof Vue);
+
+        if (typeof Vue === 'undefined' || !Vue.createApp) {
+            const vueSpan = document.getElementById('debug-vue');
+            const appSpan = document.getElementById('debug-app');
+            if (vueSpan) {
+                vueSpan.textContent = '❌ Vue CDN加载失败';
+                vueSpan.style.color = 'red';
+            }
+            if (appSpan) {
+                appSpan.textContent = '❌ 无法挂载';
+                appSpan.style.color = 'red';
+            }
+
+            const appRoot = document.getElementById('app');
+            if (appRoot) {
+                appRoot.innerHTML = `
+                    <div style="max-width: 900px; margin: 40px auto; padding: 24px; border: 1px solid #f5c2c7; background: #fff1f2; color: #842029; border-radius: 8px;">
+                        <h3 style="margin-top: 0;">页面资源加载失败</h3>
+                        <p>Vue 资源未成功加载，请检查网络或CDN可达性。</p>
+                        <p>建议操作：刷新页面（Ctrl+F5），或切换可访问外网的网络环境。</p>
+                    </div>
+                `;
+            }
+
+            throw new Error('Vue is not loaded.');
+        }
+
+        console.log('createApp:', typeof Vue.createApp, Vue.createApp);
+        const { createApp } = Vue;
+
+        // 调试：检查InteractionMixin
+        console.log('InteractionMixin:', typeof window.InteractionMixin, window.InteractionMixin);
+
+        const app = createApp({
+            data() {
+                return {
+                    isEditMode: false,
+                    editConferenceId: null,
+                    currentStep: 1,
+                    form: {
+                        name: '',
+                        type: 'training',
+                        theme: '',
+                        code: '',
+                        startDate: '',
+                        endDate: '',
+                        location: {
+                            fullAddress: '',
+                            venue: '',
+                            address: '',
+                            latitude: '',
+                            longitude: ''
+                        },
+                        description: '',
+                        coverImage: null,
+                        registration: {
+                            mode: 'open',
+                            startTime: '',
+                            endTime: '',
+                            auditMode: 'required',
+                            open: {
+                                limitTotal: false,
+                                maxCount: 100,
+                                generateQRCode: true,
+                                qrCode: null,
+                                qrCodeUrl: null,
+                                qrCodeToken: null
+                            },
+                            limited: {
+                                unitList: [],
+                                perUnitCount: 1,
+                                generateQRCode: true,
+                                qrCode: null,
+                                qrCodeUrl: null,
+                                qrCodeToken: null
+                            },
+                            import: {
+                                participants: [],
+                                generateQRCode: true,
+                                qrCode: null,
+                                qrCodeUrl: null,
+                                qrCodeToken: null
+                            },
+                            formFields: [
+                                { label: '姓名', type: 'text', required: true, placeholder: '请输入真实姓名' },
+                                { label: '性别', type: 'radio', required: true, options: ['男', '女'] },
+                                { label: '手机号码', type: 'mobile', required: true, placeholder: '请输入11位手机号码' },
+                                { label: '身份证号', type: 'idcard', required: true, placeholder: '请输入18位身份证号码' },
+                                { label: '工作单位', type: 'text', required: true, placeholder: '请输入完整单位名称' },
+                                { label: '职务', type: 'text', required: false, placeholder: '请输入职务' }
+                            ]
+                        },
+                        checkin: {
+                            mode: 'qrcode',
+                            startTime: '',
+                            endTime: '',
+                            location: {
+                                address: '',
+                                latitude: '',
+                                longitude: '',
+                                radius: 100
+                            }
+                        },
+                        notification: {
+                            channels: ['app'],
+                            templates: {
+                                meeting: { content: '' },
+                                registration: { content: '' },
+                                checkin: { content: '' },
+                                schedule: { content: '' }
+                            }
+                        }
+                    },
+                    staffList: [],
+                    addStaffMethod: 'phone',
+                    newStaff: {
+                        name: '',
+                        phone: '',
+                        position: ''
+                    },
+                    userSearchKeyword: '',
+                    systemUsers: [],
+                    selectedUsers: [],
+                    searchingUsers: false,
+                    draggingIndex: null,
+                    // 字段编辑相关
+                    showFieldEditorModal: false,
+                    editingFieldIndex: -1,
+                    editingField: {
+                        label: '',
+                        type: 'text',
+                        required: false,
+                        placeholder: '',
+                        description: '',
+                        options: ['']
+                    },
+                    // 地图相关数据
+                    showMapModal: false,
+                    mapPickerType: 'location', // 'location' 会议地点 或 'checkin' 报到地址
+                    map: null,
+                    marker: null,
+                    mapSearchKeyword: '',
+                    searchResults: [],
+                    selectedLocation: null,
+                    geocoder: null,
+                    placeSearch: null
+                }
+            },
+            computed: {
+                canProceed() {
+                    switch(this.currentStep) {
+                        case 1:
+                            return this.form.name && this.form.startDate && this.form.endDate && this.form.location.fullAddress;
+                        case 2:
+                            return this.form.registration.mode && this.form.registration.startTime && this.form.registration.endTime && this.form.registration.auditMode;
+                        case 3:
+                            return this.form.checkin.mode && this.form.checkin.startTime && this.form.checkin.endTime && this.form.checkin.location.address;
+                        case 4:
+                            return this.form.notification.channels.length > 0;
+                        case 5:
+                            return true;
+                        case 6:
+                            return true;
+                        default:
+                            return true;
+                    }
+                },
+                canCreate() {
+                    return this.canProceed && this.currentStep === 6;
+                }
+            },
+            methods: {
+                goToStep(step) {
+                    if (step <= this.currentStep || this.canProceed) {
+                        this.currentStep = step;
+                    }
+                },
+                prevStep() {
+                    if (this.currentStep > 1) {
+                        this.currentStep--;
+                    }
+                },
+                async nextStep() {
+                    // 首先检查是否可以继续（必填信息检查）
+                    if (!this.canProceed) {
+                        this.$showToast('请完善必填信息后再继续', 'warning');
+                        // 高亮显示未填写的必填字段
+                        this.highlightRequiredFields();
+                        return;
+                    }
+
+                    // 验证当前步骤
+                    if (!await this.validateCurrentStep()) {
+                        return;
+                    }
+
+                    if (this.currentStep < 6) {
+                        this.currentStep++;
+                        // 滚动到顶部
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                },
+                
+                async validateCurrentStep() {
+                    const step = this.currentStep;
+                    let isValid = true;
+                    let errorMessage = '';
+                    
+                    // 步骤1：基本信息验证
+                    if (step === 1) {
+                        if (!this.form.name || !this.form.name.trim()) {
+                            isValid = false;
+                            errorMessage = '请输入会议/培训名称';
+                        } else if (!this.form.startDate) {
+                            isValid = false;
+                            errorMessage = '请选择开始日期';
+                        } else if (!this.form.endDate) {
+                            isValid = false;
+                            errorMessage = '请选择结束日期';
+                        } else if (!this.form.location.fullAddress) {
+                            isValid = false;
+                            errorMessage = '请选择会议地点';
+                        } else if (new Date(this.form.startDate) > new Date(this.form.endDate)) {
+                            isValid = false;
+                            errorMessage = '结束日期不能早于开始日期';
+                        }
+                    }
+
+                    // 步骤2：报名设置验证
+                    if (step === 2) {
+                        if (!this.form.registration.mode) {
+                            isValid = false;
+                            errorMessage = '请选择报名方式';
+                        } else if (!this.form.registration.startTime) {
+                            isValid = false;
+                            errorMessage = '请设置报名开始时间';
+                        } else if (!this.form.registration.endTime) {
+                            isValid = false;
+                            errorMessage = '请设置报名截止时间';
+                        }
+                    }
+
+                    // 步骤3：报到设置验证
+                    if (step === 3) {
+                        if (!this.form.checkin.mode) {
+                            isValid = false;
+                            errorMessage = '请选择报到方式';
+                        } else if (!this.form.checkin.startTime) {
+                            isValid = false;
+                            errorMessage = '请设置报到开始时间';
+                        } else if (!this.form.checkin.endTime) {
+                            isValid = false;
+                            errorMessage = '请设置报到截止时间';
+                        } else if (!this.form.checkin.location.address) {
+                            isValid = false;
+                            errorMessage = '请填写报到详细地址';
+                        }
+                    }
+                    
+                    if (!isValid) {
+                        this.$showToast(errorMessage, 'error');
+                        return false;
+                    }
+                    
+                    return true;
+                },
+                generateCode() {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    this.form.code = `CONF_${year}${month}${day}_${random}`;
+                },
+                triggerCoverUpload() {
+                    this.$refs.coverInput.click();
+                },
+                async handleCoverUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        try {
+                            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || '';
+                            if (!token) {
+                                this.$showToast('请先登录后再上传封面', 'error');
+                                return;
+                            }
+
+                            const formData = new FormData();
+                            formData.append('file', file);
+
+                            const response = await fetch('/api/meeting/upload/cover', {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: formData
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`上传失败: ${response.status}`);
+                            }
+
+                            const result = await response.json();
+                            const isApiSuccess = result && (result.code === 200 || result.code === 0);
+                            if (!isApiSuccess || !result.data || !result.data.url) {
+                                throw new Error((result && result.message) || '上传失败');
+                            }
+
+                            this.form.coverImage = result.data.url;
+                            this.$showToast('封面上传成功', 'success');
+                        } catch (error) {
+                            console.error('封面上传失败:', error);
+                            this.$showToast('封面上传失败，请重试', 'error');
+                        } finally {
+                            if (this.$refs.coverInput) {
+                                this.$refs.coverInput.value = '';
+                            }
+                        }
+                    }
+                },
+                removeCover() {
+                    this.form.coverImage = null;
+                },
+                triggerUnitListUpload() {
+                    this.$refs.unitListInput.click();
+                },
+                handleUnitListUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        // 模拟解析Excel
+                        this.$showToast('单位名录上传功能需要后端支持', 'info');
+                        // 这里应该调用后端API解析Excel
+                    }
+                },
+                downloadUnitListTemplate() {
+                    this.$showToast('下载单位名录模板', 'info');
+                },
+                manageUnitList() {
+                    this.$showToast('管理单位名录功能', 'info');
+                },
+                triggerParticipantUpload() {
+                    this.$refs.participantInput.click();
+                },
+                handleParticipantUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        this.$showToast('参会人员上传功能需要后端支持', 'info');
+                    }
+                },
+                showManualEntry() {
+                    this.$showToast('手动录入功能', 'info');
+                },
+                addCustomField() {
+                    // 打开字段编辑弹窗，添加新字段
+                    this.editingFieldIndex = -1;
+                    this.editingField = {
+                        label: '',
+                        type: 'text',
+                        required: false,
+                        placeholder: '',
+                        description: '',
+                        options: ['']
+                    };
+                    this.showFieldEditorModal = true;
+                },
+                // 添加指定类型的字段
+                addFormField(type) {
+                    this.editingFieldIndex = -1;
+                    this.editingField = {
+                        label: '',
+                        type: type,
+                        required: false,
+                        placeholder: '',
+                        description: '',
+                        options: type === 'text' ? [] : ['']
+                    };
+
+                    // 根据类型设置默认占位符
+                    const placeholders = {
+                        text: '请输入文本内容',
+                        number: '请输入数字',
+                        mobile: '请输入11位手机号码',
+                        idcard: '请输入18位身份证号码',
+                        idcard_front: '请上传身份证正面照片',
+                        idcard_back: '请上传身份证反面照片',
+                        certificate: '请上传学历证书照片',
+                        image: '请上传图片',
+                        select: '请选择',
+                        radio: '请选择',
+                        checkbox: '请选择',
+                        textarea: '请输入详细内容'
+                    };
+                    this.editingField.placeholder = placeholders[type] || '';
+
+                    this.showFieldEditorModal = true;
+                },
+                // 编辑字段
+                editFormField(index) {
+                    this.editingFieldIndex = index;
+                    const field = this.form.registration.formFields[index];
+                    this.editingField = {
+                        label: field.label,
+                        type: field.type,
+                        required: field.required,
+                        placeholder: field.placeholder || '',
+                        description: field.description || '',
+                        options: field.options ? [...field.options] : ['']
+                    };
+                    this.showFieldEditorModal = true;
+                },
+                // 删除字段
+                removeFormField(index) {
+                    const field = this.form.registration.formFields[index];
+                    const confirmed = confirm(`确定要删除字段"${field.label}"吗？`);
+                    if (confirmed) {
+                        this.form.registration.formFields.splice(index, 1);
+                        this.$showToast('字段已删除', 'success');
+                    }
+                },
+                // 关闭字段编辑弹窗
+                closeFieldEditor() {
+                    this.showFieldEditorModal = false;
+                    this.editingFieldIndex = -1;
+                },
+                // 保存字段
+                saveFormField() {
+                    // 验证字段名称
+                    if (!this.editingField.label || !this.editingField.label.trim()) {
+                        this.$showToast('请输入字段名称', 'warning');
+                        return;
+                    }
+
+                    // 验证选择类型字段的选项
+                    if (['select', 'radio', 'checkbox'].includes(this.editingField.type)) {
+                        const validOptions = this.editingField.options.filter(opt => opt && opt.trim());
+                        if (validOptions.length < 1) {
+                            this.$showToast('请至少添加一个选项', 'warning');
+                            return;
+                        }
+                        this.editingField.options = validOptions;
+                    }
+
+                    // 保存字段
+                    const fieldData = {
+                        label: this.editingField.label.trim(),
+                        type: this.editingField.type,
+                        required: this.editingField.required,
+                        placeholder: this.editingField.placeholder,
+                        description: this.editingField.description
+                    };
+
+                    // 添加选项（如果是选择类型）
+                    if (['select', 'radio', 'checkbox'].includes(this.editingField.type)) {
+                        fieldData.options = [...this.editingField.options];
+                    }
+
+                    if (this.editingFieldIndex === -1) {
+                        // 添加新字段
+                        this.form.registration.formFields.push(fieldData);
+                        this.$showToast('字段已添加', 'success');
+                    } else {
+                        // 更新现有字段
+                        this.form.registration.formFields[this.editingFieldIndex] = fieldData;
+                        this.$showToast('字段已更新', 'success');
+                    }
+
+                    this.closeFieldEditor();
+                },
+                // 获取字段类型标签
+                getFieldTypeLabel(type) {
+                    const labels = {
+                        text: '文本',
+                        number: '数字',
+                        mobile: '手机号',
+                        idcard: '身份证',
+                        idcard_front: '身份证正面',
+                        idcard_back: '身份证反面',
+                        certificate: '学历证书',
+                        image: '图片',
+                        select: '下拉',
+                        radio: '单选',
+                        checkbox: '多选',
+                        textarea: '多行文本'
+                    };
+                    return labels[type] || type;
+                },
+                // 添加选项
+                addOption() {
+                    this.editingField.options.push('');
+                },
+                // 删除选项
+                removeOption(index) {
+                    this.editingField.options.splice(index, 1);
+                },
+                // 拖拽相关方法
+                handleDragStart(index, event) {
+                    this.draggingIndex = index;
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.target.classList.add('dragging');
+                },
+                handleDragOver(index, event) {
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = 'move';
+                    if (this.draggingIndex === null || this.draggingIndex === index) {
+                        return;
+                    }
+                },
+                handleDrop(index, event) {
+                    event.preventDefault();
+                    if (this.draggingIndex === null || this.draggingIndex === index) {
+                        return;
+                    }
+
+                    // 交换位置
+                    const fields = this.form.registration.formFields;
+                    const draggedItem = fields[this.draggingIndex];
+                    fields.splice(this.draggingIndex, 1);
+                    fields.splice(index, 0, draggedItem);
+
+                    this.draggingIndex = null;
+                    this.$showToast('字段顺序已更新', 'success');
+                },
+                handleDragEnd(event) {
+                    event.target.classList.remove('dragging');
+                    this.draggingIndex = null;
+                },
+                // 工作人员管理相关方法
+                addStaffByPhone() {
+                    // 验证
+                    if (!this.newStaff.name || !this.newStaff.name.trim()) {
+                        this.$showToast('请输入工作人员姓名', 'warning');
+                        return;
+                    }
+                    if (!this.newStaff.phone || !this.newStaff.phone.trim()) {
+                        this.$showToast('请输入手机号码', 'warning');
+                        return;
+                    }
+                    const phoneReg = /^1[3-9]\d{9}$/;
+                    if (!phoneReg.test(this.newStaff.phone)) {
+                        this.$showToast('手机号码格式不正确', 'warning');
+                        return;
+                    }
+
+                    // 检查是否已存在
+                    const exists = this.staffList.some(s => s.phone === this.newStaff.phone);
+                    if (exists) {
+                        this.$showToast('该手机号已添加', 'warning');
+                        return;
+                    }
+
+                    // 添加工作人员（用手机号作为staffId，11位数字可作为Long，且保证同手机号ID稳定一致）
+                    this.staffList.push({
+                        id: this.newStaff.phone.trim(),
+                        name: this.newStaff.name.trim(),
+                        phone: this.newStaff.phone.trim(),
+                        position: this.newStaff.position || '',
+                        avatar: '',
+                        permissions: {
+                            participantManagement: false,
+                            seatManagement: false,
+                            taskPublish: false,
+                            scheduleManagement: false,
+                            checkinManagement: false,
+                            materialManagement: false,
+                            notificationManagement: false,
+                            dataExport: false
+                        }
+                    });
+
+                    // 清空表单
+                    this.newStaff = {
+                        name: '',
+                        phone: '',
+                        position: ''
+                    };
+
+                    this.$showToast('工作人员添加成功', 'success');
+                },
+                searchSystemUsers() {
+                    if (!this.userSearchKeyword || this.userSearchKeyword.trim().length < 2) {
+                        this.systemUsers = [];
+                        return;
+                    }
+
+                    this.searchingUsers = true;
+
+                    // 调用后端用户搜索API
+                    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+                    const tenantId = localStorage.getItem('tenantId') || '100';
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = 'Bearer ' + token;
+                    if (tenantId) headers['X-Tenant-Id'] = tenantId;
+                    
+                    const keyword = encodeURIComponent(this.userSearchKeyword.trim());
+                    fetch(`/api/auth/users/search?keyword=${keyword}`, { headers })
+                        .then(resp => resp.json())
+                        .then(result => {
+                            if (result.code === 200 && result.data) {
+                                const users = Array.isArray(result.data) ? result.data : (result.data.records || []);
+                                this.systemUsers = users.map(u => ({
+                                    id: String(u.id),
+                                    name: u.realName || u.username || '',
+                                    phone: u.phone || '',
+                                    department: u.department || '',
+                                    avatar: u.avatar || ''
+                                }));
+                            } else {
+                                this.systemUsers = [];
+                            }
+                            this.searchingUsers = false;
+                        })
+                        .catch(err => {
+                            console.warn('搜索用户失败:', err);
+                            this.systemUsers = [];
+                            this.searchingUsers = false;
+                        });
+                },
+                isUserSelected(userId) {
+                    return this.selectedUsers.some(u => u.id === userId);
+                },
+                selectSystemUser(user) {
+                    const index = this.selectedUsers.findIndex(u => u.id === user.id);
+                    if (index > -1) {
+                        this.selectedUsers.splice(index, 1);
+                    } else {
+                        this.selectedUsers.push(user);
+                    }
+                },
+                addSelectedUsers() {
+                    if (this.selectedUsers.length === 0) {
+                        this.$showToast('请先选择用户', 'warning');
+                        return;
+                    }
+
+                    let addedCount = 0;
+                    this.selectedUsers.forEach(user => {
+                        // 检查是否已存在（按手机号或ID去重）
+                        const exists = this.staffList.some(s => s.phone === user.phone || s.id === user.id);
+                        if (!exists) {
+                            this.staffList.push({
+                                id: user.id,
+                                name: user.name,
+                                phone: user.phone,
+                                position: user.department || '',
+                                avatar: user.avatar || '',
+                                permissions: {
+                                    participantManagement: false,
+                                    seatManagement: false,
+                                    taskPublish: false,
+                                    scheduleManagement: false,
+                                    checkinManagement: false,
+                                    materialManagement: false,
+                                    notificationManagement: false,
+                                    dataExport: false
+                                }
+                            });
+                            addedCount++;
+                        }
+                    });
+
+                    this.selectedUsers = [];
+                    this.userSearchKeyword = '';
+                    this.systemUsers = [];
+
+                    if (addedCount > 0) {
+                        this.$showToast(`成功添加 ${addedCount} 位工作人员`, 'success');
+                    } else {
+                        this.$showToast('所选用户已全部存在于列表中', 'info');
+                    }
+                },
+                removeStaff(index) {
+                    this.$showConfirm(
+                        '确定要移除该工作人员吗？',
+                        '移除工作人员',
+                        'warning'
+                    ).then(confirmed => {
+                        if (confirmed) {
+                            this.staffList.splice(index, 1);
+                            this.$showToast('工作人员已移除', 'success');
+                        }
+                    });
+                },
+                isAllPermissionsSelected(staff) {
+                    const permissions = staff.permissions;
+                    return Object.values(permissions).every(value => value === true);
+                },
+                toggleAllPermissions(staff) {
+                    const permissions = staff.permissions;
+                    const isAllSelected = this.isAllPermissionsSelected(staff);
+                    
+                    Object.keys(permissions).forEach(key => {
+                        permissions[key] = !isAllSelected;
+                    });
+                },
+                getCurrentLocation() {
+                    if (navigator.geolocation) {
+                        this.$showLoading('正在获取当前位置...');
+                        navigator.geolocation.getCurrentPosition((position) => {
+                            this.form.checkin.location.latitude = position.coords.latitude.toFixed(6);
+                            this.form.checkin.location.longitude = position.coords.longitude.toFixed(6);
+                            this.$hideLoading();
+                            this.$showToast('位置已获取', 'success');
+                        }, (error) => {
+                            this.$hideLoading();
+                            this.$showToast('获取位置失败', 'error');
+                        });
+                    } else {
+                        this.$showToast('浏览器不支持地理位置获取', 'warning');
+                    }
+                },
+                selectTemplate(key) {
+                    this.$showToast(`选择模板: ${key}`, 'info');
+                },
+                getTemplateLabel(key) {
+                    const map = {
+                        meeting: '会议通知模板',
+                        registration: '报名提醒模板',
+                        checkin: '签到提醒模板',
+                        schedule: '日程提醒模板'
+                    };
+                    return map[key] || key;
+                },
+                getTypeText(type) {
+                    const typeMap = {
+                        training: '培训会议',
+                        seminar: '研讨会',
+                        conference: '大型会议',
+                        workshop: '工作坊'
+                    };
+                    return typeMap[type] || type;
+                },
+                getRegistrationModeText(mode) {
+                    const map = {
+                        open: '开放式报名',
+                        limited: '限定式报名',
+                        import: '导入式报名'
+                    };
+                    return map[mode] || mode;
+                },
+                downloadQRCode(type) {
+                    try {
+                        let qrCodeUrl = '';
+                        let fileName = '';
+                        
+                        if (type === 'limited') {
+                            qrCodeUrl = this.form.registration.limited.qrCode;
+                            fileName = `限定式报名二维码_${this.form.name}.png`;
+                        } else if (type === 'open') {
+                            qrCodeUrl = this.form.registration.open.qrCode;
+                            fileName = `开放式报名二维码_${this.form.name}.png`;
+                        } else if (type === 'import') {
+                            qrCodeUrl = this.form.registration.import.qrCode;
+                            fileName = `导入式报名签到二维码_${this.form.name}.png`;
+                        }
+                        
+                        if (!qrCodeUrl) {
+                            this.$showToast('二维码未生成，请先创建会议', 'warning');
+                            return;
+                        }
+                        
+                        // 创建下载链接
+                        const link = document.createElement('a');
+                        link.href = qrCodeUrl;
+                        link.download = fileName;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        this.$showToast('二维码已下载', 'success');
+                    } catch (error) {
+                        console.error('下载二维码失败:', error);
+                        this.$showToast('下载二维码失败，请重试', 'error');
+                    }
+                },
+                
+                copyQRCodeLink(type) {
+                    try {
+                        let qrCodeUrl = '';
+                        
+                        if (type === 'limited') {
+                            qrCodeUrl = this.form.registration.limited.qrCodeUrl;
+                        } else if (type === 'open') {
+                            qrCodeUrl = this.form.registration.open.qrCodeUrl;
+                        } else if (type === 'import') {
+                            qrCodeUrl = this.form.registration.import.qrCodeUrl;
+                        }
+                        
+                        if (!qrCodeUrl) {
+                            this.$showToast('报名链接未生成，请先创建会议', 'warning');
+                            return;
+                        }
+                        
+                        // 使用Clipboard API复制链接
+                        navigator.clipboard.writeText(qrCodeUrl).then(() => {
+                            this.$showToast('链接已复制到剪贴板', 'success');
+                        }).catch(() => {
+                            // 备用方案：使用旧API
+                            const textarea = document.createElement('textarea');
+                            textarea.value = qrCodeUrl;
+                            document.body.appendChild(textarea);
+                            textarea.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(textarea);
+                            this.$showToast('链接已复制到剪贴板', 'success');
+                        });
+                    } catch (error) {
+                        console.error('复制链接失败:', error);
+                        this.$showToast('复制链接失败，请重试', 'error');
+                    }
+                },
+                
+                // 生成二维码图像（使用QRCode库）
+                async generateQRCodeImage(url) {
+                    return new Promise((resolve) => {
+                        try {
+                            // 二维码库缺失时直接回退到在线二维码URL
+                            if (!window.QRCode || typeof QRCode.toCanvas !== 'function') {
+                                console.log('QRCode库未加载，使用在线API生成二维码');
+                                resolve(this.getQRCodeUrl(url));
+                                return;
+                            }
+
+                            // 创建临时canvas
+                            const canvas = document.createElement('canvas');
+                            QRCode.toCanvas(canvas, url, {
+                                errorCorrectionLevel: 'H',
+                                type: 'image/png',
+                                quality: 0.95,
+                                margin: 1,
+                                width: 200,
+                                color: {
+                                    dark: '#000000',
+                                    light: '#FFFFFF'
+                                }
+                            }, (error) => {
+                                if (error) {
+                                    console.warn('QRCode库生成失败:', error);
+                                    resolve(this.getQRCodeUrl(url));
+                                } else {
+                                    const qrCodeDataUrl = canvas.toDataURL('image/png');
+                                    resolve(qrCodeDataUrl);
+                                }
+                            });
+                        } catch (error) {
+                            console.warn('生成二维码发生异常:', error);
+                            resolve(this.getQRCodeUrl(url));
+                        }
+                    });
+                },
+                
+                // 使用开放API作为备用方案生成二维码
+                getQRCodeUrl(text) {
+                    // 使用QR Server API（无需认证）
+                    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`;
+                },
+                
+                // 生成安全令牌（使用crypto API提高安全性）
+                generateSecureToken() {
+                    const timestamp = Date.now().toString(36);
+                    let randomStr;
+                    if (window.crypto && window.crypto.getRandomValues) {
+                        const arr = new Uint8Array(12);
+                        window.crypto.getRandomValues(arr);
+                        randomStr = Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+                    } else {
+                        randomStr = Math.random().toString(36).substring(2, 15);
+                    }
+                    return `${timestamp}_${randomStr}`;
+                },
+                
+                // 编辑模式：从后端加载会议数据
+                async loadConferenceForEdit(conferenceId) {
+                    try {
+                        const token = localStorage.getItem('authToken') || localStorage.getItem('token') || '';
+                        const tenantId = localStorage.getItem('tenantId') || '';
+                        
+                        if (!token) {
+                            alert('请先登录系统');
+                            window.location.href = 'login.html';
+                            return;
+                        }
+                        
+                        const response = await fetch(`/api/meeting/${conferenceId}`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json',
+                                'X-Tenant-Id': tenantId
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            if (response.status === 401) {
+                                alert('登录已过期，请重新登录');
+                                window.location.href = 'login.html';
+                                return;
+                            }
+                            throw new Error(`获取会议详情失败: ${response.status}`);
+                        }
+                        
+                        const result = await response.json();
+                        const meeting = (result.code === 200 || result.code === 0) ? result.data : null;
+                        
+                        if (!meeting) {
+                            throw new Error(result.message || '会议数据为空');
+                        }
+                        
+                        console.log('加载编辑会议数据:', meeting);
+                        
+                        // 提取日期部分（yyyy-MM-dd）
+                        const extractDate = (dateTimeStr) => {
+                            if (!dateTimeStr) return '';
+                            return dateTimeStr.substring(0, 10);
+                        };
+                        
+                        // 解析 JSON 配置字段
+                        let regConfig = {};
+                        let checkinConfig = {};
+                        let notifConfig = {};
+                        try { regConfig = meeting.registrationConfig ? JSON.parse(meeting.registrationConfig) : {}; } catch(e) { console.warn('解析registrationConfig失败', e); }
+                        try { checkinConfig = meeting.checkinConfig ? JSON.parse(meeting.checkinConfig) : {}; } catch(e) { console.warn('解析checkinConfig失败', e); }
+                        try { notifConfig = meeting.notificationConfig ? JSON.parse(meeting.notificationConfig) : {}; } catch(e) { console.warn('解析notificationConfig失败', e); }
+                        
+                        // 填充表单数据
+                        this.form.code = meeting.meetingCode || '';
+                        this.form.name = meeting.meetingName || '';
+                        this.form.type = meeting.meetingType || 'training';
+                        this.form.theme = meeting.theme || '';
+                        this.form.description = meeting.description || '';
+                        this.form.startDate = extractDate(meeting.startTime);
+                        this.form.endDate = extractDate(meeting.endTime);
+                        this.form.coverImage = meeting.coverImageUrl || null;
+                        
+                        // 地点信息
+                        this.form.location.venue = meeting.venueName || '';
+                        this.form.location.fullAddress = meeting.venueAddress || '';
+                        this.form.location.address = meeting.venueAddress || '';
+                        this.form.location.latitude = meeting.locationLatitude || '';
+                        this.form.location.longitude = meeting.locationLongitude || '';
+                        
+                        // 报名配置
+                        if (regConfig.mode) this.form.registration.mode = regConfig.mode;
+                        if (regConfig.auditMode) this.form.registration.auditMode = regConfig.auditMode;
+                        if (regConfig.formFields && regConfig.formFields.length > 0) {
+                            this.form.registration.formFields = regConfig.formFields;
+                        }
+                        this.form.registration.startTime = meeting.registrationStart || '';
+                        this.form.registration.endTime = meeting.registrationEnd || '';
+                        if (regConfig.limitTotal !== undefined && this.form.registration.open) {
+                            this.form.registration.open.limitTotal = regConfig.limitTotal;
+                        }
+                        if (meeting.maxParticipants && this.form.registration.open) {
+                            this.form.registration.open.maxCount = meeting.maxParticipants;
+                        }
+                        
+                        // 签到配置
+                        if (checkinConfig.mode) this.form.checkin.mode = checkinConfig.mode;
+                        if (checkinConfig.startTime) this.form.checkin.startTime = checkinConfig.startTime;
+                        if (checkinConfig.endTime) this.form.checkin.endTime = checkinConfig.endTime;
+                        if (checkinConfig.location) {
+                            Object.assign(this.form.checkin.location, checkinConfig.location);
+                        }
+                        
+                        // 通知配置
+                        if (notifConfig.channels) this.form.notification.channels = notifConfig.channels;
+                        if (notifConfig.templates) this.form.notification.templates = { ...this.form.notification.templates, ...notifConfig.templates };
+                        
+                        // 加载已有工作人员列表
+                        try {
+                            const staffResp = await fetch(`/api/registration/staff/list?meetingId=${conferenceId}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json',
+                                    'X-Tenant-Id': tenantId
+                                }
+                            });
+                            if (staffResp.ok) {
+                                const staffResult = await staffResp.json();
+                                if ((staffResult.code === 200 || staffResult.code === 0) && Array.isArray(staffResult.data)) {
+                                    this.staffList = staffResult.data.map(s => {
+                                        // 解析权限：可能是对象、JSON字符串或null
+                                        let perms = s.permissions;
+                                        if (typeof perms === 'string') {
+                                            try { perms = JSON.parse(perms); } catch(e) { perms = null; }
+                                        }
+                                        const defaultPerms = {
+                                            participantManagement: false,
+                                            seatManagement: false,
+                                            taskPublish: false,
+                                            scheduleManagement: false,
+                                            checkinManagement: false,
+                                            materialManagement: false,
+                                            notificationManagement: false,
+                                            dataExport: false
+                                        };
+                                        return {
+                                            id: String(s.staffId || s.staff_id || s.id),
+                                            name: s.staffName || s.staff_name || '',
+                                            phone: s.staffPhone || s.staff_phone || '',
+                                            position: s.role === 0 ? '工作人员' : '管理员',
+                                            avatar: '',
+                                            permissions: Object.assign({}, defaultPerms, perms || {})
+                                        };
+                                    });
+                                    console.log(`已加载 ${this.staffList.length} 位工作人员`);
+                                }
+                            }
+                        } catch (staffErr) {
+                            console.warn('加载工作人员列表失败:', staffErr);
+                        }
+                        
+                        // 编辑模式：跳转到目标步骤（URL step 参数）或默认第1步
+                        if (this._editTargetStep && this._editTargetStep >= 1 && this._editTargetStep <= 6) {
+                            this.currentStep = this._editTargetStep;
+                            console.log('编辑模式跳转到步骤:', this._editTargetStep);
+                        } else {
+                            this.currentStep = 1;
+                        }
+                        
+                        console.log('会议数据加载完成，编辑模式就绪');
+                    } catch (error) {
+                        console.error('加载会议数据失败:', error);
+                        alert('加载会议数据失败: ' + error.message);
+                    }
+                },
+                
+                async createConference() {
+                    // 最终验证
+                    if (!await this.validateCurrentStep()) {
+                        return;
+                    }
+                    
+                    // 确认操作
+                    const confirmMsg = this.isEditMode 
+                        ? '确定要保存修改吗？'
+                        : '确定要创建会议吗？创建后将自动初始化所有关联系统。';
+                    const confirmTitle = this.isEditMode ? '保存修改' : '创建会议';
+                    const confirmed = await this.$showConfirm(
+                        confirmMsg,
+                        confirmTitle,
+                        'info'
+                    );
+                    
+                    if (!confirmed) {
+                        return;
+                    }
+                    
+                    try {
+                        this.$showLoading(this.isEditMode ? '正在保存修改，请稍候...' : '正在创建会议，请稍候...');
+                        
+                        // 模拟API调用
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        
+                        const conferenceId = this.generateConferenceId();
+                        
+                        // 生成限定式报名二维码（如果启用）
+                        if (this.form.registration.mode === 'limited' && this.form.registration.limited.generateQRCode) {
+                            try {
+                                // 生成二维码令牌（用于后续验证）
+                                this.form.registration.limited.qrCodeToken = this.generateSecureToken();
+                                
+                                // 生成报名链接
+                                const baseUrl = window.location.origin;
+                                this.form.registration.limited.qrCodeUrl = `${baseUrl}/registration/limited?conferenceId=${conferenceId}&token=${this.form.registration.limited.qrCodeToken}`;
+                                
+                                // 生成二维码图像
+                                this.$showLoading('正在创建会议并生成二维码...');
+                                this.form.registration.limited.qrCode = await this.generateQRCodeImage(this.form.registration.limited.qrCodeUrl);
+                            } catch (qrError) {
+                                console.warn('二维码生成失败:', qrError);
+                                // 使用备用API生成二维码
+                                this.form.registration.limited.qrCode = this.getQRCodeUrl(this.form.registration.limited.qrCodeUrl);
+                            }
+                        }
+                        
+                        // 生成开放式报名二维码（如果启用）
+                        if (this.form.registration.mode === 'open' && this.form.registration.open.generateQRCode) {
+                            try {
+                                // 生成二维码令牌（用于后续验证）
+                                this.form.registration.open.qrCodeToken = this.generateSecureToken();
+                                
+                                // 生成报名链接
+                                const baseUrl = window.location.origin;
+                                this.form.registration.open.qrCodeUrl = `${baseUrl}/registration/open?conferenceId=${conferenceId}&token=${this.form.registration.open.qrCodeToken}`;
+                                
+                                // 生成二维码图像
+                                this.form.registration.open.qrCode = await this.generateQRCodeImage(this.form.registration.open.qrCodeUrl);
+                            } catch (qrError) {
+                                console.warn('开放式报名二维码生成失败:', qrError);
+                                // 使用备用API生成二维码（链接已在上面设置）
+                                this.form.registration.open.qrCode = this.getQRCodeUrl(this.form.registration.open.qrCodeUrl);
+                            }
+                        }
+                        
+                        // 生成导入式报名签到二维码（如果启用）
+                        if (this.form.registration.mode === 'import' && this.form.registration.import.generateQRCode) {
+                            try {
+                                // 生成二维码令牌（用于后续验证）
+                                this.form.registration.import.qrCodeToken = this.generateSecureToken();
+                                
+                                // 生成签到链接
+                                const baseUrl = window.location.origin;
+                                this.form.registration.import.qrCodeUrl = `${baseUrl}/registration/checkin?conferenceId=${conferenceId}&token=${this.form.registration.import.qrCodeToken}`;
+                                
+                                // 生成二维码图像
+                                this.form.registration.import.qrCode = await this.generateQRCodeImage(this.form.registration.import.qrCodeUrl);
+                            } catch (qrError) {
+                                console.warn('导入式报名签到二维码生成失败:', qrError);
+                                // 使用备用API生成二维码
+                                this.form.registration.import.qrCode = this.getQRCodeUrl(this.form.registration.import.qrCodeUrl);
+                            }
+                        }
+                        
+                        // 处理封面图：避免发送超长 base64 导致后端字段超长
+                        const rawCoverImage = this.form.coverImage || '';
+                        const normalizedCoverImage = (typeof rawCoverImage === 'string'
+                            && rawCoverImage.startsWith('data:image/'))
+                            ? ''
+                            : rawCoverImage;
+
+                        // 构建请求数据
+                        const meetingRequest = {
+                            meetingCode: this.form.code,
+                            meetingName: this.form.name,
+                            meetingType: this.form.type,
+                            theme: this.form.theme,
+                            description: this.form.description,
+                            startTime: this.convertToDateTime(this.form.startDate, '09:00'),
+                            endTime: this.convertToDateTime(this.form.endDate, '17:00'),
+                            registrationStart: this.form.registration.startTime,
+                            registrationEnd: this.form.registration.endTime,
+                            venueName: this.form.location.venue,
+                            venueAddress: this.form.location.fullAddress,
+                            locationLatitude: parseFloat(this.form.location.latitude),
+                            locationLongitude: parseFloat(this.form.location.longitude),
+                            coverImageUrl: normalizedCoverImage,
+                            maxParticipants: this.form.registration.open?.maxCount || 1000,
+                            registrationConfig: JSON.stringify({
+                                mode: this.form.registration.mode,
+                                auditMode: this.form.registration.auditMode,
+                                formFields: this.form.registration.formFields,
+                                limitTotal: this.form.registration.open?.limitTotal
+                            }),
+                            checkinConfig: JSON.stringify({
+                                mode: this.form.checkin.mode,
+                                startTime: this.form.checkin.startTime,
+                                endTime: this.form.checkin.endTime,
+                                location: this.form.checkin.location
+                            }),
+                            notificationConfig: JSON.stringify({
+                                channels: this.form.notification.channels,
+                                templates: this.form.notification.templates
+                            })
+                        };
+
+                        console.log(this.isEditMode ? '更新会议请求:' : '创建会议请求:', meetingRequest);
+                        
+                        // 获取租户ID和Token（从AuthService统一存储位置）
+                        const token = localStorage.getItem('authToken') || localStorage.getItem('token') || '';
+                        const tenantId = localStorage.getItem('tenantId') || ''; // 使用默认租户ID
+                        
+                        // 检查是否登录
+                        if (!token) {
+                            this.$showToast('请先登录系统', 'error');
+                            setTimeout(() => {
+                                window.location.href = 'login.html';
+                            }, 2000);
+                            return;
+                        }
+                        
+                        // 根据模式选择 API：编辑模式用 PUT，新建模式用 POST
+                        const apiUrl = this.isEditMode 
+                            ? `/api/meeting/${this.editConferenceId}`
+                            : '/api/meeting/create';
+                        const httpMethod = this.isEditMode ? 'PUT' : 'POST';
+                        
+                        const response = await fetch(apiUrl, {
+                            method: httpMethod,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`,
+                                'X-Tenant-Id': tenantId || localStorage.getItem('tenantId') || ''
+                            },
+                            body: JSON.stringify(meetingRequest)
+                        });
+
+                        if (!response.ok) {
+                            if (response.status === 401) {
+                                this.$showToast('请先登录系统', 'error');
+                                // 3秒后跳转登录页
+                                setTimeout(() => {
+                                    window.location.href = 'login.html';
+                                }, 3000);
+                            }
+                            throw new Error(`API 错误: ${response.status} ${response.statusText}`);
+                        }
+
+                        const result = await response.json();
+                        
+                        const isApiSuccess = result && (result.code === 200 || result.code === 0);
+                        
+                        if (this.isEditMode) {
+                            // 编辑模式：PUT 返回 Boolean
+                            if (isApiSuccess) {
+                                console.log('会议更新成功');
+                                
+                                // 编辑模式：始终同步工作人员（包括全部移除的情况）
+                                try {
+                                    const staffPayload = {
+                                        meetingId: this.editConferenceId,
+                                        staffList: (this.staffList || []).map(staff => ({
+                                            staffId: staff.id,
+                                            staffName: staff.name,
+                                            staffPhone: staff.phone,
+                                            role: 0,
+                                            permissions: staff.permissions
+                                        }))
+                                    };
+                                    await fetch('/api/registration/staff/save', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': `Bearer ${token}`,
+                                            'X-Tenant-Id': tenantId || localStorage.getItem('tenantId') || ''
+                                        },
+                                        body: JSON.stringify(staffPayload)
+                                    });
+                                    console.log('工作人员已同步保存');
+                                    
+                                    // 同步工作人员群成员
+                                    await this.syncStaffGroupMembers(this.editConferenceId, this.staffList);
+                                } catch (staffError) {
+                                    console.warn('保存工作人员失败:', staffError);
+                                }
+                                
+                                localStorage.removeItem('conferenceDraft');
+                                this.$hideLoading();
+                                this.$showToast('会议修改成功！正在跳转...', 'success', 2000);
+                                setTimeout(() => {
+                                    window.location.href = `conference-detail.html?conferenceId=${this.editConferenceId}`;
+                                }, 2000);
+                            } else {
+                                throw new Error((result && result.message) || '更新会议失败');
+                            }
+                        } else if (isApiSuccess && result.data) {
+                            const createdMeeting = result.data;
+                            console.log('会议创建成功:', createdMeeting);
+                            
+                            // 如果有工作人员，批量保存到 conf_meeting_staff
+                            if (this.staffList && this.staffList.length > 0) {
+                                try {
+                                    const staffPayload = {
+                                        meetingId: createdMeeting.id,
+                                        staffList: this.staffList.map(staff => ({
+                                            staffId: staff.id,
+                                            staffName: staff.name,
+                                            staffPhone: staff.phone,
+                                            role: 0,
+                                            permissions: staff.permissions
+                                        }))
+                                    };
+                                    await fetch('/api/registration/staff/save', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': `Bearer ${token}`,
+                                            'X-Tenant-Id': tenantId || localStorage.getItem('tenantId') || ''
+                                        },
+                                        body: JSON.stringify(staffPayload)
+                                    });
+                                    console.log('工作人员已保存到数据库');
+                                    
+                                    // 自动创建工作人员群
+                                    try {
+                                        if (typeof GroupAPI !== 'undefined') {
+                                            const staffGroupData = {
+                                                groupName: `${this.form.name}-工作人员群`,
+                                                groupType: 'staff',
+                                                conferenceId: createdMeeting.id,
+                                                description: `会议"${this.form.name}"的工作人员沟通群`,
+                                                members: this.staffList.map(s => ({
+                                                    userId: s.id,
+                                                    userName: s.name,
+                                                    role: 'member'
+                                                }))
+                                            };
+                                            await GroupAPI.createGroup(staffGroupData);
+                                            console.log('工作人员群已自动创建');
+                                        }
+                                    } catch (groupErr) {
+                                        console.warn('自动创建工作人员群失败:', groupErr);
+                                    }
+                                } catch (staffError) {
+                                    console.warn('保存工作人员失败:', staffError);
+                                    // 不中断主流程，继续跳转
+                                }
+                            }
+                            
+                            // 清除草稿
+                            localStorage.removeItem('conferenceDraft');
+                            
+                            this.$hideLoading();
+                            this.$showToast('会议创建成功！正在跳转...', 'success', 2000);
+                            
+                            setTimeout(() => {
+                                window.location.href = `conference-detail.html?conferenceId=${createdMeeting.id}`;
+                            }, 2000);
+                        } else {
+                            throw new Error((result && result.message) || '创建会议失败');
+                        }
+                    } catch (error) {
+                        this.$hideLoading();
+                        console.error(this.isEditMode ? '更新会议失败:' : '创建会议失败:', error);
+                        this.$showToast(this.isEditMode ? '保存修改失败，请重试' : '创建会议失败，请重试', 'error');
+                    }
+                },
+                convertToDateTime(dateStr, timeStr = '09:00') {
+                    // 将日期字符串转换为 ISO 格式日期时间
+                    if (!dateStr) return '';
+                    const [year, month, day] = dateStr.split('-');
+                    const [hour, minute] = timeStr.split(':');
+                    return `${year}-${month}-${day}T${hour}:${minute}:00`;
+                },
+                
+                /**
+                 * 同步工作人员群成员：查找该会议的工作人员群，全量替换成员
+                 */
+                async syncStaffGroupMembers(conferenceId, staffList) {
+                    try {
+                        if (typeof GroupAPI === 'undefined') return;
+                        
+                        // 查找已有的工作人员群
+                        const groups = await GroupAPI.listGroups(conferenceId);
+                        const staffGroup = (Array.isArray(groups) ? groups : []).find(
+                            g => g.groupType === 'staff' || (g.groupName && g.groupName.includes('工作人员群'))
+                        );
+                        
+                        if (!staffGroup) {
+                            // 群不存在则创建
+                            if (staffList && staffList.length > 0) {
+                                await GroupAPI.createGroup({
+                                    groupName: `${this.form.name || '会议'}-工作人员群`,
+                                    groupType: 'staff',
+                                    conferenceId: conferenceId,
+                                    description: `会议"${this.form.name}"的工作人员沟通群`,
+                                    members: staffList.map(s => ({
+                                        userId: s.id, userName: s.name, role: 'member'
+                                    }))
+                                });
+                                console.log('[SyncGroup] 工作人员群已新建');
+                            }
+                            return;
+                        }
+                        
+                        // 群已存在，获取当前成员并做差量同步
+                        const currentMembers = await GroupAPI.getMembers(staffGroup.id);
+                        const currentIds = new Set((Array.isArray(currentMembers) ? currentMembers : []).map(m => String(m.userId || m.id)));
+                        const newIds = new Set((staffList || []).map(s => String(s.id)));
+                        
+                        // 移除不再需要的成员
+                        for (const cm of (Array.isArray(currentMembers) ? currentMembers : [])) {
+                            const cmId = String(cm.userId || cm.id);
+                            if (!newIds.has(cmId)) {
+                                await GroupAPI.removeMember(staffGroup.id, cmId);
+                            }
+                        }
+                        
+                        // 添加新成员
+                        const toAdd = (staffList || []).filter(s => !currentIds.has(String(s.id)));
+                        if (toAdd.length > 0) {
+                            await GroupAPI.batchAddMembers(staffGroup.id, toAdd.map(s => ({
+                                userId: s.id, userName: s.name, role: 'member'
+                            })));
+                        }
+                        
+                        console.log(`[SyncGroup] 工作人员群已同步: 移除${[...currentIds].filter(id => !newIds.has(id)).length}人, 新增${toAdd.length}人`);
+                    } catch (err) {
+                        console.warn('[SyncGroup] 同步工作人员群失败:', err);
+                    }
+                },
+                
+                generateConferenceId() {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    return `conf_${year}${month}${day}_${random}`;
+                },
+                saveDraft() {
+                    const draft = {
+                        currentStep: this.currentStep,
+                        form: this.form,
+                        staffList: this.staffList,
+                        savedAt: new Date().toISOString()
+                    };
+                    localStorage.setItem('conferenceDraft', JSON.stringify(draft));
+                    this.$showToast('草稿已保存', 'success');
+                },
+                
+                initSampleData() {
+                    // 设置示例日期（明天开始，3天后结束）
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const endDate = new Date(tomorrow);
+                    endDate.setDate(endDate.getDate() + 2);
+                    
+                    // 格式化日期为 YYYY-MM-DD
+                    const formatDate = (date) => {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                    };
+                    
+                    // 格式化日期时间为 YYYY-MM-DDTHH:mm
+                    const formatDateTime = (date, hour = 9, minute = 0) => {
+                        const dateStr = formatDate(date);
+                        const hourStr = String(hour).padStart(2, '0');
+                        const minuteStr = String(minute).padStart(2, '0');
+                        return `${dateStr}T${hourStr}:${minuteStr}`;
+                    };
+                    
+                    // 基本信息示例数据
+                    this.form.name = '2024年度智能会议系统培训会议';
+                    this.form.type = 'training';
+                    this.form.theme = '智能会议系统应用与实践';
+                    this.form.startDate = formatDate(tomorrow);
+                    this.form.endDate = formatDate(endDate);
+                    this.form.location.fullAddress = '北京国际会议中心 - 北京市朝阳区北四环东路8号';
+                    this.form.location.venue = '北京国际会议中心';
+                    this.form.location.address = '北京市朝阳区北四环东路8号';
+                    this.form.location.latitude = '39.9819';
+                    this.form.location.longitude = '116.4247';
+                    this.form.description = '本次培训会议旨在帮助参会人员掌握智能会议系统的使用方法，提升会议管理效率。';
+
+                    // 自动生成会议编号
+                    this.generateCode();
+
+                    // 报名设置示例数据
+                    this.form.registration.mode = 'open';
+                    const registrationStartDate = new Date(tomorrow.getTime() - 7 * 24 * 60 * 60 * 1000); // 7天前开始报名
+                    this.form.registration.startTime = formatDateTime(registrationStartDate, 9, 0);
+                    this.form.registration.endTime = formatDateTime(tomorrow, 8, 0); // 会议开始前一天截止
+                    this.form.registration.auditMode = 'required';
+                    this.form.registration.open.limitTotal = true;
+                    this.form.registration.open.maxCount = 200;
+                    
+                    // 报到设置示例数据
+                    this.form.checkin.mode = 'qrcode';
+                    this.form.checkin.startTime = formatDateTime(tomorrow, 8, 0);
+                    this.form.checkin.endTime = formatDateTime(tomorrow, 9, 30);
+                    this.form.checkin.location.address = '北京市朝阳区会议中心主入口';
+                    this.form.checkin.location.latitude = '39.9042';
+                    this.form.checkin.location.longitude = '116.4074';
+                    this.form.checkin.location.radius = 200;
+                    
+                    // 通知设置示例数据
+                    this.form.notification.channels = ['app', 'sms'];
+                    this.form.notification.templates = {
+                        meeting: {
+                            content: '尊敬的参会人员，您好！\n\n会议/培训名称：{{conferenceName}}\n会议时间：{{startDate}} 至 {{endDate}}\n会议地点：{{location}}\n\n请准时参加，谢谢！'
+                        },
+                        registration: {
+                            content: '您好！\n\n您已成功报名参加"{{conferenceName}}"会议。\n报名时间：{{registrationTime}}\n\n请等待审核结果，审核通过后将收到确认通知。'
+                        },
+                        checkin: {
+                            content: '您好！\n\n"{{conferenceName}}"会议即将开始。\n报到时间：{{checkinStartTime}}\n报到地点：{{checkinLocation}}\n\n请携带有效证件准时报到。'
+                        },
+                        schedule: {
+                            content: '提醒：\n\n"{{scheduleTitle}}"即将开始。\n时间：{{scheduleStartTime}}\n地点：{{scheduleLocation}}\n\n请准时参加。'
+                        }
+                    };
+
+                    // 确保formFields被正确初始化
+                    console.log('初始化formFields:', this.form.registration.formFields);
+                },
+                // ===== 地图选点相关方法 =====
+                showLocationPicker() {
+                    this.mapPickerType = 'location';
+                    this.showMapModal = true;
+                    this.$nextTick(() => {
+                        this.initMap();
+                    });
+                },
+                showCheckInLocationPicker() {
+                    this.mapPickerType = 'checkin';
+                    this.showMapModal = true;
+                    this.$nextTick(() => {
+                        this.initMap();
+                    });
+                },
+                closeMapModal() {
+                    this.showMapModal = false;
+                    this.searchResults = [];
+                    this.mapSearchKeyword = '';
+                },
+                initMap() {
+                    if (!window.AMap) {
+                        console.warn('高德地图API未加载，使用手工输入地址');
+                        this.$showToast('地图不可用，请手工输入地址', 'warning');
+                        return;
+                    }
+
+                    // 创建地图实例
+                    this.map = new AMap.Map('mapContainer', {
+                        zoom: 13,
+                        center: [116.397428, 39.90923], // 北京天安门
+                        viewMode: '3D',
+                        showLabel: true
+                    });
+
+                    // 添加工具条
+                    this.map.addControl(new AMap.ToolBar());
+                    this.map.addControl(new AMap.Scale());
+
+                    // 初始化地理编码服务
+                    this.geocoder = new AMap.Geocoder();
+                    this.placeSearch = new AMap.PlaceSearch({
+                        city: '全国'
+                    });
+
+                    // 地图点击事件
+                    this.map.on('click', (e) => {
+                        this.onMapClick(e);
+                    });
+
+                    // 如果已有坐标，定位到该位置
+                    if (this.form.location.latitude && this.form.location.longitude) {
+                        const lng = parseFloat(this.form.location.longitude);
+                        const lat = parseFloat(this.form.location.latitude);
+                        this.map.setCenter([lng, lat]);
+                        this.addMarker(lng, lat);
+                    }
+                },
+                onMapClick(e) {
+                    const lng = e.lnglat.getLng();
+                    const lat = e.lnglat.getLat();
+
+                    // 添加或更新标记
+                    this.addMarker(lng, lat);
+
+                    // 逆地理编码获取地址
+                    this.geocoder.getAddress([lng, lat], (status, result) => {
+                        if (status === 'complete' && result.info === 'OK') {
+                            const address = result.regeocode.formattedAddress;
+                            this.selectedLocation = {
+                                name: address.split('(')[0].trim(),
+                                address: address,
+                                lng: lng.toFixed(6),
+                                lat: lat.toFixed(6)
+                            };
+                        } else {
+                            this.selectedLocation = {
+                                name: '选中的位置',
+                                address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+                                lng: lng.toFixed(6),
+                                lat: lat.toFixed(6)
+                            };
+                        }
+                    });
+                },
+                addMarker(lng, lat) {
+                    if (this.marker) {
+                        this.marker.setPosition([lng, lat]);
+                    } else {
+                        this.marker = new AMap.Marker({
+                            position: [lng, lat],
+                            title: '会议地点'
+                        });
+                        this.marker.setMap(this.map);
+                    }
+                },
+                searchLocation() {
+                    if (!this.mapSearchKeyword.trim()) {
+                        this.$showToast('请输入搜索关键词', 'warning');
+                        return;
+                    }
+
+                    this.placeSearch.search(this.mapSearchKeyword, (status, result) => {
+                        if (status === 'complete' && result.info === 'OK') {
+                            this.searchResults = result.poiList.pois.map(poi => ({
+                                name: poi.name,
+                                address: poi.address,
+                                lng: poi.location.lng.toFixed(6),
+                                lat: poi.location.lat.toFixed(6)
+                            }));
+
+                            if (this.searchResults.length > 0) {
+                                // 自动定位到第一个搜索结果
+                                const first = this.searchResults[0];
+                                this.map.setCenter([first.lng, first.lat]);
+                                this.map.setZoom(15);
+                                this.addMarker(parseFloat(first.lng), parseFloat(first.lat));
+                            }
+                        } else {
+                            this.searchResults = [];
+                            this.$showToast('未找到相关地点，请尝试其他关键词', 'warning');
+                        }
+                    });
+                },
+                selectSearchResult(result) {
+                    this.selectedLocation = result;
+                    const lng = parseFloat(result.lng);
+                    const lat = parseFloat(result.lat);
+
+                    this.map.setCenter([lng, lat]);
+                    this.map.setZoom(15);
+                    this.addMarker(lng, lat);
+
+                    // 清空搜索结果
+                    this.searchResults = [];
+                    this.mapSearchKeyword = '';
+                },
+                confirmLocation() {
+                    if (!this.selectedLocation) {
+                        this.$showToast('请先选择地点', 'warning');
+                        return;
+                    }
+
+                    // 根据类型更新不同的表单字段
+                    if (this.mapPickerType === 'location') {
+                        // 更新会议地点
+                        this.form.location.fullAddress = this.selectedLocation.name + ' - ' + this.selectedLocation.address;
+                        this.form.location.venue = this.selectedLocation.name;
+                        this.form.location.address = this.selectedLocation.address;
+                        this.form.location.latitude = this.selectedLocation.lat;
+                        this.form.location.longitude = this.selectedLocation.lng;
+                    } else if (this.mapPickerType === 'checkin') {
+                        // 更新报到地址
+                        this.form.checkin.location.address = this.selectedLocation.name + ' - ' + this.selectedLocation.address;
+                        this.form.checkin.location.latitude = this.selectedLocation.lat;
+                        this.form.checkin.location.longitude = this.selectedLocation.lng;
+                    }
+
+                    // 关闭弹窗
+                    this.closeMapModal();
+
+                    this.$showToast('地点已选择', 'success');
+                },
+                getDefaultAvatar(name) {
+                    const ch = (name && String(name).trim().charAt(0)) || '人';
+                    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='100%' height='100%' rx='48' ry='48' fill='%23667eea'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-size='42' fill='white' font-family='Arial'>${ch}</text></svg>`;
+                    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+                },
+                getNavigationUrl() {
+                    if (!this.form.location.latitude || !this.form.location.longitude) {
+                        return '#';
+                    }
+
+                    const lat = this.form.location.latitude;
+                    const lng = this.form.location.longitude;
+                    const name = encodeURIComponent(this.form.location.venue || '会议地点');
+
+                    // 返回高德地图导航链接
+                    return `https://uri.amap.com/navigation?to=${lng},${lat},${name}&mode=car&coordinate=gaode&callnative=1`;
+                },
+                getCheckInNavigationUrl() {
+                    if (!this.form.checkin.location.latitude || !this.form.checkin.location.longitude) {
+                        return '#';
+                    }
+
+                    const lat = this.form.checkin.location.latitude;
+                    const lng = this.form.checkin.location.longitude;
+                    const name = encodeURIComponent('报到地点');
+
+                    // 返回高德地图导航链接
+                    return `https://uri.amap.com/navigation?to=${lng},${lat},${name}&mode=car&coordinate=gaode&callnative=1`;
+                },
+                // 高亮显示必填字段
+                highlightRequiredFields() {
+                    // 移除之前的高亮
+                    document.querySelectorAll('.required-highlight').forEach(el => {
+                        el.classList.remove('required-highlight');
+                    });
+
+                    // 根据当前步骤高亮未填写的必填字段
+                    const step = this.currentStep;
+                    let selector = '';
+
+                    if (step === 1) {
+                        // 基本信息
+                        if (!this.form.name) {
+                            selector += 'input[v-model="form.name"], ';
+                        }
+                        if (!this.form.startDate) {
+                            selector += 'input[v-model="form.startDate"], ';
+                        }
+                        if (!this.form.endDate) {
+                            selector += 'input[v-model="form.endDate"], ';
+                        }
+                        if (!this.form.location.fullAddress) {
+                            selector += '.location-input-group input, ';
+                        }
+                    } else if (step === 2) {
+                        // 报名设置
+                        if (!this.form.registration.mode) {
+                            selector += 'select[v-model="form.registration.mode"], ';
+                        }
+                        if (!this.form.registration.startTime) {
+                            selector += 'input[v-model="form.registration.startTime"], ';
+                        }
+                        if (!this.form.registration.endTime) {
+                            selector += 'input[v-model="form.registration.endTime"], ';
+                        }
+                    } else if (step === 4) {
+                        // 报到设置
+                        if (!this.form.checkin.mode) {
+                            selector += '.mode-option input, ';
+                        }
+                        if (!this.form.checkin.startTime) {
+                            selector += 'input[v-model="form.checkin.startTime"], ';
+                        }
+                        if (!this.form.checkin.endTime) {
+                            selector += 'input[v-model="form.checkin.endTime"], ';
+                        }
+                        if (!this.form.checkin.location.address) {
+                            selector += '.checkin-location input[required], ';
+                        }
+                    } else if (step === 5) {
+                        // 通知设置
+                        if (this.form.notification.channels.length === 0) {
+                            selector += '.channel-option, ';
+                        }
+                    }
+
+                    // 添加高亮样式
+                    if (selector) {
+                        selector = selector.slice(0, -2); // 移除最后的逗号
+                        const elements = document.querySelectorAll(selector);
+                        elements.forEach(el => {
+                            el.classList.add('required-highlight');
+                            // 滚动到第一个未填写的字段
+                            if (elements.length > 0 && el === elements[0]) {
+                                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        });
+                    }
+                }
+            },
+            mounted() {
+                // 检查URL参数，判断是否为编辑模式
+                const urlParams = new URLSearchParams(window.location.search);
+                const conferenceId = urlParams.get('conferenceId');
+                const mode = urlParams.get('mode');
+                
+                if (conferenceId && mode === 'edit') {
+                    // 编辑模式：从后端加载会议数据
+                    this.isEditMode = true;
+                    this.editConferenceId = conferenceId;
+                    // 支持 step 参数：跳转到指定步骤
+                    const step = parseInt(urlParams.get('step'));
+                    if (step >= 1 && step <= 6) {
+                        this._editTargetStep = step;
+                    }
+                    this.loadConferenceForEdit(conferenceId);
+                    return;
+                }
+                
+                // 新建模式：优先加载草稿
+                const draft = localStorage.getItem('conferenceDraft');
+                if (draft) {
+                    try {
+                        const draftData = JSON.parse(draft);
+                        this.currentStep = draftData.currentStep || 1;
+                        this.form = { ...this.form, ...draftData.form };
+                        if (draftData.staffList) {
+                            this.staffList = draftData.staffList;
+                        }
+                        this.generateCode();
+
+                        // 确保formFields存在
+                        if (!this.form.registration.formFields || this.form.registration.formFields.length === 0) {
+                            this.form.registration.formFields = [
+                                { label: '姓名', type: 'text', required: true, placeholder: '请输入真实姓名' },
+                                { label: '性别', type: 'radio', required: true, options: ['男', '女'] },
+                                { label: '手机号码', type: 'mobile', required: true, placeholder: '请输入11位手机号码' },
+                                { label: '身份证号', type: 'idcard', required: true, placeholder: '请输入18位身份证号码' },
+                                { label: '工作单位', type: 'text', required: true, placeholder: '请输入完整单位名称' },
+                                { label: '职务', type: 'text', required: false, placeholder: '请输入职务' }
+                            ];
+                        }
+
+                        console.log('formFields:', this.form.registration.formFields);
+                        return; // 如果有草稿，不加载示例数据
+                    } catch (error) {
+                        console.error('加载草稿失败:', error);
+                    }
+                }
+            }
+        });
+
+        // 暂时移除mixin进行测试
+        // app.mixin(window.InteractionMixin);
+        const vm = app.mount('#app');
+
+        // 调试：检查app是否成功创建和挂载
+        console.log('Vue app mounted successfully');
+        console.log('currentStep:', vm?.currentStep ?? 'undefined');
+
+        // 更新调试面板
+        setTimeout(() => {
+            const stepSpan = document.getElementById('debug-step');
+            if (stepSpan) {
+                stepSpan.textContent = vm?.currentStep ?? 'undefined';
+                stepSpan.style.color = 'green';
+            }
+        }, 100);
+        console.log('=== 调试信息结束 ===');
+
+        // 将InteractionMixin的方法手动添加到app中
+        if (window.InteractionMixin && window.InteractionMixin.methods) {
+            Object.keys(window.InteractionMixin.methods).forEach(key => {
+                app.config.globalProperties[key] = window.InteractionMixin.methods[key];
+            });
+        }
+    </script>
+
+    <style>
+        .wizard-navigation {
+            margin-bottom: 2rem;
+        }
+        
+        .wizard-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            padding: 1rem 0;
+        }
+        
+        .wizard-steps::before {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 1;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .step.active .step-number {
+            background: #667eea;
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background: #10b981;
+            color: white;
+        }
+        
+        .step-label {
+            font-size: 0.85rem;
+            color: #666;
+            text-align: center;
+        }
+        
+        .step.active .step-label {
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        .step-content {
+            margin-bottom: 2rem;
+            padding: 2rem;
+        }
+
+        .step-content h3 {
+            margin-bottom: 2rem;
+            color: #333;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .input-with-button {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .input-with-button input {
+            flex: 1;
+        }
+
+        .input-with-button button {
+            white-space: nowrap;
+            min-width: 80px;
+        }
+        
+        .cover-upload-area {
+            padding: 3rem;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .cover-upload-area:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .cover-upload-area i {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .cover-preview {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .cover-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+        }
+        
+        .cover-preview button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+        
+        .schedules-list {
+            margin-bottom: 2rem;
+        }
+        
+        .schedule-item {
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .schedule-header h4 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .schedule-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .schedule-settings {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .schedule-settings-item {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px dashed rgba(255, 255, 255, 0.15);
+            background: rgba(102, 126, 234, 0.03);
+            padding: 1rem;
+            border-radius: 6px;
+        }
+
+        .schedule-settings-item h5 {
+            margin: 0 0 1rem 0;
+            color: #667eea;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .schedule-settings h4 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .mode-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .mode-option {
+            cursor: pointer;
+        }
+        
+        .mode-option input[type="radio"] {
+            display: none;
+        }
+        
+        .mode-card {
+            padding: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .mode-card i {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .mode-card h5 {
+            margin: 0.5rem 0;
+            color: #333;
+        }
+        
+        .mode-card p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .mode-option.active .mode-card {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .registration-config,
+        .registration-time,
+        .registration-audit,
+        .registration-form {
+            margin-bottom: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .file-upload-area {
+            padding: 2rem;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .file-upload-area i {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-hint {
+            font-size: 0.85rem;
+            color: #666;
+            margin: 0.5rem 0;
+        }
+        
+        .qrcode-preview {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        .qrcode-preview img {
+            max-width: 200px;
+            margin-bottom: 1rem;
+        }
+        
+        .unit-list,
+        .participant-list {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .qrcode-display {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(102, 126, 234, 0.08);
+            border-radius: 8px;
+            border: 1px dashed rgba(102, 126, 234, 0.3);
+        }
+
+        .qrcode-display h5 {
+            margin: 0 0 1rem 0;
+            color: #667eea;
+            font-size: 1rem;
+        }
+
+        .qrcode-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .qrcode-placeholder i {
+            font-size: 4rem;
+            color: rgba(102, 126, 234, 0.3);
+        }
+
+        .qrcode-placeholder p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .qrcode-hint {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-left: 3px solid #667eea;
+            border-radius: 4px;
+            margin: 0;
+            font-size: 0.85rem;
+            color: #667eea;
+        }
+
+        .qrcode-hint::before {
+            content: '💡';
+        }
+
+        .form-fields-list {
+            margin-bottom: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .registration-form {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .registration-form h4 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .field-item {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: move;
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .field-item:hover {
+            background: rgba(102, 126, 234, 0.08);
+        }
+
+        .field-item.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .field-drag-handle {
+            color: #667eea;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            padding-right: 0.5rem;
+            font-size: 1.5rem;
+            min-width: 1.5rem;
+        }
+
+        .field-drag-handle:hover {
+            color: #667eea;
+        }
+
+        .field-item.dragging .field-drag-handle {
+            cursor: grabbing;
+            color: #667eea;
+        }
+
+        .field-item label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: move;
+            margin: 0;
+            width: 100%;
+        }
+
+        .field-item label input[type="checkbox"] {
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .field-item label > span:not(.field-type) {
+            flex: 1;
+            color: #333;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .field-type {
+            margin-left: auto;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            flex-shrink: 0;
+        }
+
+        /* 增强的字段项样式 */
+        .field-item.enhanced {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .field-item.enhanced .field-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .field-item.enhanced .field-drag-handle {
+            color: rgba(102, 126, 234, 0.5);
+            cursor: grab;
+        }
+
+        .field-item.enhanced .field-drag-handle:hover {
+            color: #667eea;
+        }
+
+        .field-item.enhanced .field-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .field-item.enhanced .field-label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .field-item.enhanced .field-type-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .field-item.enhanced .field-type-badge.type-text {
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+        }
+
+        .field-item.enhanced .field-type-badge.type-number,
+        .field-item.enhanced .field-type-badge.type-mobile,
+        .field-item.enhanced .field-type-badge.type-idcard {
+            background: rgba(234, 179, 8, 0.15);
+            color: #ca8a04;
+        }
+
+        .field-item.enhanced .field-type-badge.type-idcard_front,
+        .field-item.enhanced .field-type-badge.type-idcard_back,
+        .field-item.enhanced .field-type-badge.type-certificate,
+        .field-item.enhanced .field-type-badge.type-image {
+            background: rgba(34, 197, 94, 0.15);
+            color: #16a34a;
+        }
+
+        .field-item.enhanced .field-type-badge.type-select,
+        .field-item.enhanced .field-type-badge.type-radio,
+        .field-item.enhanced .field-type-badge.type-checkbox {
+            background: rgba(168, 85, 247, 0.15);
+            color: #9333ea;
+        }
+
+        .field-item.enhanced .field-type-badge.type-textarea {
+            background: rgba(59, 130, 246, 0.15);
+            color: #2563eb;
+        }
+
+        .field-item.enhanced .field-required-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(239, 68, 68, 0.15);
+            color: #dc2626;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .field-item.enhanced .field-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .field-item.enhanced .field-details {
+            display: flex;
+            gap: 1rem;
+            padding-left: 2rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .field-item.enhanced .field-description,
+        .field-item.enhanced .field-placeholder {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* 字段类型选择网格 */
+        .add-field-options {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+            border: 1px dashed rgba(102, 126, 234, 0.3);
+        }
+
+        .add-field-options h5 {
+            margin: 0 0 1rem 0;
+            color: #667eea;
+            font-size: 1rem;
+        }
+
+        .field-types-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .field-type-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 0.5rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .field-type-btn:hover {
+            background: rgba(102, 126, 234, 0.15);
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .field-type-btn i {
+            font-size: 1.5rem;
+            color: #667eea;
+        }
+
+        .field-type-btn span {
+            font-size: 0.85rem;
+            color: #333;
+        }
+
+        .field-type-btn .field-badge {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            padding: 0.15rem 0.35rem;
+            background: rgba(34, 197, 94, 0.9);
+            color: white;
+            font-size: 0.6rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        /* 字段编辑弹窗样式 */
+        .field-editor-modal {
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .field-editor-modal .modal-body {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .ocr-tip,
+        .validation-tip {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 3px solid #22c55e;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #16a34a;
+        }
+
+        .validation-tip {
+            background: rgba(59, 130, 246, 0.1);
+            border-left-color: #3b82f6;
+            color: #2563eb;
+        }
+
+        /* 选项配置样式 */
+        .options-config {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .option-item {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .option-item input {
+            flex: 1;
+        }
+
+        .radio-group,
+        .checkbox-group {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .radio-group label,
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .checkin-mode,
+        .checkin-time,
+        .checkin-location {
+            margin-bottom: 2rem;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .input-group input {
+            flex: 1;
+        }
+        
+        .notification-channels,
+        .notification-templates {
+            margin-bottom: 2rem;
+        }
+        
+        .template-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .template-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .template-editor {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .template-editor textarea {
+            flex: 1;
+        }
+        
+        .permissions-section {
+            margin-bottom: 2rem;
+        }
+        
+        .permissions-section h4 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .staff-permissions,
+        .participant-permissions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .permission-item {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+        
+        .permission-item label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        /* 工作人员管理样式 */
+        .staff-add-section {
+            margin-bottom: 2rem;
+        }
+
+        .staff-add-section h4 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .method-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            color: #667eea;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .method-content {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 0.75rem 2.5rem 0.75rem 0.75rem;
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 1rem;
+            color: #999;
+        }
+
+        .user-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .user-item:hover {
+            background: rgba(102, 126, 234, 0.08);
+        }
+
+        .user-item.selected {
+            background: rgba(102, 126, 234, 0.15);
+            border: 1px solid #667eea;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-phone {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-dept {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .user-check {
+            color: #10b981;
+            font-size: 1.5rem;
+        }
+
+        .selected-users-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .staff-list-section h4 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .staff-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .staff-card {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .staff-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .staff-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .staff-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .staff-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .staff-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .staff-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .staff-phone {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+
+        .staff-position {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .staff-permissions {
+            background: rgba(102, 126, 234, 0.03);
+            padding: 1rem;
+            border-radius: 6px;
+        }
+
+        .permissions-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.75rem;
+        }
+
+        .btn-select-all {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.85rem;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-select-all:hover {
+            background-color: #5568d3;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-select-all:active {
+            transform: scale(0.95);
+        }
+
+        .permissions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .permission-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .permission-checkbox:hover {
+            background: rgba(102, 126, 234, 0.08);
+        }
+
+        .permission-checkbox input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .permission-checkbox span {
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .loading-state,
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+        }
+
+        .loading-state i,
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .staff-preview {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .staff-preview-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+        }
+
+        .staff-permissions-preview {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .staff-permissions-preview span {
+            padding: 0.25rem 0.5rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #667eea;
+        }
+
+        .preview-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .summary-section {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .summary-section h4 {
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .summary-item .label {
+            color: #666;
+        }
+        
+        .summary-item .value {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .create-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .step-navigation {
+            display: flex;
+            justify-content: space-between;
+            padding: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .wizard-steps {
+                flex-wrap: wrap;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .mode-options {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 地点输入框样式 */
+        .location-input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .location-input-group input {
+            flex: 1;
+        }
+
+        .btn-map {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .btn-map:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .location-detail {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: var(--glass-bg);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--glass-border);
+        }
+
+        .location-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .coordinate-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #667eea;
+            text-decoration: none;
+            margin-left: auto;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover {
+            color: #764ba2;
+        }
+
+        /* 地图选点弹窗样式 */
+        .map-picker-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 1rem;
+        }
+
+        .map-picker-content {
+            background: white;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .map-picker-header h3 {
+            margin: 0;
+            font-size: 1.125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .map-picker-body {
+            padding: 1rem;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .map-search {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .map-search input {
+            flex: 1;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+        }
+
+        .map-search input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-search {
+            padding: 0.625rem 1.25rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .btn-search:hover {
+            background: #5568d3;
+        }
+
+        .map-search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+        }
+
+        .search-result-item {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: var(--glass-bg);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .result-address {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .map-container {
+            width: 100%;
+            height: 400px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            border: 2px solid var(--glass-border);
+        }
+
+        .map-selected-info {
+            padding: 1rem;
+            background: var(--glass-bg);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--glass-border);
+        }
+
+        .selected-location {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .selected-location i {
+            color: #667eea;
+            font-size: 1.125rem;
+        }
+
+        .selected-address {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .selected-address i {
+            margin-top: 0.125rem;
+            color: #764ba2;
+        }
+
+        .selected-coordinate {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .selected-coordinate i {
+            color: #667eea;
+        }
+
+        .map-picker-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            line-height: 1;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+
+        /* 按钮禁用状态样式（视觉效果但可点击） */
+        button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, #999 0%, #777 100%) !important;
+        }
+
+        button.disabled:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* 必填字段高亮样式 */
+        .required-highlight {
+            animation: highlight-pulse 1.5s ease-in-out 3;
+            border: 2px solid #ff4757 !important;
+            box-shadow: 0 0 0 4px rgba(255, 71, 87, 0.2) !important;
+        }
+
+        @keyframes highlight-pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        /* 地图选点弹窗样式 */
+    </style>
+</body>
+</html>

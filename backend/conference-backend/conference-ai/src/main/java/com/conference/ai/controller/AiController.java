@@ -25,6 +25,8 @@ public class AiController {
     private final AiFaqService faqService;
     private final AiFeedbackService feedbackService;
     private final DocumentParseService documentParseService;
+    private final RAGService ragService;
+    private final ConferenceKnowledgeCollector knowledgeCollector;
 
     // ===== 聊天对话 API =====
 
@@ -58,7 +60,12 @@ public class AiController {
             return Result.fail("消息内容不能为空");
         }
 
-        Map<String, Object> chatResult = chatService.chat(null, message.trim(), null, "APP用户", null);
+        Long conferenceId = toLong(request.get("conferenceId"));
+        Long userId = toLong(request.get("userId"));
+        String userName = (String) request.get("userName");
+        if (userName == null || userName.isBlank()) userName = "APP用户";
+
+        Map<String, Object> chatResult = chatService.chat(null, message.trim(), userId, userName, conferenceId);
 
         // 兼容APP端期望的格式
         Map<String, Object> result = new LinkedHashMap<>();
@@ -243,6 +250,54 @@ public class AiController {
         return Result.ok(faqService.getFaqStats(conferenceId));
     }
 
+    /**
+     * FAQ批量导入
+     * POST /api/ai/faq/batch-import
+     */
+    @PostMapping("/faq/batch-import")
+    public Result<Map<String, Object>> batchImportFaq(@RequestBody List<AiFaq> faqList) {
+        if (faqList == null || faqList.isEmpty()) {
+            return Result.fail("导入列表不能为空");
+        }
+        int success = 0;
+        int failed = 0;
+        for (AiFaq faq : faqList) {
+            try {
+                if (faq.getQuestion() == null || faq.getAnswer() == null) {
+                    failed++;
+                    continue;
+                }
+                faqService.addFaq(faq);
+                success++;
+            } catch (Exception e) {
+                log.warn("FAQ导入失败: {}", faq.getQuestion(), e);
+                failed++;
+            }
+        }
+        Map<String, Object> result = new HashMap<>();
+        result.put("total", faqList.size());
+        result.put("success", success);
+        result.put("failed", failed);
+        return Result.ok("批量导入完成", result);
+    }
+
+    // ===== 知识库索引 API =====
+
+    /**
+     * 重建知识库向量索引
+     * POST /api/ai/knowledge/reindex
+     */
+    @PostMapping("/knowledge/reindex")
+    public Result<String> reindexKnowledge() {
+        try {
+            ragService.reindexAll();
+            return Result.ok("知识库索引重建完成");
+        } catch (Exception e) {
+            log.error("重建知识库索引失败", e);
+            return Result.fail("重建索引失败: " + e.getMessage());
+        }
+    }
+
     // ===== 反馈 API =====
 
     /**
@@ -282,35 +337,107 @@ public class AiController {
         return Result.ok(chatService.getAiStats(conferenceId));
     }
 
-    // ===== OCR & 语音 (功能建设中) =====
+    // ===== OCR & 语音识别 =====
 
     /**
-     * OCR识别 - 功能建设中
-     * 待接入第三方OCR服务(如百度AI、腾讯云等)
+     * OCR识别 - 支持图片URL或文件上传
+     * POST /api/ai/ocr
      */
     @PostMapping("/ocr")
     public Result<Map<String, Object>> ocrRecognition(
             @RequestParam(required = false) String imageUrl,
-            @RequestParam(required = false) String type) {
-        log.info("OCR识别请求 - 功能建设中, 类型: {}", type);
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) MultipartFile file) {
+        log.info("OCR识别请求, 类型: {}, 有文件: {}", type, file != null && !file.isEmpty());
         Map<String, Object> result = new HashMap<>();
-        result.put("status", "building");
-        result.put("message", "功能建设中，敬请期待");
-        result.put("type", type);
-        return Result.ok("功能建设中", result);
+        if (file != null && !file.isEmpty()) {
+            // 接收到文件，返回待接入提示
+            result.put("status", "pending");
+            result.put("message", "OCR服务待接入。已接收文件: " + file.getOriginalFilename()
+                    + " (" + file.getSize() / 1024 + "KB)。接入通义千问VL模型后即可使用。");
+            result.put("fileName", file.getOriginalFilename());
+            result.put("fileSize", file.getSize());
+            result.put("type", type);
+            return Result.ok("OCR服务待接入", result);
+        }
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            result.put("status", "pending");
+            result.put("message", "OCR服务待接入。已接收图片URL。接入通义千问VL模型后即可使用。");
+            result.put("imageUrl", imageUrl);
+            return Result.ok("OCR服务待接入", result);
+        }
+        result.put("status", "error");
+        result.put("message", "请提供图片文件或图片URL");
+        return Result.fail("请提供图片文件或图片URL");
     }
 
     /**
-     * 语音识别 - 功能建设中
-     * 待接入第三方语音服务(如科大讯飞、百度AI等)
+     * 语音识别 - 支持音频文件上传
+     * POST /api/ai/speech-recognition
      */
     @PostMapping("/speech-recognition")
-    public Result<Map<String, String>> speechRecognition(@RequestParam(required = false) String audioUrl) {
-        log.info("语音识别请求 - 功能建设中");
-        Map<String, String> result = new HashMap<>();
-        result.put("status", "building");
-        result.put("message", "功能建设中，敬请期待");
-        return Result.ok("功能建设中", result);
+    public Result<Map<String, Object>> speechRecognition(
+            @RequestParam(required = false) String audioUrl,
+            @RequestParam(required = false) MultipartFile file) {
+        log.info("语音识别请求, 有文件: {}", file != null && !file.isEmpty());
+        Map<String, Object> result = new HashMap<>();
+        if (file != null && !file.isEmpty()) {
+            result.put("status", "pending");
+            result.put("message", "语音识别服务待接入。已接收音频文件: " + file.getOriginalFilename()
+                    + " (" + file.getSize() / 1024 + "KB)。接入Paraformer模型后即可使用。");
+            result.put("fileName", file.getOriginalFilename());
+            result.put("fileSize", file.getSize());
+            return Result.ok("语音识别服务待接入", result);
+        }
+        if (audioUrl != null && !audioUrl.isBlank()) {
+            result.put("status", "pending");
+            result.put("message", "语音识别服务待接入。已接收音频URL。接入Paraformer模型后即可使用。");
+            result.put("audioUrl", audioUrl);
+            return Result.ok("语音识别服务待接入", result);
+        }
+        result.put("status", "error");
+        result.put("message", "请提供音频文件或音频URL");
+        return Result.fail("请提供音频文件或音频URL");
+    }
+
+    // ===== 会议知识库采集 API =====
+
+    /**
+     * 预览指定会议的采集知识（调试/管理用）
+     * GET /api/ai/knowledge/conference/{conferenceId}
+     */
+    @GetMapping("/knowledge/conference/{conferenceId}")
+    public Result<Map<String, Object>> previewConferenceKnowledge(@PathVariable Long conferenceId) {
+        long start = System.currentTimeMillis();
+        String knowledge = knowledgeCollector.collectKnowledge(conferenceId);
+        long elapsed = System.currentTimeMillis() - start;
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("conferenceId", conferenceId);
+        result.put("knowledge", knowledge);
+        result.put("length", knowledge != null ? knowledge.length() : 0);
+        result.put("collectTimeMs", elapsed);
+        return Result.ok(result);
+    }
+
+    /**
+     * 清除指定会议的知识缓存
+     * DELETE /api/ai/knowledge/conference/{conferenceId}/cache
+     */
+    @DeleteMapping("/knowledge/conference/{conferenceId}/cache")
+    public Result<String> invalidateKnowledgeCache(@PathVariable Long conferenceId) {
+        knowledgeCollector.invalidateCache(conferenceId);
+        return Result.ok("缓存已清除");
+    }
+
+    /**
+     * 清除所有会议知识缓存
+     * DELETE /api/ai/knowledge/cache
+     */
+    @DeleteMapping("/knowledge/cache")
+    public Result<String> clearAllKnowledgeCache() {
+        knowledgeCollector.clearAllCache();
+        return Result.ok("所有缓存已清除");
     }
 
     // ===== 工具方法 =====

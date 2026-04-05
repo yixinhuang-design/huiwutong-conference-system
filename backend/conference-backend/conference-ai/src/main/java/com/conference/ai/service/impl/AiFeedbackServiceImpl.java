@@ -1,6 +1,8 @@
 package com.conference.ai.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.conference.ai.entity.AiFeedback;
 import com.conference.ai.mapper.AiFeedbackMapper;
@@ -49,12 +51,12 @@ public class AiFeedbackServiceImpl extends ServiceImpl<AiFeedbackMapper, AiFeedb
     @Override
     public List<AiFeedback> listFeedback(Long conferenceId, int page, int size) {
         Long tenantId = getTenantId();
+        Page<AiFeedback> pageObj = new Page<>(page, size);
         LambdaQueryWrapper<AiFeedback> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AiFeedback::getTenantId, tenantId)
                 .orderByDesc(AiFeedback::getCreateTime);
-        // 简单分页
-        wrapper.last("LIMIT " + size + " OFFSET " + ((page - 1) * size));
-        return feedbackMapper.selectList(wrapper);
+        IPage<AiFeedback> result = feedbackMapper.selectPage(pageObj, wrapper);
+        return result.getRecords();
     }
 
     @Override

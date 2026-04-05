@@ -73,3 +73,15 @@ deploy/*.zip
 
 # Response test files
 *_resp.txt
+
+# Build result files
+build_result.txt
+
+# Claude/AI assistant
+.claude/
+
+# Temp submodule check
+temp-submodule-check/
+
+# Deploy packages (large)
+deploy/conference-deploy-package.tar.gz

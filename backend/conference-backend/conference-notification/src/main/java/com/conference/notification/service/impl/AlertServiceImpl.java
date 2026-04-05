@@ -8,8 +8,11 @@ import com.conference.notification.entity.AlertRule;
 import com.conference.notification.mapper.AlertEventMapper;
 import com.conference.notification.mapper.AlertRuleMapper;
 import com.conference.notification.service.AlertService;
+import com.conference.notification.service.NotificationChannelService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -34,6 +37,13 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
 
     private final AlertRuleMapper ruleMapper;
     private final AlertEventMapper eventMapper;
+    private final NotificationChannelService notificationChannelService;
+
+    @Value("${alert.gateway.url:http://localhost:8080}")
+    private String gatewayBaseUrl;
+
+    @Value("${alert.data-service.url:http://localhost:8088}")
+    private String dataServiceUrl;
 
     private Long getTenantId() {
         try {
@@ -191,12 +201,19 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
             metrics.put("apiResponseTime", buildMetric(responseTime, "API响应时间", "ms",
                     responseTime <= 500 ? "up" : responseTime <= 1000 ? "stable" : "down"));
 
+            // 系统错误率 - 从dataService查询API访问日志统计
+            double systemErrorRate = fetchSystemErrorRate();
+            metricValues.put("systemErrorRate", systemErrorRate);
+            metrics.put("systemErrorRate", buildMetric(systemErrorRate, "系统错误率", "%",
+                    systemErrorRate <= 1 ? "up" : systemErrorRate <= 5 ? "stable" : "down"));
+
         } catch (Exception e) {
             log.error("获取实时指标异常: {}", e.getMessage(), e);
             metrics.put("registrationRate", buildMetric(0, "报到率", "%", "stable"));
             metrics.put("checkinRate", buildMetric(0, "签到率", "%", "stable"));
             metrics.put("taskCompletionRate", buildMetric(0, "任务完成率", "%", "stable"));
             metrics.put("apiResponseTime", buildMetric(0, "API响应时间", "ms", "stable"));
+            metrics.put("systemErrorRate", buildMetric(0, "系统错误率", "%", "stable"));
         }
 
         // 自动预警检测：对比当前指标与启用的规则阈值，自动生成预警事件
@@ -263,6 +280,8 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
                     event.setDeleted(0);
                     eventMapper.insert(event);
                     log.info("[预警触发] 规则={}, 指标={}, 当前值={}, 阈值={}", rule.getName(), rule.getMetric(), currentValue, rule.getThreshold());
+                    // 发送通知（短信/系统通知）
+                    sendAlertNotification(rule, event, currentValue);
                 }
             }
         }
@@ -290,7 +309,7 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
                     .connectTimeout(Duration.ofSeconds(3))
                     .build();
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8080/api/meeting/list?page=1&size=1"))
+                    .uri(URI.create(gatewayBaseUrl + "/api/meeting/list?page=1&size=1"))
                     .timeout(Duration.ofSeconds(5))
                     .GET()
                     .build();
@@ -346,8 +365,16 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
         event.setStatus("processing");
         event.setHandleTime(LocalDateTime.now());
         event.setUpdateTime(LocalDateTime.now());
+        // 设置处理人信息
+        try {
+            Long currentUserId = com.conference.common.tenant.TenantContextHolder.getTenantId();
+            event.setHandlerId(currentUserId);
+            event.setHandlerName("系统管理员"); // 待集成用户服务后替换为真实用户名
+        } catch (Exception e) {
+            event.setHandlerName("系统自动处理");
+        }
         eventMapper.updateById(event);
-        log.info("预警事件开始处理: id={}", id);
+        log.info("预警事件开始处理: id={}, handler={}", id, event.getHandlerName());
         return event;
     }
 
@@ -434,5 +461,138 @@ public class AlertServiceImpl extends ServiceImpl<AlertEventMapper, AlertEvent>
         }
 
         return stats;
+    }
+
+    // === 定时预警检测 ===
+
+    /**
+     * 定时检测所有启用规则（每120秒）
+     * 自动遍历所有有规则关联的会议，获取实时指标并检测是否超阈值
+     */
+    @Scheduled(fixedRate = 120000, initialDelay = 30000)
+    public void scheduledAlertCheck() {
+        try {
+            Long tenantId = DEFAULT_TENANT_ID;
+            // 获取所有启用的规则，按conferenceId分组
+            LambdaQueryWrapper<AlertRule> ruleWrapper = new LambdaQueryWrapper<>();
+            ruleWrapper.eq(AlertRule::getTenantId, tenantId)
+                    .eq(AlertRule::getEnabled, 1)
+                    .eq(AlertRule::getDeleted, 0);
+            List<AlertRule> allRules = ruleMapper.selectList(ruleWrapper);
+
+            Set<Long> conferenceIds = new HashSet<>();
+            for (AlertRule rule : allRules) {
+                if (rule.getConferenceId() != null) {
+                    conferenceIds.add(rule.getConferenceId());
+                }
+            }
+
+            for (Long confId : conferenceIds) {
+                try {
+                    // 收集指标
+                    Map<String, Double> metricValues = collectMetricsForConference(confId, tenantId);
+                    if (!metricValues.isEmpty()) {
+                        checkRulesAndCreateAlerts(confId, tenantId, metricValues);
+                    }
+                } catch (Exception e) {
+                    log.warn("[定时预警] 检测会议{}异常: {}", confId, e.getMessage());
+                }
+            }
+            log.debug("[定时预警] 检测完成，共{}个会议", conferenceIds.size());
+        } catch (Exception e) {
+            log.warn("[定时预警] 执行异常: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 收集指定会议的指标值（用于定时检测）
+     */
+    private Map<String, Double> collectMetricsForConference(Long conferenceId, Long tenantId) {
+        Map<String, Double> metricValues = new LinkedHashMap<>();
+        try {
+            Map<String, Object> regData = eventMapper.getRegistrationMetrics(conferenceId, tenantId);
+            if (regData != null) {
+                long approved = toLong(regData.get("approved"));
+                long reported = toLong(regData.get("reported"));
+                metricValues.put("registrationRate", approved > 0 ? Math.round(reported * 1000.0 / approved) / 10.0 : 0.0);
+            }
+
+            Map<String, Object> checkinData = eventMapper.getCheckinMetrics(conferenceId, tenantId);
+            if (checkinData != null) {
+                long expected = toLong(checkinData.get("expected"));
+                long actual = toLong(checkinData.get("actual"));
+                metricValues.put("checkinRate", expected > 0 ? Math.round(actual * 1000.0 / expected) / 10.0 : 0.0);
+            }
+
+            Map<String, Object> taskData = eventMapper.getTaskCompletionMetrics(conferenceId, tenantId);
+            if (taskData != null) {
+                long total = toLong(taskData.get("total"));
+                long completed = toLong(taskData.get("completed"));
+                metricValues.put("taskCompletionRate", total > 0 ? Math.round(completed * 1000.0 / total) / 10.0 : 0.0);
+            }
+
+            metricValues.put("apiResponseTime", measureGatewayResponseTime());
+            metricValues.put("systemErrorRate", fetchSystemErrorRate());
+        } catch (Exception e) {
+            log.warn("收集会议{}指标异常: {}", conferenceId, e.getMessage());
+        }
+        return metricValues;
+    }
+
+    // === 辅助方法 ===
+
+    /**
+     * 从data服务获取系统错误率
+     * 查询 /api/data/system/api-metrics 的 successRate 计算错误率
+     */
+    private double fetchSystemErrorRate() {
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(3))
+                    .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(dataServiceUrl + "/api/data/system/api-metrics"))
+                    .timeout(Duration.ofSeconds(5))
+                    .GET()
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            String body = response.body();
+            // 简单解析 JSON 中的 successRate 字段
+            int idx = body.indexOf("\"successRate\"");
+            if (idx > 0) {
+                int colonIdx = body.indexOf(":", idx);
+                int endIdx = body.indexOf(",", colonIdx);
+                if (endIdx < 0) endIdx = body.indexOf("}", colonIdx);
+                String val = body.substring(colonIdx + 1, endIdx).trim();
+                double successRate = Double.parseDouble(val);
+                return Math.max(0, 100.0 - successRate);
+            }
+        } catch (Exception e) {
+            log.debug("[systemErrorRate] 获取失败: {}", e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * 预警触发后发送通知（短信+系统通知）
+     */
+    private void sendAlertNotification(AlertRule rule, AlertEvent event, double currentValue) {
+        try {
+            String message = String.format("【预警通知】%s触发: 当前值%.1f, 阈值%.1f, 级别: %s",
+                    rule.getName(), currentValue, rule.getThreshold().doubleValue(), rule.getSeverity());
+
+            // 系统通知
+            if (rule.getNotifySystem() != null && rule.getNotifySystem() == 1) {
+                log.info("[预警系统通知] {}", message);
+                // TODO: 集成系统内通知推送
+            }
+
+            // 短信通知
+            if (rule.getNotifySms() != null && rule.getNotifySms() == 1) {
+                notificationChannelService.sendSMS("管理员", message);
+            }
+        } catch (Exception e) {
+            log.warn("发送预警通知异常: {}", e.getMessage());
+        }
     }
 }

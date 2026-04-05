@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.conference.registration.mapper.RegistrationGroupMemberMapper">
+
+    <resultMap id="BaseResultMap" type="com.conference.registration.entity.RegistrationGroupMember">
+        <id column="id" property="id" />
+        <result column="group_id" property="groupId" />
+        <result column="registration_id" property="registrationId" />
+        <result column="is_staff" property="isStaff" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, group_id, registration_id, is_staff, create_time
+    </sql>
+
+    <!-- 查询分组的所有成员 -->
+    <select id="getByGroupId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM registration_group_member
+        WHERE group_id = #{groupId}
+        ORDER BY is_staff DESC, create_time ASC
+    </select>
+
+    <!-- 查询成员所在的分组 -->
+    <select id="getByRegistrationId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM registration_group_member
+        WHERE registration_id = #{registrationId}
+    </select>
+
+    <!-- 查询分组中的工作人员 -->
+    <select id="getStaffByGroupId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM registration_group_member
+        WHERE group_id = #{groupId}
+          AND is_staff = TRUE
+    </select>
+
+    <!-- 插入成员关联 -->
+    <insert id="insert" parameterType="com.conference.registration.entity.RegistrationGroupMember" 
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO registration_group_member (
+            group_id, registration_id, is_staff, create_time
+        ) VALUES (
+            #{groupId}, #{registrationId}, #{isStaff}, #{createTime}
+        )
+    </insert>
+
+    <!-- 批量插入成员 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO registration_group_member (
+            group_id, registration_id, is_staff, create_time
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+        (#{item.groupId}, #{item.registrationId}, #{item.isStaff}, #{item.createTime})
+        </foreach>
+    </insert>
+
+    <!-- 删除分组的所有成员 -->
+    <delete id="deleteByGroupId">
+        DELETE FROM registration_group_member
+        WHERE group_id = #{groupId}
+    </delete>
+
+    <!-- 移除分组成员 -->
+    <delete id="deleteByGroupAndMember">
+        DELETE FROM registration_group_member
+        WHERE group_id = #{groupId}
+          AND registration_id = #{registrationId}
+    </delete>
+
+    <!-- 更新成员状态（是否为工作人员） -->
+    <update id="updateStaffStatus">
+        UPDATE registration_group_member
+        SET is_staff = #{isStaff}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 批量更新分组工作人员 -->
+    <update id="batchUpdateStaffStatus">
+        UPDATE registration_group_member
+        SET is_staff = FALSE
+        WHERE group_id = #{groupId}
+        
+        AND id IN (
+            <foreach collection="staffIds" item="id" separator=",">
+            SELECT id FROM registration_group_member
+            WHERE group_id = #{groupId} AND registration_id = #{id}
+            </foreach>
+        )
+        
+        AND registration_id IN (
+        <foreach collection="staffIds" item="id" separator=",">
+            #{id}
+        </foreach>
+        )
+    </update>
+
+    <!-- 统计分组成员数量 -->
+    <select id="countByGroupId" resultType="long">
+        SELECT COUNT(*)
+        FROM registration_group_member
+        WHERE group_id = #{groupId}
+    </select>
+
+    <!-- 统计分组工作人员数量 -->
+    <select id="countStaffByGroupId" resultType="long">
+        SELECT COUNT(*)
+        FROM registration_group_member
+        WHERE group_id = #{groupId}
+          AND is_staff = TRUE
+    </select>
+
+</mapper>

@@ -1,6 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="conference-gateway-local" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
     <option name="ACTIVE_PROFILES" value="local" />
+    <option name="ALTERNATIVE_JRE_PATH" value="C:\Program Files\Amazon Corretto\jdk1.8.0_452\jre" />
     <envs>
       <env name="NACOS_ENABLED" value="false" />
       <env name="NACOS_REGISTER_ENABLED" value="false" />

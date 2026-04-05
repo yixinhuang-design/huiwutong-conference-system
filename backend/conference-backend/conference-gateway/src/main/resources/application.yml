@@ -99,7 +99,7 @@ spring:
         - id: conference-collaboration
           uri: http://localhost:8089
           predicates:
-            - Path=/api/group/**,/api/task/**,/api/chat/**,/api/material/**
+            - Path=/api/group/**,/api/task/**,/api/task-export/**,/api/task-template/**,/api/task-comment/**,/api/chat/**,/api/material/**
 
         # ===== 协同服务 WebSocket =====
         - id: conference-websocket

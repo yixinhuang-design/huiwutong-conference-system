@@ -86,9 +86,14 @@ public class ApiAccessLogFilter implements Filter {
      */
     private void reportAccess(String method, String path, int statusCode, long responseTime) {
         try {
+            // 安全转义：防止path中的特殊字符破坏JSON结构
+            String safePath = path.replace("\\", "\\\\").replace("\"", "\\\"");
+            String safeMethod = method.replace("\\", "\\\\").replace("\"", "\\\"");
+            String safeServiceName = serviceName.replace("\\", "\\\\").replace("\"", "\\\"");
+
             String json = String.format(
                     "{\"serviceName\":\"%s\",\"method\":\"%s\",\"path\":\"%s\",\"statusCode\":%d,\"responseTime\":%d}",
-                    serviceName, method, path, statusCode, responseTime
+                    safeServiceName, safeMethod, safePath, statusCode, responseTime
             );
 
             HttpRequest request = HttpRequest.newBuilder()

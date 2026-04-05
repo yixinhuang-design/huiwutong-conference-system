@@ -1,0 +1,2693 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日程管理 - 智能会议系统</title>
+
+    <!-- 基础样式系统 -->
+    <link rel="stylesheet" href="../css/glassmorphism.css">
+    <link rel="stylesheet" href="../css/conference-theme.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/browser-compatibility.css">
+
+    <!-- 交互增强 -->
+    <link rel="stylesheet" href="../css/interaction-enhancements.css">
+
+    <!-- 统计卡片标准样式 -->
+    <link rel="stylesheet" href="../css/stat-cards-standard.css">
+
+    <!-- 图标库 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- Vue.js框架 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.prod.js"></script>
+
+    <!-- 交互工具库 -->
+    <script src="../js/interaction-utils.js"></script>
+
+    <!-- Excel导出库 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- 日程管理API模块 -->
+    <script src="../js/api/schedule-api.js"></script>
+    <script src="../js/auth-service.js"></script>
+    <script src="../js/app-init.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 页面导航栏 -->
+        <nav class="page-navigation">
+            <div class="nav-content">
+                <a href="../index.html" class="nav-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回首页</span>
+                </a>
+                <h1 class="nav-title">日程管理</h1>
+                <div class="nav-actions">
+                    <button class="btn-outline" @click="exportSchedules">
+                        <i class="fas fa-download"></i>
+                        导出
+                    </button>
+                    <button class="btn-primary" @click="showAddModal">
+                        <i class="fas fa-plus"></i>
+                        添加日程
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <div class="page-with-nav">
+            <!-- 页面头部 -->
+            <div class="page-header glass-card">
+                <div>
+                    <h2>📅 会议日程管理</h2>
+                    <div class="conference-context" v-if="conference">
+                        <span class="context-label">当前会议:</span>
+                        <span class="context-value">{{ conference.name }}</span>
+                        <span class="context-label">会议ID:</span>
+                        <span class="context-value">{{ conference.id }}</span>
+                        <span class="status-badge" :class="'status-' + conference.status">
+                            {{ getStatusText(conference.status) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快速统计 -->
+            <div class="quick-stats glass-card">
+                <h3>📊 统计概览</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ schedules.length }}</div>
+                            <div class="stat-label">总日程数</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ totalDuration }}</div>
+                            <div class="stat-label">总时长(小时)</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ checkinCount }}</div>
+                            <div class="stat-label">需签到日程</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ reminderCount }}</div>
+                            <div class="stat-label">需提醒日程</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 日程列表 -->
+            <div class="schedules-container glass-card">
+                <div class="container-header">
+                    <h3>📋 日程列表</h3>
+                    <div class="header-actions">
+                        <!-- 视图切换 -->
+                        <div class="view-toggle">
+                            <button
+                                class="toggle-btn"
+                                :class="{ active: viewMode === 'table' }"
+                                @click="viewMode = 'table'"
+                                title="表格视图"
+                            >
+                                <i class="fas fa-table"></i>
+                                <span>表格</span>
+                            </button>
+                            <button
+                                class="toggle-btn"
+                                :class="{ active: viewMode === 'schedule' }"
+                                @click="viewMode = 'schedule'"
+                                title="日程表视图"
+                            >
+                                <i class="fas fa-calendar-week"></i>
+                                <span>日程表</span>
+                            </button>
+                        </div>
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" v-model="searchKeyword" placeholder="搜索日程主题、地点、主持人..." @input="filterSchedules">
+                        </div>
+                        <select v-model="filterStatus" @change="filterSchedules" class="filter-select">
+                            <option value="">全部状态</option>
+                            <option value="pending">未开始</option>
+                            <option value="ongoing">进行中</option>
+                            <option value="completed">已结束</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 标准表格视图 -->
+                <div class="schedule-table-view" v-if="filteredSchedules.length > 0 && viewMode === 'table'">
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 12%;">日期</th>
+                                <th style="width: 12%;">时间</th>
+                                <th style="width: 28%;">内容</th>
+                                <th style="width: 18%;">地点</th>
+                                <th style="width: 18%;">主持人/主讲人</th>
+                                <th style="width: 12%;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="schedule in filteredSchedules"
+                                :key="schedule.id"
+                                :class="'status-' + getScheduleStatus(schedule)"
+                            >
+                                <td>{{ formatDate(schedule.startTime) }}</td>
+                                <td>
+                                    {{ formatTime(schedule.startTime) }} - {{ formatTime(schedule.endTime) }}
+                                </td>
+                                <td>
+                                    <div class="schedule-title">{{ schedule.title }}</div>
+                                    <div class="schedule-badges">
+                                        <span class="setting-badge" v-if="schedule.settings.needCheckin" title="需要签到">
+                                            <i class="fas fa-clipboard-check"></i>
+                                        </span>
+                                        <span class="setting-badge" v-if="schedule.settings.needReminder" title="需要提醒">
+                                            <i class="fas fa-bell"></i>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>{{ schedule.location || '-' }}</td>
+                                <td>
+                                    <div v-if="schedule.speaker">{{ schedule.speaker }}</div>
+                                    <div v-else-if="schedule.host">{{ schedule.host }}</div>
+                                    <div v-else>-</div>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-sm btn-primary" @click="viewSchedule(schedule)" title="查看详情">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-sm btn-outline" @click="editSchedule(schedule)" title="编辑">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-sm btn-outline" @click="duplicateSchedule(schedule)" title="复制">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                        <button class="btn-sm btn-danger" @click="deleteSchedule(schedule.id)" title="删除">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 日程表视图（按日期分组） -->
+                <div class="schedule-calendar-view" v-if="filteredSchedules.length > 0 && viewMode === 'schedule'">
+                    <div v-for="(dateGroup, date) in groupedSchedules" :key="date" class="date-group">
+                        <table class="schedule-calendar-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%;">日期</th>
+                                    <th style="width: 10%;">时间</th>
+                                    <th style="width: 30%;">内容</th>
+                                    <th style="width: 20%;">地点</th>
+                                    <th style="width: 18%;">主持人/主讲人</th>
+                                    <th style="width: 12%;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="(schedule, index) in dateGroup"
+                                    :key="schedule.id"
+                                    :class="'status-' + getScheduleStatus(schedule)"
+                                >
+                                    <!-- 日期列：第一行显示日期和星期，其他行合并 -->
+                                    <td v-if="index === 0" :rowspan="dateGroup.length">
+                                        {{ formatDateFull(schedule.startTime) }}
+                                    </td>
+                                    <!-- 时间列 -->
+                                    <td>
+                                        <div class="time-period">{{ getTimePeriod(schedule.startTime) }}</div>
+                                        <div class="time-range">{{ formatTime(schedule.startTime) }} - {{ formatTime(schedule.endTime) }}</div>
+                                    </td>
+                                    <!-- 内容列 -->
+                                    <td>
+                                        <div class="schedule-content">{{ schedule.title }}</div>
+                                        <div class="schedule-settings-inline">
+                                            <span v-if="schedule.settings.needReport" class="setting-tag">
+                                                <i class="fas fa-user-check"></i> 报到
+                                            </span>
+                                            <span v-if="schedule.settings.needCheckin" class="setting-tag">
+                                                <i class="fas fa-clipboard-check"></i> 签到
+                                            </span>
+                                            <span v-if="schedule.settings.needReminder" class="setting-tag">
+                                                <i class="fas fa-bell"></i> 提醒
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <!-- 地点列 -->
+                                    <td>{{ schedule.location || '-' }}</td>
+                                    <!-- 主持人/主讲人列 -->
+                                    <td>
+                                        <div v-if="schedule.speaker">{{ schedule.speaker }}</div>
+                                        <div v-else-if="schedule.host">{{ schedule.host }}</div>
+                                        <div v-else>-</div>
+                                    </td>
+                                    <!-- 操作列 -->
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn-sm btn-primary" @click="viewSchedule(schedule)" title="查看详情">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn-sm btn-outline" @click="editSchedule(schedule)" title="编辑">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn-sm btn-danger" @click="deleteSchedule(schedule.id)" title="删除">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 空状态 -->
+                <div v-if="filteredSchedules.length === 0" class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>暂无日程安排</p>
+                    <button class="btn-primary" @click="showAddModal">
+                        <i class="fas fa-plus"></i>
+                        添加第一个日程
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 添加/编辑日程弹窗 -->
+        <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
+            <div class="modal-content large-modal">
+                <div class="modal-header">
+                    <h3>{{ isEditMode ? '编辑日程' : '添加日程' }}</h3>
+                    <button class="close-btn" @click="closeModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form @submit.prevent="saveSchedule">
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>日程主题 *</label>
+                                <input
+                                    type="text"
+                                    v-model="scheduleForm.title"
+                                    required
+                                    placeholder="请输入日程主题"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label>开始时间 *</label>
+                                <input
+                                    type="datetime-local"
+                                    v-model="scheduleForm.startTime"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label>结束时间 *</label>
+                                <input
+                                    type="datetime-local"
+                                    v-model="scheduleForm.endTime"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>详细地址 *</label>
+                                <input
+                                    type="text"
+                                    v-model="scheduleForm.location"
+                                    required
+                                    placeholder="请输入详细地址（如：主会场A厅）"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label>主持人</label>
+                                <input
+                                    type="text"
+                                    v-model="scheduleForm.host"
+                                    placeholder="主持人姓名"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label>主讲人</label>
+                                <input
+                                    type="text"
+                                    v-model="scheduleForm.speaker"
+                                    placeholder="主讲人姓名"
+                                >
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>主讲人介绍</label>
+                                <textarea
+                                    v-model="scheduleForm.speakerIntro"
+                                    rows="3"
+                                    placeholder="主讲人简介、职称、研究方向等"
+                                ></textarea>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>课件/PPT上传</label>
+                                <div class="file-upload">
+                                    <input
+                                        type="file"
+                                        id="courseFile"
+                                        @change="handleFileUpload"
+                                        accept=".ppt,.pptx,.pdf,.doc,.docx"
+                                        multiple
+                                        style="display: none;"
+                                    >
+                                    <div class="file-upload-area" @click="triggerFileUpload()">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <span>点击上传课件或PPT</span>
+                                        <span class="upload-hint">支持 .ppt, .pptx, .pdf, .doc, .docx 格式</span>
+                                    </div>
+                                    <div class="file-list" v-if="scheduleForm.attachments && scheduleForm.attachments.length > 0">
+                                        <div v-for="(file, index) in scheduleForm.attachments" :key="index" class="file-item">
+                                            <i class="fas fa-file-powerpoint"></i>
+                                            <span>{{ file.name }}</span>
+                                            <button type="button" class="btn-remove-file" @click.stop="removeFile(index)">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>备注说明</label>
+                                <textarea
+                                    v-model="scheduleForm.notes"
+                                    rows="3"
+                                    placeholder="其他备注信息"
+                                ></textarea>
+                            </div>
+                        </div>
+
+                        <!-- 日程设置 -->
+                        <div class="schedule-settings">
+                            <h4>⚙️ 日程设置</h4>
+
+                            <!-- 报到设置 -->
+                            <div class="setting-card">
+                                <div class="setting-card-header">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" v-model="scheduleForm.settings.needReport">
+                                        <span class="setting-title">📝 是否需要报到</span>
+                                    </label>
+                                </div>
+                                <div class="setting-card-body" v-if="scheduleForm.settings.needReport">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>报到方式</label>
+                                            <select v-model="scheduleForm.settings.reportMethod">
+                                                <option value="print">打印表单签字</option>
+                                                <option value="qrcode">二维码扫码+位置信息</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 签到设置 -->
+                            <div class="setting-card">
+                                <div class="setting-card-header">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" v-model="scheduleForm.settings.needCheckin">
+                                        <span class="setting-title">✅ 是否需要签到</span>
+                                    </label>
+                                </div>
+                                <div class="setting-card-body" v-if="scheduleForm.settings.needCheckin">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>签到方式</label>
+                                            <select v-model="scheduleForm.settings.checkinMethod">
+                                                <option value="print">打印表单签字</option>
+                                                <option value="qrcode">二维码扫码+位置信息</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 提醒设置 -->
+                            <div class="setting-card">
+                                <div class="setting-card-header">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" v-model="scheduleForm.settings.needReminder">
+                                        <span class="setting-title">🔔 是否需要提醒</span>
+                                    </label>
+                                </div>
+                                <div class="setting-card-body" v-if="scheduleForm.settings.needReminder">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>提醒对象</label>
+                                            <select v-model="scheduleForm.settings.reminderTarget">
+                                                <option value="staff">工作人员</option>
+                                                <option value="all">全体人员</option>
+                                                <option value="user">用户自主设置</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>提前提醒时间</label>
+                                            <select v-model="scheduleForm.settings.reminderTime">
+                                                <option value="10">提前10分钟</option>
+                                                <option value="15">提前15分钟</option>
+                                                <option value="30">提前30分钟</option>
+                                                <option value="60">提前60分钟</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group full-width">
+                                            <label>提醒方式</label>
+                                            <div class="checkbox-group-inline">
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" v-model="scheduleForm.settings.reminderMethods" value="app">
+                                                    <span>APP推送</span>
+                                                </label>
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" v-model="scheduleForm.settings.reminderMethods" value="sms">
+                                                    <span>短信</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-outline" @click="closeModal">取消</button>
+                    <button class="btn-primary" @click="saveSchedule">
+                        <i class="fas fa-save"></i>
+                        {{ isEditMode ? '保存' : '添加' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 日程详情弹窗 -->
+        <div class="modal-overlay" v-if="showDetailModal" @click.self="closeDetailModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>日程详情</h3>
+                    <button class="close-btn" @click="closeDetailModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" v-if="currentSchedule">
+                    <div class="detail-view">
+                        <div class="detail-section">
+                            <h4>📅 {{ currentSchedule.title }}</h4>
+                            <div class="detail-time">
+                                <div class="time-range">
+                                    <i class="fas fa-clock"></i>
+                                    <span>{{ formatDateTime(currentSchedule.startTime) }} - {{ formatDateTime(currentSchedule.endTime) }}</span>
+                                </div>
+                            </div>
+                            <div class="detail-info">
+                                <div class="info-item" v-if="currentSchedule.location">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>{{ currentSchedule.location }}</span>
+                                </div>
+                                <div class="info-item" v-if="currentSchedule.host">
+                                    <i class="fas fa-user"></i>
+                                    <span>主持人：{{ currentSchedule.host }}</span>
+                                </div>
+                                <div class="info-item" v-if="currentSchedule.speaker">
+                                    <i class="fas fa-microphone"></i>
+                                    <span>主讲人：{{ currentSchedule.speaker }}</span>
+                                </div>
+                            </div>
+                            <div class="detail-notes" v-if="currentSchedule.speakerIntro">
+                                <strong>主讲人介绍：</strong>
+                                <p>{{ currentSchedule.speakerIntro }}</p>
+                            </div>
+                            <div class="detail-notes" v-if="currentSchedule.notes">
+                                <strong>备注说明：</strong>
+                                <p>{{ currentSchedule.notes }}</p>
+                            </div>
+                        </div>
+
+                        <div class="detail-section" v-if="currentSchedule.attachments && currentSchedule.attachments.length > 0">
+                            <h4>📎 课件资料</h4>
+                            <div class="attachment-list">
+                                <div v-for="(file, index) in currentSchedule.attachments" :key="index" class="attachment-item">
+                                    <i class="fas fa-file-powerpoint" style="color: #d97706;"></i>
+                                    <div class="attachment-info">
+                                        <div class="attachment-name">{{ file.name }}</div>
+                                        <div class="attachment-size">{{ formatFileSize(file.size) }}</div>
+                                    </div>
+                                    <button class="btn-sm btn-outline" @click="downloadAttachment(file)">
+                                        <i class="fas fa-download"></i> 下载
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="detail-section" v-if="currentSchedule.settings">
+                            <h4>⚙️ 设置</h4>
+                            <div class="settings-list">
+                                <div class="setting-item" v-if="currentSchedule.settings.needReport">
+                                    <i class="fas fa-user-check"></i>
+                                    <span>需要报到（{{ getReportMethodText(currentSchedule.settings.reportMethod) }}）</span>
+                                </div>
+                                <div class="setting-item" v-if="currentSchedule.settings.needCheckin">
+                                    <i class="fas fa-clipboard-check"></i>
+                                    <span>需要签到（{{ getCheckinMethodText(currentSchedule.settings.checkinMethod) }}）</span>
+                                </div>
+                                <div class="setting-item" v-if="currentSchedule.settings.needReminder">
+                                    <i class="fas fa-bell"></i>
+                                    <span>需要提醒（{{ getReminderTargetText(currentSchedule.settings.reminderTarget) }}，{{ getReminderMethodsText(currentSchedule.settings.reminderMethods) }}，提前{{ currentSchedule.settings.reminderTime }}分钟）</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-outline" @click="closeDetailModal">关闭</button>
+                    <button class="btn-info" @click="duplicateSchedule(currentSchedule)" title="复制日程">
+                        <i class="fas fa-copy"></i>
+                        复制
+                    </button>
+                    <button class="btn-warning" @click="cancelSchedule(currentSchedule.id)" v-if="currentSchedule.status !== 4" title="取消日程">
+                        <i class="fas fa-times"></i>
+                        取消
+                    </button>
+                    <button class="btn-success" @click="publishSchedule(currentSchedule.id)" v-if="currentSchedule.status === 0" title="发布日程">
+                        <i class="fas fa-share"></i>
+                        发布
+                    </button>
+                    <button class="btn-primary" @click="editSchedule(currentSchedule)">
+                        <i class="fas fa-edit"></i>
+                        编辑
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    // 当前会议信息
+                    conference: null,
+
+                    // 日程列表
+                    schedules: [],
+                    filteredSchedules: [],
+
+                    // 视图模式
+                    viewMode: 'table', // 'table' 或 'schedule'
+
+                    // 搜索和筛选
+                    searchKeyword: '',
+                    filterStatus: '',
+
+                    // 弹窗状态
+                    showModal: false,
+                    showDetailModal: false,
+                    isEditMode: false,
+                    currentSchedule: null,
+
+                    // 日程表单
+                    scheduleForm: {
+                        id: '',
+                        title: '',
+                        startTime: '',
+                        endTime: '',
+                        location: '',
+                        host: '',
+                        speaker: '',
+                        speakerIntro: '',
+                        notes: '',
+                        attachments: [],
+                        settings: {
+                            needReport: false,
+                            reportMethod: 'qrcode',
+                            needCheckin: false,
+                            checkinMethod: 'qrcode',
+                            needReminder: false,
+                            reminderTarget: 'all',
+                            reminderMethods: ['app'],
+                            reminderTime: '15'
+                        }
+                    }
+                }
+            },
+
+            computed: {
+                // 统计数据
+                totalDuration() {
+                    let total = 0;
+                    this.schedules.forEach(schedule => {
+                        const start = new Date(schedule.startTime);
+                        const end = new Date(schedule.endTime);
+                        total += (end - start) / (1000 * 60 * 60);
+                    });
+                    return Math.round(total);
+                },
+
+                checkinCount() {
+                    return this.schedules.filter(s => s.settings && s.settings.needCheckin).length;
+                },
+
+                reminderCount() {
+                    return this.schedules.filter(s => s.settings && s.settings.needReminder).length;
+                },
+
+                // 按日期分组的日程（用于日程表视图）
+                groupedSchedules() {
+                    const groups = {};
+                    this.filteredSchedules.forEach(schedule => {
+                        const date = this.formatDateKey(schedule.startTime);
+                        if (!groups[date]) {
+                            groups[date] = [];
+                        }
+                        groups[date].push(schedule);
+                    });
+
+                    // 对每个日期组的日程按时间排序
+                    Object.keys(groups).forEach(date => {
+                        groups[date].sort((a, b) => {
+                            return new Date(a.startTime) - new Date(b.startTime);
+                        });
+                    });
+
+                    return groups;
+                }
+            },
+
+            methods: {
+                // 从URL获取会议ID并加载数据
+                async loadData() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const conferenceId = urlParams.get('conferenceId');
+
+                    if (!conferenceId) {
+                        this.$showToast('缺少会议ID参数', 'error');
+                        setTimeout(() => {
+                            window.location.href = '../index.html';
+                        }, 1500);
+                        return;
+                    }
+
+                    try {
+                        this.$showLoading('正在加载日程...');
+                        
+                        // 从后端API加载日程列表
+                        const scheduleResponse = await ScheduleAPI.allSchedules(conferenceId);
+                        
+                        // handleResponse 已经提取了 data，直接是数组
+                        if (scheduleResponse && Array.isArray(scheduleResponse)) {
+                            this.schedules = scheduleResponse;
+                            // 加载会议真实名称
+                            this.conference = {
+                                id: conferenceId,
+                                name: '会议加载中...',
+                                status: 'preparing'
+                            };
+                            this.loadConferenceName(conferenceId);
+                        } else {
+                            throw new Error('加载日程失败');
+                        }
+                        
+                        this.filterSchedules();
+                        this.$hideLoading();
+                    } catch (error) {
+                        this.$hideLoading();
+                        console.error('加载日程失败:', error);
+                        this.$showToast('加载日程失败，请检查网络连接', 'error');
+                        // API加载失败时显示空列表
+                        this.conference = { id: conferenceId, name: '会议(加载失败)' };
+                        this.schedules = [];
+                        this.filterSchedules();
+                    }
+                },
+
+                // 加载会议真实名称
+                async loadConferenceName(conferenceId) {
+                    try {
+                        const token = localStorage.getItem('authToken');
+                        const resp = await fetch(`/api/meeting/${conferenceId}`, {
+                            headers: {
+                                'Authorization': 'Bearer ' + token,
+                                'X-Tenant-Id': localStorage.getItem('tenantId') || ''
+                            }
+                        });
+                        if (resp.ok) {
+                            const result = await resp.json();
+                            const meeting = result.data || result;
+                            if (meeting && (meeting.meetingName || meeting.name)) {
+                                this.conference.name = meeting.meetingName || meeting.name;
+                            } else {
+                                this.conference.name = '会议 #' + conferenceId;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('加载会议名称失败:', e);
+                        this.conference.name = '会议 #' + conferenceId;
+                    }
+                },
+
+                // 筛选日程
+                filterSchedules() {
+                    let filtered = [...this.schedules];
+
+                    // 关键词搜索
+                    if (this.searchKeyword) {
+                        const keyword = this.searchKeyword.toLowerCase();
+                        filtered = filtered.filter(schedule =>
+                            schedule.title.toLowerCase().includes(keyword) ||
+                            schedule.location.toLowerCase().includes(keyword) ||
+                            (schedule.host && schedule.host.toLowerCase().includes(keyword)) ||
+                            (schedule.speaker && schedule.speaker.toLowerCase().includes(keyword))
+                        );
+                    }
+
+                    // 状态筛选
+                    if (this.filterStatus) {
+                        filtered = filtered.filter(schedule => {
+                            return this.getScheduleStatus(schedule) === this.filterStatus;
+                        });
+                    }
+
+                    // 按开始时间排序
+                    filtered.sort((a, b) => {
+                        return new Date(a.startTime) - new Date(b.startTime);
+                    });
+
+                    this.filteredSchedules = filtered;
+                },
+
+                // 获取日程状态
+                getScheduleStatus(schedule) {
+                    const now = new Date();
+                    const start = new Date(schedule.startTime);
+                    const end = new Date(schedule.endTime);
+
+                    if (now < start) return 'pending';
+                    if (now >= start && now <= end) return 'ongoing';
+                    return 'completed';
+                },
+
+                // 格式化日期
+                formatDate(datetime) {
+                    return new Date(datetime).toLocaleDateString('zh-CN', {
+                        month: '2-digit',
+                        day: '2-digit'
+                    });
+                },
+
+                // 格式化完整日期（包含星期）
+                formatDateFull(datetime) {
+                    const date = new Date(datetime);
+                    const monthDay = date.toLocaleDateString('zh-CN', {
+                        month: '2-digit',
+                        day: '2-digit'
+                    });
+                    const weekday = date.toLocaleDateString('zh-CN', {
+                        weekday: 'long'
+                    });
+                    const weekdays = {
+                        '星期一': '一',
+                        '星期二': '二',
+                        '星期三': '三',
+                        '星期四': '四',
+                        '星期五': '五',
+                        '星期六': '六',
+                        '星期日': '日'
+                    };
+                    return `${monthDay}（星期${weekdays[weekday] || weekday}）`;
+                },
+
+                // 获取日期键（用于分组）
+                formatDateKey(datetime) {
+                    return new Date(datetime).toLocaleDateString('zh-CN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    });
+                },
+
+                // 获取时段（上午/下午/晚上）
+                getTimePeriod(datetime) {
+                    const hour = new Date(datetime).getHours();
+                    if (hour >= 5 && hour < 12) {
+                        return '上午';
+                    } else if (hour >= 12 && hour < 18) {
+                        return '下午';
+                    } else {
+                        return '晚上';
+                    }
+                },
+
+                // 格式化时间
+                formatTime(datetime) {
+                    return new Date(datetime).toLocaleTimeString('zh-CN', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                },
+
+                formatDateTime(datetime) {
+                    return new Date(datetime).toLocaleString('zh-CN');
+                },
+
+                // 显示添加弹窗
+                showAddModal() {
+                    this.isEditMode = false;
+                    this.resetForm();
+                    this.showModal = true;
+                },
+
+                // 编辑日程
+                async editSchedule(schedule) {
+                    this.isEditMode = true;
+                    this.scheduleForm = JSON.parse(JSON.stringify(schedule));
+                    
+                    // 确保 settings 和 reminderMethods 是正确的格式
+                    if (!this.scheduleForm.settings) {
+                        this.scheduleForm.settings = {};
+                    }
+                    if (!Array.isArray(this.scheduleForm.settings.reminderMethods)) {
+                        this.scheduleForm.settings.reminderMethods = [];
+                    }
+
+                    // 加载附件列表
+                    if (schedule.id) {
+                        try {
+                            const attachments = await ScheduleAPI.listAttachments(schedule.id);
+                            if (Array.isArray(attachments) && attachments.length > 0) {
+                                this.scheduleForm.attachments = attachments.map(att => ({
+                                    id: att.id,
+                                    name: att.fileName,
+                                    size: att.fileSize,
+                                    type: att.fileType,
+                                    url: att.fileUrl,
+                                    description: att.description,
+                                    uploadTime: att.uploadTime
+                                }));
+                            } else {
+                                this.scheduleForm.attachments = [];
+                            }
+                        } catch (error) {
+                            console.warn('加载附件列表失败:', error);
+                            this.scheduleForm.attachments = [];
+                        }
+                    }
+                    
+                    if (this.showDetailModal) {
+                        this.closeDetailModal();
+                    }
+                    this.showModal = true;
+                },
+
+                // 查看日程
+                async viewSchedule(schedule) {
+                    this.currentSchedule = JSON.parse(JSON.stringify(schedule));
+                    
+                    // 加载附件列表
+                    if (schedule.id) {
+                        try {
+                            const attachments = await ScheduleAPI.listAttachments(schedule.id);
+                            if (Array.isArray(attachments) && attachments.length > 0) {
+                                this.currentSchedule.attachments = attachments.map(att => ({
+                                    id: att.id,
+                                    name: att.fileName,
+                                    size: att.fileSize,
+                                    type: att.fileType,
+                                    url: att.fileUrl,
+                                    description: att.description,
+                                    uploadTime: att.uploadTime
+                                }));
+                            }
+                        } catch (error) {
+                            console.warn('加载附件列表失败:', error);
+                        }
+                    }
+                    
+                    this.showDetailModal = true;
+                },
+
+                // 删除日程
+                async deleteSchedule(scheduleId) {
+                    const confirmed = await this.$showConfirm(
+                        '确定要删除这个日程吗？',
+                        '删除确认',
+                        'warning'
+                    );
+
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('正在删除...');
+                            
+                            // 调用API删除日程
+                            await ScheduleAPI.deleteSchedule(scheduleId);
+                            
+                            // 从本地列表移除
+                            this.schedules = this.schedules.filter(s => s.id !== scheduleId);
+                            this.filterSchedules();
+
+                            this.$hideLoading();
+                            this.$showToast('日程已删除', 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            console.error('删除日程失败:', error);
+                            this.$showToast('删除失败，请重试', 'error');
+                        }
+                    }
+                },
+
+                // 保存日程
+                async saveSchedule() {
+                    // 验证表单
+                    if (!this.scheduleForm.title || !this.scheduleForm.startTime || !this.scheduleForm.endTime || !this.scheduleForm.location) {
+                        this.$showToast('请填写必填项', 'warning');
+                        return;
+                    }
+
+                    // 验证时间
+                    const start = new Date(this.scheduleForm.startTime);
+                    const end = new Date(this.scheduleForm.endTime);
+                    if (start >= end) {
+                        this.$showToast('结束时间必须晚于开始时间', 'warning');
+                        return;
+                    }
+
+                    try {
+                        this.$showLoading(this.isEditMode ? '正在保存...' : '正在添加...');
+                        
+                        if (this.isEditMode) {
+                            // 调用API更新日程
+                            await ScheduleAPI.updateSchedule(this.scheduleForm.id, this.scheduleForm);
+                            
+                            // 更新本地列表
+                            const index = this.schedules.findIndex(s => s.id === this.scheduleForm.id);
+                            if (index > -1) {
+                                this.schedules[index] = JSON.parse(JSON.stringify(this.scheduleForm));
+                            }
+                            this.$showToast('日程已更新', 'success');
+                        } else {
+                            // 调用API创建日程（需传入 meetingId）
+                            const response = await ScheduleAPI.createSchedule(this.conference.id, this.scheduleForm);
+                            
+                            // handleResponse 已提取 data.data，response 直接就是 ScheduleResponse
+                            if (response) {
+                                this.schedules.push(response);
+                                this.$showToast('日程已添加', 'success');
+                            }
+                        }
+
+                        this.filterSchedules();
+                        this.closeModal();
+                        this.$hideLoading();
+                    } catch (error) {
+                        this.$hideLoading();
+                        console.error('保存日程失败:', error);
+                        this.$showToast('操作失败，请重试', 'error');
+                    }
+                },
+
+                // 重置表单
+                resetForm() {
+                    this.scheduleForm = {
+                        id: '',
+                        title: '',
+                        startTime: '',
+                        endTime: '',
+                        location: '',
+                        host: '',
+                        speaker: '',
+                        speakerIntro: '',
+                        notes: '',
+                        attachments: [],
+                        settings: {
+                            needReport: false,
+                            reportMethod: 'qrcode',
+                            needCheckin: false,
+                            checkinMethod: 'qrcode',
+                            needReminder: false,
+                            reminderTarget: 'all',
+                            reminderMethods: ['app'],
+                            reminderTime: '15'
+                        }
+                    };
+                },
+
+                // 关闭弹窗
+                closeModal() {
+                    this.showModal = false;
+                    this.resetForm();
+                },
+
+                // 处理文件上传
+                async handleFileUpload(event) {
+                    const files = event.target.files;
+                    if (!files || files.length === 0) return;
+
+                    // 检查是否已创建日程（需要scheduleId）
+                    if (!this.scheduleForm.id) {
+                        this.$showToast('请先保存日程，再上传课件', 'warning');
+                        event.target.value = '';
+                        return;
+                    }
+
+                    this.$showLoading('正在上传课件...');
+
+                    try {
+                        const fileArray = Array.from(files);
+                        const uploadPromises = fileArray.map(file => 
+                            ScheduleAPI.uploadAttachment(this.scheduleForm.id, file, '')
+                                .catch(error => {
+                                    console.warn(`文件 ${file.name} 上传失败:`, error);
+                                    return null;
+                                })
+                        );
+
+                        const results = await Promise.all(uploadPromises);
+                        const successCount = results.filter(r => r !== null).length;
+
+                        if (!this.scheduleForm.attachments) {
+                            this.scheduleForm.attachments = [];
+                        }
+
+                        // 添加成功上传的附件到列表
+                        results.forEach((attachment, index) => {
+                            if (attachment) {
+                                this.scheduleForm.attachments.push({
+                                    id: attachment.id,
+                                    name: attachment.fileName,
+                                    size: attachment.fileSize,
+                                    type: attachment.fileType,
+                                    url: attachment.fileUrl,
+                                    description: attachment.description,
+                                    uploadTime: attachment.uploadTime
+                                });
+                            }
+                        });
+
+                        this.$hideLoading();
+                        if (successCount > 0) {
+                            this.$showToast(`成功上传 ${successCount} 个文件`, 'success');
+                        }
+                        if (successCount < fileArray.length) {
+                            this.$showToast(`有 ${fileArray.length - successCount} 个文件上传失败`, 'warning');
+                        }
+                    } catch (error) {
+                        this.$hideLoading();
+                        console.error('批量上传课件失败:', error);
+                        this.$showToast('上传课件失败：' + error.message, 'error');
+                    }
+
+                    // 清空input，允许重复上传同一文件
+                    event.target.value = '';
+                },
+
+                // 触发文件选择对话框
+                triggerFileUpload() {
+                    const fileInput = document.getElementById('courseFile');
+                    if (fileInput) {
+                        fileInput.click();
+                    }
+                },
+
+                // 删除文件（本地未保存）或从已保存的日程删除
+                async removeFile(index) {
+                    if (!this.scheduleForm.attachments || index < 0) return;
+
+                    const file = this.scheduleForm.attachments[index];
+                    
+                    // 如果文件有ID说明已保存，需要调用API删除
+                    if (file && file.id) {
+                        if (!confirm('确定要删除此课件吗？')) {
+                            return;
+                        }
+
+                        this.$showLoading('正在删除...');
+                        try {
+                            await ScheduleAPI.deleteAttachment(file.id);
+                            this.scheduleForm.attachments.splice(index, 1);
+                            this.$hideLoading();
+                            this.$showToast('课件已删除', 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            console.error('删除课件失败:', error);
+                            this.$showToast('删除课件失败：' + error.message, 'error');
+                        }
+                    } else {
+                        // 未保存的文件直接从本地列表删除
+                        this.scheduleForm.attachments.splice(index, 1);
+                    }
+                },
+
+                // 下载课件
+                async downloadAttachment(file) {
+                    if (!file || !file.id) {
+                        this.$showToast('无法下载此文件', 'warning');
+                        return;
+                    }
+
+                    try {
+                        // 记录下载
+                        await ScheduleAPI.recordDownload(file.id);
+
+                        // 获取下载地址
+                        const result = await ScheduleAPI.getDownloadUrl(file.id);
+                        const downloadUrl = result.downloadUrl;
+
+                        // 创建隐藏的链接并触发下载
+                        const link = document.createElement('a');
+                        link.href = downloadUrl;
+                        link.download = file.name || 'download';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+
+                        this.$showToast('开始下载：' + file.name, 'success');
+                    } catch (error) {
+                        console.error('下载课件失败:', error);
+                        this.$showToast('下载失败：' + error.message, 'error');
+                    }
+                },
+
+                // 格式化文件大小
+                formatFileSize(bytes) {
+                    if (bytes === 0) return '0 B';
+                    const k = 1024;
+                    const sizes = ['B', 'KB', 'MB', 'GB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+                },
+
+                // 关闭详情弹窗
+                closeDetailModal() {
+                    this.showDetailModal = false;
+                    this.currentSchedule = null;
+                },
+
+                // 发布日程
+                async publishSchedule(scheduleId) {
+                    try {
+                        this.$showLoading('正在发布...');
+                        
+                        // 调用API发布日程
+                        await ScheduleAPI.publishSchedule(scheduleId);
+                        
+                        // 更新本地列表中的日程状态
+                        const schedule = this.schedules.find(s => s.id === scheduleId);
+                        if (schedule) {
+                            schedule.status = 1; // 已发布
+                        }
+                        
+                        this.filterSchedules();
+                        this.closeDetailModal();
+                        
+                        this.$hideLoading();
+                        this.$showToast('日程已发布', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        console.error('发布日程失败:', error);
+                        this.$showToast('发布失败，请重试', 'error');
+                    }
+                },
+
+                // 取消日程
+                async cancelSchedule(scheduleId) {
+                    const confirmed = await this.$showConfirm(
+                        '确定要取消这个日程吗？',
+                        '取消确认',
+                        'warning'
+                    );
+
+                    if (confirmed) {
+                        try {
+                            this.$showLoading('正在取消...');
+                            
+                            // 调用API取消日程
+                            await ScheduleAPI.cancelSchedule(scheduleId);
+                            
+                            // 更新本地列表中的日程状态
+                            const schedule = this.schedules.find(s => s.id === scheduleId);
+                            if (schedule) {
+                                schedule.status = 4; // 已取消
+                            }
+                            
+                            this.filterSchedules();
+                            this.closeDetailModal();
+                            
+                            this.$hideLoading();
+                            this.$showToast('日程已取消', 'success');
+                        } catch (error) {
+                            this.$hideLoading();
+                            console.error('取消日程失败:', error);
+                            this.$showToast('取消失败，请重试', 'error');
+                        }
+                    }
+                },
+
+                // 复制日程
+                async duplicateSchedule(schedule) {
+                    try {
+                        this.$showLoading('正在复制...');
+                        
+                        // 调用API复制日程
+                        const response = await ScheduleAPI.duplicateSchedule(schedule.id);
+                        
+                        if (response && response.data) {
+                            this.schedules.push(response.data);
+                            this.filterSchedules();
+                        }
+                        
+                        this.closeDetailModal();
+                        this.$hideLoading();
+                        this.$showToast('日程已复制', 'success');
+                    } catch (error) {
+                        this.$hideLoading();
+                        console.error('复制日程失败:', error);
+                        
+                        // 降级方案：本地复制
+                        this.isEditMode = false;
+                        this.scheduleForm = JSON.parse(JSON.stringify(schedule));
+                        this.scheduleForm.id = '';
+                        this.scheduleForm.title = schedule.title + ' (副本)';
+                        this.showModal = true;
+                        
+                        this.$showToast('API复制失败，已切换到本地复制模式', 'warning');
+                    }
+                },
+
+                // 导出日程为Excel
+                exportSchedules() {
+                    if (this.filteredSchedules.length === 0) {
+                        this.$showToast('没有可导出的日程', 'warning');
+                        return;
+                    }
+
+                    if (typeof XLSX === 'undefined') {
+                        this.$showToast('Excel导出库加载失败，请检查网络', 'error');
+                        return;
+                    }
+
+                    try {
+                        const wb = XLSX.utils.book_new();
+
+                        if (this.viewMode === 'schedule') {
+                            // ===== 日程表视图（按日期分组） =====
+                            this._exportScheduleView(wb);
+                        } else {
+                            // ===== 标准表格视图（平铺列表） =====
+                            this._exportTableView(wb);
+                        }
+
+                        // 导出文件
+                        const fileName = `${this.conference.name || '会议'}_日程表_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.xlsx`;
+                        XLSX.writeFile(wb, fileName);
+                        this.$showToast('日程表已导出', 'success');
+                    } catch (e) {
+                        console.error('导出失败:', e);
+                        this.$showToast('导出失败：' + e.message, 'error');
+                    }
+                },
+
+                // 标准表格视图导出
+                _exportTableView(wb) {
+                    const title = this.conference.name || '会议日程';
+                    const rows = [];
+
+                    // 标题行
+                    rows.push([title + ' - 日程表']);
+                    rows.push([]); // 空行
+
+                    // 表头
+                    rows.push(['日期', '时间', '内容', '地点', '主持人/主讲人', '备注']);
+
+                    // 数据行
+                    this.filteredSchedules.forEach(schedule => {
+                        const s = schedule.settings || {};
+                        const tags = [];
+                        if (s.needReport) tags.push('报到');
+                        if (s.needCheckin) tags.push('签到');
+                        if (s.needReminder) tags.push('提醒');
+                        const titleText = tags.length > 0
+                            ? schedule.title + '（' + tags.join('、') + '）'
+                            : schedule.title;
+
+                        rows.push([
+                            this.formatDate(schedule.startTime),
+                            this.formatTime(schedule.startTime) + ' - ' + this.formatTime(schedule.endTime),
+                            titleText,
+                            schedule.location || '-',
+                            schedule.speaker || schedule.host || '-',
+                            schedule.notes || ''
+                        ]);
+                    });
+
+                    const ws = XLSX.utils.aoa_to_sheet(rows);
+
+                    // 设置列宽
+                    ws['!cols'] = [
+                        { wch: 12 }, // 日期
+                        { wch: 18 }, // 时间
+                        { wch: 35 }, // 内容
+                        { wch: 20 }, // 地点
+                        { wch: 16 }, // 主持人/主讲人
+                        { wch: 25 }  // 备注
+                    ];
+
+                    // 合并标题单元格
+                    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }];
+
+                    XLSX.utils.book_append_sheet(wb, ws, '日程表');
+                },
+
+                // 日程表视图导出（按日期分组，日期列合并）
+                _exportScheduleView(wb) {
+                    const title = this.conference.name || '会议日程';
+                    const rows = [];
+                    const merges = [];
+
+                    // 标题行
+                    rows.push([title + ' - 日程表（按日期分组）']);
+                    rows.push([]); // 空行
+
+                    // 表头
+                    rows.push(['日期', '时段', '时间', '内容', '地点', '主持人/主讲人']);
+                    const headerRowIdx = 2;
+
+                    // 合并标题
+                    merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } });
+
+                    let currentRow = headerRowIdx + 1; // 数据起始行
+
+                    const grouped = this.groupedSchedules;
+                    const sortedDates = Object.keys(grouped).sort();
+
+                    sortedDates.forEach(date => {
+                        const dateGroup = grouped[date];
+                        const groupStartRow = currentRow;
+
+                        dateGroup.forEach((schedule, idx) => {
+                            const s = schedule.settings || {};
+                            const tags = [];
+                            if (s.needReport) tags.push('报到');
+                            if (s.needCheckin) tags.push('签到');
+                            if (s.needReminder) tags.push('提醒');
+                            const titleText = tags.length > 0
+                                ? schedule.title + '（' + tags.join('、') + '）'
+                                : schedule.title;
+
+                            rows.push([
+                                idx === 0 ? this.formatDateFull(schedule.startTime) : '',
+                                this.getTimePeriod(schedule.startTime),
+                                this.formatTime(schedule.startTime) + ' - ' + this.formatTime(schedule.endTime),
+                                titleText,
+                                schedule.location || '-',
+                                schedule.speaker || schedule.host || '-'
+                            ]);
+                            currentRow++;
+                        });
+
+                        // 日期列合并（同日多条日程时）
+                        if (dateGroup.length > 1) {
+                            merges.push({
+                                s: { r: groupStartRow, c: 0 },
+                                e: { r: groupStartRow + dateGroup.length - 1, c: 0 }
+                            });
+                        }
+                    });
+
+                    const ws = XLSX.utils.aoa_to_sheet(rows);
+
+                    // 设置列宽
+                    ws['!cols'] = [
+                        { wch: 18 }, // 日期
+                        { wch: 6 },  // 时段
+                        { wch: 18 }, // 时间
+                        { wch: 35 }, // 内容
+                        { wch: 20 }, // 地点
+                        { wch: 16 }  // 主持人/主讲人
+                    ];
+
+                    ws['!merges'] = merges;
+
+                    XLSX.utils.book_append_sheet(wb, ws, '日程表');
+                },
+
+                // 保存数据到localStorage
+                saveData() {
+                    const data = {
+                        conferenceId: this.conference.id,
+                        schedules: this.schedules
+                    };
+                    localStorage.setItem(`schedules_${this.conference.id}`, JSON.stringify(data));
+                },
+
+                // 获取状态文本
+                getStatusText(status) {
+                    const map = {
+                        'preparing': '筹备中',
+                        'ongoing': '进行中',
+                        'ended': '已结束'
+                    };
+                    return map[status] || status;
+                },
+
+                // 获取签到方式文本
+                getCheckinMethodText(method) {
+                    const map = {
+                        'print': '打印表单签字',
+                        'qrcode': '二维码扫码'
+                    };
+                    return map[method] || method;
+                },
+
+                // 获取报到方式文本
+                getReportMethodText(method) {
+                    const map = {
+                        'print': '打印表单签字',
+                        'qrcode': '二维码扫码'
+                    };
+                    return map[method] || method;
+                },
+
+                // 获取提醒对象文本
+                getReminderTargetText(target) {
+                    const map = {
+                        'staff': '工作人员',
+                        'all': '全体人员',
+                        'user': '用户自主'
+                    };
+                    return map[target] || target;
+                },
+
+                // 获取提醒方式文本
+                getReminderMethodsText(methods) {
+                    const map = {
+                        'app': 'APP推送',
+                        'sms': '短信',
+                        'alarm': '手机闹钟'
+                    };
+                    return methods.map(m => map[m] || m).join('、');
+                }
+            },
+
+            mounted() {
+                this.loadData();
+            },
+
+            mixins: [window.InteractionMixin]
+        }).mount('#app');
+    </script>
+
+    <style>
+        /* ==================== 弹窗样式 ==================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .modal-content.large-modal {
+            max-width: 1000px;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 0.5rem;
+            line-height: 1;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 1rem 2rem;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+            border-radius: 0 0 12px 12px;
+        }
+
+        /* 表单样式 */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Checkbox组样式 */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .checkbox-group label input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        /* 开关样式 */
+        /* 日程设置卡片样式 */
+        .setting-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .setting-card:hover {
+            border-color: #d1d5db;
+        }
+
+        .setting-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-card-header {
+            padding: 1rem 1.25rem;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .setting-card-header .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .setting-card-header .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .setting-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .setting-card-body {
+            padding: 1.25rem;
+            background: #f9fafb;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .checkbox-group-inline {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        /* 开关样式 */
+        .switch-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+
+        .switch-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #d1d5db;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .switch.active {
+            background: #3b82f6;
+        }
+
+        .switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .switch.active::after {
+            transform: translateX(20px);
+        }
+
+        /* 文件上传样式 */
+        .file-upload {
+            width: 100%;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f9fafb;
+        }
+
+        .file-upload-area:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .file-upload-area i {
+            font-size: 2.5rem;
+            color: #9ca3af;
+            margin-bottom: 0.75rem;
+        }
+
+        .file-upload-area span:first-of-type {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            display: block;
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        .file-list {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .file-item i {
+            font-size: 1.25rem;
+            color: #d97706;
+        }
+
+        .file-item span {
+            flex: 1;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .btn-remove-file {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-remove-file:hover {
+            background: #fee2e2;
+        }
+
+        /* 附件列表样式 */
+        .attachment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        .attachment-item:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+
+        .attachment-item i {
+            font-size: 1.5rem;
+        }
+
+        .attachment-info {
+            flex: 1;
+        }
+
+        .attachment-name {
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .attachment-size {
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        /* 详情视图 */
+        .detail-view {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .detail-section h4 {
+            margin: 0 0 1rem 0;
+            font-size: 1.125rem;
+            color: #1f2937;
+        }
+
+        .detail-time {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+
+        .detail-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .detail-info .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            color: #4b5563;
+        }
+
+        .detail-notes {
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+        }
+
+        /* 按钮样式 */
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-outline {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-outline:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-info {
+            background: #06b6d4;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-info:hover {
+            background: #0891b2;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        /* ==================== 页面样式 ====================
+        .page-with-nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-4);
+        }
+
+        .conference-context {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-top: var(--space-2);
+            flex-wrap: wrap;
+        }
+
+        .context-label {
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
+        }
+
+        .context-value {
+            color: var(--gray-800);
+            font-weight: 500;
+        }
+
+        .status-badge {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+        }
+
+        .status-preparing {
+            background: var(--warning-light);
+            color: var(--warning-color);
+        }
+
+        .status-ongoing {
+            background: var(--info-light);
+            color: var(--info-color);
+        }
+
+        .status-ended {
+            background: var(--gray-200);
+            color: var(--gray-600);
+        }
+
+        /* 容器头部 */
+        .container-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: var(--space-3);
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+        }
+
+        .search-box input {
+            padding-left: var(--space-10);
+            width: 100%;
+        }
+
+        .filter-select {
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            background: var(--glass-bg);
+        }
+
+        /* 时间轴视图 */
+        /* ==================== 视图切换按钮 ==================== */
+        .view-toggle {
+            display: flex;
+            gap: 0.25rem;
+            background: #f3f4f6;
+            padding: 0.25rem;
+            border-radius: 8px;
+        }
+
+        .toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .toggle-btn:hover {
+            color: #374151;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .toggle-btn.active {
+            background: white;
+            color: #3b82f6;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle-btn i {
+            font-size: 1rem;
+        }
+
+        /* ==================== 日程表视图样式 ==================== */
+        .schedule-calendar-view {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .date-group {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .schedule-calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .schedule-calendar-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .schedule-calendar-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: white;
+            letter-spacing: 0.5px;
+        }
+
+        .schedule-calendar-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        .schedule-calendar-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .schedule-calendar-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .schedule-calendar-table tbody tr.status-completed {
+            opacity: 0.6;
+        }
+
+        .schedule-calendar-table tbody tr.status-ongoing {
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%);
+            border-left: 3px solid #10b981;
+        }
+
+        .schedule-calendar-table td {
+            padding: 1rem;
+            vertical-align: middle;
+            font-size: 0.875rem;
+        }
+
+        .schedule-calendar-table td:first-child {
+            font-weight: 600;
+            color: #1f2937;
+            background: #f9fafb;
+            white-space: nowrap;
+        }
+
+        .time-period {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .time-range {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+        }
+
+        .schedule-content {
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .schedule-settings-inline {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .setting-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            background: #eff6ff;
+            color: #3b82f6;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .setting-tag i {
+            font-size: 0.6875rem;
+        }
+
+        /* 日程表格样式 */
+        .schedule-table-view {
+            overflow-x: auto;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--glass-bg);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .schedule-table thead {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .schedule-table th {
+            padding: var(--space-3) var(--space-4);
+            text-align: left;
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .schedule-table tbody tr {
+            border-bottom: 1px solid var(--gray-200);
+            transition: all var(--transition-normal);
+        }
+
+        .schedule-table tbody tr:hover {
+            background: rgba(var(--primary-rgb), 0.05);
+        }
+
+        .schedule-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .schedule-table tbody tr.status-completed {
+            opacity: 0.6;
+        }
+
+        .schedule-table tbody tr.status-ongoing {
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%);
+            border-left: 3px solid var(--success-color);
+        }
+
+        .schedule-table td {
+            padding: var(--space-3) var(--space-4);
+            font-size: var(--font-size-sm);
+            color: var(--text-primary);
+            vertical-align: middle;
+        }
+
+        .schedule-title {
+            font-weight: 500;
+            margin-bottom: var(--space-1);
+        }
+
+        .schedule-badges {
+            display: flex;
+            gap: var(--space-1);
+            flex-wrap: wrap;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--space-1);
+        }
+
+        .timeline-view {
+            position: relative;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: var(--space-4);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            margin-bottom: var(--space-4);
+        }
+
+        .timeline-item:hover {
+            background: var(--gray-50);
+            transform: translateX(4px);
+        }
+
+        .timeline-item.status-completed {
+            opacity: 0.6;
+        }
+
+        .timeline-item.status-ongoing {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border-left: 3px solid var(--success-color);
+        }
+
+        .timeline-time {
+            min-width: 100px;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .time-start {
+            font-size: var(--font-size-lg);
+            color: var(--text-primary);
+        }
+
+        .time-end {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+        }
+
+        .timeline-dot {
+            position: relative;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            margin-top: var(--space-2);
+        }
+
+        .timeline-dot::before {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: calc(100% + 20px);
+            background: var(--gray-200);
+        }
+
+        .timeline-item:last-child .timeline-dot::before {
+            display: none;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-2);
+        }
+
+        .timeline-header h4 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+            color: var(--text-primary);
+        }
+
+        .timeline-actions {
+            display: flex;
+            gap: var(--space-2);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .timeline-item:hover .timeline-actions {
+            opacity: 1;
+        }
+
+        .timeline-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-4);
+            margin-bottom: var(--space-2);
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+        }
+
+        .timeline-settings {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .setting-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-2);
+            background: var(--primary-light);
+            color: var(--primary-color);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-12);
+            color: var(--gray-500);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: var(--space-4);
+            opacity: 0.3;
+        }
+
+        /* 日程设置 */
+        .schedule-settings {
+            margin-top: var(--space-4);
+            padding: var(--space-4);
+            background: var(--glass-bg);
+            border-radius: var(--radius-lg);
+        }
+
+        .schedule-settings h4 {
+            margin: 0 0 var(--space-3) 0;
+            font-size: var(--font-size-base);
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            cursor: pointer;
+            margin-top: var(--space-2);
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: var(--space-4);
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            font-size: var(--font-size-sm);
+            cursor: pointer;
+        }
+
+        /* 详情视图 */
+        .detail-view {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .detail-section {
+            padding: var(--space-4);
+            background: var(--glass-bg);
+            border-radius: var(--radius-lg);
+        }
+
+        .detail-section h4 {
+            margin: 0 0 var(--space-3) 0;
+            font-size: var(--font-size-lg);
+            color: var(--text-primary);
+        }
+
+        .detail-time {
+            margin-bottom: var(--space-3);
+        }
+
+        .time-range {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            color: var(--text-secondary);
+        }
+
+        .detail-info {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+            margin-bottom: var(--space-3);
+        }
+
+        .detail-notes {
+            padding: var(--space-3);
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+        }
+
+        .detail-notes p {
+            margin: 0;
+        }
+
+        .settings-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .timeline-item {
+                flex-direction: column;
+            }
+
+            .timeline-time {
+                text-align: left;
+                min-width: auto;
+            }
+
+            .timeline-dot {
+                display: none;
+            }
+
+            .header-actions {
+                flex-direction: column;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>

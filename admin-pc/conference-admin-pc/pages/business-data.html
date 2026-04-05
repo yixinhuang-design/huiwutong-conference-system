@@ -464,6 +464,15 @@
             async mounted() {
                 await this.initialize();
                 await this.loadAllBusinessData();
+                // 每60秒自动刷新业务数据
+                this._refreshTimer = setInterval(() => {
+                    this.loadAllBusinessData();
+                }, 60000);
+            },
+            beforeUnmount() {
+                if (this._refreshTimer) {
+                    clearInterval(this._refreshTimer);
+                }
             },
             methods: {
                 async initialize() {
