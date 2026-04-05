@@ -249,8 +249,7 @@ export default {
 @import '../../styles/common.scss';
 @import '../../styles/global-patch.scss';
 
-/* Font Awesome 图标支持 */
-@import url('@/static/fontawesome/css/all.css');
+/* Font Awesome 已在 App.vue 全局注册，无需组件内重复引入 */
 
 .meeting-detail-container {
   min-height: 100vh;
