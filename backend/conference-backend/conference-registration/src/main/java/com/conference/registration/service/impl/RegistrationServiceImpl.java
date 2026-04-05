@@ -23,10 +23,15 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
@@ -70,6 +75,12 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
 
     private final RegistrationMapper registrationMapper;
     private final RegistrationAuditMapper auditMapper;
+
+    @Autowired(required = false)
+    private RestTemplate restTemplate;
+
+    @Value("${conference.auth-service.url:http://localhost:8081/api}")
+    private String authServiceUrl;
 
     @Value("${registration.ocr.api-url:https://api.ocr.space/parse/imageurl}")
     private String ocrApiUrl;
@@ -215,6 +226,16 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         audit.setAuditMethod("manual");
         audit.setDeleted(0);
         auditMapper.insert(audit);
+
+        // 方案A：审核通过时自动为参会人员创建登录账号
+        if (registration.getStatus() == STATUS_APPROVED) {
+            try {
+                createAttendeeAccount(registration);
+            } catch (Exception e) {
+                log.warn("自动创建参会人员账号失败(不影响审核流程): registrationId={}, error={}",
+                    registration.getId(), e.getMessage());
+            }
+        }
     }
 
     @Override
@@ -222,6 +243,49 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     public void batchAuditRegistration(List<RegistrationAuditRequest> requests, Long auditorId) {
         for (RegistrationAuditRequest request : requests) {
             auditRegistration(request, auditorId);
+        }
+    }
+
+    /**
+     * 为审核通过的参会人员自动创建登录账号
+     * 调用认证服务(conference-auth)的API
+     * 默认密码规则：Hw@ + 手机号后6位，如无手机号则为 Hw@123456
+     */
+    private void createAttendeeAccount(Registration registration) {
+        if (restTemplate == null) {
+            log.warn("RestTemplate未配置，无法自动创建参会人员账号");
+            return;
+        }
+
+        // 确定用户名：优先手机号 → 其次邮箱 → 最后用报名ID
+        String username = registration.getPhone();
+        if (!StringUtils.hasText(username)) {
+            username = registration.getEmail();
+        }
+        if (!StringUtils.hasText(username)) {
+            username = "attendee_" + registration.getId();
+        }
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("tenantId", registration.getTenantId());
+        requestBody.put("username", username);
+        requestBody.put("realName", registration.getRealName());
+        requestBody.put("phone", registration.getPhone());
+        requestBody.put("email", registration.getEmail());
+        requestBody.put("gender", registration.getGender());
+        requestBody.put("registrationId", registration.getId());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+        String url = authServiceUrl + "/auth/users/create-attendee";
+        try {
+            restTemplate.postForEntity(url, entity, String.class);
+            log.info("参会人员账号创建成功: username={}, registrationId={}", username, registration.getId());
+        } catch (Exception e) {
+            log.error("调用认证服务创建账号失败: url={}, error={}", url, e.getMessage());
+            throw e;
         }
     }
 

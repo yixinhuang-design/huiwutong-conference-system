@@ -7,11 +7,35 @@ import { post, get } from './request'
 
 export default {
   /**
-   * 用户登录
+   * 用户登录（密码方式）
    * POST /auth/login
    */
   login(data) {
     return post('/auth/login', data)
+  },
+
+  /**
+   * 发送短信验证码
+   * POST /auth/sms/send
+   */
+  sendSmsCode(data) {
+    return post('/auth/sms/send', data)
+  },
+
+  /**
+   * 短信验证码登录
+   * POST /auth/sms/login
+   */
+  smsLogin(data) {
+    return post('/auth/sms/login', data)
+  },
+
+  /**
+   * 设置/修改密码（需登录状态）
+   * POST /auth/password/set
+   */
+  setPassword(data) {
+    return post('/auth/password/set', data)
   },
 
   /**

@@ -3,9 +3,18 @@
 </template>
 
 <script>
+import { useUserStore } from '@/store/modules/user'
+
 export default {
   onLaunch: function() {
     console.log('App Launch - 智能会议助手启动')
+    // 从本地存储恢复用户登录状态
+    try {
+      const userStore = useUserStore()
+      userStore.initUserState()
+    } catch (e) {
+      console.error('Init user state failed:', e)
+    }
   },
   onShow: function() {
     console.log('App Show')

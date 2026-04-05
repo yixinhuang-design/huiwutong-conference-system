@@ -193,12 +193,15 @@ gateway:
     - /api/v1/auth/register
     - /api/v1/auth/captcha
     - /api/v1/auth/sms-code
+    - /api/v1/auth/sms/**
     - /api/auth/login
     - /api/auth/refresh
     - /api/auth/logout
     - /api/auth/register
     - /api/auth/captcha
     - /api/auth/sms-code
+    - /api/auth/sms/**
+    - /api/auth/users/create-attendee
     - /api/tenant/list
     - /api/tenant/public-list
     - /api/registration/submit

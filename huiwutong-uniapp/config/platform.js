@@ -9,8 +9,8 @@
 export const h5Config = {
   // API基础地址
   apiBaseUrl: process.env.NODE_ENV === 'development'
-    ? 'http://localhost:8080/api/v1'
-    : 'https://api.huiwutong.com/api/v1',
+    ? 'http://localhost:8080/api'
+    : 'https://api.huiwutong.com/api',
 
   // 上传文件地址
   uploadUrl: '',

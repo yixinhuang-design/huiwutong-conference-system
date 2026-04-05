@@ -96,3 +96,9 @@ jwt:
   secret: ConferenceSystemJwtSecretKey2026ForSmartMeetingSystem
   expiration: 86400000  # 24小时
   refresh-expiration: 604800000  # 7天
+
+# 短信验证码配置
+sms:
+  mock-mode: true           # true=开发模式(验证码固定123456), false=生产模式(随机验证码+调用SMS API)
+  code-expire: 300          # 验证码有效期（秒）5分钟
+  send-interval: 60         # 发送间隔限制（秒）

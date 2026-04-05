@@ -8,53 +8,88 @@
       <view class="login-title">智能会议助手</view>
       <view class="login-subtitle">欢迎登录智能会议系统</view>
 
-      <!-- 身份切换Tab -->
+      <!-- 登录方式切换Tab -->
       <view class="tab-group">
         <view
           class="tab-item"
-          :class="{ active: userType === 'learner' }"
-          @click="switchUserType('learner')"
-        >
-          学员登录
-        </view>
-        <view
-          class="tab-item"
-          :class="{ active: userType === 'staff' }"
-          @click="switchUserType('staff')"
-        >
-          工作人员
-        </view>
-      </view>
-
-      <!-- 登录方式切换 -->
-      <view class="login-mode-group">
-        <view
-          class="mode-item"
-          :class="{ active: loginMode === 'password' }"
-          @click="switchLoginMode('password')"
-        >
-          密码登录
-        </view>
-        <view
-          class="mode-item"
           :class="{ active: loginMode === 'sms' }"
           @click="switchLoginMode('sms')"
         >
           验证码登录
         </view>
+        <view
+          class="tab-item"
+          :class="{ active: loginMode === 'password' }"
+          @click="switchLoginMode('password')"
+        >
+          密码登录
+        </view>
       </view>
 
-      <!-- 账号密码登录表单 -->
-      <view v-if="loginMode === 'password'" class="login-form">
+      <!-- ======== 验证码登录表单 ======== -->
+      <view v-if="loginMode === 'sms'" class="login-form">
+        <view class="form-group">
+          <view class="input-wrapper">
+            <text class="input-icon"><text class="fa fa-mobile-alt"></text></text>
+            <input
+              v-model="formData.phone"
+              placeholder="请输入手机号"
+              type="number"
+              maxlength="11"
+              class="login-input input-with-icon"
+            />
+          </view>
+        </view>
+
+        <view class="form-group">
+          <view class="input-wrapper">
+            <text class="input-icon"><text class="fa fa-shield-alt"></text></text>
+            <input
+              v-model="formData.smsCode"
+              placeholder="请输入验证码"
+              type="number"
+              maxlength="6"
+              class="login-input input-with-icon input-with-btn"
+            />
+            <button
+              class="code-btn"
+              :disabled="countdown > 0 || smsSending"
+              @click="sendSmsCode"
+            >
+              {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+            </button>
+          </view>
+        </view>
+
+        <!-- 租户切换（可选） -->
+        <view class="form-group" v-if="showTenantInput">
+          <view class="input-wrapper">
+            <text class="input-icon"><text class="fa fa-building"></text></text>
+            <input
+              v-model="formData.tenantCode"
+              placeholder="租户代码（默认DEFAULT）"
+              class="login-input input-with-icon"
+            />
+          </view>
+        </view>
+
+        <view class="form-options">
+          <view class="form-options-left"></view>
+          <text class="tenant-toggle" @click="showTenantInput = !showTenantInput">
+            {{ showTenantInput ? '隐藏租户' : '切换租户' }}
+          </text>
+        </view>
+      </view>
+
+      <!-- ======== 密码登录表单 ======== -->
+      <view v-else class="login-form">
         <view class="form-group">
           <view class="input-wrapper">
             <text class="input-icon"><text class="fa fa-user"></text></text>
             <input
               v-model="formData.username"
-              placeholder="请输入用户名/手机号"
+              placeholder="请输入手机号/用户名"
               class="login-input input-with-icon"
-              @focus="onFocus"
-              @blur="onBlur"
             />
           </view>
         </view>
@@ -67,8 +102,6 @@
               :password="!showPassword"
               placeholder="请输入密码"
               class="login-input input-with-icon"
-              @focus="onFocus"
-              @blur="onBlur"
             />
             <text
               class="password-toggle"
@@ -81,55 +114,31 @@
           </view>
         </view>
 
-        <view class="checkbox-group">
-          <checkbox
-            :checked="rememberPassword"
-            @click="toggleRemember"
-            color="#667eea"
-            style="transform: scale(0.8)"
-          />
-          <text class="checkbox-label">记住密码</text>
-        </view>
-      </view>
-
-      <!-- 验证码登录表单 -->
-      <view v-else class="login-form">
-        <view class="form-group">
+        <!-- 租户代码(可选) -->
+        <view class="form-group" v-if="showTenantInput">
           <view class="input-wrapper">
-            <text class="input-icon"><text class="fa fa-mobile-alt"></text></text>
+            <text class="input-icon"><text class="fa fa-building"></text></text>
             <input
-              v-model="formData.phone"
-              placeholder="请输入手机号"
-              type="number"
-              maxlength="11"
+              v-model="formData.tenantCode"
+              placeholder="租户代码（默认DEFAULT）"
               class="login-input input-with-icon"
-              @focus="onFocus"
-              @blur="onBlur"
             />
           </view>
         </view>
 
-        <view class="form-group">
-          <view class="input-wrapper">
-            <text class="input-icon"><text class="fa fa-comments"></text></text>
-            <input
-              v-model="formData.smsCode"
-              placeholder="请输入验证码"
-              type="number"
-              maxlength="6"
-              class="login-input input-with-icon"
-              @focus="onFocus"
-              @blur="onBlur"
+        <view class="form-options">
+          <view class="checkbox-group">
+            <checkbox
+              :checked="rememberPassword"
+              @click="rememberPassword = !rememberPassword"
+              color="#667eea"
+              style="transform: scale(0.8)"
             />
-            <button
-              class="code-btn"
-              :disabled="countdown > 0"
-              @touchend.prevent="sendSmsCode"
-              @click="sendSmsCode"
-            >
-              {{ countdown > 0 ? `${countdown}秒` : '获取验证码' }}
-            </button>
+            <text class="checkbox-label">记住密码</text>
           </view>
+          <text class="tenant-toggle" @click="showTenantInput = !showTenantInput">
+            {{ showTenantInput ? '隐藏租户' : '切换租户' }}
+          </text>
         </view>
       </view>
 
@@ -144,6 +153,10 @@
 
       <!-- 底部提示 -->
       <view class="login-tips">
+        <text v-if="loginMode === 'sms'">开发模式验证码：123456</text>
+        <text v-else>首次登录请使用验证码，登录后可在设置中设置密码</text>
+      </view>
+      <view class="login-tips">
         <text>登录即表示同意《用户协议》和《隐私政策》</text>
       </view>
     </view>
@@ -156,54 +169,32 @@ import { useUserStore } from '@/store/modules/user'
 export default {
   data() {
     return {
-      userType: 'learner', // learner | staff
-      loginMode: 'password', // password | sms
+      loginMode: 'sms', // sms | password (默认验证码登录)
       showPassword: false,
       rememberPassword: false,
-      countdown: 0,
+      showTenantInput: false,
       loading: false,
+      smsSending: false,
+      countdown: 0,
       formData: {
-        username: '',
-        password: '',
+        tenantCode: 'DEFAULT',
         phone: '',
-        smsCode: ''
+        smsCode: '',
+        username: '',
+        password: ''
       }
     }
   },
 
   onLoad() {
-    // 检查是否已登录
     const userStore = useUserStore()
     if (userStore.isLoggedIn) {
-      this.redirectToHome()
+      this.redirectByRole()
     }
-
-    // 恢复记住的密码
-    this.loadRememberedPassword()
+    this.loadRememberedData()
   },
 
   methods: {
-    /**
-     * 输入框获取焦点
-     */
-    onFocus(e) {
-      console.log('Input focused:', e)
-    },
-
-    /**
-     * 输入框失去焦点
-     */
-    onBlur(e) {
-      console.log('Input blurred:', e)
-    },
-
-    /**
-     * 切换用户类型
-     */
-    switchUserType(type) {
-      this.userType = type
-    },
-
     /**
      * 切换登录方式
      */
@@ -212,80 +203,61 @@ export default {
     },
 
     /**
-     * 切换记住密码
+     * 发送短信验证码
      */
-    toggleRemember() {
-      this.rememberPassword = !this.rememberPassword
-    },
-
-    /**
-     * 发送验证码
-     */
-    sendSmsCode() {
-      if (!this.formData.phone) {
-        uni.showToast({
-          title: '请输入手机号',
-          icon: 'none'
-        })
+    async sendSmsCode() {
+      const phone = this.formData.phone
+      if (!phone) {
+        uni.showToast({ title: '请输入手机号', icon: 'none' })
+        return
+      }
+      if (!/^1[3-9]\d{9}$/.test(phone)) {
+        uni.showToast({ title: '手机号格式不正确', icon: 'none' })
         return
       }
 
-      if (!/^1[3-9]\d{9}$/.test(this.formData.phone)) {
-        uni.showToast({
-          title: '手机号格式不正确',
-          icon: 'none'
-        })
-        return
+      this.smsSending = true
+      try {
+        const userStore = useUserStore()
+        await userStore.sendSmsCode(phone)
+        uni.showToast({ title: '验证码已发送', icon: 'success' })
+        // 开始倒计时
+        this.countdown = 60
+        const timer = setInterval(() => {
+          this.countdown--
+          if (this.countdown <= 0) clearInterval(timer)
+        }, 1000)
+      } catch (error) {
+        uni.showToast({ title: error.message || '发送失败，请稍后重试', icon: 'none' })
+      } finally {
+        this.smsSending = false
       }
-
-      // TODO: 调用发送验证码API
-      uni.showToast({
-        title: '验证码已发送',
-        icon: 'success'
-      })
-
-      // 开始倒计时
-      this.countdown = 60
-      const timer = setInterval(() => {
-        this.countdown--
-        if (this.countdown <= 0) {
-          clearInterval(timer)
-        }
-      }, 1000)
     },
 
     /**
      * 表单验证
      */
     validateForm() {
-      if (this.loginMode === 'password') {
-        if (!this.formData.username) {
-          uni.showToast({
-            title: '请输入用户名',
-            icon: 'none'
-          })
-          return false
-        }
-        if (!this.formData.password) {
-          uni.showToast({
-            title: '请输入密码',
-            icon: 'none'
-          })
-          return false
-        }
-      } else {
+      if (this.loginMode === 'sms') {
         if (!this.formData.phone) {
-          uni.showToast({
-            title: '请输入手机号',
-            icon: 'none'
-          })
+          uni.showToast({ title: '请输入手机号', icon: 'none' })
+          return false
+        }
+        if (!/^1[3-9]\d{9}$/.test(this.formData.phone)) {
+          uni.showToast({ title: '手机号格式不正确', icon: 'none' })
           return false
         }
         if (!this.formData.smsCode) {
-          uni.showToast({
-            title: '请输入验证码',
-            icon: 'none'
-          })
+          uni.showToast({ title: '请输入验证码', icon: 'none' })
+          return false
+        }
+      } else {
+        if (!this.formData.username) {
+          uni.showToast({ title: '请输入手机号/用户名', icon: 'none' })
+          return false
+        }
+        if (!this.formData.password) {
+          uni.showToast({ title: '请输入密码', icon: 'none' })
           return false
         }
       }
@@ -296,50 +268,44 @@ export default {
      * 处理登录
      */
     async handleLogin() {
-      // 1. 表单验证
       if (!this.validateForm()) return
-
       this.loading = true
 
       try {
-        // 2. 准备登录数据
-        const loginData = {
-          userType: this.userType
-        }
-
-        if (this.loginMode === 'password') {
-          loginData.username = this.formData.username
-          loginData.password = this.formData.password
-        } else {
-          loginData.phone = this.formData.phone
-          loginData.smsCode = this.formData.smsCode
-        }
-
-        // 3. 调用登录接口
         const userStore = useUserStore()
-        await userStore.login(loginData)
+        const tenantCode = this.formData.tenantCode || 'DEFAULT'
 
-        // 4. 记住密码
-        if (this.rememberPassword && this.loginMode === 'password') {
-          this.savePassword()
+        if (this.loginMode === 'sms') {
+          await userStore.smsLogin({
+            phone: this.formData.phone,
+            smsCode: this.formData.smsCode,
+            tenantCode
+          })
+        } else {
+          await userStore.login({
+            username: this.formData.username,
+            password: this.formData.password,
+            tenantCode
+          })
+          // 密码登录记住密码
+          if (this.rememberPassword) {
+            this.saveRememberedData()
+          } else {
+            uni.removeStorageSync('rememberedLogin')
+          }
         }
 
-        // 5. 登录成功提示
-        uni.showToast({
-          title: '登录成功',
-          icon: 'success',
-          duration: 1500
-        })
+        // 登录成功
+        const welcomeName = userStore.realName || userStore.username
+        uni.showToast({ title: `欢迎，${welcomeName}`, icon: 'success', duration: 1500 })
 
-        // 6. 跳转到首页
         setTimeout(() => {
-          this.redirectToHome()
+          this.redirectByRole()
         }, 1500)
-
       } catch (error) {
         console.error('Login error:', error)
         uni.showToast({
-          title: error.message || '登录失败，请稍后重试',
+          title: error.message || '登录失败，请检查输入信息',
           icon: 'none'
         })
       } finally {
@@ -348,38 +314,41 @@ export default {
     },
 
     /**
-     * 跳转到首页
+     * 根据角色跳转首页
      */
-    redirectToHome() {
-      uni.switchTab({
-        url: '/pages/common/home'
-      })
+    redirectByRole() {
+      uni.switchTab({ url: '/pages/common/home' })
     },
 
     /**
-     * 保存密码
+     * 保存密码登录信息
      */
-    savePassword() {
-      const passwordData = {
+    saveRememberedData() {
+      const data = {
         username: this.formData.username,
-        password: this.formData.password
+        password: this.formData.password,
+        tenantCode: this.formData.tenantCode
       }
-      uni.setStorageSync('rememberedPassword', JSON.stringify(passwordData))
+      uni.setStorageSync('rememberedLogin', JSON.stringify(data))
     },
 
     /**
-     * 加载记住的密码
+     * 加载记住的登录信息
      */
-    loadRememberedPassword() {
-      const saved = uni.getStorageSync('rememberedPassword')
+    loadRememberedData() {
+      const saved = uni.getStorageSync('rememberedLogin')
       if (saved) {
         try {
-          const passwordData = JSON.parse(saved)
-          this.formData.username = passwordData.username
-          this.formData.password = passwordData.password
+          const data = JSON.parse(saved)
+          this.formData.username = data.username || ''
+          this.formData.password = data.password || ''
+          this.formData.tenantCode = data.tenantCode || 'DEFAULT'
           this.rememberPassword = true
+          if (data.tenantCode && data.tenantCode !== 'DEFAULT') {
+            this.showTenantInput = true
+          }
         } catch (e) {
-          console.error('Load remembered password error:', e)
+          console.error('Load remembered data error:', e)
         }
       }
     }
@@ -540,6 +509,15 @@ export default {
   padding-left: 96rpx; /* 与图标的 left + 图标宽度对齐 */
 }
 
+/* 带右侧按钮的输入框：右侧留出按钮空间 */
+.login-page .input-with-btn {
+  padding-right: 220rpx;
+}
+
+.login-page .form-options-left {
+  flex: 1;
+}
+
 /* #ifdef H5 */
 /* UniApp H5 input 容器 */
 .login-page uni-input {
@@ -657,6 +635,29 @@ export default {
   font-size: $font-size-sm;
   color: $text-secondary;
   margin-left: $spacing-xs;
+}
+
+.login-page .form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-lg;
+}
+
+.login-page .tenant-toggle {
+  font-size: $font-size-sm;
+  color: $primary-color;
+  cursor: pointer;
+}
+
+.login-page .login-hint {
+  text-align: center;
+  margin-bottom: $spacing-lg;
+}
+
+.login-page .hint-text {
+  font-size: $font-size-sm;
+  color: $text-secondary;
 }
 
 .login-page .login-button {

@@ -2,10 +2,12 @@
  * API请求封装
  */
 
-import { getToken } from '@/utils/auth'
+import { getToken, setToken, getRefreshToken, setRefreshToken, removeToken, removeRefreshToken } from '@/utils/auth'
 
-// API基础地址
-const BASE_URL = 'http://localhost:8080/api'
+// API基础地址 - 开发环境使用localhost，真机调试时请替换为电脑IP地址
+const DEV_BASE_URL = 'http://localhost:8080/api'
+const PROD_BASE_URL = 'https://api.huiwutong.com/api'
+const BASE_URL = process.env.NODE_ENV === 'development' ? DEV_BASE_URL : PROD_BASE_URL
 
 /**
  * 请求拦截器
@@ -77,29 +79,88 @@ function responseInterceptor(response) {
 }
 
 /**
+ * Token刷新锁 - 防止并发刷新
+ */
+let isRefreshing = false
+let refreshSubscribers = []
+
+function onTokenRefreshed(success) {
+  refreshSubscribers.forEach(cb => cb(success))
+  refreshSubscribers = []
+}
+
+/**
+ * 尝试刷新Token
+ */
+function tryRefreshToken() {
+  if (isRefreshing) {
+    return new Promise(resolve => {
+      refreshSubscribers.push(resolve)
+    })
+  }
+
+  isRefreshing = true
+
+  return new Promise(resolve => {
+    const refreshTokenValue = getRefreshToken()
+    if (!refreshTokenValue) {
+      isRefreshing = false
+      onTokenRefreshed(false)
+      resolve(false)
+      return
+    }
+
+    uni.request({
+      url: BASE_URL + '/auth/refresh',
+      method: 'POST',
+      data: { refreshToken: refreshTokenValue },
+      header: { 'Content-Type': 'application/json' },
+      success: (res) => {
+        const ok = res.statusCode === 200 && res.data?.code === 200 && res.data?.data?.accessToken
+        if (ok) {
+          setToken(res.data.data.accessToken)
+          if (res.data.data.refreshToken) {
+            setRefreshToken(res.data.data.refreshToken)
+          }
+        }
+        isRefreshing = false
+        onTokenRefreshed(!!ok)
+        resolve(!!ok)
+      },
+      fail: () => {
+        isRefreshing = false
+        onTokenRefreshed(false)
+        resolve(false)
+      }
+    })
+  })
+}
+
+/**
+ * 跳转到登录页
+ */
+function redirectToLogin() {
+  removeToken()
+  removeRefreshToken()
+  uni.showToast({
+    title: '登录已过期，请重新登录',
+    icon: 'none',
+    duration: 2000
+  })
+  setTimeout(() => {
+    uni.reLaunch({ url: '/pages/index/login' })
+  }, 2000)
+}
+
+/**
  * 错误处理
  */
 function handleError(error) {
   console.error('API Error:', error)
 
-  // Token过期或无效
-  if (error.code === 401) {
-    uni.showToast({
-      title: '登录已过期，请重新登录',
-      icon: 'none',
-      duration: 2000
-    })
+  // 401由request函数内部处理Token刷新
+  if (error.code === 401) return
 
-    setTimeout(() => {
-      uni.reLaunch({
-        url: '/pages/index/login'
-      })
-    }, 2000)
-
-    return
-  }
-
-  // 其他错误
   const message = error.message || '请求失败，请稍后重试'
   uni.showToast({
     title: message,
@@ -112,6 +173,9 @@ function handleError(error) {
  * 封装请求方法
  */
 function request(options) {
+  // 保存原始options用于Token刷新后重试
+  const originalOptions = { ...options }
+
   // 请求拦截
   options = requestInterceptor(options)
 
@@ -126,6 +190,23 @@ function request(options) {
       header: options.header || {},
       timeout: options.timeout || 30000,
       success: (response) => {
+        // 处理401 - 尝试刷新Token后重试
+        const is401 = response.statusCode === 401 ||
+          (response.data && response.data.code === 401)
+
+        if (is401 && !originalOptions._isRetry) {
+          tryRefreshToken().then(refreshed => {
+            if (refreshed) {
+              originalOptions._isRetry = true
+              request(originalOptions).then(resolve).catch(reject)
+            } else {
+              redirectToLogin()
+              reject({ code: 401, message: '登录已过期，请重新登录' })
+            }
+          })
+          return
+        }
+
         try {
           const result = responseInterceptor(response)
           resolve(result)

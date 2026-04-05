@@ -14,7 +14,10 @@ public class UserInfo {
     private String tenantName;
     private String username;
     private String realName;
+    private String phone;
     private String userType;
     private String avatar;
     private List<String> roles;
+    /** 用户是否已设置密码 */
+    private Boolean hasPassword;
 }

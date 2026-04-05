@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
-import { setToken, removeToken, getUserInfo, setUserInfo, removeUserInfo } from '@/utils/auth'
+import { setToken, removeToken, getToken, getUserInfo, setUserInfo, removeUserInfo, setRefreshToken, removeRefreshToken } from '@/utils/auth'
 import auth from '@/api/auth'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     token: '',
     userInfo: null,
-    userType: '' // learner | staff
+    userType: '' // attendee | staff
   }),
 
   getters: {
@@ -19,14 +19,26 @@ export const useUserStore = defineStore('user', {
     // 获取真实姓名
     realName: (state) => state.userInfo?.realName || '',
 
-    // 获取用户角色
-    role: (state) => state.userInfo?.role || '',
+    // 获取手机号
+    phone: (state) => state.userInfo?.phone || '',
 
-    // 是否为学员
-    isLearner: (state) => state.userType === 'learner',
+    // 角色列表（后端返回数组如 ["admin"], ["user"], ["attendee"]）
+    roles: (state) => state.userInfo?.roles || [],
+
+    // 用户类型
+    userTypeStr: (state) => state.userInfo?.userType || '',
+
+    // 是否为管理员
+    isAdmin: (state) => (state.userInfo?.roles || []).includes('admin'),
+
+    // 是否为参会人员
+    isAttendee: (state) => (state.userInfo?.roles || []).includes('attendee'),
 
     // 是否为工作人员
-    isStaff: (state) => state.userType === 'staff'
+    isStaff: (state) => state.userType === 'staff' || (state.userInfo?.roles || []).includes('user'),
+
+    // 是否已设置密码
+    hasPassword: (state) => !!state.userInfo?.hasPassword
   },
 
   actions: {
@@ -55,33 +67,101 @@ export const useUserStore = defineStore('user', {
     },
 
     /**
-     * 登录
+     * 处理登录成功后的公共逻辑
+     */
+    _handleLoginSuccess(res) {
+      // 后端返回字段名是 accessToken
+      this.SET_TOKEN(res.accessToken)
+
+      // 保存refreshToken
+      if (res.refreshToken) {
+        setRefreshToken(res.refreshToken)
+      }
+
+      this.SET_USER_INFO(res.userInfo)
+
+      // 根据角色自动判断用户类型
+      const roles = res.userInfo?.roles || []
+      if (roles.includes('attendee')) {
+        this.SET_USER_TYPE('attendee')
+      } else if (roles.includes('admin') || roles.includes('user')) {
+        this.SET_USER_TYPE('staff')
+      }
+
+      // 保存用户ID和租户ID
+      if (res.userInfo) {
+        uni.setStorageSync('userId', String(res.userInfo.id))
+        if (res.userInfo.tenantId) {
+          uni.setStorageSync('tenantId', String(res.userInfo.tenantId))
+        }
+      }
+    },
+
+    /**
+     * 发送短信验证码
+     */
+    async sendSmsCode(phone) {
+      try {
+        const res = await auth.sendSmsCode({ phone })
+        return res
+      } catch (error) {
+        console.error('Send SMS code error:', error)
+        throw error
+      }
+    },
+
+    /**
+     * 短信验证码登录
+     */
+    async smsLogin(loginData) {
+      try {
+        const res = await auth.smsLogin({
+          phone: loginData.phone,
+          smsCode: loginData.smsCode,
+          tenantCode: loginData.tenantCode || 'DEFAULT'
+        })
+
+        this._handleLoginSuccess(res)
+        return res
+      } catch (error) {
+        console.error('SMS Login error:', error)
+        throw error
+      }
+    },
+
+    /**
+     * 密码登录
      */
     async login(loginData) {
       try {
-        // 调用登录API
         const res = await auth.login({
           username: loginData.username,
           password: loginData.password,
-          tenantCode: 'DEFAULT' // 默认租户代码
+          tenantCode: loginData.tenantCode || 'DEFAULT'
         })
 
-        // 保存Token和用户信息
-        this.SET_TOKEN(res.token)
-        this.SET_USER_INFO(res.userInfo)
-        this.SET_USER_TYPE(loginData.userType)
-
-        // 保存用户ID和租户ID
-        if (res.userInfo) {
-          uni.setStorageSync('userId', res.userInfo.id)
-          if (res.userInfo.tenantId) {
-            uni.setStorageSync('tenantId', res.userInfo.tenantId)
-          }
-        }
-
+        this._handleLoginSuccess(res)
         return res
       } catch (error) {
         console.error('Login error:', error)
+        throw error
+      }
+    },
+
+    /**
+     * 设置/修改密码
+     */
+    async setPassword(data) {
+      try {
+        const res = await auth.setPassword(data)
+        // 设置密码后更新本地用户信息
+        if (this.userInfo) {
+          this.userInfo.hasPassword = true
+          setUserInfo(this.userInfo)
+        }
+        return res
+      } catch (error) {
+        console.error('Set password error:', error)
         throw error
       }
     },
@@ -91,28 +171,26 @@ export const useUserStore = defineStore('user', {
      */
     async logout() {
       try {
-        // 调用登出API
         await auth.logout()
-
-        // 清除本地状态
-        this.token = ''
-        this.userInfo = null
-        this.userType = ''
-
-        removeToken()
-        removeUserInfo()
-        uni.removeStorageSync('userType')
-        uni.removeStorageSync('userId')
-        uni.removeStorageSync('tenantId')
-
-        // 跳转到登录页
-        uni.reLaunch({
-          url: '/pages/index/login'
-        })
-      } catch (error) {
-        console.error('Logout error:', error)
-        throw error
+      } catch (e) {
+        console.warn('Logout API call failed:', e)
       }
+
+      // 无论API调用成功与否，都清除本地状态
+      this.token = ''
+      this.userInfo = null
+      this.userType = ''
+
+      removeToken()
+      removeRefreshToken()
+      removeUserInfo()
+      uni.removeStorageSync('userType')
+      uni.removeStorageSync('userId')
+      uni.removeStorageSync('tenantId')
+
+      uni.reLaunch({
+        url: '/pages/index/login'
+      })
     },
 
     /**
@@ -120,12 +198,9 @@ export const useUserStore = defineStore('user', {
      */
     async getUserInfo() {
       try {
-        // 调用获取用户信息API
         const res = await auth.getUserInfo()
-
         this.SET_USER_INFO(res)
 
-        // 保存用户ID和租户ID
         if (res) {
           uni.setStorageSync('userId', res.id)
           if (res.tenantId) {
