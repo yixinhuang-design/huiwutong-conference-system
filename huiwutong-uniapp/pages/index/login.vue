@@ -460,8 +460,9 @@ export default {
   margin-bottom: $spacing-md;
 }
 
-/* 输入行容器 */
+/* 输入行容器 — 强制 flex 行布局，覆盖 common.scss 全局 position */
 .login-page .input-wrapper {
+  position: static !important;
   display: flex;
   flex-direction: row;       /* 关键：App原生默认column，必须显式row */
   align-items: center;
@@ -470,12 +471,17 @@ export default {
   border-radius: 24rpx;
   background: $bg-primary;
   padding: 0 24rpx;
+  overflow: hidden;
 }
 
-/* 左侧图标（必须用view不能用text，text在原生端不参与flex） */
+/* 左侧图标 — position:static 覆盖全局 absolute，保持在 flex 流内 */
 .login-page .input-icon {
-  width: 40rpx;
-  height: 40rpx;
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  width: 48rpx;
+  min-width: 48rpx;
+  height: 48rpx;
   flex-shrink: 0;
   margin-right: 20rpx;
   display: flex;
@@ -487,6 +493,7 @@ export default {
 .login-page .input-icon .fa {
   font-size: 36rpx;
   color: $text-tertiary;
+  line-height: 1;
 }
 
 /* 输入框 */

@@ -122,8 +122,9 @@
 }
 
 .input-wrapper {
-  position: relative;
+  position: static;
   display: flex;
+  flex-direction: row;
   align-items: center;
 }
 
@@ -144,14 +145,15 @@
 }
 
 .input-icon {
-  position: absolute;
-  left: $spacing-md;
+  position: static;
+  flex-shrink: 0;
+  margin-right: 16rpx;
   color: $text-tertiary;
   font-size: $font-size-lg;
 }
 
 .input-with-icon {
-  padding-left: 88rpx !important;
+  padding-left: 16rpx;
 }
 
 /* ==================== 标签样式（匹配app原型） ==================== */
