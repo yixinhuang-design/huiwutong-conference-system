@@ -30,7 +30,7 @@
       <view v-if="loginMode === 'sms'" class="login-form">
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon"><text class="fa fa-mobile-alt"></text></text>
+            <view class="input-icon"><text class="fa fa-mobile-alt"></text></view>
             <input
               v-model="formData.phone"
               placeholder="请输入手机号"
@@ -43,7 +43,7 @@
 
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon"><text class="fa fa-shield-alt"></text></text>
+            <view class="input-icon"><text class="fa fa-shield-alt"></text></view>
             <input
               v-model="formData.smsCode"
               placeholder="请输入验证码"
@@ -64,7 +64,7 @@
         <!-- 租户切换（可选） -->
         <view class="form-group" v-if="showTenantInput">
           <view class="input-wrapper">
-            <text class="input-icon"><text class="fa fa-building"></text></text>
+            <view class="input-icon"><text class="fa fa-building"></text></view>
             <input
               v-model="formData.tenantCode"
               placeholder="租户代码（默认DEFAULT）"
@@ -85,7 +85,7 @@
       <view v-else class="login-form">
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon"><text class="fa fa-user"></text></text>
+            <view class="input-icon"><text class="fa fa-user"></text></view>
             <input
               v-model="formData.username"
               placeholder="请输入手机号/用户名"
@@ -96,28 +96,24 @@
 
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon"><text class="fa fa-lock"></text></text>
+            <view class="input-icon"><text class="fa fa-lock"></text></view>
             <input
               v-model="formData.password"
               :password="!showPassword"
               placeholder="请输入密码"
               class="login-input"
             />
-            <text
-              class="password-toggle"
-              @touchend.prevent="showPassword = !showPassword"
-              @click="showPassword = !showPassword"
-            >
+            <view class="password-toggle" @click="showPassword = !showPassword">
               <text v-if="showPassword" class="fa fa-eye"></text>
               <text v-else class="fa fa-eye-slash"></text>
-            </text>
+            </view>
           </view>
         </view>
 
         <!-- 租户代码(可选) -->
         <view class="form-group" v-if="showTenantInput">
           <view class="input-wrapper">
-            <text class="input-icon"><text class="fa fa-building"></text></text>
+            <view class="input-icon"><text class="fa fa-building"></text></view>
             <input
               v-model="formData.tenantCode"
               placeholder="租户代码（默认DEFAULT）"
@@ -456,104 +452,70 @@ export default {
   margin-bottom: $spacing-md;
 }
 
-/* 输入行容器：边框在容器上，内部纯 flex */
+/* 输入行容器 */
 .login-page .input-wrapper {
   display: flex;
+  flex-direction: row;       /* 关键：App原生默认column，必须显式row */
   align-items: center;
+  height: 96rpx;
   border: 2rpx solid $border-color;
   border-radius: 24rpx;
   background: $bg-primary;
-  padding: 0 32rpx;
-  transition: $transition-base;
+  padding: 0 24rpx;
 }
 
-/* 左侧图标：flex 子项，不遮挡输入框 */
+/* 左侧图标（必须用view不能用text，text在原生端不参与flex） */
 .login-page .input-icon {
-  color: $text-tertiary;
-  font-size: $font-size-lg;
+  width: 40rpx;
   flex-shrink: 0;
   margin-right: 16rpx;
+  color: $text-tertiary;
+  font-size: 36rpx;
 }
 
-/* 输入框：flex:1 撑满剩余空间，无边框 */
+/* 输入框 */
 .login-page .login-input {
   flex: 1;
-  min-width: 0;
-  padding: 28rpx 0;
+  height: 92rpx;
+  padding: 0;
+  margin: 0;
   border: none;
   font-size: $font-size-md;
-  background: transparent;
+  background-color: transparent;
   color: $text-primary;
-  /* #ifdef H5 */
-  outline: none;
-  -webkit-appearance: none;
-  appearance: none;
-  /* #endif */
 }
 
 .login-page .form-options-left {
   flex: 1;
 }
 
-/* #ifdef H5 */
-.login-page uni-input {
-  display: block;
-  flex: 1;
-  min-width: 0;
-}
-
-.login-page .uni-input-wrapper {
+/* 密码显隐按钮（必须用view不能用text） */
+.login-page .password-toggle {
+  flex-shrink: 0;
+  width: 56rpx;
+  height: 56rpx;
+  margin-left: 8rpx;
+  color: $text-tertiary;
+  font-size: 36rpx;
   display: flex;
-  width: 100%;
-  height: 100%;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   justify-content: center;
 }
 
-.login-page .uni-input-input {
-  padding: 28rpx 0;
-  border: none;
-  background: transparent;
-  color: $text-primary;
-  outline: none;
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-}
-
-.login-page .uni-input-input::-webkit-input-placeholder {
-  color: $text-placeholder;
-}
-/* #endif */
-
-/* H5 聚焦反馈 */
-/* #ifdef H5 */
-.login-page .input-wrapper:focus-within {
-  border-color: $primary-color;
-  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
-}
-/* #endif */
-
-/* 密码显隐按钮：flex 子项 */
-.login-page .password-toggle {
-  font-size: $font-size-lg;
-  padding: $spacing-sm;
-  flex-shrink: 0;
-  margin-left: 8rpx;
-}
-
-/* 获取验证码按钮：flex 子项 */
+/* 获取验证码按钮 */
 .login-page .code-btn {
-  background: $primary-color;
-  color: $text-white;
-  border: none;
-  padding: 16rpx 24rpx;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-sm;
-  line-height: 1;
   flex-shrink: 0;
   margin: 0;
   margin-left: 16rpx;
+  padding: 0 24rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  background: $primary-color;
+  color: #ffffff;
+  border: none;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-sm;
   white-space: nowrap;
 }
 
@@ -561,6 +523,16 @@ export default {
   background: $text-tertiary;
   opacity: 0.6;
 }
+
+/* #ifdef H5 */
+.login-page .login-input {
+  outline: none;
+}
+.login-page .input-wrapper:focus-within {
+  border-color: $primary-color;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+}
+/* #endif */
 
 .login-page .checkbox-group {
   display: flex;
