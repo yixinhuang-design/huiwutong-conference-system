@@ -8,6 +8,22 @@ import { useUserStore } from '@/store/modules/user'
 export default {
   onLaunch: function() {
     console.log('App Launch - 智能会议助手启动')
+
+    // 动态加载 Font Awesome 本地字体（App 原生端需要）
+    // #ifdef APP-PLUS
+    uni.loadFontFace({
+      global: true,
+      family: 'Font Awesome 6 Free',
+      source: 'url("/static/fonts/fa-solid-900.ttf")',
+      success() {
+        console.log('Font Awesome 字体加载成功')
+      },
+      fail(err) {
+        console.warn('Font Awesome 字体加载失败:', err)
+      }
+    })
+    // #endif
+
     // 从本地存储恢复用户登录状态
     try {
       const userStore = useUserStore()
@@ -29,8 +45,7 @@ export default {
 @import './styles/common.scss';
 @import './styles/font-awesome.scss';
 
-/* Font Awesome 图标库 - 本地版本 */
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+/* Font Awesome 图标库 - 已通过 font-awesome.scss 本地加载 */
 
 /* 全局样式 */
 page {

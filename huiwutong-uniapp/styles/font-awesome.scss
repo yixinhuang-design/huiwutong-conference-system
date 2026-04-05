@@ -1,41 +1,23 @@
-/* Font Awesome 兼容层 - UniApp 本地版本 */
-/* 使用 WebFont 在 UniApp 中显示图标 */
+/* Font Awesome 6 Free - 本地字体版本 */
+/* TTF 文件存放于 /static/fonts/，兼容 H5 / App / 小程序 */
 
 @font-face {
   font-family: 'Font Awesome 6 Free';
   font-style: normal;
   font-weight: 900;
   font-display: block;
-  src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2') format('woff2'),
-       url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.ttf') format('truetype');
+  src: url('/static/fonts/fa-solid-900.ttf') format('truetype');
 }
 
-@font-face {
-  font-family: 'Font Awesome 6 Brands';
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-  src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-brands-400.woff2') format('woff2'),
-       url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-brands-400.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Font Awesome 6 Free';
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-  src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-regular-400.woff2') format('woff2'),
-       url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-regular-400.ttf') format('truetype');
-}
-
-/* Font Awesome 图标基础样式 */
+/* Font Awesome 图标基础样式 - 全部使用 Solid (weight 900) */
 .fa {
-  font-family: 'Font Awesome 6 Brands', 'Font Awesome 6 Free';
-  font-weight: 400;
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
   font-style: normal;
   font-variant: normal;
   text-rendering: auto;
   line-height: 1;
+  display: inline-block;
 }
 
 /* 实心图标 (Solid) - 使用 font-weight: 900 */
@@ -64,6 +46,8 @@
 .fa-mobile-alt::before { content: "\f3cd"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 .fa-eye::before { content: "\f06e"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 .fa-eye-slash::before { content: "\f070"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
+.fa-bullseye::before { content: "\f140"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
+.fa-shield-alt::before { content: "\f3ed"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 .fa-bullhorn::before { content: "\f0a1"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 .fa-chart-bar::before { content: "\f080"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 .fa-chart-line::before { content: "\f201"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
@@ -110,7 +94,7 @@
 .fa-lightbulb::before { content: "\f0eb"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 .fa-moon::before { content: "\f186"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 .fa-text-height::before { content: "\f034"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
-.fa-globe::before { content: "\f0ac"; font-family: 'Font Awesome 6 Brands'; font-weight: 400; }
+.fa-globe::before { content: "\f0ac"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 .fa-broom::before { content: "\f18a"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 .fa-phone::before { content: "\f095"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 .fa-clipboard::before { content: "\f328"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
@@ -149,11 +133,13 @@
 .fa-undo::before { content: "\f0e2"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 .fa-redo::before { content: "\f01e"; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 
-/* 确保图标在 text 元素中正确显示 */
+/* 确保图标在 text 元素中正确显示 — 统一使用 Solid 字体 */
 text.fa,
 .fas,
 .far,
 .fab {
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
   display: inline-block;
   font-style: normal;
   font-variant: normal;

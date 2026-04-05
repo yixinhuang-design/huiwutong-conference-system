@@ -3,7 +3,7 @@
     <view class="login-card">
       <!-- Logo区域 -->
       <view class="login-logo">
-        <text class="logo-icon"><text class="fa fa-bullseye"></text></text>
+        <view class="logo-icon"><text class="fa fa-bullseye"></text></view>
       </view>
       <view class="login-title">智能会议助手</view>
       <view class="login-subtitle">欢迎登录智能会议系统</view>
@@ -385,8 +385,16 @@ export default {
 }
 
 .login-page .logo-icon {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.login-page .logo-icon .fa {
   font-size: 112rpx;
-  display: block;
+  color: #3b82f6;
 }
 
 .login-page .login-title {
@@ -467,10 +475,18 @@ export default {
 /* 左侧图标（必须用view不能用text，text在原生端不参与flex） */
 .login-page .input-icon {
   width: 40rpx;
+  height: 40rpx;
   flex-shrink: 0;
-  margin-right: 16rpx;
-  color: $text-tertiary;
+  margin-right: 20rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-page .input-icon .fa {
   font-size: 36rpx;
+  color: $text-tertiary;
 }
 
 /* 输入框 */
