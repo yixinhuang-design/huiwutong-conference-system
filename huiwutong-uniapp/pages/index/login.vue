@@ -36,7 +36,7 @@
               placeholder="请输入手机号"
               type="number"
               maxlength="11"
-              class="login-input input-with-icon"
+              class="login-input"
             />
           </view>
         </view>
@@ -49,7 +49,7 @@
               placeholder="请输入验证码"
               type="number"
               maxlength="6"
-              class="login-input input-with-icon input-with-btn"
+              class="login-input"
             />
             <button
               class="code-btn"
@@ -68,7 +68,7 @@
             <input
               v-model="formData.tenantCode"
               placeholder="租户代码（默认DEFAULT）"
-              class="login-input input-with-icon"
+              class="login-input"
             />
           </view>
         </view>
@@ -89,7 +89,7 @@
             <input
               v-model="formData.username"
               placeholder="请输入手机号/用户名"
-              class="login-input input-with-icon"
+              class="login-input"
             />
           </view>
         </view>
@@ -101,7 +101,7 @@
               v-model="formData.password"
               :password="!showPassword"
               placeholder="请输入密码"
-              class="login-input input-with-icon"
+              class="login-input"
             />
             <text
               class="password-toggle"
@@ -121,7 +121,7 @@
             <input
               v-model="formData.tenantCode"
               placeholder="租户代码（默认DEFAULT）"
-              class="login-input input-with-icon"
+              class="login-input"
             />
           </view>
         </view>
@@ -360,17 +360,10 @@ export default {
 @import '../../styles/variables.scss';
 
 /* ========================================
-   登录页输入框层级体系
-   ========================================
-   层级说明：
-   - z-index: 1  -> input-wrapper（容器）
-   - z-index: 10 -> login-input, uni-input-input（输入框）
-   - z-index: 15 -> input-icon（图标，在输入框之上，不阻挡点击）
-   - z-index: 10 -> password-toggle, code-btn（按钮）
-
-   事件传递：
-   - pointer-events: none  -> 图标、placeholder
-   - pointer-events: auto  -> 输入框、按钮
+   输入框布局：纯 Flex 方案
+   图标 / 输入框 / 按钮 为同级 flex 子项，互不重叠
+   不使用 z-index / position:absolute / pointer-events
+   兼容 H5、App 原生、小程序
    ======================================== */
 
 .login-page {
@@ -463,55 +456,39 @@ export default {
   margin-bottom: $spacing-md;
 }
 
-/* 容器层级：z-index: 1 */
+/* 输入行容器：边框在容器上，内部纯 flex */
 .login-page .input-wrapper {
-  position: relative;
   display: flex;
   align-items: center;
-  z-index: 1;
+  border: 2rpx solid $border-color;
+  border-radius: 24rpx;
+  background: $bg-primary;
+  padding: 0 32rpx;
+  transition: $transition-base;
 }
 
-/* 图标层级：z-index: 15，在输入框之上，但不阻挡点击事件 */
+/* 左侧图标：flex 子项，不遮挡输入框 */
 .login-page .input-icon {
-  position: absolute;
-  left: 32rpx; /* 匹配app原型的16px */
-  top: 50%;
-  transform: translateY(-50%);
   color: $text-tertiary;
   font-size: $font-size-lg;
-  z-index: 15;
-  pointer-events: none;
+  flex-shrink: 0;
+  margin-right: 16rpx;
 }
 
-/* 输入框层级：z-index: 10，确保可点击 */
+/* 输入框：flex:1 撑满剩余空间，无边框 */
 .login-page .login-input {
-  width: 100%;
-  padding: 28rpx 32rpx 28rpx 96rpx; /* 匹配app原型的14px 16px 14px 48px */
-  border: 2rpx solid $border-color;
-  border-radius: 24rpx; /* 匹配app原型的12px */
+  flex: 1;
+  min-width: 0;
+  padding: 28rpx 0;
+  border: none;
   font-size: $font-size-md;
-  transition: $transition-base;
-  background: $bg-primary;
+  background: transparent;
   color: $text-primary;
-  position: relative;
-  z-index: 10;
-
   /* #ifdef H5 */
   outline: none;
-  cursor: text;
   -webkit-appearance: none;
-  pointer-events: auto;
+  appearance: none;
   /* #endif */
-}
-
-/* 带图标的输入框：左侧留出图标空间 */
-.login-page .input-with-icon {
-  padding-left: 96rpx; /* 与图标的 left + 图标宽度对齐 */
-}
-
-/* 带右侧按钮的输入框：右侧留出按钮空间 */
-.login-page .input-with-btn {
-  padding-right: 220rpx;
 }
 
 .login-page .form-options-left {
@@ -519,105 +496,65 @@ export default {
 }
 
 /* #ifdef H5 */
-/* UniApp H5 input 容器 */
 .login-page uni-input {
   display: block;
-  width: 100%;
-  font-size: inherit;
+  flex: 1;
+  min-width: 0;
 }
 
-/* UniApp input 包装器 */
 .login-page .uni-input-wrapper {
-  position: relative;
   display: flex;
   width: 100%;
   height: 100%;
   flex-direction: column;
   justify-content: center;
-  pointer-events: auto;
 }
 
-/* placeholder 不阻挡点击 */
-.login-page .uni-input-placeholder {
-  pointer-events: none;
-}
-
-/* UniApp H5 input 组件实际渲染的 input 元素类名是 uni-input-input */
 .login-page .uni-input-input {
-  padding: 28rpx 32rpx 28rpx 96rpx;
+  padding: 28rpx 0;
   border: none;
   background: transparent;
   color: $text-primary;
   outline: none;
-  cursor: text;
   -webkit-appearance: none;
-  min-height: 1.4em;
-  position: relative;
-  z-index: 10;
-  pointer-events: auto;
-  -webkit-user-select: text;
-  user-select: text;
-}
-
-.login-page .uni-input-input:focus {
-  outline: none;
+  appearance: none;
+  width: 100%;
 }
 
 .login-page .uni-input-input::-webkit-input-placeholder {
   color: $text-placeholder;
 }
+/* #endif */
 
-.login-page .uni-input-input:-moz-placeholder {
-  color: $text-placeholder;
-}
-
-.login-page .uni-input-input::-moz-placeholder {
-  color: $text-placeholder;
-}
-
-.login-page .uni-input-input:-ms-input-placeholder {
-  color: $text-placeholder;
+/* H5 聚焦反馈 */
+/* #ifdef H5 */
+.login-page .input-wrapper:focus-within {
+  border-color: $primary-color;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
 }
 /* #endif */
 
-.login-page .login-input:focus {
-  border-color: $primary-color;
-  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
-  /* #ifdef H5 */
-  outline: none;
-  /* #endif */
-}
-
+/* 密码显隐按钮：flex 子项 */
 .login-page .password-toggle {
-  position: absolute;
-  right: $spacing-md;
   font-size: $font-size-lg;
   padding: $spacing-sm;
-  cursor: pointer;
-  z-index: 10;
-  /* #ifdef H5 */
-  pointer-events: auto;
-  user-select: none;
-  /* #endif */
+  flex-shrink: 0;
+  margin-left: 8rpx;
 }
 
+/* 获取验证码按钮：flex 子项 */
 .login-page .code-btn {
-  position: absolute;
-  right: $spacing-sm;
-  top: 50%;
-  transform: translateY(-50%);
   background: $primary-color;
   color: $text-white;
   border: none;
-  padding: 12rpx 24rpx;
+  padding: 16rpx 24rpx;
   border-radius: $border-radius-sm;
   font-size: $font-size-sm;
   line-height: 1;
-  z-index: 10;
-  /* #ifdef H5 */
-  pointer-events: auto;
-  user-select: none;
-  /* #endif */
+  flex-shrink: 0;
+  margin: 0;
+  margin-left: 16rpx;
+  white-space: nowrap;
 }
 
 .login-page .code-btn:disabled {
@@ -628,7 +565,6 @@ export default {
 .login-page .checkbox-group {
   display: flex;
   align-items: center;
-  margin-bottom: $spacing-lg;
 }
 
 .login-page .checkbox-label {
@@ -647,17 +583,6 @@ export default {
 .login-page .tenant-toggle {
   font-size: $font-size-sm;
   color: $primary-color;
-  cursor: pointer;
-}
-
-.login-page .login-hint {
-  text-align: center;
-  margin-bottom: $spacing-lg;
-}
-
-.login-page .hint-text {
-  font-size: $font-size-sm;
-  color: $text-secondary;
 }
 
 .login-page .login-button {
